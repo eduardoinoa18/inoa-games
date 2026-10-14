@@ -1,0 +1,52 @@
+/* Inoa Games shared UI kit */
+:root{--ink:#1b2430;--paper:#fff8ee;--mint:#9fe3cf;--mint-ink:#0f5c48;--sun:#ffd166;--coral:#ff7b6b;--berry:#8c6cff;--sky:#bfe8ff;--line:rgba(27,36,48,.12);--ok:#2fbf8a;--no:#ff6b6b;--f-d:"Unbounded","Manrope",system-ui,sans-serif;--f-b:"Manrope",system-ui,-apple-system,sans-serif;color-scheme:light}
+html,body{margin:0;height:100%;overflow:hidden;background:#0d1b26;color:var(--ink);font-family:var(--f-b);-webkit-user-select:none;user-select:none;touch-action:none;-webkit-tap-highlight-color:transparent}
+canvas.ig-gl{position:fixed;inset:0;width:100%;height:100%;display:block}
+[hidden]{display:none!important}
+button{font:inherit}
+h1,h2,h3{margin:0;font-family:var(--f-d);letter-spacing:-.02em;text-wrap:balance}
+p{margin:0;line-height:1.5}
+.ig-loading{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:radial-gradient(120% 80% at 50% 100%,#1f5b6e,#0d1b26 70%);color:#fff;transition:opacity .45s}
+.ig-loading.out{opacity:0}
+.ig-loading>div{text-align:center;display:grid;gap:14px;padding:20px}
+.ig-loading h1{font-size:clamp(30px,7vw,52px)}
+.ig-brand{font-family:var(--f-d);font-weight:900;font-size:13px;letter-spacing:.12em;opacity:.8}.ig-brand span{color:var(--sun)}
+.ig-bar{width:240px;height:8px;background:rgba(255,255,255,.15);border-radius:6px;overflow:hidden;margin:0 auto}.ig-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--mint),var(--sun));transition:width .2s}
+.ig-loading p{opacity:.7;font-weight:600}
+.ig-screen{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom));box-sizing:border-box;overflow:auto;background:rgba(13,27,38,.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.ig-card{width:min(540px,100%);background:var(--paper);border-radius:28px;padding:26px 22px;box-shadow:0 24px 70px rgba(0,0,0,.3),inset 0 0 0 1px rgba(255,255,255,.7);display:grid;gap:14px;box-sizing:border-box}
+.ig-card h1{font-size:clamp(32px,7vw,50px);line-height:.95}.ig-card h2{font-size:24px}
+.ig-kicker{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mint-ink)}
+.ig-sub{color:#4c5868;font-weight:600}
+.ig-how{display:grid;gap:6px}.ig-how div{display:grid;grid-template-columns:36px 1fr;gap:8px;align-items:center;background:#fff;border:2px solid var(--line);border-radius:14px;padding:8px 10px;font-weight:600;font-size:14px}.ig-how span{font-size:22px;text-align:center}
+.ig-row{display:flex;gap:10px;flex-wrap:wrap}.ig-row>*{flex:1 1 auto}
+.ig-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:54px;padding:12px 20px;border:0;border-radius:18px;background:var(--mint-ink);color:#fff;font-family:var(--f-d);font-weight:900;font-size:15px;cursor:pointer;box-shadow:0 6px 0 #0a4234;text-decoration:none;transition:transform .08s}
+.ig-btn:active{transform:translateY(4px);box-shadow:0 2px 0 #0a4234}
+.ig-btn.ghost{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 2px var(--line)}
+.ig-btn.sun{background:var(--sun);color:var(--ink);box-shadow:0 6px 0 #d9a92e}
+.ig-btn.coral{background:var(--coral);box-shadow:0 6px 0 #c8503f}
+.ig-btn:focus-visible,.ig-chipbtn:focus-visible{outline:3px solid var(--berry);outline-offset:2px}
+.ig-chipbtn{min-height:44px;padding:8px 12px;border-radius:14px;background:#fff;border:2px solid var(--line);font-weight:800;cursor:pointer}
+.ig-chipbtn.on{border-color:var(--mint-ink);background:var(--mint)}
+.ig-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;text-align:center}.ig-stats div{background:#fff;border-radius:16px;padding:12px 8px;border:2px solid var(--line)}.ig-stats b{display:block;font-family:var(--f-d);font-size:22px;color:var(--mint-ink)}.ig-stats small{font-weight:700;color:#4c5868}
+.ig-reward{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}.ig-reward span{background:var(--ink);color:#fff;border-radius:12px;padding:6px 12px;font-weight:800;font-size:14px}
+.ig-xpbar{height:8px;background:#e8e0d2;border-radius:6px;overflow:hidden}.ig-xpbar i{display:block;height:100%;background:linear-gradient(90deg,var(--mint-ink),var(--mint))}
+.ig-top{position:fixed;left:0;right:0;top:0;z-index:20;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:max(10px,env(safe-area-inset-top)) 12px 0;pointer-events:none}
+.ig-hud{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;flex:1}
+.ig-chip{pointer-events:auto;background:rgba(255,248,238,.92);border-radius:16px;padding:8px 12px;font-weight:800;font-size:14px;box-shadow:0 4px 14px rgba(0,0,0,.15);display:inline-flex;align-items:center;gap:6px;color:var(--ink);text-decoration:none;border:0;min-height:40px;box-sizing:border-box;cursor:pointer}
+.ig-chip b{font-family:var(--f-d)}
+.ig-pad{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;justify-content:space-between;align-items:flex-end;padding:0 14px max(14px,env(safe-area-inset-bottom));pointer-events:none}
+.ig-btns{display:flex;gap:10px;pointer-events:auto}
+.ig-tbtn{width:70px;height:70px;border-radius:24px;border:0;background:rgba(255,248,238,.88);box-shadow:0 6px 0 rgba(0,0,0,.2);font-size:28px;cursor:pointer;touch-action:none}
+.ig-tbtn.on{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.2);background:var(--sun)}
+.ig-tbtn.big{width:84px;height:84px;background:var(--sun)}
+.ig-stick{pointer-events:auto;position:relative;width:150px;height:150px;border-radius:50%;background:rgba(255,248,238,.18);border:2px solid rgba(255,255,255,.35);touch-action:none}
+.ig-knob{position:absolute;left:50%;top:50%;width:62px;height:62px;border-radius:50%;background:rgba(255,248,238,.9);transform:translate(-50%,-50%);box-shadow:0 4px 12px rgba(0,0,0,.25)}
+.ig-toast{position:fixed;left:50%;top:16%;transform:translateX(-50%);z-index:25;background:rgba(27,36,48,.88);color:#fff;padding:10px 16px;border-radius:16px;font-weight:800;font-size:15px;max-width:min(520px,90%);text-align:center;opacity:0;transition:opacity .25s;pointer-events:none}
+.ig-toast.show{opacity:1}
+.ig-float{position:fixed;z-index:24;transform:translate(-50%,-50%);font-family:var(--f-d);font-weight:900;font-size:22px;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.4),0 0 12px rgba(0,0,0,.25);animation:igup 1s forwards;pointer-events:none}
+.ig-float.bad{color:#ffb3a8}.ig-float.gold{color:var(--sun)}
+@keyframes igup{to{transform:translate(-50%,-110%);opacity:0}}
+.ig-big{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);z-index:22;font-family:var(--f-d);font-weight:900;font-size:clamp(48px,12vw,110px);color:#fff;text-shadow:0 6px 0 rgba(0,0,0,.25),0 0 40px rgba(0,0,0,.25);pointer-events:none}
+@media (max-width:640px){.ig-tbtn{width:62px;height:62px}.ig-tbtn.big{width:76px;height:76px}.ig-stick{width:130px;height:130px}}
+@media (hover:hover) and (pointer:fine){.ig-pad .ig-stick{opacity:.5}}

@@ -1,0 +1,284 @@
+<title>Pixel Pact</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Press+Start+2P&family=Unbounded:wght@600;800;900&display=swap">
+<style>
+/* Layout: a golden-hour hero with the live game canvas as the backdrop, then angled glass sections. Single dark look by choice (matches the game). */
+:root{
+  --ink:#061821; --ink-2:#0a2230; --glass:rgba(7,28,38,.72); --glass-2:rgba(239,250,246,.06); --line:rgba(120,230,215,.24);
+  --foam:#effaf6; --mist:#94b9c2; --coral:#ff6b4a; --coral-ink:#2b0a02; --lagoon:#2de2c3; --sun:#ffc65c;
+  --f-display:"Unbounded","Manrope",system-ui,sans-serif; --f-body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif; --f-pixel:"Press Start 2P",ui-monospace,monospace;
+  color-scheme:dark;
+}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--ink);color:var(--foam);font-family:var(--f-body);line-height:1.55;overflow-x:hidden}
+.wrap{width:min(1080px,100%);margin:0 auto;padding-inline:20px;box-sizing:border-box}
+h1,h2,h3{margin:0;text-wrap:balance;font-family:var(--f-display);font-weight:900;letter-spacing:-.02em}
+p{margin:0}
+.eyebrow{font-family:var(--f-pixel);font-size:9px;letter-spacing:.08em;color:var(--coral);text-transform:uppercase}
+a{color:var(--lagoon)}
+.btn{display:inline-flex;align-items:center;gap:10px;font-family:var(--f-display);font-weight:800;font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:var(--coral-ink);background:var(--coral);border:0;padding:16px 24px;cursor:pointer;text-decoration:none;clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px);transition:transform .12s,filter .12s}
+.btn:hover{filter:brightness(1.1)}.btn:active{transform:scale(.97)}
+.btn.glass{background:var(--glass-2);color:var(--foam);box-shadow:inset 0 0 0 1px var(--line)}
+.btn:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:rgba(6,24,33,.7);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:60px}
+nav .logo{font-family:var(--f-display);font-weight:900;font-size:18px;letter-spacing:-.02em}
+nav .logo span{color:var(--sun)}
+nav ul{display:flex;gap:18px;list-style:none;margin:0;padding:0;font-size:13px;font-weight:700}
+nav ul a{color:var(--mist);text-decoration:none}
+nav ul a:hover{color:var(--foam)}
+header{position:relative;overflow:hidden;min-height:min(92vh,760px);display:flex;align-items:flex-end}
+header canvas{position:absolute;inset:0;width:100%;height:100%}
+header::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,24,33,.1) 0%,rgba(6,24,33,.25) 55%,rgba(6,24,33,.95) 100%)}
+.hero{position:relative;z-index:1;padding-block:72px 56px;display:grid;gap:20px;max-width:620px}
+.hero h1{font-size:clamp(48px,9vw,112px);line-height:.86;letter-spacing:-.03em;text-shadow:0 8px 40px rgba(255,107,74,.35)}
+.hero h1 span{display:block;background:linear-gradient(180deg,#fff6d8 0%,#ffc65c 42%,#ff6b4a 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .lead{font-size:clamp(16px,2.2vw,20px);color:#dbeaee;max-width:52ch}
+.cta{display:flex;gap:12px;flex-wrap:wrap}
+.proof{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:var(--mist);font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.proof b{color:var(--lagoon)}
+section{padding-block:72px}
+section.alt{background:var(--ink-2)}
+.sec-head{display:grid;gap:10px;max-width:640px;margin-bottom:34px}
+.sec-head h2{font-size:clamp(26px,4vw,40px);line-height:1.05}
+.sec-head p{color:var(--mist);font-size:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.card{position:relative;background:var(--glass);border:1px solid var(--line);padding:22px;display:grid;gap:10px;clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px);min-width:0}
+.card::before{content:"";position:absolute;left:0;top:0;width:48px;height:3px;background:var(--coral)}
+.card h3{font-size:17px;font-weight:800}
+.card p{color:var(--mist);font-size:14px}
+.card .ico{width:40px;height:40px;display:grid;place-items:center;background:rgba(45,226,195,.12);border:1px solid rgba(45,226,195,.35);color:var(--lagoon)}
+.card .ico svg{width:22px;height:22px}
+.heroes{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.heroc{background:var(--glass);border:1px solid var(--line);padding:16px;display:grid;gap:6px;clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)}
+.heroc canvas{width:100%;height:150px;display:block}
+.heroc b{font-family:var(--f-display);font-size:16px}
+.heroc .role{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--sun)}
+.heroc p{font-size:13px;color:var(--mist)}
+.modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.mode{background:var(--glass);border:1px solid var(--line);padding:24px;display:grid;gap:12px;clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px)}
+.mode h3{font-size:22px}
+.mode ul{margin:0;padding-left:18px;color:var(--mist);font-size:14px;display:grid;gap:4px}
+.mode .tag{font-family:var(--f-pixel);font-size:8px;color:var(--lagoon)}
+.price{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;align-items:stretch}
+.plan{position:relative;background:var(--glass);border:1px solid var(--line);padding:26px 22px;display:grid;gap:12px;align-content:start;clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px)}
+.plan.best{border-color:var(--sun);background:linear-gradient(180deg,rgba(255,198,92,.12),var(--glass))}
+.plan .pill{position:absolute;right:16px;top:14px;font-family:var(--f-pixel);font-size:8px;color:var(--coral-ink);background:var(--sun);padding:5px 8px}
+.plan h3{font-size:18px}
+.plan .amt{font-family:var(--f-display);font-weight:900;font-size:40px;line-height:1}
+.plan .amt small{font-size:14px;color:var(--mist);font-weight:700;font-family:var(--f-body)}
+.plan ul{margin:0;padding-left:18px;color:var(--mist);font-size:14px;display:grid;gap:5px}
+.plan .btn{justify-content:center;margin-top:6px}
+.faq{display:grid;gap:10px;max-width:760px}
+details{background:var(--glass);border:1px solid var(--line);padding:14px 18px}
+summary{cursor:pointer;font-weight:800;font-size:15px;list-style:none;display:flex;justify-content:space-between;align-items:center}
+summary::after{content:"+";font-family:var(--f-display);color:var(--lagoon)}
+details[open] summary::after{content:"–"}
+details p{color:var(--mist);font-size:14px;margin-top:10px}
+footer{border-top:1px solid var(--line);padding-block:30px;color:var(--mist);font-size:13px}
+footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.roadmap{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.step{background:var(--glass-2);border:1px solid var(--line);padding:16px;display:grid;gap:6px}
+.step .k{font-family:var(--f-pixel);font-size:8px;color:var(--sun)}
+.step b{font-size:15px}
+.step p{font-size:13px;color:var(--mist)}
+.step.done{border-color:rgba(45,226,195,.5)}
+.step.done .k{color:var(--lagoon)}
+@media (max-width:640px){nav ul{display:none}.hero{padding-block:52px 40px}section{padding-block:52px}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+
+<nav><div class="wrap"><div class="logo">PIXEL<span>PACT</span></div><ul><li><a href="#modes">Modes</a></li><li><a href="#heroes">Heroes</a></li><li><a href="#pricing">Pricing</a></li><li><a href="#faq">FAQ</a></li></ul><a class="btn" id="navPlay" href="https://claude.ai/artifact/R39Es5YCcbYnxRhuoDboVg" target="_blank" rel="noopener" style="padding:11px 16px;font-size:12px">Play free</a></div></nav>
+
+<header>
+  <canvas id="bg" aria-hidden="true"></canvas>
+  <div class="wrap hero">
+    <div class="eyebrow">Free browser brawler · phone, tablet, laptop, TV</div>
+    <h1>PIXEL<span>PACT</span></h1>
+    <p class="lead">A co-op island adventure and a 4-player party brawler in one link. No download, no account. Grab a friend, a gamepad or just your thumbs.</p>
+    <div class="cta">
+      <a class="btn" href="https://claude.ai/artifact/R39Es5YCcbYnxRhuoDboVg" target="_blank" rel="noopener">Play the free demo</a>
+      <a class="btn glass" href="#pricing">See pricing</a>
+    </div>
+    <div class="proof"><span><b>1–4</b> players on one screen</span><span><b>3</b> levels · <b>3</b> arenas</span><span><b>4</b> heroes, more coming</span><span><b>0</b> downloads</span></div>
+  </div>
+</header>
+
+<section id="modes">
+  <div class="wrap">
+    <div class="sec-head"><div class="eyebrow">Two ways to play</div><h2>Team up on the islands, then turn on each other</h2><p>Every mode works solo, on a couch with friends, or with bots filling the empty seats.</p></div>
+    <div class="modes">
+      <div class="mode"><span class="tag">ADVENTURE · CO-OP</span><h3>World 1: Emberwood Isles</h3><ul><li>Three levels: Driftwood Beach, Palm Canopy, Tidepool Caves</li><li>Shared camera, shared lives, one exit: the whole team finishes together</li><li>Fall in battle and a friend can revive you</li><li>Big Claw boss fight with three phases</li><li>Hidden Pact Shells, star ratings and speedrun par times</li></ul></div>
+      <div class="mode"><span class="tag">MATCH · VERSUS</span><h3>Last fighter standing</h3><ul><li>Damage % and knockback: the more you take, the farther you fly</li><li>Stocks, ring-outs, respawn platforms</li><li>Three stages: Driftwood Docks, Canopy Clash, Molten Crown</li><li>Stage hazards you can switch off for serious matches</li><li>Bots at three skill levels</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="heroes">
+  <div class="wrap">
+    <div class="sec-head"><div class="eyebrow">The roster</div><h2>Four heroes, four ways to fight</h2><p>Each hero has a 3-hit combo, a signature Special, an Ultimate that charges as you fight, and a perk that changes how you move.</p></div>
+    <div class="heroes" id="roster"></div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head"><div class="eyebrow">Built for the couch and the bus</div><h2>Plays everywhere a browser runs</h2></div>
+    <div class="grid">
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg></div><h3>Touch controls that feel right</h3><p>A floating stick appears wherever your thumb lands. Big glass buttons, vibration on hits, and the Ultimate button fills up like a meter.</p></div>
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9h4M8 7v4M15 9h.01M18 11h.01"/><path d="M4 14a4 4 0 014-4h8a4 4 0 014 4l-1 4a2 2 0 01-3 1l-2-2H10l-2 2a2 2 0 01-3-1z"/></svg></div><h3>Keyboards and gamepads</h3><p>Two keyboard layouts plus up to four Xbox, PlayStation or Switch Pro controllers. Press Jump in the lobby to join.</p></div>
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg></div><h3>2.5D islands</h3><p>Terrain with perspective faces, a golden-hour sky, a 2050 skyline, glowing caves and a lava crater. All drawn live, nothing to download.</p></div>
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.5 6 6.5.6-5 4.4 1.6 6.5L12 16l-5.6 3.5L8 13 3 8.6 9.5 8z"/></svg></div><h3>Friendly by default</h3><p>Unlimited continues on Friendly difficulty, generous checkpoints, revives, coaching tips when you fall, and a Share button for your best runs.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="pricing">
+  <div class="wrap">
+    <div class="sec-head"><div class="eyebrow">Pricing</div><h2>Free to play. Cheap to own.</h2><p>The demo stays free forever. The full game is a one-time purchase with no ads and no loot boxes. Prices shown are the planned launch prices.</p></div>
+    <div class="price">
+      <div class="plan"><h3>Free</h3><div class="amt">$0</div><ul><li>World 1, all three levels</li><li>Match mode on Driftwood Docks</li><li>Four heroes</li><li>Local multiplayer and bots</li></ul><a class="btn glass" href="https://claude.ai/artifact/R39Es5YCcbYnxRhuoDboVg" target="_blank" rel="noopener">Play now</a></div>
+      <div class="plan best"><span class="pill">BEST VALUE</span><h3>Full game</h3><div class="amt">$4.99 <small>one time</small></div><ul><li>Every world as it ships (Worlds 2 and 3 in development)</li><li>All match stages, including Canopy Clash and Molten Crown</li><li>Ten heroes at launch</li><li>Online play with friends: QR phone pairing and invite links</li><li>Cloud saves across devices</li></ul><a class="btn" href="#waitlist">Notify me at launch</a></div>
+      <div class="plan"><h3>Pact Pass</h3><div class="amt">$9.99 <small>per year</small></div><ul><li>Everything in Full game</li><li>Seasonal worlds, stages and hero skins</li><li>Ranked online seasons</li><li>Name on the supporters wall</li></ul><a class="btn glass" href="#waitlist">Notify me at launch</a></div>
+    </div>
+  </div>
+</section>
+
+<section id="waitlist">
+  <div class="wrap">
+    <div class="sec-head"><div class="eyebrow">Roadmap</div><h2>What is done and what is next</h2></div>
+    <div class="roadmap">
+      <div class="step done"><span class="k">DONE</span><b>Playable demo</b><p>Three co-op levels, boss fight, three arenas, bots, 2.5D visuals, touch, keyboard and gamepad.</p></div>
+      <div class="step"><span class="k">NEXT</span><b>Online play</b><p>Rooms with 4-letter codes, QR phone controllers and friends playing from home over WebRTC.</p></div>
+      <div class="step"><span class="k">THEN</span><b>Heroes 5–10</b><p>Luna Thorn, Bolt-9, Gorrak, Pixel, Sister Solenne and Capitán Coco.</p></div>
+      <div class="step"><span class="k">THEN</span><b>Worlds 2 and 3</b><p>Ten levels per world with new bosses, and a ranked season for Match mode.</p></div>
+      <div class="step"><span class="k">LAUNCH</span><b>Web + app stores</b><p>Installable web app first, then iOS and Android wrappers of the same game.</p></div>
+    </div>
+    <p class="muted" style="margin-top:18px;color:var(--mist);font-size:14px">Launch notifications will be collected on the real site once payments are set up. Until then, follow <a href="https://www.instagram.com/eduardoinoa_" target="_blank" rel="noopener">@eduardoinoa_</a> for updates.</p>
+  </div>
+</section>
+
+<section class="alt" id="faq">
+  <div class="wrap">
+    <div class="sec-head"><div class="eyebrow">FAQ</div><h2>Questions people ask</h2></div>
+    <div class="faq">
+      <details open><summary>Do I need to download anything?</summary><p>No. Open the link and play. On a phone, add it to your home screen for a full-screen app-style experience.</p></details>
+      <details><summary>How does multiplayer work?</summary><p>Today: up to four people on one screen using keyboards, gamepads and touch, with bots filling empty seats. Online rooms with QR phone pairing are the next milestone.</p></details>
+      <details><summary>Is it hard?</summary><p>Friendly difficulty gives unlimited continues and softer enemies. Normal and Brutal are there when you want them. Match bots scale with the same setting.</p></details>
+      <details><summary>Is it like Brawlhalla or Smash?</summary><p>Match mode uses the same idea: damage raises your knockback, and falling off the stage costs a stock. Pixel Pact's heroes, stages and art are its own.</p></details>
+      <details><summary>What devices are supported?</summary><p>Any modern browser: iPhone, Android, iPad, Mac, Windows, Chromebook and TV browsers. A phone in landscape gives the widest view.</p></details>
+    </div>
+  </div>
+</section>
+
+<footer><div class="wrap"><span>© 2026 Pixel Pact · an Optima Service Group project</span><span>Made in Methuen, MA · <a href="https://claude.ai/artifact/R39Es5YCcbYnxRhuoDboVg" target="_blank" rel="noopener">Play the demo</a></span></div></footer>
+
+<script>
+(() => {
+'use strict';
+const TAU = Math.PI * 2, OUTLINE = '#0a1a24';
+const lerp = (a, b, t) => a + (b - a) * t, clamp = (v, a, b) => v < a ? a : v > b ? b : v, easeOut = t => 1 - Math.pow(1 - clamp(t, 0, 1), 3);
+const hash = (x, y) => { let h = (x * 374761393 + y * 668265263) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+function hexRgb(h) { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+function rgba(h, a) { const c = hexRgb(h); return `rgba(${c[0]},${c[1]},${c[2]},${a})`; }
+function rr(c, x, y, w, h, r) { c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+const glowCache = new Map();
+function glow(c, x, y, r, col, a) { if (a <= .01 || r <= 0) return; let s = glowCache.get(col); if (!s) { s = document.createElement('canvas'); s.width = s.height = 64; const g = s.getContext('2d'), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32), k = hexRgb(col); gr.addColorStop(0, `rgba(${k[0]},${k[1]},${k[2]},1)`); gr.addColorStop(.3, `rgba(${k[0]},${k[1]},${k[2]},.45)`); gr.addColorStop(1, `rgba(${k[0]},${k[1]},${k[2]},0)`); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); glowCache.set(col, s); } const pc = c.globalCompositeOperation, pa = c.globalAlpha; c.globalCompositeOperation = 'lighter'; c.globalAlpha = Math.min(1, a); c.drawImage(s, x - r, y - r, r * 2, r * 2); c.globalCompositeOperation = pc; c.globalAlpha = pa; }
+const HEROES = [
+  { id: 'rook', name: 'Rook Ironhide', role: 'Tank · Shield knight', desc: 'Shield Bash blocks anything in front of him. Fortress Wall makes the whole team untouchable for five seconds.', bulk: 1.18, wlen: 20, c: { skin: '#f0c08a', hair: '#d9dfe8', hair2: '#a7b2c2', body: '#4a6488', body2: '#7f9cc6', limb: '#3e5474', back: '#2a3a52', accent: '#ffc65c', boot: '#2a2230', metal: '#d3dce7', glow: '#ffc65c' } },
+  { id: 'kiko', name: 'Kiko Breeze', role: 'Speed · Wind ninja', desc: 'Triple jump, the fastest run, and a Shadow Dash that slices through a whole line of enemies.', bulk: .86, wlen: 11, c: { skin: '#e5b088', hair: '#1d2340', hair2: '#121731', body: '#22345a', body2: '#3d5f99', limb: '#1c2b4a', back: '#121c33', accent: '#2de2c3', boot: '#151a2c', metal: '#d6fff7', glow: '#2de2c3' } },
+  { id: 'marisol', name: 'Marisol Tidecaller', role: 'Ranged · Tide mage', desc: 'Wave Push rolls through crowds, she glides when you hold jump, and Tsunami sweeps the screen.', bulk: .95, wlen: 24, c: { skin: '#c58a5c', hair: '#1a7f96', hair2: '#0f5668', body: '#1f9c8c', body2: '#86e0d2', limb: '#17786c', back: '#0e534c', accent: '#ff6b4a', boot: '#124a52', metal: '#e9fbff', glow: '#5be7ff' } },
+  { id: 'tito', name: 'Tito Fuego', role: 'Bruiser · Flame boxer', desc: 'Every punch sets enemies on fire. Fire Uppercut launches them, Volcano Fist erupts on impact.', bulk: 1.06, wlen: 6, c: { skin: '#9a6a40', hair: '#ff4d3a', hair2: '#ffb02e', body: '#b8431c', body2: '#f4a261', limb: '#8f3416', back: '#5e200e', accent: '#ffe66d', boot: '#3a1c10', metal: '#ff9a3c', glow: '#ff7b2e' } }
+];
+function heroPose(h, S) {
+  const t = S.t || 0, a = S.anim || 'idle', k = S.k || 0, p = { lean: 0, bob: 0, rot: 0, lT: .1, lB: .12, rT: -.08, rB: .1, lU: -.15, lF: .35, rU: .22, rF: .45 };
+  switch (a) {
+    case 'idle': { const b = Math.sin(t / 18); p.bob = b * .8; p.lU = -.15 + b * .05; p.rU = .22 - b * .05; break; }
+    case 'run': { const ph = S.phase || 0, s = Math.sin(ph), c = Math.cos(ph); p.lT = s * .95; p.lB = .25 + Math.max(0, -c) * 1.3; p.rT = -s * .95; p.rB = .25 + Math.max(0, c) * 1.3; p.rU = s; p.rF = 1; p.lU = -s; p.lF = 1; p.lean = .2; p.bob = -Math.abs(c) * 2.2 + 1; break; }
+    case 'win': { const b = Math.abs(Math.sin(t / 10)); Object.assign(p, { rU: 2.75, rF: .2, lU: 2.5, lF: .2, bob: -b * 4, lT: .2, rT: -.2 }); break; }
+    case 'light': { const n = S.n || 1; Object.assign(p, { lT: .55, lB: .5, rT: -.45, rB: .35, lean: .22, lU: -.6, lF: .6 }); if (n === 1) { p.rU = lerp(-1.3, 1.9, easeOut(k * 2.2)); p.rF = .25; p.sw = [-1.3, p.rU]; } else if (n === 2) { p.rU = lerp(2.5, .2, easeOut(k * 2.2)); p.rF = .2; p.sw = [2.5, p.rU]; p.lean = .15; } else { p.rU = lerp(3.3, .5, easeOut(k * 1.8)); p.rF = .1; p.sw = [3.3, p.rU]; p.lean = .38; p.bob = k < .3 ? -3 : 0; } break; }
+    case 'jump': Object.assign(p, { lT: .95, lB: 1.7, rT: .25, rB: .7, rU: 2.3, rF: .35, lU: 1.9, lF: .4, lean: .06 }); break;
+    case 'fall': Object.assign(p, { lT: .25, lB: .35, rT: -.25, rB: .55, rU: 1.5, rF: .5, lU: 1.2, lF: .5 }); break;
+  }
+  return p;
+}
+function drawHead(c, h, hc, r, S) {
+  const C = h.c, t = S.t || 0, a = S.anim;
+  c.fillStyle = C.skin; c.beginPath(); c.arc(hc.x, hc.y, r, 0, TAU); c.fill();
+  c.fillStyle = 'rgba(0,0,0,.12)'; c.beginPath(); c.arc(hc.x - r * .25, hc.y + r * .1, r * .85, Math.PI * .55, Math.PI * 1.25); c.fill();
+  if (h.id === 'rook') { c.fillStyle = C.metal; c.beginPath(); c.arc(hc.x, hc.y, r + .8, Math.PI + .25, TAU - .25); c.closePath(); c.fill(); c.fillStyle = C.hair2; c.fillRect(hc.x - r * .9, hc.y - r * .28, r * 1.8, r * .14); c.fillStyle = C.metal; c.fillRect(hc.x + r * .5, hc.y - r * .3, r * .2, r * .6); const sw = Math.sin(t / 9) * 2; c.fillStyle = C.accent; c.beginPath(); c.moveTo(hc.x - r * .1, hc.y - r * .95); c.quadraticCurveTo(hc.x - r * 1.1, hc.y - r * 1.9 + sw, hc.x - r * 1.9, hc.y - r * .9 + sw); c.quadraticCurveTo(hc.x - r * .9, hc.y - r * 1.15, hc.x - r * .4, hc.y - r * .55); c.closePath(); c.fill(); }
+  else if (h.id === 'kiko') { c.fillStyle = C.hair; c.beginPath(); c.arc(hc.x, hc.y, r + .6, Math.PI - .15, TAU + .1); c.closePath(); c.fill(); c.save(); c.beginPath(); c.arc(hc.x, hc.y, r, 0, TAU); c.clip(); c.fillStyle = C.hair2; c.fillRect(hc.x - r, hc.y + r * .28, r * 2, r); c.fillStyle = C.accent; c.fillRect(hc.x - r, hc.y - r * .42, r * 2, r * .26); c.restore(); }
+  else if (h.id === 'marisol') { c.fillStyle = C.hair; c.beginPath(); c.arc(hc.x, hc.y, r + .8, Math.PI - .5, TAU + .15); c.closePath(); c.fill(); c.beginPath(); c.ellipse(hc.x - r * .55, hc.y + r * .25, r * .55, r * .9, 0, 0, TAU); c.fill(); c.fillStyle = C.accent; for (let i = 0; i < 4; i++) { c.beginPath(); c.arc(hc.x - r * .15 + Math.cos(i * 1.57) * 2, hc.y - r * .9 + Math.sin(i * 1.57) * 2, 1.9, 0, TAU); c.fill(); } c.fillStyle = '#ffc65c'; c.beginPath(); c.arc(hc.x - r * .15, hc.y - r * .9, 1.3, 0, TAU); c.fill(); }
+  else { for (let layer = 0; layer < 2; layer++) { c.fillStyle = layer ? C.hair2 : C.hair; c.beginPath(); const n = 5; for (let i = 0; i <= n; i++) { const ang = Math.PI * 1.08 + (i / n) * Math.PI * .84, bx = hc.x + Math.cos(ang) * r * .95, by = hc.y + Math.sin(ang) * r * .95, len = (layer ? .45 : .8) * r + Math.sin(t * .35 + i * 1.7) * r * .18, tx = bx + Math.cos(ang) * len - len * .55, ty = by + Math.sin(ang) * len; if (i === 0) c.moveTo(bx, by); c.lineTo(tx, ty); if (i < n) { const ang2 = Math.PI * 1.08 + ((i + .5) / n) * Math.PI * .84; c.lineTo(hc.x + Math.cos(ang2) * r * .9, hc.y + Math.sin(ang2) * r * .9); } } c.closePath(); c.fill(); } }
+  const ex = hc.x + r * .42, ey = hc.y - r * .06;
+  if ((t % 210) < 7) { c.strokeStyle = OUTLINE; c.lineWidth = 1.4; c.beginPath(); c.moveTo(ex - 2.2, ey); c.lineTo(ex + 2.2, ey); c.stroke(); }
+  else { c.fillStyle = '#fff'; c.beginPath(); c.ellipse(ex, ey, r * .22, r * .28, 0, 0, TAU); c.fill(); c.fillStyle = OUTLINE; c.beginPath(); c.arc(ex + r * .08, ey + r * .03, r * .14, 0, TAU); c.fill(); }
+  if (h.id !== 'kiko') { c.strokeStyle = 'rgba(60,20,10,.7)'; c.lineWidth = 1.1; c.beginPath(); if (a === 'win') c.arc(hc.x + r * .5, hc.y + r * .38, r * .2, 0, Math.PI); else { c.moveTo(hc.x + r * .38, hc.y + r * .48); c.lineTo(hc.x + r * .62, hc.y + r * .45); } c.stroke(); c.fillStyle = 'rgba(255,107,74,.25)'; c.beginPath(); c.arc(hc.x + r * .2, hc.y + r * .3, r * .18, 0, TAU); c.fill(); }
+}
+function drawGear(c, h, A, front, p) {
+  const C = h.c, hd = A[2], a = A[3], dx = Math.sin(a), dy = Math.cos(a);
+  const blade = (len, w, col, edge) => { c.lineCap = 'round'; c.strokeStyle = OUTLINE; c.lineWidth = w + 2.4; c.beginPath(); c.moveTo(hd.x, hd.y); c.lineTo(hd.x + dx * len, hd.y + dy * len); c.stroke(); c.strokeStyle = col; c.lineWidth = w; c.beginPath(); c.moveTo(hd.x, hd.y); c.lineTo(hd.x + dx * len, hd.y + dy * len); c.stroke(); if (edge) { c.strokeStyle = edge; c.lineWidth = 1; c.beginPath(); c.moveTo(hd.x + dx * 3, hd.y + dy * 3); c.lineTo(hd.x + dx * len, hd.y + dy * len); c.stroke(); } };
+  if (h.id === 'rook') { const shield = (cx, cy) => { c.fillStyle = OUTLINE; c.beginPath(); c.arc(cx, cy, 10.5, 0, TAU); c.fill(); const g = c.createRadialGradient(cx - 3, cy - 3, 1, cx, cy, 10); g.addColorStop(0, '#fff'); g.addColorStop(.3, C.metal); g.addColorStop(1, '#7d8aa0'); c.fillStyle = g; c.beginPath(); c.arc(cx, cy, 9.2, 0, TAU); c.fill(); c.strokeStyle = C.accent; c.lineWidth = 1.8; c.beginPath(); c.arc(cx, cy, 7, 0, TAU); c.stroke(); c.fillStyle = C.accent; c.beginPath(); c.arc(cx, cy, 2.6, 0, TAU); c.fill(); }; if (front) { blade(20, 3.2, C.metal, '#fff'); c.strokeStyle = C.accent; c.lineWidth = 2.6; c.beginPath(); c.moveTo(hd.x + dx * 2 - dy * 5, hd.y + dy * 2 + dx * 5); c.lineTo(hd.x + dx * 2 + dy * 5, hd.y + dy * 2 - dx * 5); c.stroke(); } else shield(hd.x - 2, hd.y - 2); }
+  else if (h.id === 'kiko') blade(front ? 11 : 9, 2.2, C.metal, C.accent);
+  else if (h.id === 'marisol' && front) { c.lineCap = 'round'; c.strokeStyle = OUTLINE; c.lineWidth = 5; c.beginPath(); c.moveTo(hd.x - dx * 12, hd.y - dy * 12); c.lineTo(hd.x + dx * 24, hd.y + dy * 24); c.stroke(); c.strokeStyle = '#8a5a32'; c.lineWidth = 2.6; c.beginPath(); c.moveTo(hd.x - dx * 12, hd.y - dy * 12); c.lineTo(hd.x + dx * 24, hd.y + dy * 24); c.stroke(); const ox = hd.x + dx * 26, oy = hd.y + dy * 26; c.fillStyle = OUTLINE; c.beginPath(); c.arc(ox, oy, 5.6, 0, TAU); c.fill(); c.fillStyle = '#c9fbff'; c.beginPath(); c.arc(ox, oy, 4.4, 0, TAU); c.fill(); glow(c, ox, oy, 14, C.glow, .55); }
+  else if (h.id === 'tito') { const r = 5.6 * h.bulk; c.fillStyle = OUTLINE; c.beginPath(); c.arc(hd.x, hd.y, r + 1.4, 0, TAU); c.fill(); const g = c.createRadialGradient(hd.x - 2, hd.y - 2, 1, hd.x, hd.y, r); g.addColorStop(0, '#ffe0a8'); g.addColorStop(1, C.metal); c.fillStyle = g; c.beginPath(); c.arc(hd.x, hd.y, r, 0, TAU); c.fill(); if (front) glow(c, hd.x, hd.y, 16, C.glow, .5); }
+}
+function drawHero(c, h, S, x, y, f, sc) {
+  const C = h.c, B = h.bulk, p = heroPose(h, S), tw = 14 * B, lw = 5.6 * B, aw = 4.8 * B, hr = h.id === 'kiko' ? 8.6 : 9.2, L1 = 8.5, L2 = 8.5, A1 = 7.2, A2 = 7.2;
+  c.save(); c.translate(x, y); c.scale(f * sc, sc); c.translate(0, p.bob);
+  const lean = p.lean, cl = Math.cos(lean), sl = Math.sin(lean), hip = { x: 0, y: -17 }, R = (dx, dy) => ({ x: hip.x + dx * cl - dy * sl, y: hip.y + dx * sl + dy * cl }), sh = R(0, -12.5), hc = R(1, -24.5);
+  const leg = (ox, T, Bd) => { const a = { x: hip.x + ox, y: hip.y }, kk = { x: a.x + Math.sin(T) * L1, y: a.y + Math.cos(T) * L1 }; return [a, kk, { x: kk.x + Math.sin(T - Bd) * L2, y: kk.y + Math.cos(T - Bd) * L2 }]; };
+  const arm = (ox, U, F) => { const a = { x: sh.x + ox, y: sh.y }, u = U + lean * .5, e = { x: a.x + Math.sin(u) * A1, y: a.y + Math.cos(u) * A1 }; return [a, e, { x: e.x + Math.sin(u + F) * A2, y: e.y + Math.cos(u + F) * A2 }, u + F]; };
+  const bL = leg(-2.2 * B, p.lT, p.lB), fL = leg(2.2 * B, p.rT, p.rB), bA = arm(-2.5, p.lU, p.lF), fA = arm(2.5, p.rU, p.rF);
+  const line = (pts, w, col) => { c.strokeStyle = col; c.lineWidth = w; c.beginPath(); c.moveTo(pts[0].x, pts[0].y); c.lineTo(pts[1].x, pts[1].y); c.lineTo(pts[2].x, pts[2].y); c.stroke(); };
+  const boot = (pt, col, grow) => { c.fillStyle = col; c.beginPath(); c.ellipse(pt.x + 1.4, pt.y - .5, lw * .72 + grow, lw * .5 + grow, 0, 0, TAU); c.fill(); };
+  const hand = (pt, col) => { c.fillStyle = col; c.beginPath(); c.arc(pt.x, pt.y, aw * .55, 0, TAU); c.fill(); };
+  c.lineCap = 'round'; c.lineJoin = 'round';
+  for (const pass of [0, 1]) {
+    const ol = pass === 0;
+    line(bA, ol ? aw + 3.2 : aw, ol ? OUTLINE : C.back); if (!ol) { hand(bA[2], C.skin); drawGear(c, h, bA, false, p); }
+    line(bL, ol ? lw + 3.2 : lw, ol ? OUTLINE : C.back); boot(bL[2], ol ? OUTLINE : C.boot, ol ? 1.6 : 0);
+    c.save(); c.translate(hip.x, hip.y); c.rotate(lean);
+    if (ol) { c.fillStyle = OUTLINE; c.beginPath(); rr(c, -tw / 2 - 1.6, -15.6, tw + 3.2, 19.2, 6); c.fill(); }
+    else { c.fillStyle = C.body; c.beginPath(); rr(c, -tw / 2, -14, tw, 16, 5); c.fill(); c.fillStyle = C.body2; c.beginPath(); rr(c, -tw / 2 + 1.5, -13, tw - 3, 5, 3); c.fill(); c.fillStyle = C.back; c.fillRect(-tw / 2, -2.5, tw, 3); if (h.id === 'rook') { c.fillStyle = C.metal; c.beginPath(); rr(c, -tw / 2 + 2, -10, tw - 4, 7, 3); c.fill(); c.fillStyle = C.accent; c.beginPath(); c.arc(1, -6.5, 2.2, 0, TAU); c.fill(); } if (h.id === 'kiko') { c.strokeStyle = C.accent; c.lineWidth = 2.2; c.beginPath(); c.moveTo(-tw / 2, -12); c.lineTo(tw / 2, -1); c.stroke(); } if (h.id === 'tito') { c.fillStyle = C.skin; c.fillRect(-1.6, -14, 3.2, 11); } }
+    c.restore();
+    line(fL, ol ? lw + 3.2 : lw, ol ? OUTLINE : C.limb); boot(fL[2], ol ? OUTLINE : C.boot, ol ? 1.6 : 0);
+    if (ol) { c.fillStyle = OUTLINE; c.beginPath(); c.arc(hc.x, hc.y, hr + 1.7, 0, TAU); c.fill(); if (h.id === 'tito') { c.beginPath(); c.arc(hc.x - 2, hc.y - hr * .6, hr * .9, 0, TAU); c.fill(); } } else drawHead(c, h, hc, hr, S);
+    line(fA, ol ? aw + 3.2 : aw, ol ? OUTLINE : C.body2); if (!ol) { hand(fA[2], C.skin); drawGear(c, h, fA, true, p); }
+  }
+  if (p.sw && (S.k || 0) < .8) { const k = S.k || 0, rad = A1 + A2 + h.wlen * .85, a0 = Math.PI / 2 - (p.sw[0] + lean * .5), a1 = Math.PI / 2 - (p.sw[1] + lean * .5), ccw = a1 < a0; c.save(); c.globalCompositeOperation = 'lighter'; c.globalAlpha = .6 * (1 - k / .8); c.fillStyle = rgba(C.glow, .8); c.beginPath(); c.arc(sh.x, sh.y, rad, a0, a1, ccw); c.arc(sh.x, sh.y, rad * .5, a1, a0, !ccw); c.closePath(); c.fill(); c.restore(); }
+  c.restore();
+}
+/* Hero backdrop: sky, sun, sea, dunes, the four heroes idling on the beach */
+const bg = document.getElementById('bg'), bctx = bg.getContext('2d');
+let sun = null;
+function buildSun() { sun = document.createElement('canvas'); sun.width = sun.height = 256; const s = sun.getContext('2d'), g = s.createLinearGradient(0, 28, 0, 228); g.addColorStop(0, '#fff8d8'); g.addColorStop(.5, '#ffd27a'); g.addColorStop(1, '#ff7a52'); s.fillStyle = g; s.beginPath(); s.arc(128, 128, 100, 0, TAU); s.fill(); s.globalCompositeOperation = 'destination-out'; for (let i = 0; i < 6; i++) s.fillRect(0, 140 + i * 15, 256, 3 + i * 2.2); }
+let frame = 0, reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function drawBg(t) {
+  const hdr = bg.parentElement.getBoundingClientRect(), dp = Math.min(devicePixelRatio || 1, 2), W = Math.max(1, Math.round(hdr.width * dp)), H = Math.max(1, Math.round(hdr.height * dp));
+  if (bg.width !== W || bg.height !== H) { bg.width = W; bg.height = H; }
+  const c = bctx, z = Math.max(1, H / 420) * dp / dp, hz = H * .62;
+  const sky = c.createLinearGradient(0, 0, 0, hz); sky.addColorStop(0, '#0b3550'); sky.addColorStop(.42, '#2c7a8e'); sky.addColorStop(.72, '#f2977a'); sky.addColorStop(.9, '#ffc982'); sky.addColorStop(1, '#ffe2a8'); c.fillStyle = sky; c.fillRect(0, 0, W, H);
+  const sx = W * .7, sy = hz - 70 * dp, sr = 70 * dp; glow(c, sx, sy, sr * 4, '#ffb070', .55); glow(c, sx, sy, sr * 2, '#fff0c0', .5); c.drawImage(sun, sx - sr * 1.28, sy - sr * 1.28, sr * 2.56, sr * 2.56);
+  c.save(); c.globalCompositeOperation = 'lighter'; for (let i = 0; i < 5; i++) { const a = -1.2 + i * .55 + Math.sin(t * .2 + i) * .04; c.fillStyle = 'rgba(255,214,160,.05)'; c.beginPath(); c.moveTo(sx, sy); c.lineTo(sx + Math.cos(a - .06) * W * 1.4, sy + Math.sin(a - .06) * W * 1.4 + H); c.lineTo(sx + Math.cos(a + .06) * W * 1.4, sy + Math.sin(a + .06) * W * 1.4 + H); c.closePath(); c.fill(); } c.restore();
+  c.fillStyle = '#5c93a0'; for (let i = 0; i < 16; i++) { const tx = ((i * 110 + hash(i, 1) * 60 - t * 6) % (W / dp + 200) + W / dp + 200) % (W / dp + 200) * dp - 100 * dp, th = (50 + hash(i, 3) * 120) * .55 * dp, tw = (26 + hash(i, 2) * 30) * .55 * dp; c.fillRect(tx, hz - th, tw, th); if (hash(i, 4) > .6) { c.beginPath(); c.moveTo(tx, hz - th); c.lineTo(tx + tw / 2, hz - th - tw * .6); c.lineTo(tx + tw, hz - th); c.fill(); } }
+  const sea = c.createLinearGradient(0, hz, 0, H); sea.addColorStop(0, '#3fa2ad'); sea.addColorStop(.3, '#17708a'); sea.addColorStop(1, '#0a3e54'); c.fillStyle = sea; c.fillRect(0, hz, W, H - hz);
+  c.save(); c.globalCompositeOperation = 'lighter'; for (let i = 0; i < 22; i++) { const yy = hz + (4 + i * i * .9) * dp, ww = (30 - i * .6) * dp * (1 + Math.sin(t * 2 + i) * .3); c.fillStyle = `rgba(255,214,150,${.5 - i * .02})`; c.fillRect(sx - ww / 2 + Math.sin(t * 1.5 + i * 2) * 6 * dp, yy, ww, 1.6 * dp); } c.restore();
+  c.fillStyle = 'rgba(200,245,240,.35)'; for (let i = 0; i < 30; i++) { const yy = hz + (8 + (i * 37) % 120) * dp, xx = ((i * 211 + t * 14) % (W / dp + 80)) * dp - 40 * dp; c.fillRect(xx, yy, (10 + (i % 4) * 8) * dp, dp); }
+  const gy = H * .88; c.fillStyle = '#e6b673'; c.beginPath(); c.moveTo(0, H); for (let x = 0; x <= W + 20; x += 20) c.lineTo(x, gy - (Math.sin(x / 140 / dp) * 10 + 6) * dp); c.lineTo(W, H); c.closePath(); c.fill(); c.fillStyle = '#ffdb93'; c.fillRect(0, gy + 6 * dp, W, 4 * dp);
+  const sc = 2.1 * dp, base = W * (W / dp > 900 ? .72 : .5);
+  HEROES.forEach((h, i) => { const hx = base + (i - 1.5) * 60 * sc, cyc = (frame + i * 37) % 600, S = cyc > 520 && cyc < 560 ? { anim: 'win', t: frame + i * 37 } : { anim: 'idle', t: frame + i * 37 }; c.fillStyle = 'rgba(10,20,30,.25)'; c.beginPath(); c.ellipse(hx, gy + 8 * dp, 16 * sc, 4 * sc, 0, 0, TAU); c.fill(); drawHero(c, h, S, hx, gy + 8 * dp, i < 2 ? 1 : -1, sc); });
+}
+/* roster cards */
+const roster = document.getElementById('roster'), cards = [];
+HEROES.forEach(h => { const d = document.createElement('div'); d.className = 'heroc'; const cn = document.createElement('canvas'); d.appendChild(cn); d.insertAdjacentHTML('beforeend', `<span class="role">${h.role}</span><b>${h.name}</b><p>${h.desc}</p>`); roster.appendChild(d); cards.push({ h, cn }); });
+function drawCards() {
+  cards.forEach((cd, i) => { const r = cd.cn.getBoundingClientRect(), dp = Math.min(devicePixelRatio || 1, 2), W = Math.max(1, Math.round(r.width * dp)), H = Math.max(1, Math.round(r.height * dp)); if (cd.cn.width !== W || cd.cn.height !== H) { cd.cn.width = W; cd.cn.height = H; } const c = cd.cn.getContext('2d'); c.clearRect(0, 0, W, H); const sc = H * .8 / 52, f = frame + i * 50, cyc = f % 330; let S = { anim: 'idle', t: f }; if (cyc > 80 && cyc < 140) S = { anim: 'run', t: f, phase: (cyc - 80) * .32 }; else if (cyc >= 140 && cyc < 156) S = { anim: 'light', n: 1, k: (cyc - 140) / 16, t: f }; else if (cyc >= 156 && cyc < 172) S = { anim: 'light', n: 2, k: (cyc - 156) / 16, t: f }; else if (cyc >= 172 && cyc < 194) S = { anim: 'light', n: 3, k: (cyc - 172) / 22, t: f }; else if (cyc >= 260 && cyc < 290) S = { anim: 'win', t: f }; glow(c, W / 2, H * .92, H * .5, cd.h.c.glow, .35); c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(W / 2, H * .94, 16 * sc, 4 * sc, 0, 0, TAU); c.fill(); drawHero(c, cd.h, S, W / 2, H * .94, 1, sc); });
+}
+buildSun();
+let last = performance.now();
+function loop(now) { requestAnimationFrame(loop); const dt = Math.min(.1, (now - last) / 1000); last = now; if (!reduce || frame === 0) { frame++; drawBg(now / 1000); drawCards(); } else if (frame < 3) { frame++; drawBg(now / 1000); drawCards(); } }
+drawBg(0); drawCards(); requestAnimationFrame(loop);
+})();
+</script>

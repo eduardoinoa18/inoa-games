@@ -1,0 +1,150 @@
+<title>Inoa Games</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Press+Start+2P&family=Unbounded:wght@600;800;900&display=swap">
+<style>
+/*BASE*/
+/* Hub additions: the game shelf, hero creator, party steps */
+.shelf{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.game{position:relative;background:var(--glass);border:1px solid var(--line);display:grid;grid-template-rows:150px auto;clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px);min-width:0;transition:transform .15s}
+.game:hover{transform:translateY(-3px)}
+.game canvas{width:100%;height:150px;display:block;background:#0b2a3a}
+.game .body{padding:16px 18px 18px;display:grid;gap:6px}
+.game .kind{font-family:var(--f-pixel);font-size:8px;letter-spacing:.06em;color:var(--lagoon)}
+.game b{font-family:var(--f-display);font-size:17px}
+.game p{font-size:13px;color:var(--mist)}
+.game .meta{display:flex;gap:10px;flex-wrap:wrap;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--sun)}
+.game .st{position:absolute;right:12px;top:12px;font-family:var(--f-pixel);font-size:7px;padding:5px 7px;background:rgba(6,24,33,.75);border:1px solid var(--line);color:var(--foam)}
+.game .st.live{background:var(--lagoon);color:var(--coral-ink);border-color:transparent}
+.game.flag{grid-column:span 2}
+@media (max-width:640px){.game.flag{grid-column:span 1}}
+.creator{display:grid;grid-template-columns:minmax(260px,380px) 1fr;gap:24px;align-items:center}
+@media (max-width:760px){.creator{grid-template-columns:1fr}}
+.stage{background:var(--glass);border:1px solid var(--line);padding:14px;display:grid;gap:12px;clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px)}
+.stage canvas{width:100%;height:300px;display:block;background:radial-gradient(120% 90% at 50% 100%,#1b4b5c,#0b2a3a 70%)}
+.stage .row{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-family:var(--f-body);font-weight:800;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--foam);background:var(--glass-2);border:1px solid var(--line);padding:9px 12px;cursor:pointer}
+.chip:hover{border-color:var(--lagoon)}
+.chip.on{background:var(--lagoon);color:var(--coral-ink);border-color:transparent}
+.stage .nm{font-family:var(--f-display);font-weight:800;font-size:18px;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.stage .nm small{font-family:var(--f-pixel);font-size:8px;color:var(--sun)}
+.bar{height:8px;background:var(--glass-2);border:1px solid var(--line);position:relative;overflow:hidden}
+.bar i{position:absolute;inset:0;width:62%;background:linear-gradient(90deg,var(--lagoon),var(--sun))}
+.tree{display:grid;gap:12px}
+.tree .t{display:grid;grid-template-columns:28px 1fr;gap:12px;align-items:start}
+.tree .t .d{width:28px;height:28px;display:grid;place-items:center;background:rgba(45,226,195,.12);border:1px solid rgba(45,226,195,.4);color:var(--lagoon);font-family:var(--f-pixel);font-size:9px}
+.tree .t b{font-size:15px}.tree .t p{font-size:13px;color:var(--mist)}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;counter-reset:s}
+.stp{background:var(--glass);border:1px solid var(--line);padding:22px;display:grid;gap:8px;clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px)}
+.stp::before{counter-increment:s;content:"0" counter(s);font-family:var(--f-pixel);font-size:10px;color:var(--coral)}
+.stp b{font-size:17px;font-family:var(--f-display)}.stp p{font-size:14px;color:var(--mist)}
+.code{font-family:var(--f-pixel);font-size:18px;letter-spacing:.25em;color:var(--sun);background:rgba(6,24,33,.8);border:1px dashed var(--line);padding:12px 14px;display:inline-block}
+.band{display:flex;gap:28px;flex-wrap:wrap;justify-content:center;padding:18px;border-block:1px solid var(--line);background:var(--ink-2)}
+.band span{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mist)}
+.band b{color:var(--foam);font-family:var(--f-display);font-size:18px;display:block;letter-spacing:0}
+</style>
+
+<nav><div class="wrap"><div class="logo">INOA<span>GAMES</span></div><ul><li><a href="#shelf">Games</a></li><li><a href="#hero">Your hero</a></li><li><a href="#party">Party</a></li><li><a href="#pricing">Pricing</a></li><li><a href="#faq">FAQ</a></li></ul><a class="btn" href="https://claude.ai/artifact/R39Es5YCcbYnxRhuoDboVg" target="_blank" rel="noopener" style="padding:11px 16px;font-size:12px">Play free</a></div></nav>
+
+<header>
+  <canvas id="bg" aria-hidden="true"></canvas>
+  <div class="wrap hero">
+    <div class="eyebrow">One link · every phone is a controller · free to start</div>
+    <h1>INOA<span>GAMES</span></h1>
+    <p class="lead">A hub of quick, friendly games you play together from one link. Build a hero once and grow it in every game, from the Pixel Pact islands to a 60-second drawer restock.</p>
+    <div class="cta">
+      <a class="btn" href="https://claude.ai/artifact/R39Es5YCcbYnxRhuoDboVg" target="_blank" rel="noopener">Play Pixel Pact free</a>
+      <a class="btn glass" href="#shelf">See the games</a>
+    </div>
+    <div class="proof"><span><b>14</b> games on the shelf</span><span><b>1</b> hero everywhere</span><span><b>10 s</b> link to lobby</span><span><b>0</b> downloads · <b>0</b> forced ads</span></div>
+  </div>
+</header>
+
+<div class="band"><span><b>All ages</b>no stranger chat</span><span><b>60 fps</b>on 2021 phones</span><span><b>EN · ES</b>from day one</span><span><b>$4.99</b>once, your party plays free</span></div>
+
+<section id="shelf">
+  <div class="wrap">
+    <div class="sec-head"><div class="eyebrow">The shelf</div><h2>Fourteen games, one party, one hero</h2><p>Co-op adventure and a brawler for game night, four signature 3D titles with real depth for adults, a kids' allergy safari for families, and cozy one-minute games for the bus. Every one of them pays XP and coins into the same hero.</p></div>
+    <div class="shelf" id="shelfGrid"></div>
+  </div>
+</section>
+
+<section class="alt" id="hero">
+  <div class="wrap">
+    <div class="sec-head"><div class="eyebrow">Create your hero</div><h2>Make one hero. Grow it everywhere.</h2><p>Pick a class, shape the look, name it. It fights in Pixel Pact, races in Tide Runner and sits behind the counter in Brew and Bloom. Levels, cosmetics and titles are earned by playing anything on the shelf and never lost.</p></div>
+    <div class="creator">
+      <div class="stage">
+        <canvas id="maker"></canvas>
+        <div class="nm"><span id="mkName">Rook Ironhide</span><small id="mkClass">TANK · SHIELD KNIGHT</small></div>
+        <div class="row" id="mkClasses"></div>
+        <div class="row"><button class="chip" id="mkColors">New colors</button><button class="chip" id="mkName2">New name</button><button class="chip" id="mkSurprise">Surprise me</button></div>
+        <div><div style="display:flex;justify-content:space-between;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mist);margin-bottom:6px"><span>Level 12</span><span>XP to 13</span></div><div class="bar"><i></i></div></div>
+      </div>
+      <div class="tree">
+        <div class="t"><div class="d">01</div><div><b>Ten classes</b><p>Knight, Ninja, Mage and Boxer today; Ranger, Monk, Drummer, Chef, Surfer and Inventor on the way. The class sets your 3-hit combo, Special and Ultimate.</p></div></div>
+        <div class="t"><div class="d">02</div><div><b>Looks are yours</b><p>Body shape, skin, hair, face, outfit, cape, weapon skin, trail and victory pose. Colors are free; rare pieces are earned or bought, never power.</p></div></div>
+        <div class="t"><div class="d">03</div><div><b>Train, don't grind</b><p>Level 1 to 50 from XP earned in any game. Each level gives a skill point in a three-branch tree (Power, Mobility, Team) with free respec, and a guaranteed drop every 3 wins.</p></div></div>
+        <div class="t"><div class="d">04</div><div><b>Training Grounds</b><p>A 90-second daily drill that teaches the combo, the double jump and the dodge before any level asks for them.</p></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="party">
+  <div class="wrap">
+    <div class="sec-head"><div class="eyebrow">How a party works</div><h2>Send the link. Everyone is in within ten seconds.</h2></div>
+    <div class="steps">
+      <div class="stp"><b>Host opens a room</b><p>On a laptop, a TV browser or a phone. A 4-letter code and a QR appear on screen.</p><span class="code">PACT</span></div>
+      <div class="stp"><b>Friends scan or tap</b><p>No account, no download. Guests get a name and a random hero in one tap; their phone becomes a gamepad with haptics and a private screen.</p></div>
+      <div class="stp"><b>Pick a game together</b><p>The party stays together while you hop between games. The host picks, a 3-2-1 countdown starts for everyone, bots fill empty seats.</p></div>
+      <div class="stp"><b>Share the moment</b><p>Auto-clips of KOs, perfect restocks and fails, share codes for drawers and daily islands, and a hero card for your story.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="pricing">
+  <div class="wrap">
+    <div class="sec-head"><div class="eyebrow">Pricing</div><h2>Free to play. Cheap to own. Fair to keep.</h2><p>No paid power, no loot boxes, no interstitial ads. Everything in the shop is also earnable with coins. Planned launch prices.</p></div>
+    <div class="price">
+      <div class="plan"><h3>Free</h3><div class="amt">$0</div><ul><li>The whole hub and every mini-game</li><li>Pixel Pact World 1 levels 1 to 3, Match on 3 arenas</li><li>Hero creator, levels 1 to 20</li><li>Parties up to 4, bots included</li></ul><a class="btn glass" href="https://claude.ai/artifact/R39Es5YCcbYnxRhuoDboVg" target="_blank" rel="noopener">Play now</a></div>
+      <div class="plan best"><span class="pill">HOST PAYS, PARTY PLAYS</span><h3>Full game</h3><div class="amt">$4.99 <small>one time</small></div><ul><li>Every world and arena as it ships</li><li>Hero levels to 50, all ten classes</li><li>Online rooms up to 8 players; your guests play free</li><li>Cloud save across phone, laptop and app</li></ul><a class="btn" href="#faq">Notify me at launch</a></div>
+      <div class="plan"><h3>Pact Pass</h3><div class="amt">$9.99 <small>per year</small></div><ul><li>Seasonal cosmetic track and name colors</li><li>Double daily drops</li><li>Early access to each new game</li><li>Gift it to a friend in one tap</li></ul><a class="btn glass" href="#faq">Notify me at launch</a></div>
+    </div>
+  </div>
+</section>
+
+<section id="roadmap">
+  <div class="wrap">
+    <div class="sec-head"><div class="eyebrow">Roadmap</div><h2>From demo to the app stores</h2></div>
+    <div class="roadmap">
+      <div class="step done"><span class="k">DONE</span><b>Pixel Pact demo</b><p>Three co-op levels, boss fight, three arenas, bots, 2.5D look, touch, keyboard and gamepad.</p></div>
+      <div class="step"><span class="k">PHASE 0 · NOW</span><b>Online rooms</b><p>Room codes, QR phone controllers, guest accounts. Four friends on four phones.</p></div>
+      <div class="step"><span class="k">PHASE 1</span><b>Hero and hub</b><p>Hero creator, skill trees, Training Grounds, the plaza, Perfect Fit and Tide Runner.</p></div>
+      <div class="step"><span class="k">PHASE 2</span><b>3D and World 1</b><p>Three.js toon renderer, 10 levels, 6 arenas, Fail Tray, Trivia, Junkyard to Jewel.</p></div>
+      <div class="step"><span class="k">PHASE 3</span><b>App stores</b><p>iOS and Android apps of the same game: offline play, push invites, native billing.</p></div>
+      <div class="step"><span class="k">SEASONS</span><b>New every month</b><p>A new game every 4 weeks, a world or arena every 8, a cosmetic set every 2.</p></div>
+    </div>
+    <p style="margin-top:18px;color:var(--mist);font-size:14px">Launch notifications will be collected on the real site once payments are set up. Until then, follow <a href="https://www.instagram.com/eduardoinoa_" target="_blank" rel="noopener">@eduardoinoa_</a> for updates.</p>
+  </div>
+</section>
+
+<section class="alt" id="faq">
+  <div class="wrap">
+    <div class="sec-head"><div class="eyebrow">FAQ</div><h2>Questions people ask</h2></div>
+    <div class="faq">
+      <details open><summary>Do I need to download anything?</summary><p>No. Open the link and play. On a phone, add it to your home screen for a full-screen app. iOS and Android apps of the same game come in Phase 3.</p></details>
+      <details><summary>Is it for kids or adults?</summary><p>Both. The hub is all ages: Snack Squad Safari and the cozy games are built for families, while the signature 3D titles (Depths, Driftwood Builders, Tide Lines, Island Drift) are rated 10+ with ranked play and builds for adults. A child profile hides ranked play and voice. There is no text chat with strangers, no gore and no gambling mechanics. Emotes and quick-chat only; parties are private by code.</p></details>
+      <details><summary>Is it hard?</summary><p>Friendly is the default: unlimited lives, a checkpoint every 20 seconds, and a teammate can revive you in 5 seconds. Normal and Brutal are there for people who want a fight, and Brutal par times are made to be chased.</p></details>
+      <details><summary>What do I actually pay for?</summary><p>One $4.99 unlock for more worlds, arenas, classes and 8-player online rooms. Your guests never pay to join your party. Cosmetics are expression, never power, and every one is also earnable.</p></details>
+      <details><summary>Where does my hero live?</summary><p>On your account, synced across phone, laptop and app. Start as a guest, upgrade with Apple, Google or email later and nothing is lost.</p></details>
+      <details><summary>Who makes this?</summary><p>Inoa Services, a Methuen, MA company. Pixel Pact is the first game; the hub grows a game a month.</p></details>
+    </div>
+  </div>
+</section>
+
+<footer><div class="wrap"><span>© 2026 Inoa Games · an Inoa Services project</span><span>Made in Methuen, MA · <a href="https://claude.ai/artifact/R39Es5YCcbYnxRhuoDboVg" target="_blank" rel="noopener">Play Pixel Pact</a> · <a href="https://claude.ai/artifact/Q2FKuHrPNuEPCLGvU6q5Nm" target="_blank" rel="noopener">Pixel Pact page</a></span></div></footer>
+
+<script>
+(() => {
+'use strict';
+/*RIG*/

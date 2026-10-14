@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Inoa Games</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Press+Start+2P&family=Unbounded:wght@600;800;900&display=swap">
+<style>
+
+/* Layout: a golden-hour hero with the live game canvas as the backdrop, then angled glass sections. Single dark look by choice (matches the game). */
+:root{
+  --ink:#061821; --ink-2:#0a2230; --glass:rgba(7,28,38,.72); --glass-2:rgba(239,250,246,.06); --line:rgba(120,230,215,.24);
+  --foam:#effaf6; --mist:#94b9c2; --coral:#ff6b4a; --coral-ink:#2b0a02; --lagoon:#2de2c3; --sun:#ffc65c;
+  --f-display:"Unbounded","Manrope",system-ui,sans-serif; --f-body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif; --f-pixel:"Press Start 2P",ui-monospace,monospace;
+  color-scheme:dark;
+}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--ink);color:var(--foam);font-family:var(--f-body);line-height:1.55;overflow-x:hidden}
+.wrap{width:min(1080px,100%);margin:0 auto;padding-inline:20px;box-sizing:border-box}
+h1,h2,h3{margin:0;text-wrap:balance;font-family:var(--f-display);font-weight:900;letter-spacing:-.02em}
+p{margin:0}
+.eyebrow{font-family:var(--f-pixel);font-size:9px;letter-spacing:.08em;color:var(--coral);text-transform:uppercase}
+a{color:var(--lagoon)}
+.btn{display:inline-flex;align-items:center;gap:10px;font-family:var(--f-display);font-weight:800;font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:var(--coral-ink);background:var(--coral);border:0;padding:16px 24px;cursor:pointer;text-decoration:none;clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px);transition:transform .12s,filter .12s}
+.btn:hover{filter:brightness(1.1)}.btn:active{transform:scale(.97)}
+.btn.glass{background:var(--glass-2);color:var(--foam);box-shadow:inset 0 0 0 1px var(--line)}
+.btn:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:rgba(6,24,33,.7);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:60px}
+nav .logo{font-family:var(--f-display);font-weight:900;font-size:18px;letter-spacing:-.02em}
+nav .logo span{color:var(--sun)}
+nav ul{display:flex;gap:18px;list-style:none;margin:0;padding:0;font-size:13px;font-weight:700}
+nav ul a{color:var(--mist);text-decoration:none}
+nav ul a:hover{color:var(--foam)}
+header{position:relative;overflow:hidden;min-height:min(92vh,760px);display:flex;align-items:flex-end}
+header canvas{position:absolute;inset:0;width:100%;height:100%}
+header::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,24,33,.1) 0%,rgba(6,24,33,.25) 55%,rgba(6,24,33,.95) 100%)}
+.hero{position:relative;z-index:1;padding-block:72px 56px;display:grid;gap:20px;max-width:620px}
+.hero h1{font-size:clamp(48px,9vw,112px);line-height:.86;letter-spacing:-.03em;text-shadow:0 8px 40px rgba(255,107,74,.35)}
+.hero h1 span{display:block;background:linear-gradient(180deg,#fff6d8 0%,#ffc65c 42%,#ff6b4a 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .lead{font-size:clamp(16px,2.2vw,20px);color:#dbeaee;max-width:52ch}
+.cta{display:flex;gap:12px;flex-wrap:wrap}
+.proof{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:var(--mist);font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.proof b{color:var(--lagoon)}
+section{padding-block:72px}
+section.alt{background:var(--ink-2)}
+.sec-head{display:grid;gap:10px;max-width:640px;margin-bottom:34px}
+.sec-head h2{font-size:clamp(26px,4vw,40px);line-height:1.05}
+.sec-head p{color:var(--mist);font-size:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.card{position:relative;background:var(--glass);border:1px solid var(--line);padding:22px;display:grid;gap:10px;clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px);min-width:0}
+.card::before{content:"";position:absolute;left:0;top:0;width:48px;height:3px;background:var(--coral)}
+.card h3{font-size:17px;font-weight:800}
+.card p{color:var(--mist);font-size:14px}
+.card .ico{width:40px;height:40px;display:grid;place-items:center;background:rgba(45,226,195,.12);border:1px solid rgba(45,226,195,.35);color:var(--lagoon)}
+.card .ico svg{width:22px;height:22px}
+.heroes{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.heroc{background:var(--glass);border:1px solid var(--line);padding:16px;display:grid;gap:6px;clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)}
+.heroc canvas{width:100%;height:150px;display:block}
+.heroc b{font-family:var(--f-display);font-size:16px}
+.heroc .role{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--sun)}
+.heroc p{font-size:13px;color:var(--mist)}
+.modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.mode{background:var(--glass);border:1px solid var(--line);padding:24px;display:grid;gap:12px;clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px)}
+.mode h3{font-size:22px}
+.mode ul{margin:0;padding-left:18px;color:var(--mist);font-size:14px;display:grid;gap:4px}
+.mode .tag{font-family:var(--f-pixel);font-size:8px;color:var(--lagoon)}
+.price{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;align-items:stretch}
+.plan{position:relative;background:var(--glass);border:1px solid var(--line);padding:26px 22px;display:grid;gap:12px;align-content:start;clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px)}
+.plan.best{border-color:var(--sun);background:linear-gradient(180deg,rgba(255,198,92,.12),var(--glass))}
+.plan .pill{position:absolute;right:16px;top:14px;font-family:var(--f-pixel);font-size:8px;color:var(--coral-ink);background:var(--sun);padding:5px 8px}
+.plan h3{font-size:18px}
+.plan .amt{font-family:var(--f-display);font-weight:900;font-size:40px;line-height:1}
+.plan .amt small{font-size:14px;color:var(--mist);font-weight:700;font-family:var(--f-body)}
+.plan ul{margin:0;padding-left:18px;color:var(--mist);font-size:14px;display:grid;gap:5px}
+.plan .btn{justify-content:center;margin-top:6px}
+.faq{display:grid;gap:10px;max-width:760px}
+details{background:var(--glass);border:1px solid var(--line);padding:14px 18px}
+summary{cursor:pointer;font-weight:800;font-size:15px;list-style:none;display:flex;justify-content:space-between;align-items:center}
+summary::after{content:"+";font-family:var(--f-display);color:var(--lagoon)}
+details[open] summary::after{content:"–"}
+details p{color:var(--mist);font-size:14px;margin-top:10px}
+footer{border-top:1px solid var(--line);padding-block:30px;color:var(--mist);font-size:13px}
+footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.roadmap{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.step{background:var(--glass-2);border:1px solid var(--line);padding:16px;display:grid;gap:6px}
+.step .k{font-family:var(--f-pixel);font-size:8px;color:var(--sun)}
+.step b{font-size:15px}
+.step p{font-size:13px;color:var(--mist)}
+.step.done{border-color:rgba(45,226,195,.5)}
+.step.done .k{color:var(--lagoon)}
+@media (max-width:640px){nav ul{display:none}.hero{padding-block:52px 40px}section{padding-block:52px}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+
+/* Hub additions: the game shelf, hero creator, party steps */
+.shelf{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.game{position:relative;background:var(--glass);border:1px solid var(--line);display:grid;grid-template-rows:150px auto;clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px);min-width:0;transition:transform .15s}
+.game:hover{transform:translateY(-3px)}
+.game canvas{width:100%;height:150px;display:block;background:#0b2a3a}
+.game .body{padding:16px 18px 18px;display:grid;gap:6px}
+.game .kind{font-family:var(--f-pixel);font-size:8px;letter-spacing:.06em;color:var(--lagoon)}
+.game b{font-family:var(--f-display);font-size:17px}
+.game p{font-size:13px;color:var(--mist)}
+.game .meta{display:flex;gap:10px;flex-wrap:wrap;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--sun)}
+.game .st{position:absolute;right:12px;top:12px;font-family:var(--f-pixel);font-size:7px;padding:5px 7px;background:rgba(6,24,33,.75);border:1px solid var(--line);color:var(--foam)}
+.game .st.live{background:var(--lagoon);color:var(--coral-ink);border-color:transparent}
+.game.flag{grid-column:span 2}
+@media (max-width:640px){.game.flag{grid-column:span 1}}
+.creator{display:grid;grid-template-columns:minmax(260px,380px) 1fr;gap:24px;align-items:center}
+@media (max-width:760px){.creator{grid-template-columns:1fr}}
+.stage{background:var(--glass);border:1px solid var(--line);padding:14px;display:grid;gap:12px;clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px)}
+.stage canvas{width:100%;height:300px;display:block;background:radial-gradient(120% 90% at 50% 100%,#1b4b5c,#0b2a3a 70%)}
+.stage .row{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-family:var(--f-body);font-weight:800;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--foam);background:var(--glass-2);border:1px solid var(--line);padding:9px 12px;cursor:pointer}
+.chip:hover{border-color:var(--lagoon)}
+.chip.on{background:var(--lagoon);color:var(--coral-ink);border-color:transparent}
+.stage .nm{font-family:var(--f-display);font-weight:800;font-size:18px;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.stage .nm small{font-family:var(--f-pixel);font-size:8px;color:var(--sun)}
+.bar{height:8px;background:var(--glass-2);border:1px solid var(--line);position:relative;overflow:hidden}
+.bar i{position:absolute;inset:0;width:62%;background:linear-gradient(90deg,var(--lagoon),var(--sun))}
+.tree{display:grid;gap:12px}
+.tree .t{display:grid;grid-template-columns:28px 1fr;gap:12px;align-items:start}
+.tree .t .d{width:28px;height:28px;display:grid;place-items:center;background:rgba(45,226,195,.12);border:1px solid rgba(45,226,195,.4);color:var(--lagoon);font-family:var(--f-pixel);font-size:9px}
+.tree .t b{font-size:15px}.tree .t p{font-size:13px;color:var(--mist)}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;counter-reset:s}
+.stp{background:var(--glass);border:1px solid var(--line);padding:22px;display:grid;gap:8px;clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px)}
+.stp::before{counter-increment:s;content:"0" counter(s);font-family:var(--f-pixel);font-size:10px;color:var(--coral)}
+.stp b{font-size:17px;font-family:var(--f-display)}.stp p{font-size:14px;color:var(--mist)}
+.code{font-family:var(--f-pixel);font-size:18px;letter-spacing:.25em;color:var(--sun);background:rgba(6,24,33,.8);border:1px dashed var(--line);padding:12px 14px;display:inline-block}
+.band{display:flex;gap:28px;flex-wrap:wrap;justify-content:center;padding:18px;border-block:1px solid var(--line);background:var(--ink-2)}
+.band span{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mist)}
+.band b{color:var(--foam);font-family:var(--f-display);font-size:18px;display:block;letter-spacing:0}
+.heropanel{padding-block:18px 0;background:var(--ink-2)}
+.hp{display:flex;gap:16px;align-items:center;background:var(--glass);border:1px solid var(--line);padding:14px 18px;clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px)}
+.hp-lv{display:grid;place-items:center;min-width:72px;height:72px;background:var(--sun);color:var(--coral-ink)}
+.hp-lv b{font-family:var(--f-display);font-size:30px;line-height:1}.hp-lv small{font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.hp-main{flex:1;display:grid;gap:6px;min-width:0}.hp-name{font-family:var(--f-display);font-weight:800;font-size:18px}
+.hp-row{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;font-weight:800;color:var(--mist);letter-spacing:.04em;text-transform:uppercase}
+.game img.thumb{width:100%;height:150px;object-fit:cover;display:block;background:#0b2a3a}
+.game.flag img.thumb{height:180px}
+.game .st.live{background:var(--lagoon);color:var(--coral-ink)}
+</style>
+
+</head><body>
+<nav><div class="wrap"><div class="logo">INOA<span>GAMES</span></div><ul><li><a href="#shelf">Games</a></li><li><a href="#hero">Your hero</a></li><li><a href="#party">Party</a></li><li><a href="#pricing">Pricing</a></li><li><a href="#faq">FAQ</a></li></ul><a class="btn" href="games/pixelpact.html" style="padding:11px 16px;font-size:12px">Play free</a></div></nav>
+
+<header>
+  <canvas id="bg" aria-hidden="true"></canvas>
+  <div class="wrap hero">
+    <div class="eyebrow">One link · every phone is a controller · free to start</div>
+    <h1>INOA<span>GAMES</span></h1>
+    <p class="lead">A hub of quick, friendly games you play together from one link. Build a hero once and grow it in every game, from the Pixel Pact islands to a 60-second drawer restock.</p>
+    <div class="cta">
+      <a class="btn" href="games/pixelpact.html">Play Pixel Pact free</a>
+      <a class="btn glass" href="#shelf">See the games</a>
+    </div>
+    <div class="proof"><span><b>14</b> games on the shelf</span><span><b>1</b> hero everywhere</span><span><b>10 s</b> link to lobby</span><span><b>0</b> downloads · <b>0</b> forced ads</span></div>
+  </div>
+</header>
+
+<section class="heropanel"><div class="wrap"><div class="hp" id="heroStats"></div></div></section>
+<div class="band"><span><b>All ages</b>no stranger chat</span><span><b>60 fps</b>on 2021 phones</span><span><b>EN · ES</b>from day one</span><span><b>$4.99</b>once, your party plays free</span></div>
+
+<section id="shelf">
+  <div class="wrap">
+    <div class="sec-head"><div class="eyebrow">The shelf</div><h2>Fourteen games, one party, one hero</h2><p>Co-op adventure and a brawler for game night, four signature 3D titles with real depth for adults, a kids' allergy safari for families, and cozy one-minute games for the bus. Every one of them pays XP and coins into the same hero.</p></div>
+    <div class="shelf" id="shelfGrid"></div>
+  </div>
+</section>
+
+<section class="alt" id="hero">
+  <div class="wrap">
+    <div class="sec-head"><div class="eyebrow">Create your hero</div><h2>Make one hero. Grow it everywhere.</h2><p>Pick a class, shape the look, name it. It fights in Pixel Pact, races in Tide Runner and sits behind the counter in Brew and Bloom. Levels, cosmetics and titles are earned by playing anything on the shelf and never lost.</p></div>
+    <div class="creator">
+      <div class="stage">
+        <canvas id="maker"></canvas>
+        <div class="nm"><span id="mkName">Rook Ironhide</span><small id="mkClass">TANK · SHIELD KNIGHT</small></div>
+        <div class="row" id="mkClasses"></div>
+        <div class="row"><button class="chip" id="mkColors">New colors</button><button class="chip" id="mkName2">New name</button><button class="chip" id="mkSurprise">Surprise me</button></div>
+        <div><div style="display:flex;justify-content:space-between;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mist);margin-bottom:6px"><span>Level 12</span><span>XP to 13</span></div><div class="bar"><i></i></div></div>
+      </div>
+      <div class="tree">
+        <div class="t"><div class="d">01</div><div><b>Ten classes</b><p>Knight, Ninja, Mage and Boxer today; Ranger, Monk, Drummer, Chef, Surfer and Inventor on the way. The class sets your 3-hit combo, Special and Ultimate.</p></div></div>
+        <div class="t"><div class="d">02</div><div><b>Looks are yours</b><p>Body shape, skin, hair, face, outfit, cape, weapon skin, trail and victory pose. Colors are free; rare pieces are earned or bought, never power.</p></div></div>
+        <div class="t"><div class="d">03</div><div><b>Train, don't grind</b><p>Level 1 to 50 from XP earned in any game. Each level gives a skill point in a three-branch tree (Power, Mobility, Team) with free respec, and a guaranteed drop every 3 wins.</p></div></div>
+        <div class="t"><div class="d">04</div><div><b>Training Grounds</b><p>A 90-second daily drill that teaches the combo, the double jump and the dodge before any level asks for them.</p></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="party">
+  <div class="wrap">
+    <div class="sec-head"><div class="eyebrow">How a party works</div><h2>Send the link. Everyone is in within ten seconds.</h2></div>
+    <div class="steps">
+      <div class="stp"><b>Host opens a room</b><p>On a laptop, a TV browser or a phone. A 4-letter code and a QR appear on screen.</p><span class="code">PACT</span></div>
+      <div class="stp"><b>Friends scan or tap</b><p>No account, no download. Guests get a name and a random hero in one tap; their phone becomes a gamepad with haptics and a private screen.</p></div>
+      <div class="stp"><b>Pick a game together</b><p>The party stays together while you hop between games. The host picks, a 3-2-1 countdown starts for everyone, bots fill empty seats.</p></div>
+      <div class="stp"><b>Share the moment</b><p>Auto-clips of KOs, perfect restocks and fails, share codes for drawers and daily islands, and a hero card for your story.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="pricing">
+  <div class="wrap">
+    <div class="sec-head"><div class="eyebrow">Pricing</div><h2>Free to play. Cheap to own. Fair to keep.</h2><p>No paid power, no loot boxes, no interstitial ads. Everything in the shop is also earnable with coins. Planned launch prices.</p></div>
+    <div class="price">
+      <div class="plan"><h3>Free</h3><div class="amt">$0</div><ul><li>The whole hub and every mini-game</li><li>Pixel Pact World 1 levels 1 to 3, Match on 3 arenas</li><li>Hero creator, levels 1 to 20</li><li>Parties up to 4, bots included</li></ul><a class="btn glass" href="games/pixelpact.html">Play now</a></div>
+      <div class="plan best"><span class="pill">HOST PAYS, PARTY PLAYS</span><h3>Full game</h3><div class="amt">$4.99 <small>one time</small></div><ul><li>Every world and arena as it ships</li><li>Hero levels to 50, all ten classes</li><li>Online rooms up to 8 players; your guests play free</li><li>Cloud save across phone, laptop and app</li></ul><a class="btn" href="#faq">Notify me at launch</a></div>
+      <div class="plan"><h3>Pact Pass</h3><div class="amt">$9.99 <small>per year</small></div><ul><li>Seasonal cosmetic track and name colors</li><li>Double daily drops</li><li>Early access to each new game</li><li>Gift it to a friend in one tap</li></ul><a class="btn glass" href="#faq">Notify me at launch</a></div>
+    </div>
+  </div>
+</section>
+
+<section id="roadmap">
+  <div class="wrap">
+    <div class="sec-head"><div class="eyebrow">Roadmap</div><h2>From demo to the app stores</h2></div>
+    <div class="roadmap">
+      <div class="step done"><span class="k">DONE</span><b>Pixel Pact demo</b><p>Three co-op levels, boss fight, three arenas, bots, 2.5D look, touch, keyboard and gamepad.</p></div>
+      <div class="step"><span class="k">PHASE 0 · NOW</span><b>Online rooms</b><p>Room codes, QR phone controllers, guest accounts. Four friends on four phones.</p></div>
+      <div class="step"><span class="k">PHASE 1</span><b>Hero and hub</b><p>Hero creator, skill trees, Training Grounds, the plaza, Perfect Fit and Tide Runner.</p></div>
+      <div class="step"><span class="k">PHASE 2</span><b>3D and World 1</b><p>Three.js toon renderer, 10 levels, 6 arenas, Fail Tray, Trivia, Junkyard to Jewel.</p></div>
+      <div class="step"><span class="k">PHASE 3</span><b>App stores</b><p>iOS and Android apps of the same game: offline play, push invites, native billing.</p></div>
+      <div class="step"><span class="k">SEASONS</span><b>New every month</b><p>A new game every 4 weeks, a world or arena every 8, a cosmetic set every 2.</p></div>
+    </div>
+    <p style="margin-top:18px;color:var(--mist);font-size:14px">Launch notifications will be collected on the real site once payments are set up. Until then, follow <a href="https://www.instagram.com/eduardoinoa_" target="_blank" rel="noopener">@eduardoinoa_</a> for updates.</p>
+  </div>
+</section>
+
+<section class="alt" id="faq">
+  <div class="wrap">
+    <div class="sec-head"><div class="eyebrow">FAQ</div><h2>Questions people ask</h2></div>
+    <div class="faq">
+      <details open><summary>Do I need to download anything?</summary><p>No. Open the link and play. On a phone, add it to your home screen for a full-screen app. iOS and Android apps of the same game come in Phase 3.</p></details>
+      <details><summary>Is it for kids or adults?</summary><p>Both. The hub is all ages: Snack Squad Safari and the cozy games are built for families, while the signature 3D titles (Depths, Driftwood Builders, Tide Lines, Island Drift) are rated 10+ with ranked play and builds for adults. A child profile hides ranked play and voice. There is no text chat with strangers, no gore and no gambling mechanics. Emotes and quick-chat only; parties are private by code.</p></details>
+      <details><summary>Is it hard?</summary><p>Friendly is the default: unlimited lives, a checkpoint every 20 seconds, and a teammate can revive you in 5 seconds. Normal and Brutal are there for people who want a fight, and Brutal par times are made to be chased.</p></details>
+      <details><summary>What do I actually pay for?</summary><p>One $4.99 unlock for more worlds, arenas, classes and 8-player online rooms. Your guests never pay to join your party. Cosmetics are expression, never power, and every one is also earnable.</p></details>
+      <details><summary>Where does my hero live?</summary><p>On your account, synced across phone, laptop and app. Start as a guest, upgrade with Apple, Google or email later and nothing is lost.</p></details>
+      <details><summary>Who makes this?</summary><p>Inoa Services, a Methuen, MA company. Pixel Pact is the first game; the hub grows a game a month.</p></details>
+    </div>
+  </div>
+</section>
+
+<footer><div class="wrap"><span>© 2026 Inoa Games · an Inoa Services project</span><span>Made in Methuen, MA · <a href="games/pixelpact.html">Play Pixel Pact</a> · <a href="https://claude.ai/artifact/Q2FKuHrPNuEPCLGvU6q5Nm" target="_blank" rel="noopener">Pixel Pact page</a></span></div></footer>
+
+<script>
+(() => {
+'use strict';
+const TAU = Math.PI * 2, OUTLINE = '#0a1a24';
+const lerp = (a, b, t) => a + (b - a) * t, clamp = (v, a, b) => v < a ? a : v > b ? b : v, easeOut = t => 1 - Math.pow(1 - clamp(t, 0, 1), 3);
+const hash = (x, y) => { let h = (x * 374761393 + y * 668265263) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+function hexRgb(h) { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+function rgba(h, a) { const c = hexRgb(h); return `rgba(${c[0]},${c[1]},${c[2]},${a})`; }
+function rr(c, x, y, w, h, r) { c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+const glowCache = new Map();
+function glow(c, x, y, r, col, a) { if (a <= .01 || r <= 0) return; let s = glowCache.get(col); if (!s) { s = document.createElement('canvas'); s.width = s.height = 64; const g = s.getContext('2d'), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32), k = hexRgb(col); gr.addColorStop(0, `rgba(${k[0]},${k[1]},${k[2]},1)`); gr.addColorStop(.3, `rgba(${k[0]},${k[1]},${k[2]},.45)`); gr.addColorStop(1, `rgba(${k[0]},${k[1]},${k[2]},0)`); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); glowCache.set(col, s); } const pc = c.globalCompositeOperation, pa = c.globalAlpha; c.globalCompositeOperation = 'lighter'; c.globalAlpha = Math.min(1, a); c.drawImage(s, x - r, y - r, r * 2, r * 2); c.globalCompositeOperation = pc; c.globalAlpha = pa; }
+const HEROES = [
+  { id: 'rook', name: 'Rook Ironhide', role: 'Tank · Shield knight', desc: 'Shield Bash blocks anything in front of him. Fortress Wall makes the whole team untouchable for five seconds.', bulk: 1.18, wlen: 20, c: { skin: '#f0c08a', hair: '#d9dfe8', hair2: '#a7b2c2', body: '#4a6488', body2: '#7f9cc6', limb: '#3e5474', back: '#2a3a52', accent: '#ffc65c', boot: '#2a2230', metal: '#d3dce7', glow: '#ffc65c' } },
+  { id: 'kiko', name: 'Kiko Breeze', role: 'Speed · Wind ninja', desc: 'Triple jump, the fastest run, and a Shadow Dash that slices through a whole line of enemies.', bulk: .86, wlen: 11, c: { skin: '#e5b088', hair: '#1d2340', hair2: '#121731', body: '#22345a', body2: '#3d5f99', limb: '#1c2b4a', back: '#121c33', accent: '#2de2c3', boot: '#151a2c', metal: '#d6fff7', glow: '#2de2c3' } },
+  { id: 'marisol', name: 'Marisol Tidecaller', role: 'Ranged · Tide mage', desc: 'Wave Push rolls through crowds, she glides when you hold jump, and Tsunami sweeps the screen.', bulk: .95, wlen: 24, c: { skin: '#c58a5c', hair: '#1a7f96', hair2: '#0f5668', body: '#1f9c8c', body2: '#86e0d2', limb: '#17786c', back: '#0e534c', accent: '#ff6b4a', boot: '#124a52', metal: '#e9fbff', glow: '#5be7ff' } },
+  { id: 'tito', name: 'Tito Fuego', role: 'Bruiser · Flame boxer', desc: 'Every punch sets enemies on fire. Fire Uppercut launches them, Volcano Fist erupts on impact.', bulk: 1.06, wlen: 6, c: { skin: '#9a6a40', hair: '#ff4d3a', hair2: '#ffb02e', body: '#b8431c', body2: '#f4a261', limb: '#8f3416', back: '#5e200e', accent: '#ffe66d', boot: '#3a1c10', metal: '#ff9a3c', glow: '#ff7b2e' } }
+];
+function heroPose(h, S) {
+  const t = S.t || 0, a = S.anim || 'idle', k = S.k || 0, p = { lean: 0, bob: 0, rot: 0, lT: .1, lB: .12, rT: -.08, rB: .1, lU: -.15, lF: .35, rU: .22, rF: .45 };
+  switch (a) {
+    case 'idle': { const b = Math.sin(t / 18); p.bob = b * .8; p.lU = -.15 + b * .05; p.rU = .22 - b * .05; break; }
+    case 'run': { const ph = S.phase || 0, s = Math.sin(ph), c = Math.cos(ph); p.lT = s * .95; p.lB = .25 + Math.max(0, -c) * 1.3; p.rT = -s * .95; p.rB = .25 + Math.max(0, c) * 1.3; p.rU = s; p.rF = 1; p.lU = -s; p.lF = 1; p.lean = .2; p.bob = -Math.abs(c) * 2.2 + 1; break; }
+    case 'win': { const b = Math.abs(Math.sin(t / 10)); Object.assign(p, { rU: 2.75, rF: .2, lU: 2.5, lF: .2, bob: -b * 4, lT: .2, rT: -.2 }); break; }
+    case 'light': { const n = S.n || 1; Object.assign(p, { lT: .55, lB: .5, rT: -.45, rB: .35, lean: .22, lU: -.6, lF: .6 }); if (n === 1) { p.rU = lerp(-1.3, 1.9, easeOut(k * 2.2)); p.rF = .25; p.sw = [-1.3, p.rU]; } else if (n === 2) { p.rU = lerp(2.5, .2, easeOut(k * 2.2)); p.rF = .2; p.sw = [2.5, p.rU]; p.lean = .15; } else { p.rU = lerp(3.3, .5, easeOut(k * 1.8)); p.rF = .1; p.sw = [3.3, p.rU]; p.lean = .38; p.bob = k < .3 ? -3 : 0; } break; }
+    case 'jump': Object.assign(p, { lT: .95, lB: 1.7, rT: .25, rB: .7, rU: 2.3, rF: .35, lU: 1.9, lF: .4, lean: .06 }); break;
+    case 'fall': Object.assign(p, { lT: .25, lB: .35, rT: -.25, rB: .55, rU: 1.5, rF: .5, lU: 1.2, lF: .5 }); break;
+  }
+  return p;
+}
+function drawHead(c, h, hc, r, S) {
+  const C = h.c, t = S.t || 0, a = S.anim;
+  c.fillStyle = C.skin; c.beginPath(); c.arc(hc.x, hc.y, r, 0, TAU); c.fill();
+  c.fillStyle = 'rgba(0,0,0,.12)'; c.beginPath(); c.arc(hc.x - r * .25, hc.y + r * .1, r * .85, Math.PI * .55, Math.PI * 1.25); c.fill();
+  if (h.id === 'rook') { c.fillStyle = C.metal; c.beginPath(); c.arc(hc.x, hc.y, r + .8, Math.PI + .25, TAU - .25); c.closePath(); c.fill(); c.fillStyle = C.hair2; c.fillRect(hc.x - r * .9, hc.y - r * .28, r * 1.8, r * .14); c.fillStyle = C.metal; c.fillRect(hc.x + r * .5, hc.y - r * .3, r * .2, r * .6); const sw = Math.sin(t / 9) * 2; c.fillStyle = C.accent; c.beginPath(); c.moveTo(hc.x - r * .1, hc.y - r * .95); c.quadraticCurveTo(hc.x - r * 1.1, hc.y - r * 1.9 + sw, hc.x - r * 1.9, hc.y - r * .9 + sw); c.quadraticCurveTo(hc.x - r * .9, hc.y - r * 1.15, hc.x - r * .4, hc.y - r * .55); c.closePath(); c.fill(); }
+  else if (h.id === 'kiko') { c.fillStyle = C.hair; c.beginPath(); c.arc(hc.x, hc.y, r + .6, Math.PI - .15, TAU + .1); c.closePath(); c.fill(); c.save(); c.beginPath(); c.arc(hc.x, hc.y, r, 0, TAU); c.clip(); c.fillStyle = C.hair2; c.fillRect(hc.x - r, hc.y + r * .28, r * 2, r); c.fillStyle = C.accent; c.fillRect(hc.x - r, hc.y - r * .42, r * 2, r * .26); c.restore(); }
+  else if (h.id === 'marisol') { c.fillStyle = C.hair; c.beginPath(); c.arc(hc.x, hc.y, r + .8, Math.PI - .5, TAU + .15); c.closePath(); c.fill(); c.beginPath(); c.ellipse(hc.x - r * .55, hc.y + r * .25, r * .55, r * .9, 0, 0, TAU); c.fill(); c.fillStyle = C.accent; for (let i = 0; i < 4; i++) { c.beginPath(); c.arc(hc.x - r * .15 + Math.cos(i * 1.57) * 2, hc.y - r * .9 + Math.sin(i * 1.57) * 2, 1.9, 0, TAU); c.fill(); } c.fillStyle = '#ffc65c'; c.beginPath(); c.arc(hc.x - r * .15, hc.y - r * .9, 1.3, 0, TAU); c.fill(); }
+  else { for (let layer = 0; layer < 2; layer++) { c.fillStyle = layer ? C.hair2 : C.hair; c.beginPath(); const n = 5; for (let i = 0; i <= n; i++) { const ang = Math.PI * 1.08 + (i / n) * Math.PI * .84, bx = hc.x + Math.cos(ang) * r * .95, by = hc.y + Math.sin(ang) * r * .95, len = (layer ? .45 : .8) * r + Math.sin(t * .35 + i * 1.7) * r * .18, tx = bx + Math.cos(ang) * len - len * .55, ty = by + Math.sin(ang) * len; if (i === 0) c.moveTo(bx, by); c.lineTo(tx, ty); if (i < n) { const ang2 = Math.PI * 1.08 + ((i + .5) / n) * Math.PI * .84; c.lineTo(hc.x + Math.cos(ang2) * r * .9, hc.y + Math.sin(ang2) * r * .9); } } c.closePath(); c.fill(); } }
+  const ex = hc.x + r * .42, ey = hc.y - r * .06;
+  if ((t % 210) < 7) { c.strokeStyle = OUTLINE; c.lineWidth = 1.4; c.beginPath(); c.moveTo(ex - 2.2, ey); c.lineTo(ex + 2.2, ey); c.stroke(); }
+  else { c.fillStyle = '#fff'; c.beginPath(); c.ellipse(ex, ey, r * .22, r * .28, 0, 0, TAU); c.fill(); c.fillStyle = OUTLINE; c.beginPath(); c.arc(ex + r * .08, ey + r * .03, r * .14, 0, TAU); c.fill(); }
+  if (h.id !== 'kiko') { c.strokeStyle = 'rgba(60,20,10,.7)'; c.lineWidth = 1.1; c.beginPath(); if (a === 'win') c.arc(hc.x + r * .5, hc.y + r * .38, r * .2, 0, Math.PI); else { c.moveTo(hc.x + r * .38, hc.y + r * .48); c.lineTo(hc.x + r * .62, hc.y + r * .45); } c.stroke(); c.fillStyle = 'rgba(255,107,74,.25)'; c.beginPath(); c.arc(hc.x + r * .2, hc.y + r * .3, r * .18, 0, TAU); c.fill(); }
+}
+function drawGear(c, h, A, front, p) {
+  const C = h.c, hd = A[2], a = A[3], dx = Math.sin(a), dy = Math.cos(a);
+  const blade = (len, w, col, edge) => { c.lineCap = 'round'; c.strokeStyle = OUTLINE; c.lineWidth = w + 2.4; c.beginPath(); c.moveTo(hd.x, hd.y); c.lineTo(hd.x + dx * len, hd.y + dy * len); c.stroke(); c.strokeStyle = col; c.lineWidth = w; c.beginPath(); c.moveTo(hd.x, hd.y); c.lineTo(hd.x + dx * len, hd.y + dy * len); c.stroke(); if (edge) { c.strokeStyle = edge; c.lineWidth = 1; c.beginPath(); c.moveTo(hd.x + dx * 3, hd.y + dy * 3); c.lineTo(hd.x + dx * len, hd.y + dy * len); c.stroke(); } };
+  if (h.id === 'rook') { const shield = (cx, cy) => { c.fillStyle = OUTLINE; c.beginPath(); c.arc(cx, cy, 10.5, 0, TAU); c.fill(); const g = c.createRadialGradient(cx - 3, cy - 3, 1, cx, cy, 10); g.addColorStop(0, '#fff'); g.addColorStop(.3, C.metal); g.addColorStop(1, '#7d8aa0'); c.fillStyle = g; c.beginPath(); c.arc(cx, cy, 9.2, 0, TAU); c.fill(); c.strokeStyle = C.accent; c.lineWidth = 1.8; c.beginPath(); c.arc(cx, cy, 7, 0, TAU); c.stroke(); c.fillStyle = C.accent; c.beginPath(); c.arc(cx, cy, 2.6, 0, TAU); c.fill(); }; if (front) { blade(20, 3.2, C.metal, '#fff'); c.strokeStyle = C.accent; c.lineWidth = 2.6; c.beginPath(); c.moveTo(hd.x + dx * 2 - dy * 5, hd.y + dy * 2 + dx * 5); c.lineTo(hd.x + dx * 2 + dy * 5, hd.y + dy * 2 - dx * 5); c.stroke(); } else shield(hd.x - 2, hd.y - 2); }
+  else if (h.id === 'kiko') blade(front ? 11 : 9, 2.2, C.metal, C.accent);
+  else if (h.id === 'marisol' && front) { c.lineCap = 'round'; c.strokeStyle = OUTLINE; c.lineWidth = 5; c.beginPath(); c.moveTo(hd.x - dx * 12, hd.y - dy * 12); c.lineTo(hd.x + dx * 24, hd.y + dy * 24); c.stroke(); c.strokeStyle = '#8a5a32'; c.lineWidth = 2.6; c.beginPath(); c.moveTo(hd.x - dx * 12, hd.y - dy * 12); c.lineTo(hd.x + dx * 24, hd.y + dy * 24); c.stroke(); const ox = hd.x + dx * 26, oy = hd.y + dy * 26; c.fillStyle = OUTLINE; c.beginPath(); c.arc(ox, oy, 5.6, 0, TAU); c.fill(); c.fillStyle = '#c9fbff'; c.beginPath(); c.arc(ox, oy, 4.4, 0, TAU); c.fill(); glow(c, ox, oy, 14, C.glow, .55); }
+  else if (h.id === 'tito') { const r = 5.6 * h.bulk; c.fillStyle = OUTLINE; c.beginPath(); c.arc(hd.x, hd.y, r + 1.4, 0, TAU); c.fill(); const g = c.createRadialGradient(hd.x - 2, hd.y - 2, 1, hd.x, hd.y, r); g.addColorStop(0, '#ffe0a8'); g.addColorStop(1, C.metal); c.fillStyle = g; c.beginPath(); c.arc(hd.x, hd.y, r, 0, TAU); c.fill(); if (front) glow(c, hd.x, hd.y, 16, C.glow, .5); }
+}
+function drawHero(c, h, S, x, y, f, sc) {
+  const C = h.c, B = h.bulk, p = heroPose(h, S), tw = 14 * B, lw = 5.6 * B, aw = 4.8 * B, hr = h.id === 'kiko' ? 8.6 : 9.2, L1 = 8.5, L2 = 8.5, A1 = 7.2, A2 = 7.2;
+  c.save(); c.translate(x, y); c.scale(f * sc, sc); c.translate(0, p.bob);
+  const lean = p.lean, cl = Math.cos(lean), sl = Math.sin(lean), hip = { x: 0, y: -17 }, R = (dx, dy) => ({ x: hip.x + dx * cl - dy * sl, y: hip.y + dx * sl + dy * cl }), sh = R(0, -12.5), hc = R(1, -24.5);
+  const leg = (ox, T, Bd) => { const a = { x: hip.x + ox, y: hip.y }, kk = { x: a.x + Math.sin(T) * L1, y: a.y + Math.cos(T) * L1 }; return [a, kk, { x: kk.x + Math.sin(T - Bd) * L2, y: kk.y + Math.cos(T - Bd) * L2 }]; };
+  const arm = (ox, U, F) => { const a = { x: sh.x + ox, y: sh.y }, u = U + lean * .5, e = { x: a.x + Math.sin(u) * A1, y: a.y + Math.cos(u) * A1 }; return [a, e, { x: e.x + Math.sin(u + F) * A2, y: e.y + Math.cos(u + F) * A2 }, u + F]; };
+  const bL = leg(-2.2 * B, p.lT, p.lB), fL = leg(2.2 * B, p.rT, p.rB), bA = arm(-2.5, p.lU, p.lF), fA = arm(2.5, p.rU, p.rF);
+  const line = (pts, w, col) => { c.strokeStyle = col; c.lineWidth = w; c.beginPath(); c.moveTo(pts[0].x, pts[0].y); c.lineTo(pts[1].x, pts[1].y); c.lineTo(pts[2].x, pts[2].y); c.stroke(); };
+  const boot = (pt, col, grow) => { c.fillStyle = col; c.beginPath(); c.ellipse(pt.x + 1.4, pt.y - .5, lw * .72 + grow, lw * .5 + grow, 0, 0, TAU); c.fill(); };
+  const hand = (pt, col) => { c.fillStyle = col; c.beginPath(); c.arc(pt.x, pt.y, aw * .55, 0, TAU); c.fill(); };
+  c.lineCap = 'round'; c.lineJoin = 'round';
+  for (const pass of [0, 1]) {
+    const ol = pass === 0;
+    line(bA, ol ? aw + 3.2 : aw, ol ? OUTLINE : C.back); if (!ol) { hand(bA[2], C.skin); drawGear(c, h, bA, false, p); }
+    line(bL, ol ? lw + 3.2 : lw, ol ? OUTLINE : C.back); boot(bL[2], ol ? OUTLINE : C.boot, ol ? 1.6 : 0);
+    c.save(); c.translate(hip.x, hip.y); c.rotate(lean);
+    if (ol) { c.fillStyle = OUTLINE; c.beginPath(); rr(c, -tw / 2 - 1.6, -15.6, tw + 3.2, 19.2, 6); c.fill(); }
+    else { c.fillStyle = C.body; c.beginPath(); rr(c, -tw / 2, -14, tw, 16, 5); c.fill(); c.fillStyle = C.body2; c.beginPath(); rr(c, -tw / 2 + 1.5, -13, tw - 3, 5, 3); c.fill(); c.fillStyle = C.back; c.fillRect(-tw / 2, -2.5, tw, 3); if (h.id === 'rook') { c.fillStyle = C.metal; c.beginPath(); rr(c, -tw / 2 + 2, -10, tw - 4, 7, 3); c.fill(); c.fillStyle = C.accent; c.beginPath(); c.arc(1, -6.5, 2.2, 0, TAU); c.fill(); } if (h.id === 'kiko') { c.strokeStyle = C.accent; c.lineWidth = 2.2; c.beginPath(); c.moveTo(-tw / 2, -12); c.lineTo(tw / 2, -1); c.stroke(); } if (h.id === 'tito') { c.fillStyle = C.skin; c.fillRect(-1.6, -14, 3.2, 11); } }
+    c.restore();
+    line(fL, ol ? lw + 3.2 : lw, ol ? OUTLINE : C.limb); boot(fL[2], ol ? OUTLINE : C.boot, ol ? 1.6 : 0);
+    if (ol) { c.fillStyle = OUTLINE; c.beginPath(); c.arc(hc.x, hc.y, hr + 1.7, 0, TAU); c.fill(); if (h.id === 'tito') { c.beginPath(); c.arc(hc.x - 2, hc.y - hr * .6, hr * .9, 0, TAU); c.fill(); } } else drawHead(c, h, hc, hr, S);
+    line(fA, ol ? aw + 3.2 : aw, ol ? OUTLINE : C.body2); if (!ol) { hand(fA[2], C.skin); drawGear(c, h, fA, true, p); }
+  }
+  if (p.sw && (S.k || 0) < .8) { const k = S.k || 0, rad = A1 + A2 + h.wlen * .85, a0 = Math.PI / 2 - (p.sw[0] + lean * .5), a1 = Math.PI / 2 - (p.sw[1] + lean * .5), ccw = a1 < a0; c.save(); c.globalCompositeOperation = 'lighter'; c.globalAlpha = .6 * (1 - k / .8); c.fillStyle = rgba(C.glow, .8); c.beginPath(); c.arc(sh.x, sh.y, rad, a0, a1, ccw); c.arc(sh.x, sh.y, rad * .5, a1, a0, !ccw); c.closePath(); c.fill(); c.restore(); }
+  c.restore();
+}
+
+/* Hero backdrop: sky, sun, sea, dunes, the four heroes idling on the beach */
+const bg = document.getElementById('bg'), bctx = bg.getContext('2d');
+let sun = null;
+function buildSun() { sun = document.createElement('canvas'); sun.width = sun.height = 256; const s = sun.getContext('2d'), g = s.createLinearGradient(0, 28, 0, 228); g.addColorStop(0, '#fff8d8'); g.addColorStop(.5, '#ffd27a'); g.addColorStop(1, '#ff7a52'); s.fillStyle = g; s.beginPath(); s.arc(128, 128, 100, 0, TAU); s.fill(); s.globalCompositeOperation = 'destination-out'; for (let i = 0; i < 6; i++) s.fillRect(0, 140 + i * 15, 256, 3 + i * 2.2); }
+let frame = 0, reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function drawBg(t) {
+  const hdr = bg.parentElement.getBoundingClientRect(), dp = Math.min(devicePixelRatio || 1, 2), W = Math.max(1, Math.round(hdr.width * dp)), H = Math.max(1, Math.round(hdr.height * dp));
+  if (bg.width !== W || bg.height !== H) { bg.width = W; bg.height = H; }
+  const c = bctx, z = Math.max(1, H / 420) * dp / dp, hz = H * .62;
+  const sky = c.createLinearGradient(0, 0, 0, hz); sky.addColorStop(0, '#0b3550'); sky.addColorStop(.42, '#2c7a8e'); sky.addColorStop(.72, '#f2977a'); sky.addColorStop(.9, '#ffc982'); sky.addColorStop(1, '#ffe2a8'); c.fillStyle = sky; c.fillRect(0, 0, W, H);
+  const sx = W * .7, sy = hz - 70 * dp, sr = 70 * dp; glow(c, sx, sy, sr * 4, '#ffb070', .55); glow(c, sx, sy, sr * 2, '#fff0c0', .5); c.drawImage(sun, sx - sr * 1.28, sy - sr * 1.28, sr * 2.56, sr * 2.56);
+  c.save(); c.globalCompositeOperation = 'lighter'; for (let i = 0; i < 5; i++) { const a = -1.2 + i * .55 + Math.sin(t * .2 + i) * .04; c.fillStyle = 'rgba(255,214,160,.05)'; c.beginPath(); c.moveTo(sx, sy); c.lineTo(sx + Math.cos(a - .06) * W * 1.4, sy + Math.sin(a - .06) * W * 1.4 + H); c.lineTo(sx + Math.cos(a + .06) * W * 1.4, sy + Math.sin(a + .06) * W * 1.4 + H); c.closePath(); c.fill(); } c.restore();
+  c.fillStyle = '#5c93a0'; for (let i = 0; i < 16; i++) { const tx = ((i * 110 + hash(i, 1) * 60 - t * 6) % (W / dp + 200) + W / dp + 200) % (W / dp + 200) * dp - 100 * dp, th = (50 + hash(i, 3) * 120) * .55 * dp, tw = (26 + hash(i, 2) * 30) * .55 * dp; c.fillRect(tx, hz - th, tw, th); if (hash(i, 4) > .6) { c.beginPath(); c.moveTo(tx, hz - th); c.lineTo(tx + tw / 2, hz - th - tw * .6); c.lineTo(tx + tw, hz - th); c.fill(); } }
+  const sea = c.createLinearGradient(0, hz, 0, H); sea.addColorStop(0, '#3fa2ad'); sea.addColorStop(.3, '#17708a'); sea.addColorStop(1, '#0a3e54'); c.fillStyle = sea; c.fillRect(0, hz, W, H - hz);
+  c.save(); c.globalCompositeOperation = 'lighter'; for (let i = 0; i < 22; i++) { const yy = hz + (4 + i * i * .9) * dp, ww = (30 - i * .6) * dp * (1 + Math.sin(t * 2 + i) * .3); c.fillStyle = `rgba(255,214,150,${.5 - i * .02})`; c.fillRect(sx - ww / 2 + Math.sin(t * 1.5 + i * 2) * 6 * dp, yy, ww, 1.6 * dp); } c.restore();
+  c.fillStyle = 'rgba(200,245,240,.35)'; for (let i = 0; i < 30; i++) { const yy = hz + (8 + (i * 37) % 120) * dp, xx = ((i * 211 + t * 14) % (W / dp + 80)) * dp - 40 * dp; c.fillRect(xx, yy, (10 + (i % 4) * 8) * dp, dp); }
+  const gy = H * .88; c.fillStyle = '#e6b673'; c.beginPath(); c.moveTo(0, H); for (let x = 0; x <= W + 20; x += 20) c.lineTo(x, gy - (Math.sin(x / 140 / dp) * 10 + 6) * dp); c.lineTo(W, H); c.closePath(); c.fill(); c.fillStyle = '#ffdb93'; c.fillRect(0, gy + 6 * dp, W, 4 * dp);
+  const sc = 2.1 * dp, base = W * (W / dp > 900 ? .72 : .5);
+  HEROES.forEach((h, i) => { const hx = base + (i - 1.5) * 60 * sc, cyc = (frame + i * 37) % 600, S = cyc > 520 && cyc < 560 ? { anim: 'win', t: frame + i * 37 } : { anim: 'idle', t: frame + i * 37 }; c.fillStyle = 'rgba(10,20,30,.25)'; c.beginPath(); c.ellipse(hx, gy + 8 * dp, 16 * sc, 4 * sc, 0, 0, TAU); c.fill(); drawHero(c, h, S, hx, gy + 8 * dp, i < 2 ? 1 : -1, sc); });
+}
+
+/* ---------- The shelf: nine games, each with a tiny live illustration ---------- */
+const PASTEL = { mint: '#9fe3cf', butter: '#ffe59a', pink: '#ffb7c5', lav: '#c9b8ff', peach: '#ffc9a3', cream: '#fff4e3', wood: '#c48a5a' };
+const GAMES = [
+  { id: 'pact', kind: 'FLAGSHIP · CO-OP ADVENTURE', name: 'Pixel Pact', desc: 'Four heroes, one exit. Clear the Emberwood Isles together, revive your friends, beat Big Claw. Ten levels in World 1.', meta: ['1–4 players', '3–5 min', 'Play now'], flag: true , href: 'games/pixelpact.html', st: 'PLAY', live: true },
+  { id: 'match', kind: 'VERSUS · PLATFORM BRAWLER', name: 'Pixel Pact: Match', desc: 'Damage, knockback, ring-outs. Last hero standing on Driftwood Docks, Canopy Clash or Molten Crown.', meta: ['2–4 players', '2–3 min', 'Play now'] , href: 'games/pixelpact.html', st: 'PLAY', live: true },
+  { id: 'safari', kind: 'KIDS + GROWN-UPS · ALLERGY SAFE SAFARI', name: 'Snack Squad Safari', desc: 'A real 3D safari trail where you feed your buddy only what is safe for you. Labels read aloud for kids who can\u2019t read yet, a grown-up Scanner role, and an animated Buddy Rescue that teaches the auto-injector and 9-1-1 step by step. English and Spanish.', meta: ['1–2 players', '5 levels', 'Play now'] , href: 'games/safari.html', st: 'PLAY', live: true },
+  { id: 'depths', kind: 'SIGNATURE 3D · CO-OP ROGUELITE', name: 'Pixel Pact: Depths', desc: 'Dive under the islands with up to three friends. Every run builds a different hero; bosses demand teamwork; a weekly seeded run with a friends leaderboard.', meta: ['1–4 players', '15–25 min', 'Ages 10+'] , href: 'games/depths.html', st: 'PLAY', live: true },
+  { id: 'builders', kind: 'SIGNATURE 3D · SURVIVAL BUILD', name: 'Driftwood Builders', desc: 'A shared island that grows for months. Farms, boats, blueprints and tide raids with up to eight friends.', meta: ['1–8 players', '10–40 min', 'Ages 10+'] , href: 'games/builders.html', st: 'SOON' },
+  { id: 'tide', kind: 'SIGNATURE 3D · 4V4 TERRITORY', name: 'Tide Lines', desc: 'Paint the arena with water cannons, hold the most ground when the horn sounds. Ranked seasons, four-minute matches, built to stream.', meta: ['8 players', '4 min', 'Ages 10+'] , href: 'games/tidelines.html', st: 'SOON' },
+  { id: 'drift', kind: 'SIGNATURE 3D · KART RACER', name: 'Island Drift', desc: 'Eight karts, phone tilt or gamepad, items with counterplay and your friends\u2019 ghosts on every track.', meta: ['2–8 players', '3 min'] , href: 'games/drift.html', st: 'PLAY', live: true },
+  { id: 'fit', kind: 'COZY · ASMR', name: 'Perfect Fit', desc: 'A messy drawer, perfectly shaped slots, and a bass-boosted snap every time something lands. Race a friend or zone out alone.', meta: ['1–4 players', '60–90 s'] , href: 'games/fit.html', st: 'SOON' },
+  { id: 'tray', kind: 'PARTY · PHYSICS', name: 'Fail Tray', desc: 'Carry a wobbling tower of jelly, ice and an anvil through an obstacle course. Falling is the funny part.', meta: ['1–8 players', '45 s'] , href: 'games/tray.html', st: 'SOON' },
+  { id: 'junk', kind: 'COZY · RESTORATION', name: 'Junkyard to Jewel', desc: 'Wipe the rust away with your finger and watch the shine come back. Day 1 to Day 30 on a single wreck.', meta: ['Solo', '2–4 min'] , href: 'games/junk.html', st: 'SOON' },
+  { id: 'brew', kind: 'COZY · IDLE CAFE', name: 'Brew and Bloom', desc: 'Grow magical tea plants while you are away, brew for woodland regulars when you are back. Nobody ever gets angry.', meta: ['Solo', '30–90 s check-ins'] , href: 'games/brew.html', st: 'PLAY', live: true },
+  { id: 'trivia', kind: 'PARTY · PHONES AS BUZZERS', name: 'Pact Trivia', desc: 'Questions on the big screen, buzzers in every hand. English and Spanish packs, family rounds, spicy rounds for adults.', meta: ['2–20 players', '5 min'] , href: 'games/trivia.html', st: 'SOON' },
+  { id: 'draw', kind: 'PARTY · DRAW AND GUESS', name: 'Draw the Pact', desc: 'Draw on your phone, the room guesses on the TV. The worst drawing wins the clip.', meta: ['3–12 players', '4 min'] , href: 'games/draw.html', st: 'SOON' },
+  { id: 'runner', kind: 'RACE · GHOSTS', name: 'Tide Runner', desc: 'A 60-second runner with the same seed for everyone today. Race your friends’ ghosts and post a time to beat.', meta: ['1–8 players', '60 s'], st: 'PHASE 1' }
+];
+const grid = document.getElementById('shelfGrid'), tiles = [];
+GAMES.forEach(g => {
+  const d = document.createElement(g.href ? 'a' : 'div'); d.className = 'game' + (g.flag ? ' flag' : ''); if (g.href) { d.href = g.live ? g.href : '#shelf'; d.style.textDecoration = 'none'; d.style.color = 'inherit'; }
+  const cn = document.createElement('canvas'); if (g.thumb) { const im = document.createElement('img'); im.src = g.thumb; im.alt = g.name + ' screenshot'; im.loading = 'lazy'; im.className = 'thumb'; d.appendChild(im); } else d.appendChild(cn);
+  d.insertAdjacentHTML('beforeend', `<span class="st${g.live ? ' live' : ''}">${g.st}</span><div class="body"><span class="kind">${g.kind}</span><b>${g.name}</b><p>${g.desc}</p><div class="meta">${g.meta.map(m => `<span>${m}</span>`).join('')}</div></div>`);
+  grid.appendChild(d); tiles.push({ g, cn });
+});
+function slotRect(c, x, y, w, h, col) { c.fillStyle = col; c.beginPath(); rr(c, x, y, w, h, 5); c.fill(); }
+const ILLO = {
+  pact(c, W, H, t) { const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#2c7a8e'); g.addColorStop(.6, '#f2977a'); g.addColorStop(1, '#ffe2a8'); c.fillStyle = g; c.fillRect(0, 0, W, H); const gy = H * .86; c.fillStyle = '#e6b673'; c.fillRect(0, gy, W, H - gy); c.fillStyle = '#ffdb93'; c.fillRect(0, gy, W, 3); const sc = H / 110; HEROES.forEach((h, i) => { const f = t + i * 40, cyc = f % 240; const S = cyc < 120 ? { anim: 'run', t: f, phase: f * .32 } : cyc < 200 ? { anim: 'idle', t: f } : { anim: 'win', t: f }; const hx = W * .18 + i * W * .21 + (cyc < 120 ? Math.sin(cyc / 120 * Math.PI) * 10 : 0); c.fillStyle = 'rgba(0,0,0,.2)'; c.beginPath(); c.ellipse(hx, gy + 2, 14 * sc, 3 * sc, 0, 0, TAU); c.fill(); drawHero(c, h, S, hx, gy + 2, 1, sc); }); },
+  match(c, W, H, t) { c.fillStyle = '#0d2e44'; c.fillRect(0, 0, W, H); c.fillStyle = '#17405a'; for (let i = 0; i < 8; i++) c.fillRect(i * W / 8 + 4, H * .3 + Math.sin(i + t * .02) * 8, W / 8 - 8, H); const py = H * .66; c.fillStyle = '#2a3a52'; c.beginPath(); rr(c, W * .18, py, W * .64, 18, 6); c.fill(); c.fillStyle = '#6f8fb0'; c.fillRect(W * .18, py, W * .64, 3); const sc = H / 115, k = (t % 60) / 60; const a = HEROES[3], b = HEROES[1]; const ax = W * .38 + Math.sin(t * .05) * 6; drawHero(c, a, k < .3 ? { anim: 'light', n: 3, k: k / .3, t } : { anim: 'idle', t }, ax, py, 1, sc); const fly = k < .3 ? 0 : Math.min(1, (k - .3) / .5); const bx = W * .56 + fly * 60, by = py - Math.sin(fly * Math.PI) * 40; drawHero(c, b, fly > 0 ? { anim: 'fall', t } : { anim: 'idle', t }, bx, by, -1, sc); if (fly > 0 && fly < .6) { c.font = `900 ${12 * sc}px Unbounded, sans-serif`; c.fillStyle = '#ffc65c'; c.strokeStyle = OUTLINE; c.lineWidth = 3; c.textAlign = 'center'; c.strokeText('132%', bx, by - 50); c.fillText('132%', bx, by - 50); } glow(c, ax + 20, py - 24, 30, '#ff7b2e', .4 * (1 - k)); },
+  fit(c, W, H, t) { c.fillStyle = PASTEL.cream; c.fillRect(0, 0, W, H); c.fillStyle = PASTEL.wood; c.beginPath(); rr(c, 14, 14, W - 28, H - 28, 10); c.fill(); c.fillStyle = '#a56f44'; c.beginPath(); rr(c, 22, 22, W - 44, H - 44, 8); c.fill(); const cols = [PASTEL.mint, PASTEL.butter, PASTEL.pink, PASTEL.lav, PASTEL.peach, PASTEL.mint, PASTEL.butter, PASTEL.pink]; const cw = (W - 60) / 4, ch = (H - 60) / 2; const cyc = (t % 360) / 360; cols.forEach((col, i) => { const gx = 30 + (i % 4) * cw, gy = 30 + Math.floor(i / 4) * ch; c.fillStyle = 'rgba(0,0,0,.18)'; c.beginPath(); rr(c, gx + 2, gy + 2, cw - 8, ch - 8, 6); c.fill(); const done = cyc * 9 > i, k = clamp(cyc * 9 - i, 0, 1), e = 1 - Math.pow(1 - k, 3); const ox = done ? lerp(W * .5 - gx, 0, e) : W * .5 - gx, oy = done ? lerp(-H * .5, 0, e) : -H * .5; if (done) { const s = 1 + Math.sin(e * Math.PI) * .18; c.save(); c.translate(gx + ox + (cw - 8) / 2, gy + oy + (ch - 8) / 2); c.scale(s, s); slotRect(c, -(cw - 12) / 2, -(ch - 12) / 2, cw - 12, ch - 12, col); c.fillStyle = 'rgba(255,255,255,.35)'; c.fillRect(-(cw - 12) / 2 + 4, -(ch - 12) / 2 + 4, cw - 20, 4); c.restore(); } }); c.fillStyle = 'rgba(0,0,0,.5)'; c.font = '700 10px Manrope, sans-serif'; c.textAlign = 'left'; c.fillText('thock.', 30, H - 14); },
+  tray(c, W, H, t) { c.fillStyle = '#0f3346'; c.fillRect(0, 0, W, H); c.fillStyle = '#1e5a6e'; c.fillRect(0, H * .8, W, H); const wob = Math.sin(t * .09) * .22 + Math.sin(t * .031) * .1; const bx = W * .5 + Math.sin(t * .03) * 20, by = H * .8; c.save(); c.translate(bx, by); c.fillStyle = '#f0c08a'; c.fillRect(-10, -26, 20, 26); c.fillStyle = '#4a6488'; c.beginPath(); rr(c, -12, -44, 24, 20, 5); c.fill(); c.fillStyle = '#f0c08a'; c.beginPath(); c.arc(0, -54, 9, 0, TAU); c.fill(); c.fillStyle = '#5a3a28'; c.fillRect(-20, -50, 40, 5); c.translate(0, -50); const cols = [PASTEL.mint, PASTEL.pink, '#ff6b4a', PASTEL.lav, '#8ad5ff', PASTEL.butter]; for (let i = 0; i < cols.length; i++) { c.rotate(wob * (i + 1) * .25); c.translate(0, -16); c.fillStyle = cols[i]; const w = i === 2 ? 30 : 24 - i * 1.5; if (i === 2) { c.fillStyle = '#5b6470'; c.beginPath(); rr(c, -w / 2, -8, w, 16, 3); c.fill(); } else { c.beginPath(); rr(c, -w / 2 + Math.sin(t * .2 + i) * 1.5, -8, w, 16, i % 2 ? 8 : 3); c.fill(); } } c.restore(); c.fillStyle = 'rgba(255,255,255,.8)'; c.font = '800 10px Manrope, sans-serif'; c.textAlign = 'left'; c.fillText('99% fail here →', 12, 20); },
+  junk(c, W, H, t) { c.fillStyle = '#20343c'; c.fillRect(0, 0, W, H); const cx = W / 2, cy = H / 2; const car = () => { c.beginPath(); rr(c, cx - 70, cy - 10, 140, 40, 10); c.fill(); c.beginPath(); rr(c, cx - 40, cy - 36, 80, 34, 12); c.fill(); }; c.fillStyle = '#6b4a2e'; car(); c.fillStyle = '#8a5a34'; for (let i = 0; i < 26; i++) { c.fillRect(cx - 70 + hash(i, 1) * 140, cy - 36 + hash(i, 2) * 76, 6, 4); } const k = (Math.sin(t * .02) + 1) / 2, wipe = cx - 80 + k * 170; c.save(); c.beginPath(); c.rect(cx - 80, 0, wipe - (cx - 80), H); c.clip(); c.fillStyle = '#2de2c3'; car(); c.fillStyle = 'rgba(255,255,255,.55)'; c.beginPath(); rr(c, cx - 34, cy - 32, 68, 22, 8); c.fill(); c.fillStyle = '#fff'; c.fillRect(cx - 60, cy - 2, 120, 3); c.restore(); c.fillStyle = '#112'; c.beginPath(); c.arc(cx - 40, cy + 32, 12, 0, TAU); c.arc(cx + 40, cy + 32, 12, 0, TAU); c.fill(); c.fillStyle = '#ffe59a'; c.beginPath(); c.arc(wipe, cy + Math.sin(t * .1) * 20, 9, 0, TAU); c.fill(); glow(c, wipe, cy, 22, '#ffe59a', .4); },
+  brew(c, W, H, t) { const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#ffd7b0'); g.addColorStop(1, '#ffb7c5'); c.fillStyle = g; c.fillRect(0, 0, W, H); c.fillStyle = PASTEL.wood; c.fillRect(0, H * .7, W, H); c.fillStyle = '#fff'; c.beginPath(); rr(c, W * .3, H * .38, 50, 42, 10); c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 7; c.beginPath(); c.arc(W * .3 + 54, H * .38 + 20, 11, -1.4, 1.4); c.stroke(); c.fillStyle = PASTEL.mint; c.fillRect(W * .3 + 6, H * .38 + 6, 38, 10); for (let i = 0; i < 3; i++) { const sy = H * .34 - ((t * .6 + i * 30) % 60), a = 1 - ((t * .6 + i * 30) % 60) / 60; c.strokeStyle = `rgba(255,255,255,${a * .8})`; c.lineWidth = 3; c.beginPath(); c.moveTo(W * .3 + 12 + i * 12, sy + 20); c.quadraticCurveTo(W * .3 + 18 + i * 12, sy + 10, W * .3 + 12 + i * 12, sy); c.stroke(); } const px = W * .7, py = H * .7; c.fillStyle = '#c9b8ff'; c.beginPath(); rr(c, px - 18, py - 24, 36, 26, 6); c.fill(); const grow = (Math.sin(t * .03) + 1) / 2; c.strokeStyle = '#3aa37a'; c.lineWidth = 4; c.lineCap = 'round'; c.beginPath(); c.moveTo(px, py - 24); c.quadraticCurveTo(px + 8, py - 40 - grow * 20, px, py - 50 - grow * 30); c.stroke(); for (let i = 0; i < 3; i++) { const ly = py - 32 - i * 12 - grow * 12; c.fillStyle = '#5fcf9a'; c.beginPath(); c.ellipse(px + (i % 2 ? 10 : -10), ly, 9, 5, i % 2 ? .6 : -.6, 0, TAU); c.fill(); } c.fillStyle = '#ff6b4a'; c.beginPath(); c.arc(px, py - 52 - grow * 30, 5 + grow * 3, 0, TAU); c.fill(); c.fillStyle = '#6b4a2e'; c.beginPath(); c.arc(W * .12, H * .62, 14, 0, TAU); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(W * .12 - 4, H * .62 - 2, 3, 0, TAU); c.arc(W * .12 + 4, H * .62 - 2, 3, 0, TAU); c.fill(); c.fillStyle = '#5b3b2e'; c.beginPath(); c.arc(W * .12 - 4, H * .62 - 2, 1.4, 0, TAU); c.arc(W * .12 + 4, H * .62 - 2, 1.4, 0, TAU); c.fill(); },
+  trivia(c, W, H, t) { c.fillStyle = '#0b1f33'; c.fillRect(0, 0, W, H); c.fillStyle = '#132f4d'; c.beginPath(); rr(c, 14, 14, W - 28, H * .5, 8); c.fill(); c.fillStyle = '#fff'; c.font = '800 11px Manrope, sans-serif'; c.textAlign = 'center'; c.fillText('¿Cuál es la capital de RD?', W / 2, 40); c.font = '700 9px Manrope, sans-serif'; c.fillStyle = '#94b9c2'; c.fillText('A Santiago   B Santo Domingo   C Punta Cana', W / 2, 60); const cols = ['#ff6b4a', '#2de2c3', '#ffc65c', '#c9b8ff']; for (let i = 0; i < 4; i++) { const px = 30 + i * (W - 60) / 3, py = H * .82, press = ((t + i * 23) % 90) < 10; c.fillStyle = '#1a2a3a'; c.beginPath(); rr(c, px - 16, py - 24, 32, 44, 6); c.fill(); c.fillStyle = cols[i]; c.beginPath(); c.arc(px, py - 8 + (press ? 3 : 0), 10, 0, TAU); c.fill(); if (press) glow(c, px, py - 8, 26, cols[i], .6); } },
+  draw(c, W, H, t) { c.fillStyle = '#fff6e8'; c.fillRect(0, 0, W, H); c.strokeStyle = '#2b2b2b'; c.lineWidth = 3; c.lineCap = 'round'; const n = Math.floor((t % 200) / 2); c.beginPath(); for (let i = 0; i < Math.min(n, 100); i++) { const a = i / 100 * TAU * 1.2, r = 30 + Math.sin(i * .7) * 10; const x = W * .4 + Math.cos(a) * r, y = H * .5 + Math.sin(a) * r * .8; if (i === 0) c.moveTo(x, y); else c.lineTo(x, y); } c.stroke(); if (n > 60) { c.beginPath(); c.arc(W * .4 - 12, H * .45, 3, 0, TAU); c.arc(W * .4 + 8, H * .45, 3, 0, TAU); c.fillStyle = '#2b2b2b'; c.fill(); } const guesses = ['potato?', 'a cat', 'EDUARDO', 'the sun??']; for (let i = 0; i < 4; i++) { const yy = 46 + i * 24, show = ((t / 40) % 6) > i; if (!show) continue; c.fillStyle = i === 2 ? '#2de2c3' : '#ffe0b0'; c.beginPath(); rr(c, W * .66, yy, 60, 18, 9); c.fill(); c.fillStyle = '#2b2b2b'; c.font = '800 9px Manrope, sans-serif'; c.textAlign = 'center'; c.fillText(guesses[i], W * .66 + 30, yy + 12); } },
+  runner(c, W, H, t) { const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#0b3550'); g.addColorStop(1, '#2c7a8e'); c.fillStyle = g; c.fillRect(0, 0, W, H); const gy = H * .78; c.fillStyle = '#17708a'; c.fillRect(0, gy, W, H); c.fillStyle = '#e6b673'; for (let i = 0; i < 6; i++) { const x = ((i * 70 - t * 2.4) % (W + 70) + W + 70) % (W + 70) - 35; c.beginPath(); rr(c, x, gy - 6, 50, 14, 6); c.fill(); } const sc = H / 115; [[1, 0, .55], [0, 1, .35], [3, 2, .18]].forEach(([hi, k, a]) => { c.globalAlpha = k ? a : 1; const bob = -Math.abs(Math.sin(t * .15 + k)) * 14; drawHero(c, HEROES[hi], { anim: 'run', t: t + k * 9, phase: t * .35 }, W * .35 - k * 26, gy - 4 + bob, 1, sc); }); c.globalAlpha = 1; c.fillStyle = '#ffc65c'; c.font = '900 12px Unbounded, sans-serif'; c.textAlign = 'left'; c.fillText((38.2 + Math.floor(t / 60) % 3 * .01).toFixed(2) + 's', 12, 22); c.fillStyle = '#94b9c2'; c.font = '700 8px Manrope, sans-serif'; c.fillText('ghost: Valentina 37.90s', 12, 36); }
+};
+ILLO.safari = (c, W, H, t) => { c.fillStyle = '#bfe8ff'; c.fillRect(0, 0, W, H); c.fillStyle = '#d8c7a6'; c.beginPath(); c.moveTo(0, H); c.lineTo(W * .3, H * .35); c.lineTo(W * .7, H * .35); c.lineTo(W, H); c.fill(); c.fillStyle = '#ffc9a3'; c.beginPath(); c.moveTo(0, H * .3); c.lineTo(W * .3, H * .35); c.lineTo(0, H); c.fill(); c.beginPath(); c.moveTo(W, H * .3); c.lineTo(W * .7, H * .35); c.lineTo(W, H); c.fill(); const foods = ['🍎', '🥛', '📦', '🥕', '🥜', '📦']; foods.forEach((f, i) => { const k = ((t * .01 + i * .17) % 1), y = H * .35 + k * H * .6, x = W / 2 + ((i % 3) - 1) * (30 + k * 90); c.font = `${10 + k * 22}px serif`; c.textAlign = 'center'; c.fillText(f, x, y); }); c.fillStyle = '#5bb8ff'; c.beginPath(); rr(c, W / 2 - 26, H * .72, 52, 26, 6); c.fill(); c.fillStyle = '#9fe3cf'; c.beginPath(); c.arc(W / 2, H * .7, 11, 0, TAU); c.fill(); c.fillStyle = '#1b2430'; c.beginPath(); c.arc(W / 2 - 4, H * .69, 1.6, 0, TAU); c.arc(W / 2 + 4, H * .69, 1.6, 0, TAU); c.fill(); c.fillStyle = '#1b2430'; c.font = '800 10px Manrope, sans-serif'; c.textAlign = 'left'; c.fillText('safe for me?', 12, 20); };
+ILLO.depths = (c, W, H, t) => { c.fillStyle = '#0a1420'; c.fillRect(0, 0, W, H); c.fillStyle = '#122233'; for (let i = 0; i < 9; i++) { c.beginPath(); c.moveTo(i * W / 8 - 10, 0); c.lineTo(i * W / 8 + 14, H * .4 + Math.sin(i * 2.1) * 20); c.lineTo(i * W / 8 + 30, 0); c.fill(); c.beginPath(); c.moveTo(i * W / 8, H); c.lineTo(i * W / 8 + 16, H * .6 + Math.cos(i * 1.7) * 18); c.lineTo(i * W / 8 + 34, H); c.fill(); } const sc = H / 120; const hx = W * .3 + Math.sin(t * .03) * 10; glow(c, hx, H * .6, 60, '#ffc65c', .6); drawHero(c, HEROES[3], { anim: 'run', t, phase: t * .3 }, hx, H * .82, 1, sc); drawHero(c, HEROES[0], { anim: 'idle', t }, hx - 34, H * .84, 1, sc * .9); for (let i = 0; i < 3; i++) { const ex = W * .65 + i * 28, ey = H * .7 + Math.sin(t * .1 + i) * 6; c.fillStyle = '#6a2fa0'; c.beginPath(); c.arc(ex, ey, 10, 0, TAU); c.fill(); c.fillStyle = '#ff6b6b'; c.beginPath(); c.arc(ex - 3, ey - 2, 2, 0, TAU); c.arc(ex + 3, ey - 2, 2, 0, TAU); c.fill(); } c.fillStyle = '#94b9c2'; c.font = '800 9px Manrope, sans-serif'; c.textAlign = 'left'; c.fillText('floor 7 · seed #0414', 12, 18); };
+ILLO.builders = (c, W, H, t) => { const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#ffb070'); g.addColorStop(.5, '#2c7a8e'); g.addColorStop(1, '#0b3550'); c.fillStyle = g; c.fillRect(0, 0, W, H); c.fillStyle = '#e6b673'; c.beginPath(); c.ellipse(W / 2, H * .72, W * .42, H * .2, 0, 0, TAU); c.fill(); c.fillStyle = '#3aa35b'; c.beginPath(); c.ellipse(W / 2, H * .66, W * .3, H * .13, 0, 0, TAU); c.fill(); const house = (x, y, s) => { c.fillStyle = '#c48a5a'; c.fillRect(x - 12 * s, y - 14 * s, 24 * s, 14 * s); c.fillStyle = '#ff6b4a'; c.beginPath(); c.moveTo(x - 15 * s, y - 14 * s); c.lineTo(x, y - 26 * s); c.lineTo(x + 15 * s, y - 14 * s); c.fill(); c.fillStyle = '#ffe59a'; c.fillRect(x - 3 * s, y - 9 * s, 6 * s, 9 * s); }; house(W * .42, H * .64, 1); house(W * .6, H * .6, .8); const k = (t % 300) / 300; if (k > .3) house(W * .5, H * .54, Math.min(1, (k - .3) * 2) * .7); for (let i = 0; i < 3; i++) { const px = W * .34 + i * 18, py = H * .7; c.fillStyle = ['#ffc65c', '#2de2c3', '#ff6b4a'][i]; c.beginPath(); c.arc(px, py - 6, 4, 0, TAU); c.fill(); c.fillRect(px - 3, py - 3, 6, 8); } c.strokeStyle = 'rgba(255,255,255,.6)'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(W * .5, H * .54); c.lineTo(W * .5 + 30, H * .3); c.stroke(); c.fillStyle = '#fff'; c.font = '800 9px Manrope, sans-serif'; c.textAlign = 'left'; c.fillText('day 42 · 3 friends online', 12, 18); };
+ILLO.tide = (c, W, H, t) => { c.fillStyle = '#e8eef4'; c.fillRect(0, 0, W, H); const k = (Math.sin(t * .02) + 1) / 2; const cells = 10; for (let i = 0; i < cells; i++) for (let j = 0; j < 5; j++) { const h = hash(i, j), owner = h < .45 + (k - .5) * .5 ? 'a' : h > .55 + (k - .5) * .5 ? 'b' : null; if (owner) { c.fillStyle = owner === 'a' ? '#2de2c3' : '#ff6b4a'; c.fillRect(i * W / cells, j * H / 5, W / cells + 1, H / 5 + 1); } } const sc = H / 125; drawHero(c, HEROES[2], { anim: 'light', n: 1, k: (t % 20) / 20, t }, W * .3, H * .85, 1, sc); drawHero(c, HEROES[3], { anim: 'run', t, phase: t * .3 }, W * .7, H * .85, -1, sc); c.fillStyle = '#1b2430'; c.font = '900 12px Unbounded, sans-serif'; c.textAlign = 'center'; c.fillText(`${Math.round(48 + (k - .5) * 20)}%  ·  ${Math.round(52 - (k - .5) * 20)}%`, W / 2, 20); };
+ILLO.drift = (c, W, H, t) => { c.fillStyle = '#2c7a8e'; c.fillRect(0, 0, W, H); c.fillStyle = '#e6b673'; c.fillRect(0, H * .3, W, H * .5); c.fillStyle = '#4a4f5a'; c.beginPath(); c.moveTo(0, H * .85); c.lineTo(W * .35, H * .4); c.lineTo(W * .65, H * .4); c.lineTo(W, H * .85); c.fill(); c.strokeStyle = '#fff'; c.setLineDash([10, 10]); c.lineDashOffset = -t * 2; c.lineWidth = 2; c.beginPath(); c.moveTo(W / 2, H * .4); c.lineTo(W / 2, H * .85); c.stroke(); c.setLineDash([]); const kart = (x, y, s, col) => { c.fillStyle = col; c.beginPath(); rr(c, x - 16 * s, y - 10 * s, 32 * s, 16 * s, 5 * s); c.fill(); c.fillStyle = '#1b2430'; c.beginPath(); c.arc(x - 11 * s, y + 7 * s, 5 * s, 0, TAU); c.arc(x + 11 * s, y + 7 * s, 5 * s, 0, TAU); c.fill(); c.fillStyle = '#f0c08a'; c.beginPath(); c.arc(x, y - 13 * s, 6 * s, 0, TAU); c.fill(); }; kart(W * .5 + Math.sin(t * .05) * 30, H * .78, 1.1, '#ff6b4a'); kart(W * .45, H * .6, .7, '#2de2c3'); kart(W * .56, H * .52, .5, '#ffc65c'); c.fillStyle = '#fff'; c.font = '900 11px Unbounded, sans-serif'; c.textAlign = 'left'; c.fillText('LAP 2/3', 12, 20); };
+function drawTiles() {
+  tiles.forEach((tl, i) => { if (tl.g.thumb) return; const r = tl.cn.getBoundingClientRect(); if (r.bottom < -200 || r.top > innerHeight + 200) return; const dp = Math.min(devicePixelRatio || 1, 2), W = Math.max(1, Math.round(r.width * dp)), H = Math.max(1, Math.round(r.height * dp)); if (tl.cn.width !== W || tl.cn.height !== H) { tl.cn.width = W; tl.cn.height = H; } const c = tl.cn.getContext('2d'); c.save(); c.scale(dp, dp); (ILLO[tl.g.id] || ILLO.pact)(c, W / dp, H / dp, frame + i * 31); c.restore(); });
+}
+/* ---------- Shared hero profile (every game adds XP/coins) ---------- */
+function readProfile() { try { return Object.assign({ name: '', xp: 0, coins: 0, games: {} }, JSON.parse(localStorage.getItem('inoa.profile') || '{}')); } catch (e) { return { name: '', xp: 0, coins: 0, games: {} }; } }
+function writeProfile(p) { try { localStorage.setItem('inoa.profile', JSON.stringify(p)); } catch (e) { } }
+function heroLv(xp) { let lv = 1, need = 100, x = xp; while (x >= need && lv < 50) { x -= need; lv++; need = Math.round(need * 1.12); } return { lv, into: x, need }; }
+function renderProfile() { const p = readProfile(), L = heroLv(p.xp); const el = document.getElementById('heroStats'); if (!el) return; const played = Object.keys(p.games || {}).length; el.innerHTML = `<div class="hp-lv"><b>${L.lv}</b><small>Hero level</small></div><div class="hp-main"><div class="hp-name">${p.name || 'New hero'}</div><div class="bar"><i style="width:${Math.round(L.into / L.need * 100)}%"></i></div><div class="hp-row"><span>${L.into}/${L.need} XP</span><span>🪙 ${p.coins}</span><span>🎮 ${played} game${played === 1 ? '' : 's'} played</span></div></div>`; }
+renderProfile(); addEventListener('focus', renderProfile); document.addEventListener('visibilitychange', () => { if (!document.hidden) renderProfile(); });
+/* ---------- Hero maker: class, random palette, random name ---------- */
+const mk = document.getElementById('maker'), mkName = document.getElementById('mkName'), mkClass = document.getElementById('mkClass'), mkClasses = document.getElementById('mkClasses');
+const FIRST = ['Rook', 'Kiko', 'Marisol', 'Tito', 'Luna', 'Bolt', 'Gorrak', 'Pixel', 'Solenne', 'Coco', 'Yara', 'Dante', 'Nova', 'Mateo', 'Isla', 'Rafa'], LAST = ['Ironhide', 'Breeze', 'Tidecaller', 'Fuego', 'Thorn', 'Nine', 'Stormfist', 'Reefguard', 'Sunrunner', 'Moonshell', 'Driftwood', 'Emberlane'], TITLES = ['Reef Guardian', 'Combo Kid', 'Night Surfer', 'Canopy Ghost', 'Raft Captain', 'Lava Walker', 'Tide Whisperer', 'Shell Collector'];
+const PALS = [['#f0c08a', '#e5b088', '#c58a5c', '#9a6a40', '#6b4a2e', '#f8d9c0'], ['#d9dfe8', '#1d2340', '#1a7f96', '#ff4d3a', '#ffe66d', '#2de2c3', '#c9b8ff', '#ffb7c5', '#3aa37a'], ['#4a6488', '#22345a', '#1f9c8c', '#b8431c', '#6a2fa0', '#1c7a4a', '#a0233a', '#2a2a2a', '#d9a21b'], ['#ffc65c', '#2de2c3', '#ff6b4a', '#ffe66d', '#5be7ff', '#ff8ad8', '#b6ff6b']];
+const pick = a => a[Math.floor(Math.random() * a.length)];
+let maker = { base: 0, c: null, name: 'Rook Ironhide', title: 'Reef Guardian' };
+function shade(h, k) { const [r, g, b] = hexRgb(h); return '#' + [r, g, b].map(v => clamp(Math.round(v * k), 0, 255).toString(16).padStart(2, '0')).join(''); }
+function randomColors() { const skin = pick(PALS[0]), hair = pick(PALS[1]), body = pick(PALS[2]), accent = pick(PALS[3]); return { skin, hair, hair2: shade(hair, .72), body, body2: shade(body, 1.55), limb: shade(body, .8), back: shade(body, .55), accent, boot: shade(body, .4), metal: '#e6eef5', glow: accent }; }
+function randomName() { return `${pick(FIRST)} ${pick(LAST)}`; }
+function setClass(i) { maker.base = i; [...mkClasses.children].forEach((b, j) => b.classList.toggle('on', j === i)); mkClass.textContent = HEROES[i].role.toUpperCase(); }
+function heroOf() { return { ...HEROES[maker.base], c: maker.c || HEROES[maker.base].c }; }
+HEROES.forEach((h, i) => { const b = document.createElement('button'); b.className = 'chip'; b.textContent = h.role.split(' · ')[1]; b.addEventListener('click', () => setClass(i)); mkClasses.appendChild(b); });
+setClass(0);
+const say = () => { mkName.textContent = maker.name; const p = readProfile(); p.name = maker.name; writeProfile(p); renderProfile(); };
+document.getElementById('mkColors').addEventListener('click', () => { maker.c = randomColors(); });
+document.getElementById('mkName2').addEventListener('click', () => { maker.name = randomName(); maker.title = pick(TITLES); say(); });
+document.getElementById('mkSurprise').addEventListener('click', () => { setClass(Math.floor(Math.random() * HEROES.length)); maker.c = randomColors(); maker.name = randomName(); maker.title = pick(TITLES); say(); });
+let mkKick = 0;
+mk.addEventListener('pointerdown', () => { mkKick = frame; });
+function drawMaker() {
+  const r = mk.getBoundingClientRect(); if (r.bottom < -200 || r.top > innerHeight + 200) return; const dp = Math.min(devicePixelRatio || 1, 2), W = Math.max(1, Math.round(r.width * dp)), H = Math.max(1, Math.round(r.height * dp)); if (mk.width !== W || mk.height !== H) { mk.width = W; mk.height = H; }
+  const c = mk.getContext('2d'); c.clearRect(0, 0, W, H); c.save(); c.scale(dp, dp); const w = W / dp, h = H / dp, hero = heroOf();
+  c.strokeStyle = 'rgba(120,230,215,.12)'; c.lineWidth = 1; for (let i = 0; i < 9; i++) { const y = h * .55 + i * i * 2.2; c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke(); } for (let i = -6; i <= 6; i++) { c.beginPath(); c.moveTo(w / 2 + i * 26, h * .55); c.lineTo(w / 2 + i * 80, h); c.stroke(); }
+  const sc = h * .62 / 52, since = frame - mkKick, S = since < 50 ? { anim: 'light', n: 1 + Math.floor(since / 17), k: (since % 17) / 17, t: frame } : (frame % 400) > 340 ? { anim: 'win', t: frame } : { anim: 'idle', t: frame };
+  glow(c, w / 2, h * .86, h * .4, hero.c.glow, .4); c.fillStyle = 'rgba(0,0,0,.35)'; c.beginPath(); c.ellipse(w / 2, h * .9, 18 * sc, 5 * sc, 0, 0, TAU); c.fill(); drawHero(c, hero, S, w / 2, h * .9, 1, sc);
+  c.fillStyle = 'rgba(255,255,255,.55)'; c.font = '800 10px Manrope, sans-serif'; c.textAlign = 'center'; c.fillText('tap to attack', w / 2, h - 10);
+  c.fillStyle = hero.c.accent; c.font = '900 11px Unbounded, sans-serif'; c.textAlign = 'left'; c.fillText(maker.title.toUpperCase(), 14, 22); c.restore();
+}
+buildSun();
+let last = performance.now();
+function loop(now) { requestAnimationFrame(loop); last = now; if (!reduce || frame < 3) { frame++; drawBg(now / 1000); drawTiles(); drawMaker(); } }
+drawBg(0); drawTiles(); drawMaker(); requestAnimationFrame(loop);
+})();
+</script>
+
+</body></html>

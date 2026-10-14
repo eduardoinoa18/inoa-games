@@ -1,0 +1,10 @@
+assets
+tools
+test
+legacy
+docs
+hub-src
+node_modules
+*.md
+package.json
+package-lock.json

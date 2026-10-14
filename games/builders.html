@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Driftwood Builders</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;800&family=Unbounded:wght@700;900&display=swap">
+<link rel="stylesheet" href="../engine/ui.css">
+<style>
+.db-quest{position:fixed;left:12px;top:calc(max(10px,env(safe-area-inset-top)) + 52px);z-index:19;background:rgba(255,248,238,.93);border-radius:16px;padding:8px 12px;box-shadow:0 4px 14px rgba(0,0,0,.15);max-width:min(300px,calc(100% - 24px));font-weight:800;font-size:13px;display:grid;gap:4px;pointer-events:none}
+.db-quest small{font-weight:700;color:#4c5868;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.db-quest i{display:block;height:6px;border-radius:4px;background:#e8e0d2;overflow:hidden}.db-quest i b{display:block;height:100%;background:linear-gradient(90deg,var(--mint-ink),var(--mint));transition:width .3s}
+.db-quest.done{animation:dbq .6s ease-out}@keyframes dbq{40%{transform:scale(1.06);background:var(--sun)}}
+.db-day{position:fixed;right:12px;top:calc(max(10px,env(safe-area-inset-top)) + 52px);z-index:19;display:flex;gap:6px;pointer-events:auto}
+.db-pal{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(max(14px,env(safe-area-inset-bottom)) + 0px);z-index:21;width:min(560px,calc(100% - 520px));background:rgba(255,248,238,.95);border-radius:20px;padding:8px;box-sizing:border-box;box-shadow:0 8px 30px rgba(0,0,0,.25);display:grid;gap:6px}
+.db-pal .row{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:thin}
+.db-pal .tools{display:flex;gap:6px}.db-pal .tools button{flex:1 1 auto;min-height:40px}
+.db-pc{flex:0 0 auto;width:74px;border:2px solid var(--line);background:#fff;border-radius:14px;padding:5px 3px;text-align:center;font-weight:800;cursor:pointer;display:grid;gap:1px;font-size:11px;color:var(--ink)}
+.db-pc .e{font-size:22px;line-height:1.1}.db-pc small{font-size:10px;color:#4c5868;font-weight:700;white-space:nowrap}
+.db-pc.on{border-color:var(--mint-ink);background:var(--mint)}.db-pc.poor small{color:#c8503f}
+.db-tip{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(max(14px,env(safe-area-inset-bottom)) + 96px);z-index:19;background:rgba(27,36,48,.82);color:#fff;border-radius:14px;padding:7px 12px;font-weight:800;font-size:13px;pointer-events:none;white-space:nowrap}
+.db-sheet{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(13,27,38,.35);backdrop-filter:blur(6px)}
+.db-sheet textarea{width:100%;box-sizing:border-box;min-height:70px;border-radius:14px;border:2px solid var(--line);padding:10px;font:600 12px/1.4 ui-monospace,monospace;resize:vertical;user-select:text;-webkit-user-select:text}
+.db-visit{white-space:nowrap;position:fixed;left:50%;top:calc(max(10px,env(safe-area-inset-top)) + 52px);transform:translateX(-50%);z-index:21;background:var(--sun);border-radius:16px;padding:8px 14px;font-weight:800;box-shadow:0 4px 14px rgba(0,0,0,.2);display:flex;gap:10px;align-items:center}
+.db-fade{position:fixed;inset:0;z-index:28;background:#0b1024;opacity:0;pointer-events:none;transition:opacity .8s}
+.db-fade.on{opacity:1}
+.db-photo .ig-top,.db-photo .ig-pad,.db-photo .db-quest,.db-photo .db-day,.db-photo .db-pal,.db-photo .db-tip{display:none!important}
+.db-photox{position:fixed;right:12px;top:calc(max(10px,env(safe-area-inset-top)));z-index:22;display:none}
+.db-photo .db-photox{display:flex}
+@media (max-width:980px){.db-pal{width:calc(100% - 24px);bottom:calc(max(14px,env(safe-area-inset-bottom)) + 168px)}.db-tip{bottom:calc(max(14px,env(safe-area-inset-bottom)) + 318px);max-width:calc(100% - 24px);white-space:normal;text-align:center}}
+@media (max-width:640px){.db-visit{top:auto;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 100px);font-size:13px;padding:6px 10px}.ig-hud .ig-chip{padding:5px 8px;font-size:12px;min-height:34px;gap:3px}.db-quest{font-size:12px;top:calc(max(10px,env(safe-area-inset-top)) + 142px)}.db-day{top:calc(max(10px,env(safe-area-inset-top)) + 96px);left:12px;right:auto}.db-day .ig-chip{min-height:36px;padding:6px 10px}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+</head><body>
+<canvas class="ig-gl" id="gl"></canvas>
+<div class="db-fade" id="fade"></div>
+<script type="module">
+import * as E from '../engine/inoa3d.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+const { THREE, clamp, lerp, rnd, pick, hash, damp, SFX, $ } = E;
+const V3 = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
+
+/* ================= data ================= */
+const RES = { wood: '🪵', stone: '🪨', fibre: '🌿', food: '🍎' };
+const PIECES = {
+  floor: { name: 'Floor', e: '🟫', layer: 'ground', cost: { wood: 2 } },
+  wall: { name: 'Wall', e: '🧱', layer: 'edge', cost: { wood: 3 } },
+  door: { name: 'Door', e: '🚪', layer: 'edge', cost: { wood: 3 }, pass: true },
+  window: { name: 'Window', e: '🪟', layer: 'edge', cost: { wood: 2, stone: 1 } },
+  roof: { name: 'Roof', e: '🛖', layer: 'roof', cost: { wood: 2, fibre: 2 } },
+  fence: { name: 'Fence', e: '🚧', layer: 'edge', cost: { wood: 1, fibre: 1 }, low: true },
+  path: { name: 'Path', e: '🪨', layer: 'ground', cost: { stone: 1 } },
+  lamp: { name: 'Lantern', e: '🏮', layer: 'obj', cost: { wood: 1, stone: 1, fibre: 1 } },
+  campfire: { name: 'Campfire', e: '🔥', layer: 'obj', cost: { wood: 2, stone: 3 } },
+  plot: { name: 'Garden', e: '🌱', layer: 'ground', cost: { wood: 1, fibre: 2 } },
+  chest: { name: 'Chest', e: '🧰', layer: 'obj', cost: { wood: 4 } },
+  bed: { name: 'Bed', e: '🛏️', layer: 'obj', cost: { wood: 4, fibre: 3 } },
+  bench: { name: 'Bench', e: '🪑', layer: 'obj', cost: { wood: 3 } },
+  barrel: { name: 'Barrel', e: '🛢️', layer: 'obj', cost: { wood: 2 } },
+  dock: { name: 'Dock', e: '⚓', layer: 'ground', water: true, cost: { wood: 3 } },
+  boat: { name: 'Boat', e: '⛵', layer: 'obj', water: true, cost: { wood: 8, fibre: 3 } }
+};
+const PKEYS = Object.keys(PIECES);
+const CROPS = ['carrot', 'cabbage', 'corn', 'pumpkin', 'strawberry'];
+const QUESTS = [
+  { text: 'Chop 6 wood from trees 🌴', stat: 'wood', n: 6, reward: { stone: 2 } },
+  { text: 'Mine 4 stone from rocks 🪨', stat: 'stone', n: 4, reward: { wood: 3 } },
+  { text: 'Gather 4 fibre from bushes 🌿', stat: 'fibre', n: 4, reward: { food: 2 } },
+  { text: 'Build a shelter before night: floor, 3 walls or a door, and a roof', check: () => shelterCount() > 0 ? 1 : 0, n: 1, reward: { wood: 6, fibre: 4 }, coins: 15 },
+  { text: 'Light a campfire 🔥', check: () => countOf('campfire'), n: 1, reward: { food: 3 } },
+  { text: 'Plant 3 crops in garden plots 🌱', check: () => S.crops.filter(c => c.seed).length, n: 3, reward: { wood: 5 } },
+  { text: 'Build a dock on the water ⚓', check: () => countOf('dock'), n: 1, reward: { fibre: 4 } },
+  { text: 'Build a boat and go for a sail ⛵', check: () => S.sailed ? 1 : 0, n: 1, reward: { stone: 4, wood: 4 } },
+  { text: 'Place 3 lanterns for cozy nights 🏮', check: () => countOf('lamp'), n: 3, reward: { food: 4 } },
+  { text: 'Build a bed and sleep through a night 🛏️', check: () => S.slept ? 1 : 0, n: 1, reward: { wood: 8 } }
+];
+const DAY_LEN = 420; // seconds per full day
+const PLAYERS = [['survivor-female', 'Juno'], ['survivor-male', 'Kai'], ['skater-female', 'Mara'], ['skater-male', 'Leo']];
+
+/* ================= save ================= */
+const KEY = 'inoa.builders';
+const DEF = () => ({ v: 1, seed: 1 + Math.floor(Math.random() * 9000), day: 1, dayT: .08, inv: { wood: 4, stone: 2, fibre: 2, food: 2 }, pieces: [], crops: [], dep: {}, q: 0, qBase: { wood: 0, stone: 0, fibre: 0, food: 0 }, stat: { wood: 0, stone: 0, fibre: 0, food: 0 }, built: 0, coins: 0, sailed: false, slept: false, player: 0, pos: null, name: 'My island', clock: 0 });
+let S = Object.assign(DEF(), E.store.get(KEY, {}));
+const save = () => { if (G.visit) return; S.pos = [player.pos.x, player.pos.z, player.yaw]; E.store.set(KEY, S); };
+
+/* ================= engine ================= */
+const ld = E.loading('Driftwood Builders', 'Washing driftwood ashore…');
+const R = E.createRenderer($('gl'), { fov: 55, portraitFov: 72, shadowSize: 24, far: 700 });
+const { scene, camera, sun, hemi } = R;
+await E.loadPack('../packs/builders.json', R, p => ld.set(p));
+R.setEnv(E.ASSETS.hdri.dawn); R.setLook({ background: 0x000000, fogNear: 70, fogFar: 230 }); scene.background = null;
+const input = E.createInput({ surface: $('gl') });
+const P = new E.Particles(scene);
+const G = { mode: 'title', t: 0, modal: false, build: false, sel: 'floor', rot: 0, demolish: false, night: 0, target: null, undo: [], swing: null, auto: null, visit: false, photo: false, day: { gathered: 0, built: 0, quests: 0 }, boat: null };
+let music = null;
+
+/* ================= helpers ================= */
+function box(w, h, d, m, x, y, z, parent, cast = true) { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y, z); b.castShadow = cast; b.receiveShadow = true; if (parent) parent.add(b); return b; }
+function cyl(rt, rb, h, m, x, y, z, parent, seg = 12) { const c = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), m); c.position.set(x, y, z); c.castShadow = true; c.receiveShadow = true; if (parent) parent.add(c); return c; }
+function shadowAll(o) { o.traverse(m => { if (m.isMesh && !m.userData.outline) { m.castShadow = true; m.receiveShadow = true; } }); return o; }
+const TW = []; function tween(dur, fn, done) { TW.push({ t: 0, dur, fn, done }); fn(0); }
+const ease = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+function angDamp(a, b, dt, k) { let d = b - a; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; return a + d * (1 - Math.pow(k, dt)); }
+const costTxt = c => Object.entries(c).map(([k, v]) => `${v}${RES[k]}`).join(' ');
+const canPay = c => Object.entries(c).every(([k, v]) => S.inv[k] >= v);
+const pay = (c, sign = -1) => { for (const [k, v] of Object.entries(c)) S.inv[k] += sign * v; };
+function glowTex() { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); const r = g.createRadialGradient(32, 32, 0, 32, 32, 32); r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(.35, 'rgba(255,255,255,.55)'); r.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = r; g.fillRect(0, 0, 64, 64); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; }
+
+// Merge static meshes that share a material into one mesh each (big draw-call saver). Skips anything flagged dyn/pick.
+function mergeStatic(root) {
+  root.updateMatrixWorld(true); const inv = new THREE.Matrix4().copy(root.matrixWorld).invert(); const groups = new Map();
+  root.traverse(o => { if (!o.isMesh || o.isInstancedMesh || o.isSkinnedMesh || Array.isArray(o.material) || !o.geometry.attributes.position) return; for (let q = o; q; q = q.parent) { if (q.userData.dyn || q.userData.pick || !q.visible) return; if (q === root) break; } const g = o.geometry; if (g.morphAttributes && Object.keys(g.morphAttributes).length) return; const key = o.material.uuid + '|' + o.castShadow + o.receiveShadow + '|' + Object.keys(g.attributes).sort().join(',') + '|' + o.renderOrder; if (!groups.has(key)) groups.set(key, []); groups.get(key).push(o); });
+  const gone = new Set();
+  for (const list of groups.values()) { if (list.length < 2) continue; const geos = list.map(o => { const g = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone(); for (const k of Object.keys(g.attributes)) if (g.attributes[k].isInterleavedBufferAttribute) g.setAttribute(k, g.attributes[k].clone()); g.applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld)); return g; }); let merged = null; try { merged = mergeGeometries(geos); } catch (e) { } geos.forEach(g => g.dispose()); if (!merged) continue; const m = new THREE.Mesh(merged, list[0].material); m.castShadow = list[0].castShadow; m.receiveShadow = list[0].receiveShadow; m.renderOrder = list[0].renderOrder; m.userData.outline = list[0].userData.outline; root.add(m); list.forEach(o => gone.add(o)); }
+  for (const o of gone) for (const c of [...o.children]) if (!gone.has(c)) root.attach(c);
+  for (const o of gone) o.removeFromParent();
+  return root;
+}
+
+
+/* ================= terrain ================= */
+let SEED = S.seed;
+function vnoise(x, z, s) { const xi = Math.floor(x), zi = Math.floor(z), xf = x - xi, zf = z - zi; const u = xf * xf * (3 - 2 * xf), v = zf * zf * (3 - 2 * zf); const a = hash(xi + s * 131, zi), b = hash(xi + 1 + s * 131, zi), c = hash(xi + s * 131, zi + 1), d = hash(xi + 1 + s * 131, zi + 1); return lerp(lerp(a, b, u), lerp(c, d, u), v); }
+function fbm(x, z, s, o = 4) { let a = .5, f = 1, sum = 0, n = 0; for (let i = 0; i < o; i++) { sum += vnoise(x * f, z * f, s + i * 17) * a; n += a; a *= .5; f *= 2.03; } return sum / n; }
+function shoreR(x, z) { const ang = Math.atan2(z, x); return 31 + (fbm(Math.cos(ang) * 1.6 + 9, Math.sin(ang) * 1.6 + 9, SEED) - .5) * 20; }
+function shoreD(x, z) { return shoreR(x, z) - Math.hypot(x, z); }
+function H(x, z) { const d = shoreD(x, z); let h; if (d < 0) h = -Math.min(3.4, -d * .32); else if (d < 6) h = d * .17; else h = 1.02 + Math.min(d - 6, 8) * .055; const hill = Math.max(0, fbm(x * .05, z * .05, SEED + 7) - .5) * 15 * E.smooth(7, 15, d); return h + hill + (fbm(x * .35, z * .35, SEED + 3, 2) - .5) * .22 * E.smooth(1, 5, d); }
+const world = new THREE.Group(); scene.add(world);
+let terrain = null, water = null, waterMat = null;
+function buildTerrain() {
+  if (terrain) { world.remove(terrain); terrain.geometry.dispose(); }
+  const TS = 150, TN = 150; const g = new THREE.PlaneGeometry(TS, TS, TN, TN); g.rotateX(-Math.PI / 2); const pos = g.attributes.position;
+  for (let i = 0; i < pos.count; i++) pos.setY(i, H(pos.getX(i), pos.getZ(i)));
+  g.computeVertexNormals(); const nrm = g.attributes.normal; const col = new Float32Array(pos.count * 3); const c = new THREE.Color(), sand = new THREE.Color(0xead6a4), wet = new THREE.Color(0xc9b484), grass = new THREE.Color(0x79b85a), grass2 = new THREE.Color(0x5f9e4a), dry = new THREE.Color(0xa7b860), rock = new THREE.Color(0x9b9184), sea = new THREE.Color(0x7fc9b9);
+  for (let i = 0; i < pos.count; i++) { const x = pos.getX(i), z = pos.getZ(i), h = pos.getY(i), ny = nrm.getY(i); const n = fbm(x * .15, z * .15, SEED + 11, 2);
+    if (h < -.05) c.copy(wet).lerp(sea, clamp(-h / 2.5, 0, 1) * .55); else if (h < .62 + n * .25) c.copy(sand).lerp(wet, clamp(.25 - h, 0, .25) * 2); else { c.copy(grass).lerp(grass2, n); if (h > 3) c.lerp(dry, clamp((h - 3) / 3, 0, .6)); }
+    if (ny < .8 && h > .3) c.lerp(rock, clamp((.8 - ny) * 4, 0, 1)); col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b; }
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  const nm = E.pbr('grass', 0xffffff, [60, 60], { bump: 2 }).normalMap;
+  terrain = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .95, normalMap: nm, normalScale: new THREE.Vector2(.7, .7) })); terrain.receiveShadow = true; terrain.userData.pick = { type: 'ground' }; world.add(terrain);
+  if (!water) {
+    waterMat = new THREE.ShaderMaterial({ transparent: true, uniforms: { uTime: { value: 0 }, uC: { value: new THREE.Color(0x3fc0c8) }, uD: { value: new THREE.Color(0x1d6f9a) }, uFog: { value: new THREE.Color() }, uFogN: { value: 70 }, uFogF: { value: 230 }, uFoam: { value: .9 } },
+      vertexShader: 'uniform float uTime;varying float vH;varying vec2 vW;varying float vDist;void main(){vec3 p=position;float h=sin(p.x*.18+uTime*1.1)*.09+sin(p.z*.23-uTime*1.4)*.07+sin((p.x+p.z)*.5+uTime*2.)*.025;p.y+=h;vH=h;vW=p.xz;vec4 mv=modelViewMatrix*vec4(p,1.);vDist=length(mv.xyz);gl_Position=projectionMatrix*mv;}',
+      fragmentShader: 'uniform vec3 uC,uD,uFog;uniform float uTime,uFogN,uFogF,uFoam;varying float vH;varying vec2 vW;varying float vDist;void main(){float r=length(vW);float deep=smoothstep(25.,60.,r);vec3 c=mix(uC,uD,deep);c=mix(c,c*1.15,smoothstep(-.1,.15,vH));float f=smoothstep(.13,.2,vH+sin(vW.x*1.7+uTime*1.3)*.03+sin(vW.y*2.1-uTime)*.03);c=mix(c,vec3(uFoam),f*.35);float a=mix(.62,.92,deep);c=mix(c,uFog,smoothstep(uFogN,uFogF,vDist));gl_FragColor=vec4(c,a);\n#include <colorspace_fragment>\n}' });
+    const wg = new THREE.PlaneGeometry(700, 700, 160, 160); wg.rotateX(-Math.PI / 2); water = new THREE.Mesh(wg, waterMat); water.position.y = 0; water.renderOrder = 1; water.userData.pick = { type: 'water' }; world.add(water);
+  }
+}
+
+/* ================= sky / time of day ================= */
+const SKY = (() => { const g = new THREE.Group(); const mat = new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false, fog: false, toneMapped: false, uniforms: { uTop: { value: new THREE.Color() }, uHor: { value: new THREE.Color() }, uSun: { value: new THREE.Color() }, uSunDir: { value: V3(0, 1, 0) } }, vertexShader: 'varying vec3 vP;void main(){vP=normalize(position);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}', fragmentShader: 'uniform vec3 uTop,uHor,uSun,uSunDir;varying vec3 vP;void main(){float h=clamp(vP.y,0.,1.);vec3 c=mix(uHor,uTop,pow(h,.55));float d=max(0.,dot(vP,uSunDir));c+=uSun*(pow(d,200.)*.9+pow(d,12.)*.08);gl_FragColor=vec4(c,1.);\n#include <colorspace_fragment>\n}' });
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(320, 32, 16), mat); dome.renderOrder = -10; g.add(dome);
+  const n = 600, sp = new Float32Array(n * 3); for (let i = 0; i < n; i++) { const a = hash(i, 1) * 6.283, e = hash(i, 2) * .9 + .06, r = 300; sp[i * 3] = Math.cos(a) * Math.cos(e) * r; sp[i * 3 + 1] = Math.sin(e) * r; sp[i * 3 + 2] = Math.sin(a) * Math.cos(e) * r; } const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.BufferAttribute(sp, 3)); const starMat = new THREE.PointsMaterial({ color: 0xfff6d8, size: 2, transparent: true, opacity: 0, fog: false, depthWrite: false }); g.add(new THREE.Points(sg, starMat));
+  const cloudMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1, fog: false, transparent: true, opacity: .9, depthWrite: false }); const pg = new THREE.SphereGeometry(1, 10, 8); const clouds = [];
+  for (let i = 0; i < 10; i++) { const cl = new THREE.Group(); for (let k = 0; k < 5; k++) { const puff = new THREE.Mesh(pg, cloudMat); const r = 7 + hash(i, k) * 7; puff.scale.set(r, r * .5, r); puff.position.set(k * 8 - 16, hash(k, i) * 3, hash(i + 3, k) * 5); cl.add(puff); } const a = i / 10 * Math.PI * 2 + hash(i, 7); cl.userData.a = a; cl.position.set(Math.cos(a) * 220, 55 + hash(i, 9) * 35, Math.sin(a) * 220); cl.lookAt(0, cl.position.y, 0); g.add(cl); clouds.push(cl); }
+  scene.add(g); return { g, mat, starMat, cloudMat, clouds }; })();
+const NIGHT = { top: 0x0c1430, hor: 0x2a3462, glow: 0x5a68b0, sun: .5, sc: 0xa9b9ff, hemi: .62, hc: 0x6070a8, exp: .98, night: 1, wc: 0x1f5a7a, wd: 0x0e2a4a, foam: .45 };
+const KF = [[0, { top: 0x6f8fc8, hor: 0xf6c7a2, glow: 0xffc890, sun: 1.0, sc: 0xffc69a, hemi: .5, hc: 0xf3d2b8, exp: .94, night: .3, wc: 0x5ab7c0, wd: 0x2a6a96, foam: .8 }], [.1, { top: 0x5a9ad8, hor: 0xd6ecf7, glow: 0xfff0d0, sun: 1.65, sc: 0xfff0dc, hemi: .55, hc: 0xd6ecf7, exp: .95, night: 0, wc: 0x3fc0c8, wd: 0x1d6f9a, foam: .95 }], [.35, { top: 0x4a8fd6, hor: 0xd2ecf8, glow: 0xfff6dc, sun: 1.8, sc: 0xfff4e4, hemi: .58, hc: 0xd2ecf8, exp: .93, night: 0, wc: 0x3fc6cc, wd: 0x1d6f9a, foam: .95 }], [.55, { top: 0x6a86c4, hor: 0xffcf9e, glow: 0xffad66, sun: 1.55, sc: 0xffc080, hemi: .5, hc: 0xffd7aa, exp: .94, night: .08, wc: 0x52b3b8, wd: 0x2a5f8e, foam: .9 }], [.63, { top: 0x2e3a72, hor: 0xe3967a, glow: 0xff8f5a, sun: .8, sc: 0xffa070, hemi: .48, hc: 0xb88a8a, exp: .95, night: .6, wc: 0x3a8496, wd: 0x1a3f66, foam: .7 }], [.7, NIGHT], [.94, NIGHT], [1, null]];
+KF[KF.length - 1][1] = KF[0][1];
+const cA = new THREE.Color(), cB = new THREE.Color(); const lerpHex = (a, b, k) => cA.set(a).lerp(cB.set(b), k).getHex();
+function lookAt(t) { let i = 0; while (i < KF.length - 2 && KF[i + 1][0] <= t) i++; const [h0, a] = KF[i], [h1, b] = KF[i + 1]; const k = E.smooth(0, 1, (t - h0) / (h1 - h0)); const o = {}; for (const key in a) o[key] = typeof a[key] === 'number' && ['sun', 'hemi', 'exp', 'night', 'foam'].includes(key) ? lerp(a[key], b[key], k) : lerpHex(a[key], b[key], k); return o; }
+function sunDir(t) { const dayK = clamp(t / .66, 0, 1); const th = lerp(.18, Math.PI - .18, dayK); const sd = V3(Math.cos(th) * .85, Math.sin(th) * .75 + .1, -.45).normalize(); const md = V3(-.35, .8, .45).normalize(); const nk = E.smooth(.6, .72, t) * (1 - E.smooth(.92, 1, t)); return sd.lerp(md, nk).normalize(); }
+function applyTime() { const L = lookAt(S.dayT); G.night = L.night; const sd = sunDir(S.dayT); const U = SKY.mat.uniforms; U.uTop.value.set(L.top); U.uHor.value.set(L.hor); U.uSun.value.set(L.glow); U.uSunDir.value.copy(sd).setY(Math.max(.02, sd.y * (1 - L.night)));
+  SKY.starMat.opacity = E.smooth(.5, .95, L.night) * .9; SKY.cloudMat.opacity = .85 * (1 - E.smooth(.4, .9, L.night) * .7); SKY.cloudMat.color.set(0xffffff).lerp(cA.set(L.hor), .3 + L.night * .4);
+  scene.fog.color.set(L.hor); R.renderer.toneMappingExposure = L.exp; sun.intensity = L.sun; sun.color.set(L.sc); hemi.intensity = L.hemi; hemi.color.set(L.hc); hemi.groundColor.set(0x6f6a4a); scene.environmentIntensity = .18 * (1 - L.night * .5); R.bloom.strength = .12 + L.night * .2; R.bloom.threshold = .85;
+  waterMat.uniforms.uC.value.set(L.wc); waterMat.uniforms.uD.value.set(L.wd); waterMat.uniforms.uFog.value.set(L.hor); waterMat.uniforms.uFoam.value = L.foam; G.sunDir = sd; MT.glow.emissiveIntensity = .3 + L.night * 2.4; ffMat.opacity = E.smooth(.4, .9, L.night) * .95; }
+
+/* ================= materials ================= */
+const MT = {
+  plank: E.pbr('wood', 0xdcae7c, [1, 1], { bump: 3 }), plankDark: E.pbr('wood', 0x96704c, [1, 1]), deck: E.pbr('wood', 0x9c7048, [1, 2]),
+  stone: E.pbr('stone', 0xa8a294, [1, 1]), thatch: E.pbr('fabric', 0xe2bf72, [4, 4], { bump: 5 }), soil: E.pbr('sand', 0x5a3d26, [2, 2]),
+  bark: E.pbr('wood', 0x6b4a33, [1, 2]), glass: new THREE.MeshStandardMaterial({ color: 0xcfeeff, transparent: true, opacity: .3, roughness: .05, metalness: .2, depthWrite: false }),
+  glow: new THREE.MeshStandardMaterial({ color: 0xfff1cf, emissive: 0xffb85a, emissiveIntensity: 1, roughness: .4 }),
+  flame: new THREE.MeshBasicMaterial({ color: 0xffa040, transparent: true, opacity: .9, blending: THREE.AdditiveBlending, depthWrite: false }),
+  leafA: new THREE.MeshStandardMaterial({ color: 0x4f9446, roughness: .85, flatShading: true }), leafB: new THREE.MeshStandardMaterial({ color: 0x6eaf55, roughness: .85, flatShading: true }),
+  ghostOK: new THREE.MeshBasicMaterial({ color: 0x5fe0a8, transparent: true, opacity: .5, depthWrite: false }), ghostNO: new THREE.MeshBasicMaterial({ color: 0xff6b6b, transparent: true, opacity: .5, depthWrite: false }), ghostDel: new THREE.MeshBasicMaterial({ color: 0xff5a5a, transparent: true, opacity: .35, depthWrite: false })
+};
+const flowerCols = [0xffb3c7, 0xfff1a6, 0xffffff, 0xc8b6ff, 0xff9f80];
+
+/* ================= resource nodes ================= */
+let NODES = [];
+const nodeGroup = new THREE.Group(); world.add(nodeGroup);
+function mkBush(s, berries) { const g = new THREE.Group(); for (let k = 0; k < 4; k++) { const m = new THREE.Mesh(new THREE.IcosahedronGeometry((.42 + hash(k, s * 9) * .22), 1), k % 2 ? MT.leafA : MT.leafB); m.position.set((k - 1.5) * .32, .35 + hash(s, k) * .15, (hash(k, s) - .5) * .4); m.scale.y = .8; m.castShadow = true; m.receiveShadow = true; g.add(m); } const fr = []; for (let k = 0; k < (berries ? 8 : 5); k++) { const f = berries ? E.instance('strawberry', { scale: .16, outline: false }) : new THREE.Mesh(new THREE.SphereGeometry(.06, 6, 5), E.mat(flowerCols[(k + s) % 5])); const a = k / 8 * 6.28; f.position.set(Math.cos(a) * .55, .45 + hash(k, s) * .35, Math.sin(a) * .35); f.userData.dyn = true; g.add(f); fr.push(f); } g.userData.fruit = fr; return g; }
+function baseCenter(g) { g.updateMatrixWorld(true); const v = V3(); let minY = 1e9; const pts = []; g.traverse(o => { if (!o.isMesh || o.userData.outline || o.userData.dyn) return; const pa = o.geometry.attributes.position; for (let i = 0; i < pa.count; i += 1) { v.fromBufferAttribute(pa, i).applyMatrix4(o.matrixWorld); pts.push(v.x, v.y, v.z); if (v.y < minY) minY = v.y; } }); let ax = 0, az = 0, n = 0; for (let i = 0; i < pts.length; i += 3) if (pts[i + 1] < minY + .35) { ax += pts[i]; az += pts[i + 2]; n++; } if (n) for (const c of g.children) { c.position.x -= ax / n; c.position.z -= az / n; } }
+function genNodes() {
+  for (const n of NODES) nodeGroup.remove(n.g); NODES = [];
+  const sp = spawnPoint(); let tries = 0;
+  const add = (type, x, z) => { for (const n of NODES) if ((n.x - x) ** 2 + (n.z - z) ** 2 < 3.1 ** 2) return false; if ((sp.x - x) ** 2 + (sp.z - z) ** 2 < 7 ** 2) return false; NODES.push({ type, x, z }); return true; };
+  while (NODES.length < 105 && tries++ < 6000) { const a = hash(tries, SEED) * 6.283, r = Math.sqrt(hash(SEED, tries)) * 44; const x = Math.cos(a) * r, z = Math.sin(a) * r; const d = shoreD(x, z), h = H(x, z); const roll = hash(tries * 3, SEED + 1);
+    if (d > 1.5 && d < 7 && roll < .55) add('palm', x, z); else if (d > 9 && h < 4.5 && roll < .35) add('tree', x, z); else if (d > 7 && roll < .5) add('rock', x, z); else if (d > 2.5 && d < 7 && roll < .62) add('rock', x, z); else if (d > 6 && roll < .78) add('bush', x, z); else if (d > 9 && roll < .86) add('fruit', x, z); }
+  NODES.forEach((n, idx) => { n.idx = idx; const s = hash(idx, SEED + 5); let g;
+    if (n.type === 'palm') { g = E.instance(s < .5 ? 'palm-detailed-short' : 'palm-long', { scale: 4.2 + s * 2 }); n.r = .38; n.max = 3; n.res = 'wood'; n.tool = 'axe'; }
+    else if (n.type === 'tree') { g = E.instance('tree-big', { scale: 5 + s * 2, fit: 'height', tint: 0x9fd88f }); n.r = .45; n.max = 4; n.res = 'wood'; n.tool = 'axe'; }
+    else if (n.type === 'fruit') { g = E.instance('low-poly-tree', { scale: 4.2 + s, fit: 'height' }); const fr = []; for (let k = 0; k < 6; k++) { const ap = E.instance('apple', { scale: .22, outline: false }); const a = k / 6 * 6.28; ap.position.set(Math.cos(a) * 1.0, 3.2 + hash(k, idx) * .8, Math.sin(a) * 1.0); ap.userData.dyn = true; g.add(ap); fr.push(ap); } g.userData.fruit = fr; n.r = .4; n.max = 3; n.res = 'food'; n.tool = 'hand'; }
+    else if (n.type === 'rock') { const kind = s < .4 ? 'formation-rock' : s < .8 ? 'formation-stone' : 'formation-large-rock'; g = E.instance(kind, { scale: kind === 'formation-large-rock' ? 2.4 : 1.4 + s * .5, tint: kind === 'formation-stone' ? 0xe6dccb : null }); n.r = kind === 'formation-large-rock' ? 1.0 : .7; n.max = kind === 'formation-large-rock' ? 6 : 3; n.res = 'stone'; n.tool = 'shovel'; }
+    else { const berries = hash(idx, 77) < .35; g = mkBush(idx, berries); n.r = .55; n.max = 2; n.res = berries ? 'food' : 'fibre'; n.tool = 'hand'; if (berries) n.type = 'berry'; }
+    if (n.tool === 'axe' || n.type === 'fruit') baseCenter(g);
+    g.position.set(n.x, H(n.x, n.z) - .05, n.z); g.rotation.y = s * 6.28; mergeStatic(g); nodeGroup.add(g); n.g = g; n.hp = n.max; n.alive = true; n.shake = 0; n.baseScale = 1;
+    if (!G.visit && S.dep[idx] && S.dep[idx] >= S.day) deplete(n, true); });
+}
+function deplete(n, instant) { n.alive = false; n.hp = 0; S.dep[n.idx] = S.day; if (n.type === 'fruit') { n.g.userData.fruit.forEach(f => f.visible = false); return; }
+  if (n.type === 'berry') { n.g.userData.fruit.forEach(f => f.visible = false); return; }
+  if (instant) { n.g.visible = false; addStump(n); return; }
+  if (n.tool === 'axe') { const dx = n.x - player.pos.x, dz = n.z - player.pos.z, l = Math.hypot(dx, dz) || 1; const axis = V3(dz / l, 0, -dx / l); const q0 = n.g.quaternion.clone(); tween(1.1, k => { n.g.quaternion.copy(q0).premultiply(new THREE.Quaternion().setFromAxisAngle(axis, ease(k) * 1.45)); }, () => { tween(.5, k => n.g.scale.setScalar(1 - k * .99), () => { n.g.visible = false; n.g.quaternion.copy(q0); n.g.scale.setScalar(1); addStump(n); }); SFX.crash(); P.burst(V3(n.x + dx / l * 3, H(n.x, n.z) + .5, n.z + dz / l * 3), { color: 0x7cbf5a, n: 20, speed: 2.5, up: 2, size: .35, life: .9, additive: false, gravity: 6 }); }); }
+  else tween(.4, k => n.g.scale.setScalar(1 - k * .99), () => { n.g.visible = false; n.g.scale.setScalar(1); addStump(n); }); }
+function addStump(n) { if (n.stump) { n.stump.visible = true; return; } let m; if (n.tool === 'axe') { m = new THREE.Group(); cyl(.22, .28, .35, MT.bark, 0, .17, 0, m, 9); const top = new THREE.Mesh(new THREE.CircleGeometry(.22, 9), E.mat(0xd9b88a)); top.rotation.x = -Math.PI / 2; top.position.y = .351; m.add(top); } else if (n.tool === 'shovel') { m = new THREE.Group(); for (let k = 0; k < 3; k++) { const pb = new THREE.Mesh(new THREE.DodecahedronGeometry(.18 + k * .04), MT.stone); pb.position.set((k - 1) * .3, .1, hash(k, n.idx) * .3); pb.castShadow = true; m.add(pb); } } else { m = new THREE.Group(); const sp = new THREE.Mesh(new THREE.ConeGeometry(.2, .25, 6), MT.leafB); sp.position.y = .12; m.add(sp); } m.position.set(n.x, H(n.x, n.z), n.z); nodeGroup.add(m); n.stump = m; }
+function regrowAll() { for (const n of NODES) if (!n.alive) { n.alive = true; n.hp = n.max; n.g.visible = true; n.g.scale.setScalar(.01); if (n.stump) n.stump.visible = false; if (n.g.userData.fruit) n.g.userData.fruit.forEach(f => f.visible = true); const g = n.g; tween(1.2, k => g.scale.setScalar(.01 + ease(k) * .99)); } S.dep = {}; }
+
+/* ================= grid + pieces ================= */
+const CELL = 2, WALL_H = 2.5;
+const cellOf = (x, z) => [Math.floor(x / CELL), Math.floor(z / CELL)];
+const cellC = (i, j) => V3((i + .5) * CELL, 0, (j + .5) * CELL);
+function cellStats(i, j) { let mx = -99, mn = 99; for (const [a, b] of [[0, 0], [1, 0], [0, 1], [1, 1], [.5, .5], [.5, 0], [0, .5], [1, .5], [.5, 1]]) { const h = H((i + a) * CELL, (j + b) * CELL); mx = Math.max(mx, h); mn = Math.min(mn, h); } return { mx, mn }; }
+const snapH = h => Math.ceil(h * 4) / 4;
+const edgeKey = (i, j, side) => side === 0 ? `z:${i}:${j}` : side === 2 ? `z:${i}:${j + 1}` : side === 1 ? `x:${i + 1}:${j}` : `x:${i}:${j}`;
+function edgeCells(key) { const [ax, a, b] = key.split(':'); const A = +a, B = +b; return ax === 'z' ? [[A, B - 1], [A, B]] : [[A - 1, B], [A, B]]; }
+function edgeInfo(key) { const [ax, a, b] = key.split(':'); const A = +a, B = +b; return ax === 'z' ? { x: (A + .5) * CELL, z: B * CELL, ry: 0 } : { x: A * CELL, z: (B + .5) * CELL, ry: Math.PI / 2 }; }
+const OCC = new Map(); // layer key -> piece
+const pieceKey = p => { const L = PIECES[p.t].layer; return L === 'edge' ? 'e:' + edgeKey(p.i, p.j, p.r) : L[0] + ':' + p.i + ':' + p.j; };
+function groundTop(i, j) { const gp = OCC.get(`g:${i}:${j}`); if (gp) return gp.y; return null; }
+function baseY(i, j) { const gt = groundTop(i, j); if (gt != null && OCC.get(`g:${i}:${j}`).t !== 'path' && OCC.get(`g:${i}:${j}`).t !== 'plot') return gt; return snapH(cellStats(i, j).mx); }
+function edgeBase(key) { const [c1, c2] = edgeCells(key); const ys = []; for (const [i, j] of [c1, c2]) { const gt = groundTop(i, j); const gp = OCC.get(`g:${i}:${j}`); if (gt != null && gp.t !== 'path' && gp.t !== 'plot') ys.push(gt); } if (ys.length) return Math.max(...ys); const ei = edgeInfo(key); const off = ei.ry ? [[0, -1], [0, 1], [0, 0]] : [[-1, 0], [1, 0], [0, 0]]; return snapH(Math.max(...off.map(([a, b]) => H(ei.x + a * .95, ei.z + b * .95)))); }
+function pieceY(p) { const T = PIECES[p.t]; if (p.t === 'dock') return .55; if (p.t === 'boat') return 0; if (T.layer === 'edge') return edgeBase(edgeKey(p.i, p.j, p.r)); if (T.layer === 'roof') { let y = baseY(p.i, p.j); for (let s = 0; s < 4; s++) { const ek = edgeKey(p.i, p.j, s); const e = OCC.get('e:' + ek); if (e && !PIECES[e.t].low) y = Math.max(y, e.y); } return y + WALL_H; } if (p.t === 'floor') return snapH(cellStats(p.i, p.j).mx) + .12; if (p.t === 'path' || p.t === 'plot') return H(cellC(p.i, p.j).x, cellC(p.i, p.j).z); const gp = OCC.get(`g:${p.i}:${p.j}`); if (gp && gp.t === 'floor') return gp.y; if (gp && gp.t === 'dock') return gp.y + .07; const c = cellC(p.i, p.j); return H(c.x, c.z); }
+// ---- piece meshes ----
+function mkFloor() { const g = new THREE.Group(); box(2, .24, 2, MT.plank, 0, -.12, 0, g); box(1.9, 1.6, 1.9, MT.stone, 0, -1.04, 0, g); for (let k = -1; k <= 1; k += 2) box(2.02, .03, .06, MT.plankDark, 0, .002, k * .5, g, false); return g; }
+function mkPath(p) { const g = new THREE.Group(); const c = cellC(p.i, p.j); const base = H(c.x, c.z); for (let k = 0; k < 5; k++) { const a = k * 1.3 + hash(p.i, p.j), r = k ? .55 : 0; const x = Math.cos(a) * r, z = Math.sin(a) * r; const s = new THREE.Mesh(new THREE.CylinderGeometry(.34 + hash(k, p.i) * .1, .4, .3, 7), MT.stone); s.position.set(x, H(c.x + x, c.z + z) - base + .02, z); s.rotation.y = a; s.receiveShadow = true; s.castShadow = true; g.add(s); } return g; }
+function mkPlot() { const g = new THREE.Group(); box(1.7, .5, 1.7, MT.soil, 0, -.05, 0, g); for (const s of [-1, 1]) { box(1.86, .32, .1, MT.plankDark, 0, .02, s * .88, g); box(.1, .32, 1.86, MT.plankDark, s * .88, .02, 0, g); } for (let k = -1; k <= 1; k += 2) box(1.5, .05, .25, E.mat(0x4a3020), 0, .22, k * .38, g, false); return g; }
+function mkWall(kind) { const g = new THREE.Group(); const H2 = WALL_H; const post = (x) => box(.22, H2 + .1, .22, MT.plankDark, x, H2 / 2 + .05, 0, g);
+  if (kind === 'fence') { for (const x of [-.95, .95, 0]) box(.12, 1.05, .12, MT.plankDark, x, .52, 0, g); for (const y of [.4, .82]) box(2, .09, .06, MT.plank, 0, y, 0, g); box(2, .5, .2, MT.stone, 0, -.2, 0, g); return g; }
+  post(-1); post(1); box(2, .9, .3, MT.stone, 0, -.4, 0, g);
+  if (kind === 'wall') box(1.8, H2, .16, MT.plank, 0, H2 / 2, 0, g);
+  else if (kind === 'door') { box(1.8, H2 - 2.1, .16, MT.plank, 0, 2.1 + (H2 - 2.1) / 2, 0, g); box(.4, 2.1, .16, MT.plank, -.7, 1.05, 0, g); box(.4, 2.1, .16, MT.plank, .7, 1.05, 0, g); const door = new THREE.Group(); box(1.0, 2.05, .07, MT.plankDark, .5, 1.03, 0, door); const knob = new THREE.Mesh(new THREE.SphereGeometry(.05, 8, 6), E.mat(0xc9a25a, { metalness: .7, roughness: .3 })); knob.position.set(.88, 1.0, .06); door.add(knob); door.position.set(-.5, 0, .05); door.rotation.y = -1.1; g.add(door); }
+  else { box(1.8, 1.0, .16, MT.plank, 0, .5, 0, g); box(1.8, H2 - 1.9, .16, MT.plank, 0, 1.9 + (H2 - 1.9) / 2, 0, g); box(.4, .9, .16, MT.plank, -.7, 1.45, 0, g); box(.4, .9, .16, MT.plank, .7, 1.45, 0, g); const gl = new THREE.Mesh(new THREE.PlaneGeometry(1.0, .9), MT.glass); gl.position.y = 1.45; g.add(gl); box(1.0, .06, .2, MT.plankDark, 0, 1.45, 0, g); for (const s of [-1, 1]) { const sh = box(.5, .95, .05, E.pbr('wood', 0x6f9fb8, [1, 1]), s * .78, 1.45, .14, g); sh.rotation.y = s * .5; } box(1.2, .07, .26, MT.plankDark, 0, 1.0, .05, g); }
+  return g; }
+function mkRoof() { const g = new THREE.Group(); const cone = new THREE.Mesh(new THREE.ConeGeometry(1.75, 1.3, 4, 1), MT.thatch); cone.rotation.y = Math.PI / 4; cone.position.y = .65 + .08; cone.castShadow = true; cone.receiveShadow = true; g.add(cone); box(2.1, .1, 2.1, MT.plankDark, 0, .04, 0, g); return g; }
+function mkLamp() { const g = new THREE.Group(); box(.14, 1.9, .14, MT.plankDark, 0, .95, 0, g); box(.6, .1, .1, MT.plankDark, .25, 1.85, 0, g); const lan = new THREE.Group(); const gl = new THREE.Mesh(new THREE.CylinderGeometry(.12, .12, .28, 8), MT.glow); lan.add(gl); cyl(.06, .16, .1, MT.plankDark, 0, .19, 0, lan, 8); cyl(.14, .12, .04, MT.plankDark, 0, -.16, 0, lan, 8); lan.position.set(.48, 1.55, 0); g.add(lan); box(.5, .3, .5, MT.stone, 0, .05, 0, g); g.userData.light = V3(.48, 1.55, 0); return g; }
+function mkCampfire() { const g = new THREE.Group(); for (let k = 0; k < 9; k++) { const a = k / 9 * 6.283; const s = new THREE.Mesh(new THREE.DodecahedronGeometry(.17), MT.stone); s.position.set(Math.cos(a) * .55, .1, Math.sin(a) * .55); s.rotation.set(k, k * 2, 0); s.castShadow = true; g.add(s); } for (let k = 0; k < 3; k++) { const l = cyl(.07, .08, .8, MT.bark, 0, .18, 0, g, 7); l.rotation.set(Math.PI / 2 - .35, k * 2.1, 0); } const fl = new THREE.Mesh(new THREE.ConeGeometry(.22, .7, 8), MT.flame); fl.position.y = .45; g.add(fl); const fl2 = new THREE.Mesh(new THREE.ConeGeometry(.12, .45, 8), new THREE.MeshBasicMaterial({ color: 0xfff0a0, transparent: true, opacity: .9, blending: THREE.AdditiveBlending, depthWrite: false })); fl2.position.y = .38; g.add(fl2); fl.userData.dyn = fl2.userData.dyn = true; g.userData.flames = [fl, fl2]; g.userData.light = V3(0, .9, 0); g.userData.fire = true; return g; }
+function mkModel(name, scale, opts) { const g = new THREE.Group(); const m = E.instance(name, Object.assign({ scale }, opts || {})); g.add(m); return g; }
+function mkDock() { const g = new THREE.Group(); for (let k = 0; k < 5; k++) box(2.04, .1, .36, MT.deck, 0, -.05, -.8 + k * .4, g); for (const x of [-.85, .85]) for (const z of [-.85, .85]) box(.16, 3.2, .16, MT.plankDark, x, -1.6, z, g); return g; }
+function buildPiece(p) { let g; switch (p.t) { case 'floor': g = mkFloor(); break; case 'path': g = mkPath(p); break; case 'plot': g = mkPlot(); break; case 'wall': case 'door': case 'window': case 'fence': g = mkWall(p.t); break; case 'roof': g = mkRoof(); break; case 'lamp': g = mkLamp(); break; case 'campfire': g = mkCampfire(); break; case 'chest': g = mkModel('chest', .95); break; case 'bed': g = mkModel('bed', 2.1); break; case 'bench': g = mkModel('bench', 1.6); break; case 'barrel': g = mkModel('barrel', .95); break; case 'dock': g = mkDock(); break; case 'boat': g = mkModel('boat-small', 3.2); g.children[0].rotation.y = Math.PI / 2; break; } shadowAll(g); return g; }
+function placePieceMesh(p) { const T = PIECES[p.t]; const g = mergeStatic(buildPiece(p)); p.y = pieceY(p); if (T.layer === 'edge') { const ei = edgeInfo(edgeKey(p.i, p.j, p.r)); g.position.set(ei.x, p.y, ei.z); g.rotation.y = ei.ry; } else { const c = cellC(p.i, p.j); g.position.set(c.x, p.y, c.z); g.rotation.y = -p.r * Math.PI / 2; } world.add(g); p.g = g; g.userData.piece = p; return g; }
+const PLIST = []; // live pieces
+function addPiece(p, fromLoad) { OCC.set(pieceKey(p), p); placePieceMesh(p); PLIST.push(p); if (p.t === 'plot' && !G.visit && !S.crops.find(c => c.i === p.i && c.j === p.j)) S.crops.push({ i: p.i, j: p.j, seed: null, t0: 0 }); if (p.t === 'boat') G.boatPiece = p; if (!fromLoad) { S.pieces.push([PKEYS.indexOf(p.t), p.i, p.j, p.r]); } syncCrop(p); return p; }
+function removePiece(p) { OCC.delete(pieceKey(p)); world.remove(p.g); PLIST.splice(PLIST.indexOf(p), 1); const k = S.pieces.findIndex(a => PKEYS[a[0]] === p.t && a[1] === p.i && a[2] === p.j && a[3] === p.r); if (k >= 0) S.pieces.splice(k, 1); if (p.t === 'plot') { const ci = S.crops.findIndex(c => c.i === p.i && c.j === p.j); if (ci >= 0) S.crops.splice(ci, 1); } if (G.boatPiece === p) G.boatPiece = null; }
+function countOf(t) { return PLIST.filter(p => p.t === t).length; }
+function shelterCount() { let n = 0; for (const p of PLIST) { if (p.t !== 'floor') continue; if (!OCC.get(`r:${p.i}:${p.j}`)) continue; let w = 0; for (let s = 0; s < 4; s++) { const e = OCC.get('e:' + edgeKey(p.i, p.j, s)); if (e && !PIECES[e.t].low) w++; } if (w >= 3) n++; } return n; }
+function nodeInCell(i, j) { const x0 = i * CELL, z0 = j * CELL; for (const n of NODES) if (n.alive || n.stump?.visible) { if (n.x > x0 - n.r * .6 && n.x < x0 + CELL + n.r * .6 && n.z > z0 - n.r * .6 && n.z < z0 + CELL + n.r * .6) return n; } return null; }
+function validate(p) { const T = PIECES[p.t]; if (OCC.get(pieceKey(p))) return 'Something is already there';
+  const st = cellStats(p.i, p.j);
+  if (T.layer === 'edge') { const [c1, c2] = edgeCells(edgeKey(p.i, p.j, p.r)); const land = [c1, c2].some(([i, j]) => cellStats(i, j).mx > .15 || OCC.get(`g:${i}:${j}`)?.t === 'dock'); if (!land) return 'Walls need land'; const ei = edgeInfo(edgeKey(p.i, p.j, p.r)); for (const n of NODES) if ((n.alive || n.stump?.visible) && Math.hypot(n.x - ei.x, n.z - ei.z) < n.r + .9) return 'A tree or rock is in the way'; return null; }
+  if (T.layer === 'roof') { let sup = 0; for (let s = 0; s < 4; s++) { const e = OCC.get('e:' + edgeKey(p.i, p.j, s)); if (e && !PIECES[e.t].low) sup++; } for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if (OCC.get(`r:${p.i + a}:${p.j + b}`)) sup++; return sup ? null : 'Roofs rest on walls (or next to another roof)'; }
+  if (p.t === 'dock') { if (st.mn > .05) return 'Docks go on the water'; if (st.mx < -2.6) return 'Too deep — build out from the shore'; const near = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => cellStats(p.i + a, p.j + b).mx > .3 || OCC.get(`g:${p.i + a}:${p.j + b}`)?.t === 'dock'); return near ? null : 'Start the dock at the shore'; }
+  if (p.t === 'boat') { if (st.mx > .02) return 'Boats need open water'; if (OCC.get(`g:${p.i}:${p.j}`)) return 'Something is already there'; const near = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]].some(([a, b]) => cellStats(p.i + a, p.j + b).mx > .2 || OCC.get(`g:${p.i + a}:${p.j + b}`)?.t === 'dock'); if (!near) return 'Moor the boat next to the shore or a dock'; if (countOf('boat') >= 2) return 'Two boats is plenty!'; return null; }
+  if (T.layer === 'ground' || T.layer === 'obj') { const gp = OCC.get(`g:${p.i}:${p.j}`); if (T.layer === 'obj' && gp && (gp.t === 'plot')) return 'That is a garden'; if (T.layer === 'obj' && gp && gp.t === 'dock') { if (p.t === 'bed') return 'Beds go on land'; return null; } if (st.mn < .1) return 'Too close to the water'; if (st.mx - st.mn > (p.t === 'path' ? 1.6 : 1.15)) return 'Too steep here'; if (nodeInCell(p.i, p.j)) return 'A tree or rock is in the way'; if (T.layer === 'obj' && OCC.get(`r:${p.i}:${p.j}`) && p.t === 'campfire') return 'No campfires indoors!'; return null; }
+  return null; }
+
+/* ================= crops ================= */
+const CROP_TIME = 75; // game seconds
+let gameClock = 0; // persistent seconds of play (stored in S.clock)
+function syncCrop(p) { if (p.t !== 'plot') return; const c = S.crops.find(c => c.i === p.i && c.j === p.j); if (!c) return; const g = p.g; if (g.userData.crop) { g.remove(g.userData.crop); g.userData.crop = null; } if (!c.seed) return; const k = clamp((S.clock - c.t0) / CROP_TIME, 0, 1); const stage = k >= 1 ? 2 : k > .45 ? 1 : 0; const cg = new THREE.Group(); for (const [x, z] of [[-.4, -.38], [.4, -.38], [-.4, .38], [.4, .38]]) { let m; if (stage === 2) { m = E.instance(c.seed, { scale: c.seed === 'corn' ? .7 : .42 }); } else { m = new THREE.Group(); for (let s = 0; s < 3; s++) { const lf = new THREE.Mesh(new THREE.ConeGeometry(.05, stage ? .45 : .22, 5), MT.leafB); lf.position.y = (stage ? .45 : .22) / 2; lf.rotation.set((s - 1) * .4, 0, (s % 2 - .5) * .5); m.add(lf); } } m.position.set(x, .22, z); m.rotation.y = hash(x * 9, z * 9) * 6; cg.add(m); } shadowAll(cg); g.add(cg); g.userData.crop = cg; c.stage = stage; }
+function cropAt(i, j) { return S.crops.find(c => c.i === i && c.j === j); }
+
+/* ================= player ================= */
+const player = { pos: V3(), yaw: 0, vel: V3(), y: 0, model: null, rig: null, t: 0, speed: 0, tool: null };
+const tools = {};
+function spawnPoint() { const ang = Math.PI / 2 + .3; for (let r = 30; r > 0; r -= .5) { const x = Math.cos(ang) * r, z = Math.sin(ang) * r; if (shoreD(x, z) > 8.5) return V3(x, 0, z); } return V3(0, 0, 0); }
+function buildPlayer() { if (player.root) world.remove(player.root); const root = new THREE.Group(); const m = E.instance(PLAYERS[S.player % 4][0], { scale: 1.7, fit: 'height', outline: false }); root.add(m); player.root = root; player.model = m; player.rig = E.bones(m); world.add(root);
+  const sh = new THREE.Mesh(new THREE.CircleGeometry(.35, 18), new THREE.MeshBasicMaterial({ color: 0, transparent: true, opacity: .22, depthWrite: false })); sh.rotation.x = -Math.PI / 2; sh.position.y = .03; root.add(sh); player.shadow = sh;
+  // tools held in the right hand (hidden until used). Orientation is solved from the T-pose rest so the handle points forward out of the fist.
+  const hand = player.rig.RightHand; root.updateMatrixWorld(true); const ws = hand.getWorldScale(V3()).x; const hqi = hand.getWorldQuaternion(new THREE.Quaternion()).invert(); const want = new THREE.Quaternion().setFromUnitVectors(V3(0, 1, 0), V3(0, .25, 1).normalize());
+  for (const [name, sc, grip] of [['axe', .8, -.14], ['shovel', 1.0, -.2]]) { const holder = new THREE.Group(); const t = E.instance(name, { scale: sc }); t.position.y = grip; holder.add(t); holder.scale.setScalar(1 / ws); holder.quaternion.copy(hqi).multiply(want); holder.position.copy(V3(-.07, -.03, .02).applyQuaternion(hqi)).multiplyScalar(1 / ws); hand.add(holder); holder.visible = false; tools[name] = holder; }
+}
+
+/* ================= camera ================= */
+const cam = { yaw: .3, pitch: .42, dist: 10, pos: V3(), look: V3() };
+function updateCamera(dt, snap) {
+  if (G.mode === 'title') { const a = G.t * .04; const c = V3(0, 2, 0); cam.pos.set(Math.cos(a) * 58, 26, Math.sin(a) * 58); camera.position.copy(cam.pos); camera.lookAt(c); updateSun(V3(0, 0, 0)); return; }
+  const portrait = innerHeight > innerWidth; const focus = (G.boat ? G.boat.pos : player.pos).clone().add(V3(0, 1.3, 0));
+  let dist = cam.dist * (portrait ? 1.25 : 1), pitch = cam.pitch; if (G.photo) { dist = cam.dist * 1.4; }
+  const want = focus.clone().add(V3(Math.sin(cam.yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(cam.yaw) * Math.cos(pitch)).multiplyScalar(dist));
+  const gh = Math.max(0, H(want.x, want.z)) + .8; if (want.y < gh) want.y = gh;
+  const k = snap ? 1 : 1 - Math.pow(.002, dt); cam.pos.lerp(want, k); cam.look.lerp(focus, snap ? 1 : 1 - Math.pow(.0005, dt)); camera.position.copy(cam.pos); camera.lookAt(cam.look); updateSun(focus); updateOcclusion(snap ? 1 : dt);
+}
+let occT = 0;
+function updateOcclusion(dt) { occT -= dt; if (occT > 0) return; occT = .12; const c = camera.position, f = cam.look; const dx = f.x - c.x, dz = f.z - c.z, L = Math.hypot(dx, dz) || 1; for (const n of NODES) { if (!n.alive) continue; const px = n.x - c.x, pz = n.z - c.z; const t = (px * dx + pz * dz) / L; const perp = Math.abs(px * dz - pz * dx) / L; const big = n.tool === 'axe' || n.type === 'fruit'; const hide = (t > -1 && t < L - 1.2 && perp < n.r + (big ? 1.6 : .6)) || Math.hypot(px, pz) < (big ? 6.5 : 2.5); n.g.visible = !hide; } }
+function updateSun(f) { const sd = G.sunDir || V3(.4, .8, .3); sun.position.copy(f).addScaledVector(sd, 45); sun.target.position.copy(f); sun.target.updateMatrixWorld(); }
+
+/* ================= collision / movement ================= */
+function solids(x, z) { const out = []; const [ci, cj] = cellOf(x, z); for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) { const i = ci + a, j = cj + b; for (let s = 0; s < 4; s++) { const e = OCC.get('e:' + edgeKey(i, j, s)); if (e && !PIECES[e.t].pass && !out.includes(e)) out.push(e); } const o = OCC.get(`o:${i}:${j}`); if (o && o.t !== 'boat' && !out.includes(o)) out.push(o); } return out; }
+const BOXES = { chest: [.45, .35], bed: [.6, 1.05], bench: [.75, .3], barrel: [.38, .38], lamp: [.3, .3], campfire: [.6, .6] };
+function collide(pos, rad) {
+  for (const n of NODES) { if (!(n.alive || n.stump?.visible)) continue; const dx = pos.x - n.x, dz = pos.z - n.z, rr = (n.alive ? n.r : .3) + rad; const d2 = dx * dx + dz * dz; if (d2 < rr * rr && d2 > 1e-6) { const d = Math.sqrt(d2); pos.x = n.x + dx / d * rr; pos.z = n.z + dz / d * rr; } }
+  for (const p of solids(pos.x, pos.z)) { let cx, cz, hx, hz, ry; if (PIECES[p.t].layer === 'edge') { const ei = edgeInfo(edgeKey(p.i, p.j, p.r)); cx = ei.x; cz = ei.z; hx = 1.1; hz = .14; ry = ei.ry; } else { const c = cellC(p.i, p.j); cx = c.x; cz = c.z; [hx, hz] = BOXES[p.t] || [.4, .4]; ry = -p.r * Math.PI / 2; }
+    if (Math.abs(player.y - p.y) > 2.2 && PIECES[p.t].layer !== 'edge') continue;
+    const cs = Math.cos(ry), sn = Math.sin(ry); const lx = (pos.x - cx) * cs - (pos.z - cz) * sn, lz = (pos.x - cx) * sn + (pos.z - cz) * cs; const qx = clamp(lx, -hx, hx), qz = clamp(lz, -hz, hz); const dx = lx - qx, dz = lz - qz, d = Math.hypot(dx, dz);
+    if (d < rad) { let nx, nz, push; if (d > 1e-5) { nx = dx / d; nz = dz / d; push = rad - d; } else { const ox = hx - Math.abs(lx), oz = hz - Math.abs(lz); if (ox < oz) { nx = Math.sign(lx) || 1; nz = 0; push = ox + rad; } else { nx = 0; nz = Math.sign(lz) || 1; push = oz + rad; } } const wx = nx * cs + nz * sn, wz = -nx * sn + nz * cs; pos.x += wx * push; pos.z += wz * push; } }
+}
+function groundAt(x, z) { const [i, j] = cellOf(x, z); const gp = OCC.get(`g:${i}:${j}`); let h = H(x, z); if (gp && (gp.t === 'floor' || gp.t === 'dock')) h = Math.max(gp.t === 'dock' ? -9 : h, gp.y); const o = OCC.get(`o:${i}:${j}`); return h; }
+function walkable(x, z) { const [i, j] = cellOf(x, z); const gp = OCC.get(`g:${i}:${j}`); if (gp?.t === 'dock') return true; return H(x, z) > -.35; }
+
+/* ================= gathering / interactions ================= */
+function nearestNode(maxD = 1.5) { let best = null, bd = 1e9; const fx = Math.sin(player.yaw), fz = Math.cos(player.yaw); for (const n of NODES) { if (!n.alive) continue; const dx = n.x - player.pos.x, dz = n.z - player.pos.z; const d = Math.hypot(dx, dz) - n.r; if (d > maxD) continue; const facing = (dx * fx + dz * fz) / (Math.hypot(dx, dz) || 1); const score = d - facing * .6; if (score < bd) { bd = score; best = n; } } return best; }
+function nearPiece(types, maxD = 2) { let best = null, bd = maxD; for (const p of PLIST) { if (!types.includes(p.t)) continue; const c = PIECES[p.t].layer === 'edge' ? edgeInfo(edgeKey(p.i, p.j, p.r)) : cellC(p.i, p.j); const d = Math.hypot(c.x - player.pos.x, c.z - player.pos.z); if (d < bd) { bd = d; best = p; } } return best; }
+function hitNode(n) { if (!n.alive) return; n.hp--; n.shake = .35; const gain = n.res; let amt = 1; if (n.hp <= 0 && (n.type === 'tree' || n.type === 'palm')) amt = 2; S.inv[gain] += amt; S.stat[gain] += amt; G.day.gathered += amt;
+  const top = V3(n.x, H(n.x, n.z) + (n.tool === 'axe' ? 1.2 : .6), n.z);
+  if (n.tool === 'axe') { E.noise(.12, .18, 900, 1.2); E.tone(170, .1, 'square', .08, -60); P.burst(top, { color: 0xc89a62, n: 10, speed: 1.6, up: 2.2, size: .14, life: .6, additive: false, gravity: 9 }); }
+  else if (n.tool === 'shovel') { E.tone(1300, .05, 'square', .05); E.noise(.1, .14, 3200, 2); P.burst(top, { color: 0xd8d2c4, n: 10, speed: 1.6, up: 2, size: .14, life: .5, additive: false, gravity: 9 }); P.burst(top, { color: 0xffe9a8, n: 4, speed: 2, up: 2, size: .1, life: .3 }); }
+  else { E.noise(.18, .06, 2400, .8); SFX.pop(); P.burst(top, { color: n.res === 'food' ? 0xff6b6b : 0x7cbf5a, n: 8, speed: 1, up: 1.8, size: .16, life: .6, additive: false, gravity: 6 }); if (n.g.userData.fruit) { const f = n.g.userData.fruit.filter(f => f.visible); const per = Math.ceil(f.length / Math.max(1, n.hp + 1)); for (let k = 0; k < per && f[k]; k++) f[k].visible = false; } }
+  const sp = E.toScreen(top.add(V3(0, .6, 0)), camera); E.floatText(`+${amt} ${RES[gain]}`, sp.x, sp.y, 'gold');
+  if (n.hp <= 0) { deplete(n); if (G.auto?.node === n) G.auto = null; }
+  hud(); checkQuest(); }
+function interact() {
+  if (G.boat) { tryDisembark(); return; }
+  const n = nearestNode(1.4); if (n) { startSwing(n); return; }
+  const plot = nearPiece(['plot'], 1.9); if (plot) { plotAction(plot); return; }
+  const boat = nearPiece(['boat'], 2.6); if (boat) { board(boat); return; }
+  const bed = nearPiece(['bed'], 2.2); if (bed) { trySleep(); return; }
+  const ch = nearPiece(['chest'], 1.8); if (ch) { E.toast(`Your chest: ${Object.entries(S.inv).map(([k, v]) => `${RES[k]} ${v}`).join('  ')}`, 2200); SFX.pop(); return; }
+  const fire = nearPiece(['campfire'], 2.2); if (fire) { E.toast('Toasty! 🔥 The fire keeps the night cozy.', 1600); P.burst(fire.g.position.clone().add(V3(0, .8, 0)), { color: 0xffb347, n: 12, speed: .6, up: 2.5, size: .15, life: .9, gravity: -1 }); return; }
+  E.toast('Walk up to a tree 🌴, rock 🪨 or bush 🌿 and press ✋', 1800);
+}
+function startSwing(n) { if (G.swing) return; G.swing = { t: 0, node: n, hit: false }; for (const k in tools) tools[k].visible = k === n.tool; player.yaw = Math.atan2(n.x - player.pos.x, n.z - player.pos.z); }
+function plotAction(p) { const c = cropAt(p.i, p.j); if (!c) return; if (!c.seed) { if (S.inv.food < 1) { E.toast('Seeds cost 1 🍎 — pick fruit from trees or berry bushes', 2000); return; } S.inv.food--; c.seed = pick(CROPS); c.t0 = S.clock; syncCrop(p); SFX.pop(); P.burst(p.g.position.clone().add(V3(0, .3, 0)), { color: 0x8a6a4a, n: 10, size: .1, speed: .8, up: 1.4, life: .6, additive: false }); E.toast(`Planted ${c.seed}! 🌱 Ready in about a minute.`, 1600); hud(); checkQuest(); }
+  else if (c.stage === 2) { S.inv.food += 3; S.stat.food += 3; G.day.gathered += 3; c.seed = null; syncCrop(p); SFX.good(); const sp = E.toScreen(p.g.position.clone().add(V3(0, 1, 0)), camera); E.floatText('+3 🍎', sp.x, sp.y, 'gold'); P.burst(p.g.position.clone().add(V3(0, .5, 0)), { color: 0xffd166, n: 14 }); hud(); }
+  else E.toast('Growing… 🌱', 1000); }
+
+/* ================= boat ================= */
+function board(p) { G.boat = { piece: p, pos: p.g.position.clone(), yaw: p.g.rotation.y, v: 0, dist: 0 }; removePiece(p); const g = buildPiece(p); world.add(g); G.boat.g = g; player.root.position.set(0, 0, 0); G.boat.g.add(player.root); player.root.position.set(0, .25, .1); player.root.rotation.y = 0; SFX.splash(); E.toast('Sail with the stick / WASD. Press ✋ near land to hop off.', 2600, true); }
+function tryDisembark() { const b = G.boat; let best = null; for (let a = 0; a < 16; a++) { const ang = a / 16 * 6.283; for (const r of [1.6, 2.2, 2.8]) { const x = b.pos.x + Math.cos(ang) * r, z = b.pos.z + Math.sin(ang) * r; if (walkable(x, z) && H(x, z) > .05 || OCC.get(`g:${cellOf(x, z).join(':')}`)?.t === 'dock') { best = V3(x, 0, z); break; } } if (best) break; } if (!best) { E.toast('Sail closer to the shore to hop off', 1500); return; }
+  const [i, j] = cellOf(b.pos.x, b.pos.z); const p = { t: 'boat', i, j, r: 0 }; world.remove(b.g); b.g.remove(player.root); world.add(player.root); OCC.set(pieceKey(p), p); placePieceMesh(p); p.g.position.copy(b.pos); p.g.rotation.y = b.yaw; PLIST.push(p); G.boatPiece = p; const k = S.pieces.findIndex(a => PKEYS[a[0]] === 'boat'); if (k >= 0) S.pieces[k] = [PKEYS.indexOf('boat'), i, j, 0]; else S.pieces.push([PKEYS.indexOf('boat'), i, j, 0]);
+  player.pos.copy(best); player.y = groundAt(best.x, best.z); G.boat = null; SFX.splash(); save(); }
+function updateBoat(dt, s) { const b = G.boat; const fwd = -s.y, turn = s.x; b.yaw -= turn * dt * 1.6 * (Math.abs(b.v) > .3 ? 1 : .6); b.v = damp(b.v, fwd * 6, .2, dt); const nx = b.pos.x + Math.sin(b.yaw) * b.v * dt, nz = b.pos.z + Math.cos(b.yaw) * b.v * dt; if (H(nx, nz) < -.45 && !OCC.get(`g:${cellOf(nx, nz).join(':')}`) && Math.hypot(nx, nz) < 120) { b.dist += Math.hypot(nx - b.pos.x, nz - b.pos.z); b.pos.x = nx; b.pos.z = nz; } else b.v *= .5; if (b.dist > 12 && !S.sailed) { S.sailed = true; checkQuest(); } b.g.position.set(b.pos.x, Math.sin(G.t * 2) * .06, b.pos.z); b.g.rotation.set(Math.sin(G.t * 1.6) * .04, b.yaw, Math.sin(G.t * 1.3) * .05 - turn * .06); E.pose(player.rig, { ...E.POSES.sit(), LeftArm: [-1, 0, -.8], RightArm: [-1, 0, .8], LeftForeArm: [-.5], RightForeArm: [-.5] }); player.pos.set(b.pos.x, 0, b.pos.z); if (Math.abs(b.v) > 1 && Math.random() < .3) P.burst(V3(b.pos.x - Math.sin(b.yaw) * 1.5, .1, b.pos.z - Math.cos(b.yaw) * 1.5), { color: 0xffffff, n: 2, speed: .6, up: .8, size: .25, life: .6, additive: false, gravity: 3 }); }
+
+/* ================= sleep / days ================= */
+function trySleep() { if (G.night < .5) { E.toast('Not sleepy yet ☀️ — come back when it gets dark', 1800); return; } const f = $('fade'); f.classList.add('on'); G.modal = true; SFX.whoosh(); E.say('Good night!'); setTimeout(() => { S.slept = true; S.dayT = 0; endOfDay(true); f.classList.remove('on'); }, 1000); }
+function endOfDay(slept) {
+  G.modal = true; const d = G.day; const day = S.day; S.day++; regrowAll(); save();
+  const xp = 30 + d.built * 4 + d.gathered + d.quests * 25, coins = 10 + Math.round(d.built / 2) + d.quests * 10;
+  E.results({ gameId: 'builders', title: `Day ${day} on ${S.name}`, stats: [['Gathered', d.gathered], ['Built', d.built], ['Quests', d.quests], ['Shelters', shelterCount()]], xp, coins, best: PLIST.length, bestLabel: 'Biggest island (pieces)', share: `My island has ${PLIST.length} pieces after ${day} days in Driftwood Builders (Inoa Games)! ${location.href}`, onAgain: () => { G.modal = false; G.day = { gathered: 0, built: 0, quests: 0 }; checkQuest(); E.toast(`☀️ Day ${S.day} — trees and rocks grew back!`, 2200, true); } });
+  const btn = document.querySelector('.ig-results [data-a=again]'); if (btn) btn.textContent = `Start day ${S.day}`; if (slept) checkQuest();
+}
+
+/* ================= quests ================= */
+let questEl = null;
+function questProgress() { const q = QUESTS[S.q]; if (!q) return null; const v = q.stat ? S.stat[q.stat] - S.qBase[q.stat] : q.check(); return { q, v: Math.min(q.n, v) }; }
+function checkQuest() { const pr = questProgress(); drawQuest(); if (!pr || pr.v < pr.q.n) return; const q = pr.q; pay(q.reward, 1); S.coins += q.coins || 5; G.day.quests++; S.q++; S.qBase = { ...S.stat }; SFX.win(); E.toast(`Quest complete! ${costTxt(q.reward)} 🎉`, 2400); if (questEl) { questEl.classList.remove('done'); void questEl.offsetWidth; questEl.classList.add('done'); } const nq = QUESTS[S.q]; setTimeout(() => { if (nq) E.say('Next: ' + nq.text.replace(/[^\w\s,:.']/g, '')); }, 1600); save(); hud(); drawQuest(); setTimeout(checkQuest, 50); }
+function drawQuest() { if (!questEl) return; const pr = questProgress(); if (!pr) { questEl.innerHTML = `<small>Free build</small>Make your island cozy! 🌺 ${PLIST.length} pieces`; return; } questEl.innerHTML = `<small>Quest ${S.q + 1}/${QUESTS.length} · reward ${costTxt(pr.q.reward)}</small>${pr.q.text} <span>${pr.v}/${pr.q.n}</span><i><b style="width:${pr.v / pr.q.n * 100}%"></b></i>`; }
+
+/* ================= build mode ================= */
+let palEl = null, tipEl = null, ghost = null, ghostKey = '';
+function toggleBuild(on = !G.build) { if (G.visit) { E.toast('Building is off while visiting', 1500); return; } if (G.boat) return; G.build = on; G.demolish = false; G.target = null; if (ghost) { world.remove(ghost); ghost = null; ghostKey = ''; } if (on) { drawPalette(); if (!G.saidBuild) { G.saidBuild = true; E.say('Pick a piece, then press the check button to place it. Green means it fits.'); } } else if (palEl) { palEl.remove(); palEl = null; } updateButtons(); SFX.click(); }
+function drawPalette() { if (!palEl) { palEl = document.createElement('div'); palEl.className = 'db-pal'; document.body.appendChild(palEl); } palEl.innerHTML = `<div class="row">${PKEYS.map((k, i) => { const T = PIECES[k]; return `<button class="db-pc ${G.sel === k && !G.demolish ? 'on' : ''} ${canPay(T.cost) ? '' : 'poor'}" data-p="${k}" title="${i < 9 ? 'Key ' + (i + 1) : ''}"><span class="e">${T.e}</span>${T.name}<small>${costTxt(T.cost)}</small></button>`; }).join('')}</div><div class="tools"><button class="ig-chipbtn" data-t="rot">↻ Rotate</button><button class="ig-chipbtn" data-t="undo">↶ Undo</button><button class="ig-chipbtn ${G.demolish ? 'on' : ''}" data-t="del">🧹 Remove</button><button class="ig-chipbtn" data-t="x">✕ Done</button></div>`;
+  palEl.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { G.sel = b.dataset.p; G.demolish = false; ghostKey = ''; drawPalette(); SFX.click(); });
+  palEl.querySelector('[data-t=rot]').onclick = rotate; palEl.querySelector('[data-t=undo]').onclick = undo; palEl.querySelector('[data-t=del]').onclick = () => { G.demolish = !G.demolish; ghostKey = ''; drawPalette(); }; palEl.querySelector('[data-t=x]').onclick = () => toggleBuild(false);
+  const on = palEl.querySelector('.db-pc.on'); if (on) on.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }
+function rotate() { G.rot = (G.rot + 1) % 4; if (G.target && G.target.src === 'tap' && PIECES[G.sel].layer === 'edge') G.target.side = G.rot; ghostKey = ''; SFX.click(); }
+function computeTarget() {
+  const T = PIECES[G.sel];
+  if (G.target && G.target.src === 'tap') { if (player.pos.distanceTo(G.target.from) > 1.2) G.target = null; else return G.target; }
+  const fx = Math.sin(player.yaw), fz = Math.cos(player.yaw); const reach = T.layer === 'edge' ? 1.6 : 2.4; let x = player.pos.x + fx * reach, z = player.pos.z + fz * reach;
+  if (T.water) { for (let r = 2; r <= 8; r += .5) { x = player.pos.x + fx * r; z = player.pos.z + fz * r; const [ti, tj] = cellOf(x, z); if (cellStats(ti, tj).mn < .05) break; } }
+  const [i, j] = cellOf(x, z); return { i, j, side: G.rot, src: 'front' };
+}
+function currentPlan() { const tg = computeTarget(); G.target = tg.src === 'tap' ? tg : null; const T = PIECES[G.sel]; const p = { t: G.sel, i: tg.i, j: tg.j, r: T.layer === 'edge' ? (tg.side ?? G.rot) : G.rot }; return p; }
+function demolishTarget() { if (G.target && G.target.src === 'tap' && G.target.piece && PLIST.includes(G.target.piece)) return G.target.piece; let best = null, bd = 3; const fx = Math.sin(player.yaw), fz = Math.cos(player.yaw); for (const p of PLIST) { const c = PIECES[p.t].layer === 'edge' ? edgeInfo(edgeKey(p.i, p.j, p.r)) : cellC(p.i, p.j); const dx = c.x - player.pos.x, dz = c.z - player.pos.z; const d = Math.hypot(dx, dz); const f = (dx * fx + dz * fz) / (d || 1); const sc = d - f * 1.2 + (p.t === 'roof' ? .6 : 0); if (sc < bd) { bd = sc; best = p; } } return best; }
+function updateGhost() {
+  if (!G.build) return;
+  if (G.demolish) { const p = demolishTarget(); const key = p ? 'del' + pieceKey(p) : 'none'; if (key !== ghostKey) { if (ghost) world.remove(ghost); ghost = null; ghostKey = key; if (p) { ghost = buildPiece(p); ghost.traverse(o => { if (o.isMesh) { o.material = MT.ghostDel; o.castShadow = false; if (o.userData.outline) o.visible = false; } }); ghost.position.copy(p.g.position); ghost.rotation.copy(p.g.rotation); ghost.scale.setScalar(1.04); world.add(ghost); } } G.ghostPiece = p; tip(p ? `Press ✅ to remove ${PIECES[p.t].name} (refund ${costTxt(PIECES[p.t].cost)})` : 'Nothing to remove here'); return; }
+  const p = currentPlan(); const err = validate(p) || (canPay(PIECES[p.t].cost) ? null : `Need ${costTxt(PIECES[p.t].cost)}`); const key = pieceKey(p) + p.t + p.r + (err ? 'x' : 'o') + PLIST.length;
+  if (key !== ghostKey) { ghostKey = key; if (ghost) world.remove(ghost); ghost = buildPiece(p); ghost.traverse(o => { if (o.isMesh) { o.material = err ? MT.ghostNO : MT.ghostOK; o.castShadow = false; o.receiveShadow = false; if (o.userData.outline) o.visible = false; } }); mergeStatic(ghost); const y = pieceY(p); if (PIECES[p.t].layer === 'edge') { const ei = edgeInfo(edgeKey(p.i, p.j, p.r)); ghost.position.set(ei.x, y, ei.z); ghost.rotation.y = ei.ry; } else { const c = cellC(p.i, p.j); ghost.position.set(c.x, y, c.z); ghost.rotation.y = -p.r * Math.PI / 2; } world.add(ghost); }
+  G.plan = p; G.planErr = err; ghost.position.y = pieceY(p) + Math.sin(G.t * 5) * .03; tip(err ? `✋ ${err}` : `${PIECES[p.t].e} ${PIECES[p.t].name} · ${costTxt(PIECES[p.t].cost)} — press ✅`);
+}
+function tip(t) { if (!tipEl) { tipEl = document.createElement('div'); tipEl.className = 'db-tip'; document.body.appendChild(tipEl); } tipEl.hidden = !t; if (tipEl.textContent !== t) tipEl.textContent = t || ''; }
+function placeNow() {
+  if (G.demolish) { const p = G.ghostPiece; if (!p) return; if (p.t === 'plot') { const c = cropAt(p.i, p.j); if (c?.seed) { c.seed = null; } } removePiece(p); pay(PIECES[p.t].cost, 1); G.undo.push({ op: 'del', p: { t: p.t, i: p.i, j: p.j, r: p.r } }); SFX.pop(); P.burst(p.g.position.clone().add(V3(0, .8, 0)), { color: 0xd9b88a, n: 14, additive: false, size: .2, speed: 1.5 }); refreshAround(p); ghostKey = ''; hud(); save(); return; }
+  const p = G.plan; if (!p) return; if (G.planErr) { SFX.tick(); E.toast(G.planErr, 1400); return; }
+  pay(PIECES[p.t].cost); const np = addPiece({ t: p.t, i: p.i, j: p.j, r: p.r }); G.undo.push({ op: 'add', p: np }); S.built++; G.day.built++;
+  SFX.snap(); const g = np.g; const y0 = g.position.y; tween(.28, k => { g.position.y = y0 + (1 - ease(k)) * .6; g.scale.setScalar(.85 + ease(k) * .15); }); P.burst(g.position.clone().add(V3(0, .3, 0)), { color: 0xffe9a8, n: 12, speed: 1.4, up: 1.6, size: .2, life: .6 });
+  refreshAround(np); ghostKey = ''; hud(); checkQuest(); save(); }
+function refreshAround(p) { // re-seat walls/roofs whose height depends on neighbours
+  for (const q of PLIST) { if (q === p) continue; const L = PIECES[q.t].layer; if (L === 'ground' && q.t !== 'floor') continue; const ny = pieceY(q); if (Math.abs(ny - q.y) > .01 && Math.abs(q.i - p.i) <= 2 && Math.abs(q.j - p.j) <= 2) { q.y = ny; q.g.position.y = ny; } } }
+function undo() { const u = G.undo.pop(); if (!u) { E.toast('Nothing to undo', 1000); return; } if (u.op === 'add') { if (PLIST.includes(u.p)) { removePiece(u.p); pay(PIECES[u.p.t].cost, 1); refreshAround(u.p); } } else { if (canPay(PIECES[u.p.t].cost) && !validate(u.p)) { pay(PIECES[u.p.t].cost); const np = addPiece({ ...u.p }); refreshAround(np); } } SFX.whoosh(); ghostKey = ''; hud(); save(); }
+
+/* ================= lights / fireflies ================= */
+const POOL = Array.from({ length: 5 }, () => { const l = new THREE.PointLight(0xffb45e, 0, 12, 1.6); world.add(l); return l; });
+const playerLight = new THREE.PointLight(0xffd9a0, 0, 9, 1.5); world.add(playerLight);
+let poolT = 0;
+function updateLights(dt) { poolT -= dt; if (poolT <= 0) { poolT = .4; const srcs = PLIST.filter(p => p.g.userData.light).map(p => ({ p, d: p.g.position.distanceToSquared(player.pos) })).sort((a, b) => a.d - b.d); POOL.forEach((l, i) => { const s = srcs[i]; if (s) { l.position.copy(s.p.g.userData.light).applyMatrix4(s.p.g.matrixWorld); l.userData.fire = !!s.p.g.userData.fire; l.userData.on = true; } else l.userData.on = false; }); }
+  POOL.forEach(l => { const base = l.userData.fire ? .35 + G.night * 1 : G.night; l.intensity = l.userData.on ? base * (l.userData.fire ? 9 + Math.sin(G.t * 13) * 1.2 + Math.sin(G.t * 7.3) * .8 : 7) : 0; });
+  playerLight.intensity = G.night * 2.2; playerLight.position.copy(player.pos).add(V3(0, 2.2, 0));
+  for (const p of PLIST) if (p.g.userData.flames) { const [a, b] = p.g.userData.flames; a.scale.set(1, 1 + Math.sin(G.t * 11 + p.i) * .15, 1); b.scale.set(1, 1 + Math.sin(G.t * 15 + p.j) * .2, 1); if (Math.random() < dt * 4) P.burst(p.g.position.clone().add(V3(rnd(-.1, .1), .7, rnd(-.1, .1))), { color: 0xffa040, n: 1, speed: .2, up: 1.5, size: .12, life: .8, gravity: -.6 }); } }
+const FF_N = 40, ffPos = new Float32Array(FF_N * 3), ffSeed = Array.from({ length: FF_N }, (_, i) => ({ x: rnd(-14, 14), z: rnd(-14, 14), y: rnd(.5, 2.5), p: rnd(0, 6.3), s: rnd(.4, .9) }));
+const ffGeo = new THREE.BufferGeometry(); ffGeo.setAttribute('position', new THREE.BufferAttribute(ffPos, 3));
+const ffMat = new THREE.PointsMaterial({ size: .2, map: glowTex(), color: 0xe9ff9a, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }); const fireflies = new THREE.Points(ffGeo, ffMat); fireflies.frustumCulled = false; world.add(fireflies);
+
+/* ================= share / visit ================= */
+function exportCode() { const body = S.seed + '|' + S.pieces.map(a => a.join(',')).join(';'); return 'DWB1.' + btoa(unescape(encodeURIComponent(body))).replace(/=+$/, ''); }
+function parseCode(code) { try { const s = code.trim().replace(/^DWB1\./, ''); const body = decodeURIComponent(escape(atob(s))); const [seed, list] = body.split('|'); const pieces = (list ? list.split(';') : []).map(x => x.split(',').map(Number)).filter(a => a.length === 4 && PKEYS[a[0]] && a.every(Number.isFinite)); if (!Number.isFinite(+seed)) return null; return { seed: +seed, pieces: pieces.slice(0, 3000) }; } catch (e) { return null; } }
+function loadIsland(seed, pieces, crops) { for (const p of PLIST.slice()) { world.remove(p.g); } PLIST.length = 0; OCC.clear(); SEED = seed; buildTerrain(); genNodes(); const order = ['ground', 'obj', 'edge', 'roof']; const ps = pieces.map(a => ({ t: PKEYS[a[0]], i: a[1], j: a[2], r: a[3] })); ps.sort((a, b) => order.indexOf(PIECES[a.t].layer) - order.indexOf(PIECES[b.t].layer)); for (const p of ps) if (!OCC.get(pieceKey(p))) addPiece(p, true); const sp = spawnPoint(); player.pos.copy(sp); player.y = groundAt(sp.x, sp.z); }
+function openShare() { if (G.modal) return; const d = document.createElement('div'); d.className = 'db-sheet'; const code = G.visit ? G.visitCode : exportCode(); d.innerHTML = `<div class="ig-card"><div class="ig-kicker">Share island</div><h2>${G.visit ? 'Visiting island' : 'Your island code'}</h2><p class="ig-sub">Send this code to a friend — they can paste it below to visit your island.</p><textarea readonly id="dbCode">${code}</textarea><div class="ig-row"><button class="ig-btn sun" data-a="copy">📋 Copy code</button></div><p class="ig-sub">Visit a friend's island</p><textarea id="dbIn" placeholder="Paste an island code (DWB1…)"></textarea><div class="ig-row"><button class="ig-btn ghost" data-a="close">Close</button><button class="ig-btn" data-a="visit">🏝️ Visit</button></div></div>`; document.body.appendChild(d); G.modal = true;
+  d.querySelector('[data-a=copy]').onclick = async () => { const ta = d.querySelector('#dbCode'); try { await navigator.clipboard.writeText(ta.value); E.toast('Copied! Send it to a friend.'); } catch (e) { ta.select(); E.toast('Select the code and copy it'); } };
+  d.querySelector('[data-a=close]').onclick = () => { d.remove(); G.modal = false; };
+  d.querySelector('[data-a=visit]').onclick = () => { const v = d.querySelector('#dbIn').value; if (visitCode(v)) { d.remove(); G.modal = false; } else E.toast('That code does not look right 🤔', 1600); }; }
+let visitEl = null;
+function visitCode(code) { const c = parseCode(code); if (!c) return false; if (!G.visit) save(); G.visit = true; G.visitCode = code.trim(); if (G.build) toggleBuild(false); loadIsland(c.seed, c.pieces); visitEl = document.createElement('div'); visitEl.className = 'db-visit'; visitEl.innerHTML = `🏝️ Visiting a friend's island <button class="ig-chipbtn" id="dbHome">🏠 Go home</button>`; document.body.appendChild(visitEl); visitEl.querySelector('#dbHome').onclick = goHome; SFX.whoosh(); E.toast('Welcome! Have a look around.', 1800, true); updateButtons(); return true; }
+function goHome() { G.visit = false; if (visitEl) visitEl.remove(); visitEl = null; loadIsland(S.seed, S.pieces); if (S.pos) { player.pos.set(S.pos[0], 0, S.pos[1]); player.y = groundAt(S.pos[0], S.pos[1]); } PLIST.forEach(p => syncCrop(p)); updateButtons(); hud(); drawQuest(); }
+
+/* ================= photo mode ================= */
+function photo(on = !G.photo) { G.photo = on; document.body.classList.toggle('db-photo', on); if (ghost) ghost.visible = !on; if (on) { E.toast('Photo mode — drag to orbit, scroll/pinch to zoom', 1800); cam.pitch = .3; } }
+const photoX = document.createElement('div'); photoX.className = 'db-photox'; photoX.innerHTML = '<button class="ig-chip">✕ Exit photo</button>'; document.body.appendChild(photoX); photoX.onclick = () => photo(false);
+
+/* ================= pointer (camera + tap) ================= */
+const canvas = $('gl'); const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(); const ptrs = new Map(); let pinch = null;
+canvas.addEventListener('pointerdown', e => { E.audio(); ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, t: performance.now(), moved: false }); if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), z: cam.dist }; } });
+canvas.addEventListener('pointermove', e => { const p = ptrs.get(e.pointerId); if (!p) return; const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY; if (Math.hypot(p.x - p.sx, p.y - p.sy) > 8) p.moved = true; if (pinch && ptrs.size === 2) { const [a, b] = [...ptrs.values()]; cam.dist = clamp(pinch.z * pinch.d / Math.max(20, Math.hypot(a.x - b.x, a.y - b.y)), 4.5, 22); return; } if (p.moved && G.mode === 'play') { cam.yaw -= dx * .006; cam.pitch = clamp(cam.pitch + dy * .004, .12, 1.25); } });
+const endP = e => { const p = ptrs.get(e.pointerId); if (!p) return; ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null; if (!p.moved && performance.now() - p.t < 450 && e.type === 'pointerup') tap(e.clientX, e.clientY); };
+canvas.addEventListener('pointerup', endP); canvas.addEventListener('pointercancel', endP);
+canvas.addEventListener('wheel', e => { e.preventDefault(); cam.dist = clamp(cam.dist * (1 + e.deltaY * .001), 4.5, 22); }, { passive: false });
+function tap(x, y) { if (G.modal || G.mode !== 'play' || G.photo) return; ndc.set(x / innerWidth * 2 - 1, -(y / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera);
+  if (G.build) { if (G.demolish) { const hits = ray.intersectObjects(PLIST.map(p => p.g), true); if (hits.length) { let o = hits[0].object; while (o && !o.userData.piece) o = o.parent; if (o) { G.target = { src: 'tap', from: player.pos.clone(), piece: o.userData.piece }; ghostKey = ''; SFX.click(); } } return; }
+    const hits = ray.intersectObjects([terrain, water, ...PLIST.filter(p => PIECES[p.t].layer === 'ground').map(p => p.g)], true); if (!hits.length) return; const pt = hits[0].point; const [i, j] = cellOf(pt.x, pt.z); const fx = pt.x / CELL - i, fz = pt.z / CELL - j; const side = [fz, 1 - fx, 1 - fz, fx].indexOf(Math.min(fz, 1 - fx, 1 - fz, fx)); const same = G.target && G.target.i === i && G.target.j === j && (PIECES[G.sel].layer !== 'edge' || G.target.side === side); if (PIECES[G.sel].layer === 'edge') G.rot = side; G.target = { src: 'tap', from: player.pos.clone(), i, j, side }; if (same) placeNow(); else SFX.click(); return; }
+  // play: tap a resource to walk & gather, or the ground to walk there
+  const ng = ray.intersectObjects(NODES.filter(n => n.alive).map(n => n.g), true); if (ng.length) { let o = ng[0].object; const n = NODES.find(n => { let q = o; while (q) { if (q === n.g) return true; q = q.parent; } return false; }); if (n) { G.auto = { node: n }; SFX.click(); return; } }
+  const th = ray.intersectObject(terrain); if (th.length && walkable(th[0].point.x, th[0].point.z)) { G.auto = { to: th[0].point.clone() }; } }
+
+/* ================= HUD ================= */
+let SH = null, dayEl = null;
+function hud() { if (!SH) return; SH.hud.innerHTML = Object.entries(RES).map(([k, e]) => `<span class="ig-chip">${e} <b>${S.inv[k]}</b></span>`).join(''); if (palEl && G.build) { palEl.querySelectorAll('[data-p]').forEach(b => b.classList.toggle('poor', !canPay(PIECES[b.dataset.p].cost))); } drawDay(); }
+function drawDay() { if (!dayEl) return; const t = S.dayT; const hh = Math.floor((6 + t * 24) % 24), icon = G.night > .5 ? '🌙' : t < .1 ? '🌅' : t > .55 ? '🌇' : '☀️'; const txt = `${icon} Day ${S.day} · ${String(hh).padStart(2, '0')}:00`; const c = dayEl.querySelector('#dbClock'); if (c && c.textContent !== txt) c.textContent = txt; }
+function updateButtons() { const a = $('bAct'), b = $('bAlt'), c = $('bBuild'); if (!a) return; a.textContent = G.build ? '✅' : G.boat ? '⚓' : '✋'; b.textContent = G.build ? '↻' : '🏃'; c.textContent = G.build ? '✕' : '🔨'; c.style.display = G.visit || G.boat ? 'none' : ''; if (tipEl) tipEl.hidden = !G.build; }
+function bindPad() { input.bindStick($('igStick'), $('igKnob')); input.bindButton($('bAct'), 'a'); input.bindButton($('bAlt'), 'b'); input.bindButton($('bBuild'), 'c'); }
+
+/* ================= update ================= */
+let saveT = 0, prevPad = {};
+function update(dt) {
+  G.t += dt; P.update(dt); waterMat.uniforms.uTime.value += dt;
+  for (const w of TW.slice()) { w.t += dt; const k = Math.min(1, w.t / w.dur); w.fn(k); if (k >= 1) { TW.splice(TW.indexOf(w), 1); w.done && w.done(); } }
+  for (const cl of SKY.clouds) { cl.userData.a += dt * .004; cl.position.x = Math.cos(cl.userData.a) * 220; cl.position.z = Math.sin(cl.userData.a) * 220; cl.lookAt(0, cl.position.y, 0); }
+  for (const n of NODES) if (n.shake > 0) { n.shake -= dt; n.g.rotation.z = Math.sin(n.shake * 50) * n.shake * .12; if (n.shake <= 0) n.g.rotation.z = 0; }
+  if (G.mode !== 'play') { applyTime(); return; }
+  if (!G.modal) { S.dayT += dt / DAY_LEN; S.clock = (S.clock || 0) + dt; if (S.dayT >= 1) { S.dayT -= 1; endOfDay(); } }
+  applyTime(); drawDay();
+  // crops
+  for (const p of PLIST) if (p.t === 'plot') { const c = cropAt(p.i, p.j); if (c?.seed) { const k = (S.clock - c.t0) / CROP_TIME; const st = k >= 1 ? 2 : k > .45 ? 1 : 0; if (st !== c.stage) syncCrop(p); if (st === 2 && Math.random() < dt * .8) P.burst(p.g.position.clone().add(V3(rnd(-.6, .6), .8, rnd(-.6, .6))), { color: 0xfff2a8, n: 2, speed: .2, up: .5, size: .12, life: .8, gravity: -.3 }); } }
+  const s = input.poll();
+  // right stick / bumpers (gamepad)
+  const pads = navigator.getGamepads ? navigator.getGamepads() : []; let rx = 0, ry = 0, lb = false, rb = false; for (const gp of pads) { if (!gp) continue; if (Math.abs(gp.axes[2] || 0) > .2) rx = gp.axes[2]; if (Math.abs(gp.axes[3] || 0) > .2) ry = gp.axes[3]; lb = lb || gp.buttons[4]?.pressed; rb = rb || gp.buttons[5]?.pressed; }
+  cam.yaw -= rx * dt * 2.2; cam.pitch = clamp(cam.pitch + ry * dt * 1.2, .12, 1.25);
+  if (G.build && !G.modal) { if (lb && !prevPad.lb) cyclePiece(-1); if (rb && !prevPad.rb) cyclePiece(1); } prevPad = { lb, rb };
+  if (G.modal) { E.pose(player.rig, E.POSES.idle(G.t)); return; }
+  if (G.photo) { if (!ptrs.size) cam.yaw += dt * .08; updateLights(dt); return; }
+  if (s.cPressed && !G.boat) toggleBuild();
+  if (G.boat) { updateBoat(dt, s); if (s.aPressed) interact(); updateLights(dt); saveT += dt; if (saveT > 8) { saveT = 0; save(); } return; }
+  // movement relative to camera
+  let mx = s.x, mz = s.y; if (Math.abs(mx) + Math.abs(mz) > .1) G.auto = null;
+  if (G.auto) { const tgt = G.auto.node ? V3(G.auto.node.x, 0, G.auto.node.z) : G.auto.to; const dx = tgt.x - player.pos.x, dz = tgt.z - player.pos.z, d = Math.hypot(dx, dz); const stop = G.auto.node ? G.auto.node.r + .75 : .3; if (d > stop) { const f = V3(-Math.sin(cam.yaw), 0, -Math.cos(cam.yaw)), r = V3(Math.cos(cam.yaw), 0, -Math.sin(cam.yaw)); const wx = dx / d, wz = dz / d; mx = wx * r.x + wz * r.z; mz = -(wx * f.x + wz * f.z); G.auto.stuck = (G.auto.stuck || 0) + dt; if (G.auto.stuck > 8) G.auto = null; } else { if (G.auto.node) { if (G.auto.node.alive) { if (!G.swing) startSwing(G.auto.node); } else G.auto = null; } else G.auto = null; } }
+  const mag = Math.min(1, Math.hypot(mx, mz)); const running = !G.build && (s.b || mag > .95 && input.touch.x * input.touch.x + input.touch.y * input.touch.y > .9) ; const spd = (running ? 6.2 : 3.4) * mag;
+  if (mag > .08 && !G.swing) { const fwd = V3(-Math.sin(cam.yaw), 0, -Math.cos(cam.yaw)), right = V3(Math.cos(cam.yaw), 0, -Math.sin(cam.yaw)); const dir = right.multiplyScalar(mx).addScaledVector(fwd, -mz).normalize(); const want = Math.atan2(dir.x, dir.z); player.yaw = angDamp(player.yaw, want, dt, .00002);
+    const np = player.pos.clone().addScaledVector(dir, spd * dt); const ox = player.pos.x, oz = player.pos.z; if (walkable(np.x, oz)) player.pos.x = np.x; if (walkable(player.pos.x, np.z)) player.pos.z = np.z; collide(player.pos, .34); if (!walkable(player.pos.x, player.pos.z)) { player.pos.x = ox; player.pos.z = oz; }
+    // step-up limit: floors/roof-height obstacles
+    const gy = groundAt(player.pos.x, player.pos.z); if (gy - player.y > 1.0) { player.pos.x = ox; player.pos.z = oz; }
+    player.speed = spd; } else player.speed = damp(player.speed, 0, .001, dt);
+  player.y = damp(player.y, groundAt(player.pos.x, player.pos.z), .00001, dt);
+  player.root.position.set(player.pos.x, player.y, player.pos.z); player.root.rotation.y = player.yaw; player.t += dt;
+  // swing / gather
+  if (G.swing) { const sw = G.swing; sw.t += dt; const D = .55; const k = sw.t / D; const hand = sw.node.tool === 'hand'; const kk = k < .55 ? ease(k / .55) : 1 - ease((k - .55) / .45) * .7; E.pose(player.rig, hand ? E.POSES.punch(Math.min(1, k * 1.2)) : E.POSES.swing(kk)); if (!sw.hit && k > .5) { sw.hit = true; hitNode(sw.node); } if (k >= 1) { G.swing = null; for (const t in tools) tools[t].visible = false; if (s.a && sw.node.alive && !G.build) startSwing(sw.node); } }
+  else if (player.speed > 4.5) E.pose(player.rig, E.POSES.run(player.t)); else if (player.speed > .3) E.pose(player.rig, E.POSES.walk(player.t, player.speed / 3.2)); else E.pose(player.rig, E.POSES.idle(player.t));
+  // actions
+  if (G.build) { if (s.aPressed) placeNow(); if (s.bPressed) rotate(); updateGhost(); }
+  else { if (s.aPressed) interact(); }
+  updateLights(dt);
+  // fireflies follow the player area at night
+  if (ffMat.opacity > .01) { for (let i = 0; i < FF_N; i++) { const f = ffSeed[i], t = G.t * f.s + f.p; const x = player.pos.x + f.x + Math.sin(t * .7) * 1.2, z = player.pos.z + f.z + Math.cos(t * .8) * 1.2; ffPos[i * 3] = x; ffPos[i * 3 + 2] = z; ffPos[i * 3 + 1] = Math.max(0, H(x, z)) + f.y + Math.sin(t * 1.1) * .4; } ffGeo.attributes.position.needsUpdate = true; }
+  saveT += dt; if (saveT > 8) { saveT = 0; save(); }
+}
+function cyclePiece(d) { const i = PKEYS.indexOf(G.sel); G.sel = PKEYS[(i + d + PKEYS.length) % PKEYS.length]; G.demolish = false; ghostKey = ''; drawPalette(); SFX.click(); }
+addEventListener('keydown', e => { if (G.mode !== 'play' || G.modal) return; if (e.code === 'Escape' && G.photo) { photo(false); return; } if ((e.code === 'Escape' || e.code === 'KeyP')) { pause(); return; } if (e.code === 'KeyF') photo(); if (e.code === 'KeyB' || e.code === 'Tab') { e.preventDefault(); toggleBuild(); } if (!G.build) return; if (e.code === 'KeyR') rotate(); if (e.code === 'KeyZ') undo(); if (e.code === 'KeyX') { G.demolish = !G.demolish; ghostKey = ''; drawPalette(); } if (e.code === 'KeyQ') cyclePiece(-1); if (/^Digit\d$/.test(e.code)) { const n = +e.code.slice(5); const i = n === 0 ? 9 : n - 1; if (PKEYS[i]) { G.sel = PKEYS[i]; G.demolish = false; ghostKey = ''; drawPalette(); } } });
+
+/* ================= flow ================= */
+function pause() { if (G.modal) return; G.modal = true; music && music.stop(); E.pauseMenu({ onResume: () => { G.modal = false; music = E.music(E.SONGS.chill); }, onRestart: () => askReset(), extra: `<div class="ig-row"><button class="ig-chipbtn" data-a="photo">📷 Photo mode</button><button class="ig-chipbtn" data-a="share">🔗 Share island</button></div><p class="ig-sub" style="font-size:13px">Restart starts a brand-new island (your current one is replaced).</p>` }); const card = [...document.querySelectorAll('.ig-screen')].pop(); card.querySelector('[data-a=photo]').onclick = () => { card.remove(); G.modal = false; music = E.music(E.SONGS.chill); photo(true); }; card.querySelector('[data-a=share]').onclick = () => { card.remove(); G.modal = false; music = E.music(E.SONGS.chill); openShare(); }; }
+function askReset() { const d = document.createElement('div'); d.className = 'db-sheet'; d.innerHTML = `<div class="ig-card"><div class="ig-kicker">New island?</div><h2>Start a brand-new island?</h2><p class="ig-sub">Your current island and everything on it will be replaced. Tip: share it first with 🔗 to keep a copy.</p><div class="ig-row"><button class="ig-btn ghost" data-a="no">Keep my island</button><button class="ig-btn coral" data-a="yes">New island</button></div></div>`; document.body.appendChild(d); G.modal = true; d.querySelector('[data-a=no]').onclick = () => { d.remove(); G.modal = false; music = E.music(E.SONGS.chill); }; d.querySelector('[data-a=yes]').onclick = () => { d.remove(); confirmReset(); }; }
+function confirmReset() { const keepPlayer = S.player; S = Object.assign(DEF(), { player: keepPlayer }); E.store.set(KEY, S); G.visit = false; loadIsland(S.seed, []); G.undo = []; G.modal = false; music = E.music(E.SONGS.chill); hud(); drawQuest(); E.toast('A fresh island washes up! 🏝️', 2000, true); return true; }
+function start() {
+  G.mode = 'play'; buildPlayer(); const sp = S.pos ? V3(S.pos[0], 0, S.pos[1]) : spawnPoint(); player.pos.copy(sp); player.yaw = S.pos ? S.pos[2] : Math.PI; player.y = groundAt(sp.x, sp.z); cam.yaw = player.yaw + Math.PI; updateCamera(0, true);
+  if (!SH) { SH = E.shell({ onPause: pause, stick: true, buttons: [{ id: 'bAlt', icon: '🏃', label: 'Run / rotate' }, { id: 'bBuild', icon: '🔨', label: 'Build mode' }, { id: 'bAct', icon: '✋', label: 'Gather / place', cls: 'big' }] }); bindPad();
+    questEl = document.createElement('div'); questEl.className = 'db-quest'; document.body.appendChild(questEl);
+    dayEl = document.createElement('div'); dayEl.className = 'db-day'; dayEl.innerHTML = `<span class="ig-chip" id="dbClock"></span><button class="ig-chip" id="dbPhoto" aria-label="Photo mode">📷</button><button class="ig-chip" id="dbShare" aria-label="Share island">🔗</button>`; document.body.appendChild(dayEl); $('dbPhoto').onclick = () => photo(true); $('dbShare').onclick = openShare; }
+  hud(); drawQuest(); updateButtons(); music && music.stop(); music = E.music(E.SONGS.chill);
+  E.say(S.built ? 'Welcome back to your island!' : 'Welcome to Driftwood Builders! Walk with the stick or W A S D. Press the hand button near trees, rocks and bushes to gather.');
+}
+function title() { G.mode = 'title';
+  const extra = `<div><p class="ig-sub" style="margin-bottom:6px">Your builder</p><div class="ig-row" id="dbP">${PLAYERS.map((p, i) => `<button class="ig-chipbtn ${i === S.player ? 'on' : ''}" data-i="${i}">${p[1]}</button>`).join('')}</div></div>`;
+  const d = E.titleScreen({ title: 'Driftwood Builders', kicker: 'Inoa Games · Island sandbox', lead: 'Wash up on a tiny island, gather driftwood, stone and fibre, and build a cozy home by the sea. Nights are safe — just a little darker, with lanterns glowing.', how: [['🕹️', 'Move: stick, WASD or arrows · drag to look · tap to walk'], ['✋', 'Gather: Space/✋ next to trees, rocks, bushes and fruit'], ['🔨', 'Build: E/🔨, pick a piece, R/↻ rotates, ✅ places (green = fits)'], ['📜', 'Follow the quests · 🔗 share your island · 📷 photo mode']], extra, onPlay: start });
+  d.querySelectorAll('#dbP button').forEach(b => b.onclick = () => { S.player = +b.dataset.i; d.querySelectorAll('#dbP button').forEach(x => x.classList.toggle('on', x === b)); E.store.set(KEY, S); }); }
+document.addEventListener('visibilitychange', () => { if (document.hidden && G.mode === 'play') { save(); if (!G.modal) pause(); } });
+
+/* ================= boot ================= */
+loadIsland(S.seed, S.pieces); PLIST.forEach(p => syncCrop(p)); applyTime(); buildPlayer(); player.pos.copy(spawnPoint()); player.root.position.copy(player.pos).setY(H(player.pos.x, player.pos.z));
+// warm-up: compile every material variant once behind the loading screen
+{ const tmp = []; for (const t of PKEYS) { const g = buildPiece({ t, i: 0, j: 0, r: 0 }); g.position.set(0, 3, 0); world.add(g); tmp.push(g); const gh = buildPiece({ t, i: 0, j: 0, r: 0 }); gh.traverse(o => { if (o.isMesh) o.material = MT.ghostOK; }); world.add(gh); tmp.push(gh); } for (const c of CROPS) { const m = E.instance(c, { scale: .4 }); world.add(m); tmp.push(m); } for (const k in tools) tools[k].visible = true; SKY.starMat.opacity = .5; ffMat.opacity = .5; P.burst(V3(0, 1, 0), { n: 2 }); P.burst(V3(0, 1, 0), { n: 2, additive: false }); POOL.forEach(l => l.intensity = 1); playerLight.intensity = 1;
+  camera.position.set(0, 8, 14); camera.lookAt(0, 2, 0); R.render(1 / 60); tmp.forEach(o => world.remove(o)); for (const k in tools) tools[k].visible = false; applyTime(); }
+title(); ld.done(); window.__READY = true;
+E.loop((dt) => { if (window.__NORENDER) return; update(dt); updateCamera(dt); R.render(dt); });
+window.__GAME = {
+  get G() { return G; }, get S() { return S; }, update, start, player, cam, NODES, PLIST, R, H, tools, toggleBuild, placeNow, rotate, undo, photo, exportCode, visitCode, goHome, shelterCount, interact, trySleep, endOfDay,
+  give(r) { for (const k in r) S.inv[k] += r[k]; hud(); },
+  ff(sec) { S.dayT += sec / DAY_LEN; S.clock = (S.clock || 0) + sec; while (S.dayT >= 1) { S.dayT -= 1; endOfDay(); } applyTime(); },
+  setDayT(t) { S.dayT = t; applyTime(); },
+  // teleport next to the nearest live node of a type and gather it completely
+  autoGather(type) { let best = null, bd = 1e9; for (const n of NODES) if (n.alive && (n.type === type || n.res === type)) { const d = Math.hypot(n.x - player.pos.x, n.z - player.pos.z); if (d < bd) { bd = d; best = n; } } if (!best) return 0; const a = Math.atan2(player.pos.z - best.z, player.pos.x - best.x); player.pos.set(best.x + Math.cos(a) * (best.r + .7), 0, best.z + Math.sin(a) * (best.r + .7)); player.y = groundAt(player.pos.x, player.pos.z); player.yaw = Math.atan2(best.x - player.pos.x, best.z - player.pos.z); let n = 0; while (best.alive && n < 10) { hitNode(best); n++; } return n; },
+  build(t, i, j, r = 0) { G.sel = t; const p = { t, i, j, r }; const err = validate(p) || (canPay(PIECES[t].cost) ? null : 'cost'); if (err) return err; pay(PIECES[t].cost); const np = addPiece(p); S.built++; G.day.built++; refreshAround(np); checkQuest(); hud(); return 'ok'; },
+  findFlat(minSize = 3) { const sp = player.pos; for (let r = 0; r < 14; r++) for (let a = -r; a <= r; a++) for (let b = -r; b <= r; b++) { if (Math.max(Math.abs(a), Math.abs(b)) !== r) continue; const [ci, cj] = cellOf(sp.x, sp.z); const i = ci + a, j = cj + b; let ok = true; for (let x = 0; x < minSize && ok; x++) for (let y = 0; y < minSize && ok; y++) { const st = cellStats(i + x, j + y); if (st.mn < .3 || st.mx - st.mn > .9 || nodeInCell(i + x, j + y) || OCC.get(`g:${i + x}:${j + y}`)) ok = false; } if (ok) return [i, j]; } return null; },
+  findShore() { const sp = player.pos; let best = null, bd = 1e9; for (let i = -24; i < 24; i++) for (let j = -24; j < 24; j++) { const p = { t: 'dock', i, j, r: 0 }; if (validate(p)) continue; const c = cellC(i, j); const d = c.distanceTo(sp); if (d < bd) { bd = d; best = [i, j]; } } return best; },
+  findBoatSpot() { for (const p of PLIST.filter(p => p.t === 'dock')) for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { if (!validate({ t: 'boat', i: p.i + a, j: p.j + b, r: 0 })) return [p.i + a, p.j + b]; } return null; },
+  teleport(x, z, yaw) { player.pos.set(x, 0, z); player.y = groundAt(x, z); if (yaw != null) player.yaw = yaw; },
+  cellC, cellOf, validate, frame() { updateCamera(0, true); }
+};
+</script>
+</body></html>

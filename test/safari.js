@@ -1,0 +1,1 @@
+module.exports = async (p, shot) => { await shot('title'); await p.evaluate(() => { const A = window.__AA; A.S.voice = false; A.startLevel(1); for (let i = 0; i < 10; i++) A.spawn(); for (let k = 0; k < 60; k++) A.update(1 / 60); }); await p.waitForTimeout(800); await shot('play'); };

@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Pact Trivia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;800&family=Unbounded:wght@700;900&display=swap">
+<link rel="stylesheet" href="../engine/ui.css">
+<style>
+:root{--p0:#ff6b6b;--p1:#4fb3ff;--p2:#ffd166;--p3:#2fd18a}
+.tv-scores{position:fixed;left:50%;transform:translateX(-50%);bottom:max(14px,env(safe-area-inset-bottom));z-index:20;display:flex;gap:6px;pointer-events:none;flex-wrap:wrap;justify-content:center;max-width:96vw}
+.tv-scores span{background:rgba(255,248,238,.94);border-radius:14px;padding:6px 10px;font-weight:800;font-size:14px;display:flex;gap:6px;align-items:center;box-shadow:0 4px 12px rgba(0,0,0,.25)}
+.tv-scores span i{width:12px;height:12px;border-radius:50%;display:inline-block}
+.tv-scores span b{font-family:var(--f-d)}
+.tv-scores span.on{outline:3px solid #fff;transform:scale(1.08)}
+.tv-choices{position:fixed;left:50%;bottom:max(12px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:21;width:min(860px,calc(100vw - 20px));display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px;box-sizing:border-box;border-radius:24px;background:rgba(13,15,36,.82);backdrop-filter:blur(6px);border:3px solid var(--pc,#fff)}
+.tv-choices .who{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;color:#fff;font-weight:800;font-size:15px;padding:0 4px}
+.tv-choices .who b{font-family:var(--f-d);color:var(--pc,#fff)}
+.tv-choices .tbar{grid-column:1/-1;height:6px;border-radius:4px;background:rgba(255,255,255,.15);overflow:hidden}.tv-choices .tbar i{display:block;height:100%;background:var(--pc,#fff);width:100%}
+.tv-ch{display:grid;grid-template-columns:44px 1fr;align-items:center;gap:10px;min-height:58px;border:0;border-radius:16px;background:#fff8ee;color:#1b2430;font-weight:800;font-size:clamp(15px,2.2vw,19px);text-align:left;padding:6px 12px 6px 6px;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.25);line-height:1.15}
+.tv-ch b{display:grid;place-items:center;width:44px;height:44px;border-radius:12px;color:#fff;font-family:var(--f-d);font-size:20px}
+.tv-ch:nth-of-type(1) b{background:#e2443a}.tv-ch:nth-of-type(2) b{background:#2f7fd0}.tv-ch:nth-of-type(3) b{background:#e0a100}.tv-ch:nth-of-type(4) b{background:#1f9a63}
+.tv-ch.out{opacity:.3;text-decoration:line-through;pointer-events:none}
+.tv-ch:active{transform:translateY(3px)}
+.tv-buz{position:fixed;z-index:22;width:clamp(78px,15vmin,112px);height:clamp(78px,15vmin,112px);border-radius:50%;border:6px solid rgba(255,255,255,.9);font-family:var(--f-d);font-weight:900;color:#fff;font-size:clamp(13px,2.6vmin,17px);cursor:pointer;box-shadow:0 8px 0 rgba(0,0,0,.35),0 0 30px rgba(255,255,255,.25);display:grid;place-items:center;line-height:1.05;text-shadow:0 2px 0 rgba(0,0,0,.3);touch-action:none;padding:0}
+.tv-buz small{display:block;font-size:.75em;opacity:.9}
+.tv-buz:active,.tv-buz.hit{transform:translateY(5px);box-shadow:0 3px 0 rgba(0,0,0,.35)}
+.tv-buz.off{opacity:.25;filter:grayscale(.7)}
+.tv-buz[data-c="0"]{left:12px;top:118px}.tv-buz[data-c="1"]{right:12px;top:118px}.tv-buz[data-c="2"]{left:12px;bottom:16px}.tv-buz[data-c="3"]{right:12px;bottom:16px}
+.tv-card{position:fixed;inset:0;z-index:28;display:grid;place-items:center;background:rgba(8,10,26,.72);backdrop-filter:blur(8px);padding:16px;box-sizing:border-box}
+.tv-card .ig-card{width:min(620px,100%)}
+.tv-card .q{font-family:var(--f-d);font-size:clamp(18px,3.4vw,26px);line-height:1.2}
+.tv-card .opts{display:grid;gap:8px}
+.tv-card .opts .tv-ch{box-shadow:0 4px 0 rgba(0,0,0,.15);border:2px solid var(--line)}
+.wg{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.wg button{min-height:56px;border-radius:14px;border:2px solid var(--line);background:#fff;font-weight:800;cursor:pointer;font-size:14px;color:var(--ink)}.wg button b{display:block;font-family:var(--f-d);font-size:15px}.wg button.all{background:var(--coral);color:#fff;border-color:transparent}
+.pk{display:flex;gap:6px;flex-wrap:wrap}.pk button{flex:1 1 70px;min-height:46px;border-radius:14px;border:2px solid var(--line);background:#fff;font-weight:800;cursor:pointer;color:var(--ink);padding:4px 6px}.pk button.on{border-color:var(--mint-ink);background:var(--mint)}
+.pk button small{display:block;font-weight:600;font-size:11px;color:#4c5868}
+.names{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:6px}.names input{min-height:42px;border-radius:12px;border:2px solid var(--line);padding:0 10px;font:inherit;font-weight:800;box-sizing:border-box;width:100%;user-select:text;-webkit-user-select:text}
+.ttl-scroll{max-height:calc(100dvh - 32px);overflow:auto}
+.tt-wide .tt-col{display:grid;gap:12px;align-content:start}
+@media (min-width:760px) and (orientation:landscape){.tt-wide{width:min(940px,100%);grid-template-columns:1fr 1.1fr;column-gap:22px}}
+.tv-bubble{position:fixed;z-index:19;transform:translate(-50%,-100%);background:#fff;color:#1b2430;font-weight:800;font-size:14px;padding:6px 10px;border-radius:14px;box-shadow:0 6px 16px rgba(0,0,0,.3);pointer-events:none;white-space:nowrap;animation:pop .25s ease-out}
+.tv-bubble:after{content:"";position:absolute;left:50%;bottom:-8px;margin-left:-8px;border:8px solid transparent;border-top-color:#fff;border-bottom:0}
+@keyframes pop{from{transform:translate(-50%,-80%) scale(.6);opacity:0}}
+@media (max-width:640px){.tv-choices{grid-template-columns:1fr 1fr;gap:6px;padding:8px}.tv-ch{min-height:52px;grid-template-columns:36px 1fr;font-size:14px}.tv-ch b{width:36px;height:36px;font-size:17px}.tv-scores{max-width:60vw}.tv-scores span{font-size:12px;padding:5px 8px}}
+@media (orientation:portrait){.tv-buz[data-c="0"],.tv-buz[data-c="1"]{top:auto;bottom:128px}.tv-scores{bottom:auto;top:58px;max-width:70vw}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+</head><body>
+<canvas class="ig-gl" id="gl"></canvas>
+<div class="tv-scores" id="tvScores" hidden></div>
+<div class="tv-choices" id="tvChoices" hidden></div>
+<div id="tvBuzzers"></div>
+<script type="module">
+import * as E from '../engine/inoa3d.js';
+const { THREE, clamp, lerp, rnd, pick, hash, damp, SFX, $ } = E;
+
+/* ======================= question bank =======================
+   [category, difficulty 1-3, EN question, [EN correct, wrong, wrong, wrong], ES question, [ES correct, wrong, wrong, wrong]]
+   Original, family-friendly questions. The first choice is the correct one; choices are shuffled at runtime. */
+const Q = [
+// ---- science
+['sci', 1, 'What do plants need from the sun to make their food?', ['Light', 'Sound', 'Wind', 'Snow'], '¿Qué necesitan las plantas del sol para fabricar su alimento?', ['Luz', 'Sonido', 'Viento', 'Nieve']],
+['sci', 1, 'How many planets are in our solar system?', ['8', '7', '9', '10'], '¿Cuántos planetas hay en nuestro sistema solar?', ['8', '7', '9', '10']],
+['sci', 1, 'Which planet is known as the Red Planet?', ['Mars', 'Venus', 'Jupiter', 'Saturn'], '¿Qué planeta es conocido como el planeta rojo?', ['Marte', 'Venus', 'Júpiter', 'Saturno']],
+['sci', 1, 'What is frozen water called?', ['Ice', 'Steam', 'Fog', 'Salt'], '¿Cómo se llama el agua congelada?', ['Hielo', 'Vapor', 'Niebla', 'Sal']],
+['sci', 1, 'Which body part pumps blood around the body?', ['The heart', 'The lungs', 'The stomach', 'The brain'], '¿Qué parte del cuerpo bombea la sangre?', ['El corazón', 'Los pulmones', 'El estómago', 'El cerebro']],
+['sci', 1, 'Which gas do we need to breathe to stay alive?', ['Oxygen', 'Helium', 'Neon', 'Argon'], '¿Qué gas necesitamos respirar para vivir?', ['Oxígeno', 'Helio', 'Neón', 'Argón']],
+['sci', 1, 'Which tool do scientists use to see very tiny things?', ['Microscope', 'Telescope', 'Thermometer', 'Compass'], '¿Qué instrumento usan los científicos para ver cosas muy pequeñas?', ['El microscopio', 'El telescopio', 'El termómetro', 'La brújula']],
+['sci', 1, 'What color do you get by mixing blue and yellow paint?', ['Green', 'Purple', 'Orange', 'Pink'], '¿Qué color se obtiene al mezclar pintura azul y amarilla?', ['Verde', 'Morado', 'Naranja', 'Rosado']],
+['sci', 2, 'What is the largest planet in our solar system?', ['Jupiter', 'Saturn', 'Earth', 'Neptune'], '¿Cuál es el planeta más grande del sistema solar?', ['Júpiter', 'Saturno', 'La Tierra', 'Neptuno']],
+['sci', 2, 'At sea level, water boils at what temperature?', ['100 °C', '50 °C', '0 °C', '200 °C'], 'Al nivel del mar, ¿a qué temperatura hierve el agua?', ['100 °C', '50 °C', '0 °C', '200 °C']],
+['sci', 2, 'What is the chemical formula for water?', ['H₂O', 'CO₂', 'O₂', 'NaCl'], '¿Cuál es la fórmula química del agua?', ['H₂O', 'CO₂', 'O₂', 'NaCl']],
+['sci', 2, 'Which force pulls objects toward the Earth?', ['Gravity', 'Magnetism', 'Friction', 'Electricity'], '¿Qué fuerza atrae los objetos hacia la Tierra?', ['La gravedad', 'El magnetismo', 'La fricción', 'La electricidad']],
+['sci', 2, 'What is the largest organ of the human body?', ['The skin', 'The liver', 'The heart', 'The lungs'], '¿Cuál es el órgano más grande del cuerpo humano?', ['La piel', 'El hígado', 'El corazón', 'Los pulmones']],
+['sci', 2, 'Which planet is closest to the Sun?', ['Mercury', 'Venus', 'Mars', 'Earth'], '¿Qué planeta está más cerca del Sol?', ['Mercurio', 'Venus', 'Marte', 'La Tierra']],
+['sci', 2, 'Which gas do plants take in from the air to make food?', ['Carbon dioxide', 'Helium', 'Neon', 'Hydrogen'], '¿Qué gas toman las plantas del aire para fabricar su alimento?', ['Dióxido de carbono', 'Helio', 'Neón', 'Hidrógeno']],
+['sci', 2, 'What do you call an animal that eats only plants?', ['Herbivore', 'Carnivore', 'Omnivore', 'Predator'], '¿Cómo se llama un animal que solo come plantas?', ['Herbívoro', 'Carnívoro', 'Omnívoro', 'Depredador']],
+['sci', 3, 'How many bones are in the adult human body?', ['206', '106', '306', '186'], '¿Cuántos huesos tiene el cuerpo humano adulto?', ['206', '106', '306', '186']],
+['sci', 3, 'What is the chemical symbol for gold?', ['Au', 'Ag', 'Go', 'Gd'], '¿Cuál es el símbolo químico del oro?', ['Au', 'Ag', 'Or', 'Go']],
+['sci', 3, 'Which is the hottest planet in our solar system?', ['Venus', 'Mercury', 'Mars', 'Jupiter'], '¿Cuál es el planeta más caliente del sistema solar?', ['Venus', 'Mercurio', 'Marte', 'Júpiter']],
+['sci', 3, 'About how long does sunlight take to reach Earth?', ['8 minutes', '8 seconds', '8 hours', '8 days'], '¿Cuánto tarda aproximadamente la luz del Sol en llegar a la Tierra?', ['8 minutos', '8 segundos', '8 horas', '8 días']],
+['sci', 3, 'Which part of a plant or animal cell holds most of its DNA?', ['The nucleus', 'The membrane', 'The cell wall', 'The ribosome'], '¿Qué parte de una célula animal o vegetal guarda la mayor parte de su ADN?', ['El núcleo', 'La membrana', 'La pared celular', 'El ribosoma']],
+['sci', 3, 'What travels faster: light or sound?', ['Light', 'Sound', 'They are equal', 'It depends on the color'], '¿Qué viaja más rápido: la luz o el sonido?', ['La luz', 'El sonido', 'Son iguales', 'Depende del color']],
+// ---- animals
+['ani', 1, 'What is the largest animal on Earth?', ['Blue whale', 'Elephant', 'Giraffe', 'Great white shark'], '¿Cuál es el animal más grande de la Tierra?', ['La ballena azul', 'El elefante', 'La jirafa', 'El tiburón blanco']],
+['ani', 1, 'How many legs does a spider have?', ['8', '6', '10', '4'], '¿Cuántas patas tiene una araña?', ['8', '6', '10', '4']],
+['ani', 1, 'What is a baby frog called?', ['Tadpole', 'Cub', 'Calf', 'Chick'], '¿Cómo se llama la cría de la rana?', ['Renacuajo', 'Cachorro', 'Ternero', 'Pollito']],
+['ani', 1, 'Which animal is famous for its black and white stripes?', ['Zebra', 'Lion', 'Giraffe', 'Hippo'], '¿Qué animal es famoso por sus rayas blancas y negras?', ['La cebra', 'El león', 'La jirafa', 'El hipopótamo']],
+['ani', 1, 'What do pandas mostly eat?', ['Bamboo', 'Fish', 'Meat', 'Bananas'], '¿Qué comen principalmente los pandas?', ['Bambú', 'Pescado', 'Carne', 'Bananas']],
+['ani', 1, 'Which bird cannot fly but is an excellent swimmer?', ['Penguin', 'Eagle', 'Parrot', 'Owl'], '¿Qué ave no puede volar pero nada muy bien?', ['El pingüino', 'El águila', 'El loro', 'El búho']],
+['ani', 1, 'Which insect makes honey?', ['Bee', 'Ant', 'Butterfly', 'Mosquito'], '¿Qué insecto produce miel?', ['La abeja', 'La hormiga', 'La mariposa', 'El mosquito']],
+['ani', 1, 'Where does a baby kangaroo grow after it is born?', ["In its mother's pouch", 'In a nest', 'Underwater', 'In a cave'], '¿Dónde crece la cría del canguro después de nacer?', ['En la bolsa de su madre', 'En un nido', 'Bajo el agua', 'En una cueva']],
+['ani', 1, 'Which animal is the tallest in the world?', ['Giraffe', 'Elephant', 'Camel', 'Ostrich'], '¿Cuál es el animal más alto del mundo?', ['La jirafa', 'El elefante', 'El camello', 'El avestruz']],
+['ani', 1, 'What sound does a cow make?', ['Moo', 'Woof', 'Meow', 'Quack'], '¿Qué sonido hace la vaca?', ['Mu', 'Guau', 'Miau', 'Cuac']],
+['ani', 2, 'What is the fastest land animal?', ['Cheetah', 'Horse', 'Lion', 'Kangaroo'], '¿Cuál es el animal terrestre más rápido?', ['El guepardo', 'El caballo', 'El león', 'El canguro']],
+['ani', 2, 'What is a group of lions called?', ['A pride', 'A flock', 'A school', 'A swarm'], '¿Cómo se llama un grupo de leones?', ['Manada', 'Bandada', 'Cardumen', 'Enjambre']],
+['ani', 2, 'Which mammal can truly fly?', ['The bat', 'The flying squirrel', 'The penguin', 'The ostrich'], '¿Qué mamífero puede volar de verdad?', ['El murciélago', 'La ardilla voladora', 'El pingüino', 'El avestruz']],
+['ani', 2, 'How many hearts does an octopus have?', ['3', '1', '2', '8'], '¿Cuántos corazones tiene un pulpo?', ['3', '1', '2', '8']],
+['ani', 2, 'Dolphins are…', ['Mammals', 'Fish', 'Reptiles', 'Amphibians'], 'Los delfines son…', ['Mamíferos', 'Peces', 'Reptiles', 'Anfibios']],
+['ani', 2, 'Which bird can fly backwards?', ['Hummingbird', 'Pigeon', 'Eagle', 'Duck'], '¿Qué ave puede volar hacia atrás?', ['El colibrí', 'La paloma', 'El águila', 'El pato']],
+['ani', 2, 'Why are flamingos pink?', ['Because of the food they eat', 'They are born pink', 'They roll in pink mud', 'From sunburn'], '¿Por qué los flamencos son rosados?', ['Por la comida que comen', 'Nacen rosados', 'Se revuelcan en barro rosado', 'Por quemaduras de sol']],
+['ani', 3, "Which sea animal is also called a 'sea cow'?", ['Manatee', 'Walrus', 'Seal', 'Dolphin'], "¿Qué animal marino también es llamado 'vaca marina'?", ['El manatí', 'La morsa', 'La foca', 'El delfín']],
+['ani', 3, 'A caterpillar turns into a butterfly inside a…', ['Chrysalis', 'Nest', 'Shell', 'Burrow'], 'La oruga se convierte en mariposa dentro de una…', ['Crisálida', 'Madriguera', 'Concha', 'Colmena']],
+['ani', 3, 'What is the largest species of turtle?', ['Leatherback sea turtle', 'Box turtle', 'Snapping turtle', 'Green sea turtle'], '¿Cuál es la especie de tortuga más grande?', ['La tortuga laúd', 'La tortuga de caja', 'La tortuga mordedora', 'La tortuga verde']],
+['ani', 3, 'Snakes flick their tongues mainly to…', ['Smell', 'Hear', 'See', 'Breathe'], 'Las serpientes sacan la lengua principalmente para…', ['Oler', 'Oír', 'Ver', 'Respirar']],
+['ani', 3, 'What do you call animals that are active at night?', ['Nocturnal', 'Diurnal', 'Aquatic', 'Arboreal'], '¿Cómo se llaman los animales que están activos de noche?', ['Nocturnos', 'Diurnos', 'Acuáticos', 'Arbóreos']],
+// ---- geography
+['geo', 1, 'What is the largest ocean on Earth?', ['Pacific', 'Atlantic', 'Indian', 'Arctic'], '¿Cuál es el océano más grande de la Tierra?', ['Pacífico', 'Atlántico', 'Índico', 'Ártico']],
+['geo', 1, 'On which continent is Egypt?', ['Africa', 'Asia', 'Europe', 'South America'], '¿En qué continente está Egipto?', ['África', 'Asia', 'Europa', 'América del Sur']],
+['geo', 1, 'What is the capital of France?', ['Paris', 'London', 'Rome', 'Madrid'], '¿Cuál es la capital de Francia?', ['París', 'Londres', 'Roma', 'Madrid']],
+['geo', 1, 'Which is the coldest continent?', ['Antarctica', 'Africa', 'Europe', 'Australia'], '¿Cuál es el continente más frío?', ['La Antártida', 'África', 'Europa', 'Australia']],
+['geo', 1, 'Which country is shaped like a boot?', ['Italy', 'Spain', 'Greece', 'Portugal'], '¿Qué país tiene forma de bota?', ['Italia', 'España', 'Grecia', 'Portugal']],
+['geo', 1, 'What do we call the huge bodies of salt water that cover most of Earth?', ['Oceans', 'Rivers', 'Waterfalls', 'Streams'], '¿Cómo se llaman las enormes masas de agua salada que cubren gran parte de la Tierra?', ['Océanos', 'Ríos', 'Cascadas', 'Arroyos']],
+['geo', 1, 'What is the capital of Spain?', ['Madrid', 'Barcelona', 'Seville', 'Valencia'], '¿Cuál es la capital de España?', ['Madrid', 'Barcelona', 'Sevilla', 'Valencia']],
+['geo', 1, 'What is the name of the planet we live on?', ['Earth', 'Mars', 'The Moon', 'The Sun'], '¿Cómo se llama el planeta donde vivimos?', ['La Tierra', 'Marte', 'La Luna', 'El Sol']],
+['geo', 2, 'What is the tallest mountain in the world above sea level?', ['Mount Everest', 'Kilimanjaro', 'Aconcagua', 'Mont Blanc'], '¿Cuál es la montaña más alta del mundo sobre el nivel del mar?', ['El monte Everest', 'El Kilimanjaro', 'El Aconcagua', 'El Mont Blanc']],
+['geo', 2, 'What is the capital of Japan?', ['Tokyo', 'Kyoto', 'Osaka', 'Seoul'], '¿Cuál es la capital de Japón?', ['Tokio', 'Kioto', 'Osaka', 'Seúl']],
+['geo', 2, 'What is the largest country in the world by area?', ['Russia', 'Canada', 'China', 'Brazil'], '¿Cuál es el país más grande del mundo por superficie?', ['Rusia', 'Canadá', 'China', 'Brasil']],
+['geo', 2, 'On which continent is the Sahara Desert?', ['Africa', 'Asia', 'Australia', 'South America'], '¿En qué continente está el desierto del Sahara?', ['África', 'Asia', 'Australia', 'América del Sur']],
+['geo', 2, 'What is the capital of Canada?', ['Ottawa', 'Toronto', 'Vancouver', 'Montreal'], '¿Cuál es la capital de Canadá?', ['Ottawa', 'Toronto', 'Vancouver', 'Montreal']],
+['geo', 2, 'Which ocean lies between the Americas and Europe?', ['Atlantic', 'Pacific', 'Indian', 'Arctic'], '¿Qué océano está entre América y Europa?', ['Atlántico', 'Pacífico', 'Índico', 'Ártico']],
+['geo', 2, 'Which imaginary line divides Earth into northern and southern halves?', ['The equator', 'The prime meridian', 'The Tropic of Cancer', 'The date line'], '¿Qué línea imaginaria divide la Tierra en hemisferio norte y sur?', ['El ecuador', 'El meridiano de Greenwich', 'El trópico de Cáncer', 'La línea de cambio de fecha']],
+['geo', 3, 'In which country is Mount Kilimanjaro?', ['Tanzania', 'Kenya', 'Egypt', 'Morocco'], '¿En qué país está el monte Kilimanjaro?', ['Tanzania', 'Kenia', 'Egipto', 'Marruecos']],
+['geo', 3, 'The Great Barrier Reef lies off the coast of which country?', ['Australia', 'Brazil', 'Mexico', 'Philippines'], '¿Frente a la costa de qué país está la Gran Barrera de Coral?', ['Australia', 'Brasil', 'México', 'Filipinas']],
+['geo', 3, 'What is the capital of Egypt?', ['Cairo', 'Alexandria', 'Giza', 'Luxor'], '¿Cuál es la capital de Egipto?', ['El Cairo', 'Alejandría', 'Guiza', 'Luxor']],
+['geo', 3, 'Which river flows through Paris?', ['The Seine', 'The Thames', 'The Danube', 'The Rhine'], '¿Qué río atraviesa París?', ['El Sena', 'El Támesis', 'El Danubio', 'El Rin']],
+['geo', 3, 'In which ocean is Iceland?', ['The North Atlantic', 'The Pacific', 'The Indian Ocean', 'The Southern Ocean'], '¿En qué océano está Islandia?', ['El Atlántico Norte', 'El Pacífico', 'El Índico', 'El Océano Austral']],
+['geo', 3, 'What is the smallest country in the world?', ['Vatican City', 'Monaco', 'Malta', 'San Marino'], '¿Cuál es el país más pequeño del mundo?', ['La Ciudad del Vaticano', 'Mónaco', 'Malta', 'San Marino']],
+// ---- food
+['food', 1, 'Guacamole is mainly made from which fruit?', ['Avocado', 'Strawberry', 'Apple', 'Mango'], '¿De qué fruta se hace principalmente el guacamole?', ['Aguacate', 'Fresa', 'Manzana', 'Mango']],
+['food', 1, 'Popcorn is made from which grain?', ['Corn', 'Rice', 'Wheat', 'Oats'], '¿De qué grano se hacen las palomitas?', ['Maíz', 'Arroz', 'Trigo', 'Avena']],
+['food', 1, 'Which animal gives us most of the milk we drink?', ['Cow', 'Chicken', 'Pig', 'Fish'], '¿Qué animal nos da la mayor parte de la leche que tomamos?', ['La vaca', 'La gallina', 'El cerdo', 'El pez']],
+['food', 1, 'Cheese is made from…', ['Milk', 'Eggs', 'Flour', 'Honey'], 'El queso se hace con…', ['Leche', 'Huevos', 'Harina', 'Miel']],
+['food', 1, 'Chocolate is made from the seeds of which plant?', ['Cacao', 'Coffee', 'Vanilla', 'Coconut'], '¿De las semillas de qué planta se hace el chocolate?', ['Cacao', 'Café', 'Vainilla', 'Coco']],
+['food', 1, 'Which fruit is long, yellow and curved?', ['Banana', 'Apple', 'Grape', 'Cherry'], '¿Qué fruta es larga, amarilla y curva?', ['La banana', 'La manzana', 'La uva', 'La cereza']],
+['food', 1, 'Which of these is a vegetable?', ['Carrot', 'Apple', 'Strawberry', 'Grape'], '¿Cuál de estos es un vegetal?', ['La zanahoria', 'La manzana', 'La fresa', 'La uva']],
+['food', 1, 'What color is a ripe tomato usually?', ['Red', 'Blue', 'Purple', 'Black'], '¿De qué color es normalmente un tomate maduro?', ['Rojo', 'Azul', 'Morado', 'Negro']],
+['food', 1, 'Which drink is made from roasted beans?', ['Coffee', 'Lemonade', 'Milk', 'Orange juice'], '¿Qué bebida se hace con granos tostados?', ['El café', 'La limonada', 'La leche', 'El jugo de naranja']],
+['food', 2, 'Sushi comes from which country?', ['Japan', 'China', 'Thailand', 'Korea'], '¿De qué país viene el sushi?', ['Japón', 'China', 'Tailandia', 'Corea']],
+['food', 2, 'Paella is a famous rice dish from…', ['Spain', 'Italy', 'Mexico', 'Peru'], 'La paella es un famoso plato de arroz de…', ['España', 'Italia', 'México', 'Perú']],
+['food', 2, 'Which vitamin are oranges famous for?', ['Vitamin C', 'Vitamin D', 'Vitamin K', 'Vitamin B12'], '¿Por qué vitamina son famosas las naranjas?', ['Vitamina C', 'Vitamina D', 'Vitamina K', 'Vitamina B12']],
+['food', 2, 'Bread dough rises thanks to…', ['Yeast', 'Salt', 'Sugar', 'Oil'], 'La masa del pan sube gracias a…', ['La levadura', 'La sal', 'El azúcar', 'El aceite']],
+['food', 2, 'Tofu is made from…', ['Soybeans', 'Rice', 'Corn', 'Peanuts'], 'El tofu se hace con…', ['Soya', 'Arroz', 'Maíz', 'Maní']],
+['food', 2, 'Butter is made by churning…', ['Cream', 'Water', 'Juice', 'Eggs'], 'La mantequilla se hace batiendo…', ['Crema de leche', 'Agua', 'Jugo', 'Huevos']],
+['food', 2, 'Kimchi is a traditional dish from…', ['Korea', 'Japan', 'India', 'Vietnam'], 'El kimchi es un plato tradicional de…', ['Corea', 'Japón', 'India', 'Vietnam']],
+['food', 2, 'Croissants are most associated with which country?', ['France', 'Germany', 'Mexico', 'Japan'], '¿Con qué país se asocian más los cruasanes?', ['Francia', 'Alemania', 'México', 'Japón']],
+['food', 3, 'Pizza Margherita comes from which Italian city?', ['Naples', 'Rome', 'Milan', 'Venice'], '¿De qué ciudad italiana viene la pizza Margarita?', ['Nápoles', 'Roma', 'Milán', 'Venecia']],
+['food', 3, 'Which country is most famous for maple syrup?', ['Canada', 'Brazil', 'Egypt', 'Spain'], '¿Qué país es más famoso por el sirope de arce?', ['Canadá', 'Brasil', 'Egipto', 'España']],
+['food', 3, 'Which spice comes from the dried stigmas of the crocus flower?', ['Saffron', 'Cinnamon', 'Pepper', 'Nutmeg'], '¿Qué especia se obtiene de los estigmas secos de la flor llamada crocus?', ['El azafrán', 'La canela', 'La pimienta', 'La nuez moscada']],
+['food', 3, 'Hummus is mainly made from which legume?', ['Chickpeas', 'Lentils', 'Black beans', 'Peas'], '¿De qué legumbre se hace principalmente el hummus?', ['Garbanzos', 'Lentejas', 'Frijoles negros', 'Guisantes']],
+// ---- sports
+['sport', 1, 'How many players does a soccer team have on the field?', ['11', '9', '7', '5'], '¿Cuántos jugadores tiene un equipo de fútbol en la cancha?', ['11', '9', '7', '5']],
+['sport', 1, 'In which sport do you shoot a ball through a hoop?', ['Basketball', 'Tennis', 'Golf', 'Swimming'], '¿En qué deporte se lanza una pelota por un aro?', ['Baloncesto', 'Tenis', 'Golf', 'Natación']],
+['sport', 1, 'Which sport uses a bat, a ball and bases?', ['Baseball', 'Soccer', 'Volleyball', 'Hockey'], '¿Qué deporte usa bate, pelota y bases?', ['Béisbol', 'Fútbol', 'Voleibol', 'Hockey']],
+['sport', 1, 'How many rings are on the Olympic flag?', ['5', '4', '6', '7'], '¿Cuántos aros hay en la bandera olímpica?', ['5', '4', '6', '7']],
+['sport', 1, 'Which sport is played on ice with sticks and a puck?', ['Ice hockey', 'Curling', 'Skiing', 'Rugby'], '¿Qué deporte se juega sobre hielo con palos y un disco?', ['Hockey sobre hielo', 'Curling', 'Esquí', 'Rugby']],
+['sport', 1, 'Which sport is done in a pool?', ['Swimming', 'Cycling', 'Boxing', 'Skating'], '¿Qué deporte se practica en una piscina?', ['Natación', 'Ciclismo', 'Boxeo', 'Patinaje']],
+['sport', 1, 'What shape is a rugby ball?', ['Oval', 'Round', 'Square', 'Triangular'], '¿Qué forma tiene un balón de rugby?', ['Ovalada', 'Redonda', 'Cuadrada', 'Triangular']],
+['sport', 1, 'What do you ride in a cycling race?', ['A bicycle', 'A horse', 'A skateboard', 'A boat'], '¿En qué se monta en una carrera de ciclismo?', ['En una bicicleta', 'En un caballo', 'En una patineta', 'En un bote']],
+['sport', 2, 'In baseball, how many strikes make a strikeout?', ['3', '2', '4', '5'], 'En el béisbol, ¿cuántos strikes hacen un ponche?', ['3', '2', '4', '5']],
+['sport', 2, 'How long is a regular soccer match?', ['90 minutes', '60 minutes', '45 minutes', '120 minutes'], '¿Cuánto dura un partido regular de fútbol?', ['90 minutos', '60 minutos', '45 minutos', '120 minutos']],
+['sport', 2, 'Which sport uses a shuttlecock?', ['Badminton', 'Tennis', 'Squash', 'Table tennis'], '¿Qué deporte usa un volante (o gallito)?', ['Bádminton', 'Tenis', 'Squash', 'Tenis de mesa']],
+['sport', 2, 'How many players per team are on a volleyball court?', ['6', '5', '4', '8'], '¿Cuántos jugadores por equipo hay en una cancha de voleibol?', ['6', '5', '4', '8']],
+['sport', 2, 'In golf, who wins?', ['Fewest strokes', 'Most strokes', 'Longest single drive', 'Fastest walker'], 'En el golf, ¿quién gana?', ['Quien usa menos golpes', 'Quien usa más golpes', 'El tiro más largo', 'Quien camina más rápido']],
+['sport', 2, 'How many points is a touchdown worth in American football?', ['6', '3', '7', '2'], '¿Cuántos puntos vale un touchdown en el fútbol americano?', ['6', '3', '7', '2']],
+['sport', 2, 'In basketball, a basket from behind the arc is worth…', ['3 points', '2 points', '1 point', '4 points'], 'En el baloncesto, una canasta desde detrás del arco vale…', ['3 puntos', '2 puntos', '1 punto', '4 puntos']],
+['sport', 2, 'Ping-pong is another name for…', ['Table tennis', 'Badminton', 'Squash', 'Bowling'], 'El ping-pong también se llama…', ['Tenis de mesa', 'Bádminton', 'Squash', 'Bolos']],
+['sport', 2, "In which sport would you see a 'slam dunk'?", ['Basketball', 'Baseball', 'Volleyball', 'Tennis'], "¿En qué deporte se hace una 'clavada'?", ['Baloncesto', 'Béisbol', 'Voleibol', 'Tenis']],
+['sport', 3, 'How long is a marathon?', ['42.195 km', '21.1 km', '50 km', '36.5 km'], '¿Cuánto mide un maratón?', ['42,195 km', '21,1 km', '50 km', '36,5 km']],
+['sport', 3, 'How high is a regulation basketball hoop?', ['10 feet (3.05 m)', '8 feet (2.44 m)', '12 feet (3.66 m)', '9 feet (2.74 m)'], '¿A qué altura está un aro de baloncesto reglamentario?', ['3,05 m (10 pies)', '2,44 m (8 pies)', '3,66 m (12 pies)', '2,74 m (9 pies)']],
+['sport', 3, "In which sport is scoring three goals in one game called a 'hat trick'?", ['Soccer', 'Golf', 'Swimming', 'Tennis'], "¿En qué deporte se llama 'hat-trick' a marcar tres goles en un partido?", ['Fútbol', 'Golf', 'Natación', 'Tenis']],
+['sport', 3, 'How many holes are in a standard round of golf?', ['18', '9', '12', '24'], '¿Cuántos hoyos tiene una ronda estándar de golf?', ['18', '9', '12', '24']],
+// ---- music
+['music', 1, 'Which instrument has black and white keys?', ['Piano', 'Guitar', 'Drum', 'Flute'], '¿Qué instrumento tiene teclas blancas y negras?', ['El piano', 'La guitarra', 'El tambor', 'La flauta']],
+['music', 1, 'How many strings does a standard guitar have?', ['6', '4', '5', '8'], '¿Cuántas cuerdas tiene una guitarra estándar?', ['6', '4', '5', '8']],
+['music', 1, 'Which instrument do you play by hitting it with sticks?', ['Drum', 'Violin', 'Trumpet', 'Harp'], '¿Qué instrumento se toca golpeándolo con baquetas?', ['El tambor', 'El violín', 'La trompeta', 'El arpa']],
+['music', 1, 'What kind of instrument are maracas?', ['Percussion (you shake them)', 'String', 'Brass', 'Keyboard'], '¿Qué tipo de instrumento son las maracas?', ['De percusión (se sacuden)', 'De cuerda', 'De metal', 'De teclado']],
+['music', 1, 'What do we call the person who leads an orchestra?', ['Conductor', 'Pilot', 'Coach', 'Captain'], '¿Cómo se llama la persona que dirige una orquesta?', ['Director de orquesta', 'Piloto', 'Entrenador', 'Capitán']],
+['music', 1, 'Which of these instruments do you blow into?', ['Flute', 'Drum', 'Piano', 'Guitar'], '¿En cuál de estos instrumentos se sopla?', ['La flauta', 'El tambor', 'El piano', 'La guitarra']],
+['music', 1, 'How many lines does a music staff have?', ['5', '4', '6', '7'], '¿Cuántas líneas tiene el pentagrama?', ['5', '4', '6', '7']],
+['music', 2, 'How many keys does a standard piano have?', ['88', '76', '92', '64'], '¿Cuántas teclas tiene un piano estándar?', ['88', '76', '92', '64']],
+['music', 2, 'The trumpet belongs to which family of instruments?', ['Brass', 'Strings', 'Percussion', 'Woodwinds'], '¿A qué familia de instrumentos pertenece la trompeta?', ['Viento metal', 'Cuerdas', 'Percusión', 'Viento madera']],
+['music', 2, 'What is a group of four musicians called?', ['Quartet', 'Trio', 'Duet', 'Quintet'], '¿Cómo se llama un grupo de cuatro músicos?', ['Cuarteto', 'Trío', 'Dúo', 'Quinteto']],
+['music', 2, "In music, what does 'tempo' describe?", ['Speed', 'Volume', 'Pitch', 'Harmony'], "En la música, ¿qué describe el 'tempo'?", ['La velocidad', 'El volumen', 'El tono', 'La armonía']],
+['music', 2, 'Reggae music comes from which island?', ['Jamaica', 'Cuba', 'Puerto Rico', 'Trinidad'], '¿De qué isla viene la música reggae?', ['Jamaica', 'Cuba', 'Puerto Rico', 'Trinidad']],
+['music', 2, 'Mariachi music is traditional in…', ['Mexico', 'Argentina', 'Spain', 'Chile'], 'La música de mariachi es tradicional de…', ['México', 'Argentina', 'España', 'Chile']],
+['music', 2, 'Samba is a famous rhythm from…', ['Brazil', 'Peru', 'Cuba', 'Spain'], 'La samba es un ritmo famoso de…', ['Brasil', 'Perú', 'Cuba', 'España']],
+['music', 2, 'Which is the smallest instrument of the violin family?', ['Violin', 'Cello', 'Double bass', 'Viola'], '¿Cuál es el instrumento más pequeño de la familia del violín?', ['El violín', 'El violonchelo', 'El contrabajo', 'La viola']],
+['music', 2, 'How is a harp played?', ['By plucking strings', 'By blowing air', 'By pressing keys', 'By hitting it with sticks'], '¿Cómo se toca el arpa?', ['Pulsando cuerdas', 'Soplando aire', 'Presionando teclas', 'Golpeándola con baquetas']],
+['music', 3, 'The steelpan (steel drum) was invented in…', ['Trinidad and Tobago', 'Jamaica', 'Barbados', 'Haiti'], '¿Dónde se inventó el steelpan (tambor de acero)?', ['Trinidad y Tobago', 'Jamaica', 'Barbados', 'Haití']],
+['music', 3, 'Tango was born around the Río de la Plata, mainly in…', ['Argentina and Uruguay', 'Mexico and Cuba', 'Spain and Portugal', 'Peru and Bolivia'], 'El tango nació en la región del Río de la Plata, principalmente en…', ['Argentina y Uruguay', 'México y Cuba', 'España y Portugal', 'Perú y Bolivia']],
+['music', 3, 'Cumbia music has its roots in which country?', ['Colombia', 'Chile', 'Venezuela', 'Paraguay'], '¿En qué país tiene sus raíces la cumbia?', ['Colombia', 'Chile', 'Venezuela', 'Paraguay']],
+['music', 3, 'What is the highest female singing voice?', ['Soprano', 'Alto', 'Tenor', 'Bass'], '¿Cuál es la voz femenina más aguda?', ['Soprano', 'Contralto', 'Tenor', 'Bajo']],
+['music', 3, "In sheet music, what does the marking 'piano' mean?", ['Play softly', 'Play loudly', 'Play quickly', 'Play slowly'], "En una partitura, ¿qué significa la indicación 'piano'?", ['Tocar suave', 'Tocar fuerte', 'Tocar rápido', 'Tocar lento']],
+// ---- Caribbean & Latin America
+['latam', 1, 'What is the capital of the Dominican Republic?', ['Santo Domingo', 'Santiago', 'Punta Cana', 'La Romana'], '¿Cuál es la capital de la República Dominicana?', ['Santo Domingo', 'Santiago', 'Punta Cana', 'La Romana']],
+['latam', 1, 'What is the capital of Puerto Rico?', ['San Juan', 'Ponce', 'Mayagüez', 'Arecibo'], '¿Cuál es la capital de Puerto Rico?', ['San Juan', 'Ponce', 'Mayagüez', 'Arecibo']],
+['latam', 1, 'What is the capital of Mexico?', ['Mexico City', 'Guadalajara', 'Monterrey', 'Cancún'], '¿Cuál es la capital de México?', ['Ciudad de México', 'Guadalajara', 'Monterrey', 'Cancún']],
+['latam', 1, 'Which language is mainly spoken in Brazil?', ['Portuguese', 'Spanish', 'French', 'English'], '¿Qué idioma se habla principalmente en Brasil?', ['Portugués', 'Español', 'Francés', 'Inglés']],
+['latam', 1, 'The Dominican Republic shares its island with which country?', ['Haiti', 'Cuba', 'Jamaica', 'Puerto Rico'], '¿Con qué país comparte su isla la República Dominicana?', ['Haití', 'Cuba', 'Jamaica', 'Puerto Rico']],
+['latam', 1, 'Tostones are made by frying slices of…', ['Green plantain', 'Apple', 'Pineapple', 'Grape'], 'Los tostones se hacen friendo rodajas de…', ['Plátano verde', 'Manzana', 'Piña', 'Uva']],
+['latam', 2, 'What is the name of the island shared by the Dominican Republic and Haiti?', ['Hispaniola', 'Cuba', 'Borinquen', 'Jamaica'], '¿Cómo se llama la isla que comparten la República Dominicana y Haití?', ['La Española', 'Cuba', 'Borinquen', 'Jamaica']],
+['latam', 2, 'Which is the largest island in the Caribbean?', ['Cuba', 'Hispaniola', 'Jamaica', 'Puerto Rico'], '¿Cuál es la isla más grande del Caribe?', ['Cuba', 'La Española', 'Jamaica', 'Puerto Rico']],
+['latam', 2, 'In which country is Machu Picchu?', ['Peru', 'Bolivia', 'Chile', 'Ecuador'], '¿En qué país está Machu Picchu?', ['Perú', 'Bolivia', 'Chile', 'Ecuador']],
+['latam', 2, 'Merengue and bachata are music styles from…', ['The Dominican Republic', 'Colombia', 'Argentina', 'Chile'], 'El merengue y la bachata son ritmos de…', ['República Dominicana', 'Colombia', 'Argentina', 'Chile']],
+['latam', 2, 'The little coquí frog is a beloved symbol of…', ['Puerto Rico', 'Mexico', 'Peru', 'Panama'], 'La ranita coquí es un símbolo querido de…', ['Puerto Rico', 'México', 'Perú', 'Panamá']],
+['latam', 2, 'What is the capital of Cuba?', ['Havana', 'Santiago de Cuba', 'Varadero', 'Trinidad'], '¿Cuál es la capital de Cuba?', ['La Habana', 'Santiago de Cuba', 'Varadero', 'Trinidad']],
+['latam', 2, 'The Panama Canal connects which two oceans?', ['Atlantic and Pacific', 'Pacific and Indian', 'Atlantic and Arctic', 'Indian and Atlantic'], '¿Qué océanos conecta el Canal de Panamá?', ['Atlántico y Pacífico', 'Pacífico e Índico', 'Atlántico y Ártico', 'Índico y Atlántico']],
+['latam', 2, 'Which mountain range runs down the west of South America?', ['The Andes', 'The Alps', 'The Rockies', 'The Himalayas'], '¿Qué cordillera recorre el oeste de Sudamérica?', ['Los Andes', 'Los Alpes', 'Las Rocosas', 'El Himalaya']],
+['latam', 2, 'The Day of the Dead (Día de Muertos) is a famous celebration from…', ['Mexico', 'Spain', 'Brazil', 'Cuba'], 'El Día de Muertos es una famosa celebración de…', ['México', 'España', 'Brasil', 'Cuba']],
+['latam', 2, 'Besides French, which language is official in Haiti?', ['Haitian Creole', 'Spanish', 'English', 'Portuguese'], 'Además del francés, ¿qué idioma es oficial en Haití?', ['Criollo haitiano', 'Español', 'Inglés', 'Portugués']],
+['latam', 2, 'Which country is named after the imaginary line around the middle of the Earth?', ['Ecuador', 'Colombia', 'Peru', 'Venezuela'], '¿Qué país lleva el nombre de la línea imaginaria que rodea el centro de la Tierra?', ['Ecuador', 'Colombia', 'Perú', 'Venezuela']],
+['latam', 3, 'Larimar, a sky-blue gemstone, is found almost only in…', ['The Dominican Republic', 'Brazil', 'Mexico', 'Chile'], 'El larimar, una piedra azul cielo, se encuentra casi únicamente en…', ['República Dominicana', 'Brasil', 'México', 'Chile']],
+['latam', 3, 'What is the highest mountain in the Caribbean?', ['Pico Duarte', 'Blue Mountain Peak', 'El Yunque', 'Pico Turquino'], '¿Cuál es la montaña más alta del Caribe?', ['Pico Duarte', 'Pico Blue Mountain', 'El Yunque', 'Pico Turquino']],
+['latam', 3, 'The Galápagos Islands belong to which country?', ['Ecuador', 'Peru', 'Colombia', 'Chile'], '¿A qué país pertenecen las Islas Galápagos?', ['Ecuador', 'Perú', 'Colombia', 'Chile']],
+['latam', 3, 'Easter Island (Rapa Nui), famous for its giant moai statues, belongs to…', ['Chile', 'Peru', 'Argentina', 'Mexico'], 'La Isla de Pascua (Rapa Nui), famosa por sus moáis, pertenece a…', ['Chile', 'Perú', 'Argentina', 'México']],
+['latam', 3, 'Lake Titicaca is shared by which two countries?', ['Peru and Bolivia', 'Chile and Argentina', 'Ecuador and Colombia', 'Brazil and Paraguay'], '¿Qué dos países comparten el lago Titicaca?', ['Perú y Bolivia', 'Chile y Argentina', 'Ecuador y Colombia', 'Brasil y Paraguay']],
+['latam', 3, 'Mangú, a Dominican breakfast favorite, is made from mashed…', ['Plantains', 'Potatoes', 'Corn', 'Rice'], 'El mangú, favorito del desayuno dominicano, es un puré de…', ['Plátanos', 'Papas', 'Maíz', 'Arroz']],
+// ---- movies
+['film', 1, 'What do we call a movie made of drawings or computer images that move?', ['An animated film', 'A documentary', 'A newsreel', 'A radio show'], '¿Cómo se llama una película hecha con dibujos o imágenes de computadora que se mueven?', ['Película animada', 'Documental', 'Noticiero', 'Programa de radio']],
+['film', 1, 'Which snack is the classic treat at movie theaters?', ['Popcorn', 'Soup', 'Salad', 'Rice'], '¿Qué merienda es la clásica en el cine?', ['Palomitas de maíz', 'Sopa', 'Ensalada', 'Arroz']],
+['film', 1, 'Who tells the actors what to do while making a movie?', ['The director', 'The pilot', 'The chef', 'The judge'], '¿Quién les dice a los actores qué hacer mientras se filma una película?', ['El director', 'El piloto', 'El chef', 'El juez']],
+['film', 1, 'What color carpet is traditionally rolled out at big movie premieres?', ['Red', 'Blue', 'Green', 'Yellow'], '¿De qué color es la alfombra tradicional en los grandes estrenos de cine?', ['Roja', 'Azul', 'Verde', 'Amarilla']],
+['film', 1, 'Where do you watch a movie at the cinema?', ['On a big screen', 'On a radio', 'In a book', 'On a clock'], '¿Dónde se ve una película en el cine?', ['En una pantalla grande', 'En una radio', 'En un libro', 'En un reloj']],
+['film', 1, 'A short preview of an upcoming movie is called a…', ['Trailer', 'Sequel', 'Credit', 'Ticket'], 'Un adelanto corto de una película que viene se llama…', ['Tráiler', 'Secuela', 'Créditos', 'Boleto']],
+['film', 2, "What is a 'storyboard'?", ['Drawings that plan each shot', 'A very long script', 'The movie poster', 'A camera stand'], "¿Qué es un 'storyboard'?", ['Dibujos que planean cada toma', 'Un guion muy largo', 'El cartel de la película', 'Un soporte para la cámara']],
+['film', 2, 'In movies, what does CGI stand for?', ['Computer-generated imagery', 'Camera grade image', 'Color graphic input', 'Cinema group idea'], 'En el cine, ¿qué significa CGI?', ['Imágenes generadas por computadora', 'Imagen de cámara grado', 'Entrada gráfica de color', 'Idea de grupo de cine']],
+['film', 2, 'Movies made before recorded sound were called…', ['Silent films', 'Talkies', 'Musicals', 'Cartoons'], 'Las películas hechas antes del sonido grabado se conocen como…', ['Cine mudo', 'Cine sonoro', 'Musicales', 'Caricaturas']],
+['film', 2, 'What is a green screen used for?', ['Replacing the background', 'Showing subtitles', 'Cooling the cameras', 'Selling tickets'], '¿Para qué se usa una pantalla verde?', ['Para reemplazar el fondo', 'Para mostrar subtítulos', 'Para enfriar las cámaras', 'Para vender boletos']],
+['film', 2, 'What is the clapperboard used for on a film set?', ['Matching picture and sound', 'Scaring the actors', 'Calling lunch', 'Lighting the scene'], '¿Para qué se usa la claqueta en un rodaje?', ['Para sincronizar imagen y sonido', 'Para asustar a los actores', 'Para llamar a almorzar', 'Para iluminar la escena']],
+['film', 2, 'Stop-motion animation is made by…', ['Moving models a tiny bit between photos', 'Drawing on glass', 'Filming real animals', 'Recording only voices'], 'La animación stop-motion se hace…', ['Moviendo figuras un poquito entre fotos', 'Dibujando sobre vidrio', 'Filmando animales reales', 'Grabando solo voces']],
+['film', 2, 'A person who performs dangerous scenes in place of an actor is a…', ['Stunt double', 'Extra', 'Producer', 'Editor'], 'La persona que hace las escenas peligrosas en lugar de un actor es un…', ['Doble de acción', 'Extra', 'Productor', 'Editor']],
+['film', 2, 'In which country is the Cannes Film Festival held?', ['France', 'Italy', 'Spain', 'Germany'], '¿En qué país se celebra el Festival de Cine de Cannes?', ['Francia', 'Italia', 'España', 'Alemania']],
+['film', 2, "The music written especially for a movie is called its…", ['Score', 'Script', 'Cast', 'Trailer'], 'La música compuesta especialmente para una película se llama…', ['Banda sonora', 'Guion', 'Reparto', 'Tráiler']],
+['film', 2, "What is a 'sequel'?", ['A movie that continues an earlier story', "A movie's first scene", 'A movie review', 'A funny mistake'], "¿Qué es una 'secuela'?", ['Una película que continúa una historia anterior', 'La primera escena', 'Una reseña', 'Un error gracioso']],
+['film', 3, 'What is the classic frame rate of cinema film?', ['24 frames per second', '12 frames per second', '60 frames per second', '100 frames per second'], '¿Cuál es la velocidad clásica del cine en fotogramas por segundo?', ['24 por segundo', '12 por segundo', '60 por segundo', '100 por segundo']],
+['film', 3, "Which country's film industry is nicknamed 'Bollywood'?", ['India', 'Nigeria', 'Brazil', 'Egypt'], "¿La industria de cine de qué país es apodada 'Bollywood'?", ['India', 'Nigeria', 'Brasil', 'Egipto']],
+['film', 3, "Nigeria's huge film industry is often nicknamed…", ['Nollywood', 'Bollywood', 'Tollywood', 'Lollywood'], 'La enorme industria de cine de Nigeria es apodada…', ['Nollywood', 'Bollywood', 'Tollywood', 'Lollywood']],
+['film', 3, 'The written text of a movie, with dialogue and directions, is the…', ['Screenplay', 'Storyboard', 'Soundtrack', 'Poster'], 'El texto escrito de una película, con diálogos e indicaciones, es el…', ['Guion', 'Storyboard', 'Banda sonora', 'Cartel']],
+['film', 3, 'Funny mistakes shown at the end of some movies are called…', ['Bloopers', 'Cameos', 'Credits', 'Spoilers'], 'Los errores graciosos que se muestran al final de algunas películas se llaman…', ['Tomas falsas', 'Cameos', 'Créditos', 'Spoilers']],
+['film', 3, 'When a famous person appears very briefly in a movie, it is called a…', ['Cameo', 'Montage', 'Close-up', 'Flashback'], 'Cuando una persona famosa aparece muy brevemente en una película, se llama…', ['Cameo', 'Montaje', 'Primer plano', 'Flashback']]
+];
+const CATS = { sci: ['🔬', 'Science', 'Ciencia', '#5bb8ff'], ani: ['🐾', 'Animals', 'Animales', '#2fd18a'], geo: ['🌍', 'Geography', 'Geografía', '#4fd1c5'], food: ['🍲', 'Food', 'Comida', '#ff9a3c'], sport: ['⚽', 'Sports', 'Deportes', '#ff6b6b'], music: ['🎵', 'Music', 'Música', '#c9b8ff'], latam: ['🌴', 'Caribbean & Latin America', 'Caribe y Latinoamérica', '#ffd166'], film: ['🎬', 'Movies', 'Cine', '#ff7bc0'] };
+
+/* ======================= strings ======================= */
+const STR = {
+  en: { welcome: 'Welcome to Pact Trivia! Buzz in when you know the answer.', round1: 'Round one: buzz in!', final: 'Final round: All in!', wager: n => `${n}, how much will you wager?`, look: n => `${n}, everyone else look away!`, ready: "I'm ready", locked: 'Locked in!', pass: n => `Pass to ${n}`, steal: 'Steal! Anyone else?', nobody: "Time's up! The answer was", correct: 'Correct!', wrong: 'Not quite!', answering: 'answering', buzz: 'BUZZ', q: 'Question', of: 'of', wins: n => `${n} wins!`, tie: 'It’s a tie!', answer: 'The answer is', allin: 'ALL IN', score: 'Score', go: 'Go!', reveal: 'Reveal!', cat: 'Category', yourWager: 'Wager', kids: 'Kids mode', choose: 'Pick your answer', timeout: 'Out of time' },
+  es: { welcome: '¡Bienvenidos a Pact Trivia! Presiona tu botón cuando sepas la respuesta.', round1: 'Primera ronda: ¡a pulsar!', final: 'Ronda final: ¡Todo o nada!', wager: n => `${n}, ¿cuánto vas a apostar?`, look: n => `${n}, ¡los demás no miren!`, ready: 'Estoy listo', locked: '¡Respuesta guardada!', pass: n => `Pásale a ${n}`, steal: '¡Robo! ¿Alguien más?', nobody: '¡Se acabó el tiempo! La respuesta era', correct: '¡Correcto!', wrong: '¡Casi!', answering: 'responde', buzz: '¡YA!', q: 'Pregunta', of: 'de', wins: n => `¡Gana ${n}!`, tie: '¡Empate!', answer: 'La respuesta es', allin: 'TODO', score: 'Puntos', go: '¡Vamos!', reveal: '¡A revelar!', cat: 'Categoría', yourWager: 'Apuesta', kids: 'Modo niños', choose: 'Elige tu respuesta', timeout: 'Sin tiempo' }
+};
+const BOTS = [
+  { name: 'Profe Pip', e: '🦉', acc: [.95, .85, .7], react: [2.4, 4.6], bluff: .05, wager: .5, lines: { en: ['Elementary!', 'Let me think…', 'Hmm, fascinating.'], es: ['¡Elemental!', 'Déjame pensar…', 'Mmm, fascinante.'] } },
+  { name: 'Zippy Zoe', e: '⚡', acc: [.78, .58, .42], react: [.9, 2.1], bluff: .35, wager: 1, lines: { en: ['Me! Me! Me!', 'Too slow!', 'Oops, hehe'], es: ['¡Yo! ¡Yo! ¡Yo!', '¡Muy lentos!', 'Ups, jeje'] } },
+  { name: 'Lucky Lalo', e: '🍀', acc: [.62, .48, .38], react: [1.6, 5.2], bluff: .2, wager: -1, lines: { en: ['Feeling lucky!', 'Eeny, meeny…', 'Whoa!'], es: ['¡Me siento con suerte!', 'De tin marín…', '¡Uy!'] } }
+];
+const PCOL = [0xff6b6b, 0x4fb3ff, 0xffd166, 0x2fd18a], PCSS = ['#ff6b6b', '#4fb3ff', '#ffd166', '#2fd18a'];
+const MODELS = ['skater-female', 'male', 'survivor-female', 'cyborg-female'], HOST_MODEL = 'survivor-male';
+const KEYS = ['KeyA', 'KeyL', 'KeyZ', 'KeyM'], KEYN = ['A', 'L', 'Z', 'M'];
+const ROUND_Q = 8;
+
+/* ======================= engine ======================= */
+const ld = E.loading('Pact Trivia', 'Warming up the studio lights…');
+const R = E.createRenderer($('gl'), { fov: 42, portraitFov: 62, shadowSize: 12, far: 200 });
+const { scene, camera, sun, hemi } = R;
+await E.loadPack('../packs/trivia.json', R, p => ld.set(p));
+R.setLook({ background: 0x0b0d22, fog: 0x0b0d22, fogNear: 30, fogFar: 70, sun: 1.1, sunColor: 0xfff1de, hemi: .32, skyHor: 0x8fa4ff, ground: 0x241a3a, exposure: .95, env: .22, bloom: .22, bloomThreshold: .82 });
+R.setEnv(E.ASSETS.hdri.studio);
+sun.position.set(2, 14, 12); sun.target.position.set(0, 1, 0); sun.target.updateMatrixWorld();
+const input = E.createInput({ surface: $('gl') });
+const P = new E.Particles(scene);
+const S = Object.assign({ lang: E.profile().lang === 'es' ? 'es' : 'en', humans: 1, bots: true, kids: false, names: ['Ana', 'Leo', 'Mia', 'Rafa'] }, E.store.get('inoa.trivia', {}));
+const save = () => E.store.set('inoa.trivia', S);
+const T = () => STR[S.lang];
+let G = null, music = null, hudEl = null;
+
+/* ======================= helpers ======================= */
+function canvasTex(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return { c, g: c.getContext('2d'), t }; }
+function wrap(g, text, maxW) { const words = String(text).split(' '); const lines = []; let cur = ''; for (const w of words) { const t = cur ? cur + ' ' + w : w; if (g.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; } else cur = t; } if (cur) lines.push(cur); return lines; }
+function fitText(g, text, maxW, maxH, start, min, weight = 800, family = 'Manrope, sans-serif', lh = 1.18) { let f = start; for (; f >= min; f -= 2) { g.font = `${weight} ${f}px ${family}`; const L = wrap(g, text, maxW); if (L.length * f * lh <= maxH && L.every(l => g.measureText(l).width <= maxW)) return { f, L }; } g.font = `${weight} ${min}px ${family}`; return { f: min, L: wrap(g, text, maxW) }; }
+function rrect(g, x, y, w, h, r) { g.beginPath(); g.roundRect(x, y, w, h, r); }
+const MIRROR = {};
+function solveRight(rig, root, key, LA, LF) {
+  const ck = key + JSON.stringify([LA, LF]); if (MIRROR[ck]) return MIRROR[ck];
+  const sv = { p: root.position.clone(), r: root.rotation.clone(), s: root.scale.clone() }; root.position.set(0, 0, 0); root.rotation.set(0, 0, 0);
+  const W = n => { const v = new THREE.Vector3(); rig[n].getWorldPosition(v); return v; };
+  E.pose(rig, { LeftArm: LA, LeftForeArm: LF }); root.updateMatrixWorld(true); const wh = W('LeftHand'), we = W('LeftForeArm'); wh.x *= -1; we.x *= -1;
+  const err = q => { E.pose(rig, { RightArm: [q[0], q[1], q[2]], RightForeArm: [q[3], q[4], q[5]] }); root.updateMatrixWorld(true); return W('RightHand').distanceToSquared(wh) + W('RightForeArm').distanceToSquared(we) * 2; };
+  let q = [1.2, 0, .4, 0, 0, 0], best = err(q);
+  for (let step = .5; step > .01; step *= .5) { let imp = true; while (imp) { imp = false; for (let i = 0; i < 6; i++) for (const sg of [-1, 1]) { const t = q.slice(); t[i] += sg * step; const e = err(t); if (e < best - 1e-6) { best = e; q = t; imp = true; } } } }
+  root.position.copy(sv.p); root.rotation.copy(sv.r); root.updateMatrixWorld(true);
+  return (MIRROR[ck] = { a: q.slice(0, 3), f: q.slice(3) });
+}
+// arms: mirror-safe pose for both arms from the left arm values
+function arms(ch, LA, LF) { const r = solveRight(ch.rig, ch.g, ch.model, LA, LF); return { LeftArm: LA, LeftForeArm: LF, RightArm: r.a, RightForeArm: r.f }; }
+
+/* ======================= studio ======================= */
+const studio = new THREE.Group(); scene.add(studio);
+const floor = new THREE.Mesh(new THREE.CircleGeometry(40, 64), E.pbr('paint', 0x14162e, [10, 10], { bump: 1 })); floor.rotation.x = -Math.PI / 2; floor.position.y = -1.2; floor.receiveShadow = true; studio.add(floor);
+const stage = new THREE.Mesh(new THREE.CylinderGeometry(9, 9.3, 1.2, 64), E.pbr('paint', 0x262a55, [6, 1])); stage.position.y = -.6; stage.receiveShadow = true; studio.add(stage);
+const stageTop = new THREE.Mesh(new THREE.CircleGeometry(9, 64), E.pbr('tile', 0x2d3266, [10, 10], { bump: 1 })); stageTop.rotation.x = -Math.PI / 2; stageTop.position.y = .002; stageTop.receiveShadow = true; studio.add(stageTop);
+const ledMat = new THREE.MeshStandardMaterial({ color: 0x0, emissive: 0x6fe3ff, emissiveIntensity: 1.6 });
+const rim = new THREE.Mesh(new THREE.TorusGeometry(9.05, .05, 8, 120), ledMat); rim.rotation.x = Math.PI / 2; rim.position.y = .0; studio.add(rim);
+const rim2 = new THREE.Mesh(new THREE.TorusGeometry(9.25, .04, 8, 120), new THREE.MeshStandardMaterial({ color: 0, emissive: 0xff7bc0, emissiveIntensity: 1.3 })); rim2.rotation.x = Math.PI / 2; rim2.position.y = -1.0; studio.add(rim2);
+// back wall: curved LED panel
+const wallTex = canvasTex(1024, 256); { const g = wallTex.g; g.fillStyle = '#0d1030'; g.fillRect(0, 0, 1024, 256); for (let y = 8; y < 256; y += 16) for (let x = 8; x < 1024; x += 16) { const k = .25 + .75 * Math.pow(hash(x, y), 3); g.fillStyle = `rgba(${90 + 80 * k | 0},${110 + 60 * k | 0},255,${.25 + k * .5})`; g.beginPath(); g.arc(x, y, 3, 0, 7); g.fill(); } wallTex.t.wrapS = THREE.RepeatWrapping; wallTex.t.repeat.set(3, 1); }
+const wall = new THREE.Mesh(new THREE.CylinderGeometry(15, 15, 13, 64, 1, true, Math.PI * .62, Math.PI * .76), new THREE.MeshStandardMaterial({ map: wallTex.t, emissive: 0xffffff, emissiveMap: wallTex.t, emissiveIntensity: .28, roughness: .6, side: THREE.BackSide })); wall.position.set(0, 5.3, 4); wall.rotation.y = Math.PI; studio.add(wall);
+// light truss
+const trussM = E.pbr('metal', 0x3a3f55, [1, 4]);
+for (const z of [-1, 4]) { const tr = new THREE.Mesh(new THREE.BoxGeometry(22, .25, .25), trussM); tr.position.set(0, 10.2, z); studio.add(tr); }
+// host screen
+const SCR = { mesh: null, frame: null, tex: null, w: 9.6, h: 5.2 };
+function buildScreen(portrait) {
+  if (SCR.group) studio.remove(SCR.group);
+  const w = portrait ? 7.4 : 8.6, h = portrait ? 6.2 : 4.65; SCR.w = w; SCR.h = h;
+  const ct = canvasTex(portrait ? 1200 : 1600, portrait ? 1010 : 866); SCR.tex = ct;
+  const grp = new THREE.Group(); const frame = new THREE.Mesh(new THREE.BoxGeometry(w + .5, h + .5, .3), E.pbr('metal', 0x2a2e48, [2, 1])); frame.castShadow = true; grp.add(frame);
+  const glow = new THREE.Mesh(new THREE.BoxGeometry(w + .62, h + .62, .2), new THREE.MeshStandardMaterial({ color: 0, emissive: 0x6fe3ff, emissiveIntensity: 1.1 })); glow.position.z = -.08; grp.add(glow);
+  const scr = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: ct.t, toneMapped: false })); scr.position.z = .16; grp.add(scr);
+  const leg = new THREE.Mesh(new THREE.BoxGeometry(.5, 8, .5), trussM); leg.position.set(0, -h / 2 - 4, -.3); grp.add(leg);
+  grp.position.set(0, portrait ? 6.0 : 4.95, -3.2); studio.add(grp); SCR.group = grp; SCR.dirty = true;
+}
+// spotlights + visible cones
+const coneMat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, uniforms: { uC: { value: new THREE.Color(0xfff1d0) }, uA: { value: .1 } }, vertexShader: 'varying float vY;varying vec3 vN;varying vec3 vV;void main(){vY=1.-uv.y;vec4 mv=modelViewMatrix*vec4(position,1.);vN=normalize(normalMatrix*normal);vV=normalize(-mv.xyz);gl_Position=projectionMatrix*mv;}', fragmentShader: 'uniform vec3 uC;uniform float uA;varying float vY;varying vec3 vN;varying vec3 vV;void main(){float e=pow(abs(dot(vN,vV)),1.6);gl_FragColor=vec4(uC,uA*vY*vY*e);}' });
+const spots = [];
+function aimCone(cone, from, to) { const mid = from.clone().add(to).multiplyScalar(.5); cone.position.copy(mid); const dir = from.clone().sub(to).normalize(); cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir); cone.scale.set(1, from.distanceTo(to) / 9.6, 1); }
+function spotAt(x, z, col, tgtY = 1) { const sp = new THREE.SpotLight(col, 60, 18, .32, .7, 1.4); sp.position.set(x, 10, z + 1.5); sp.target.position.set(x, tgtY, z); scene.add(sp, sp.target); const cone = new THREE.Mesh(new THREE.ConeGeometry(1.5, 9.6, 32, 1, true), coneMat.clone()); cone.material.uniforms.uC.value = new THREE.Color(col); cone.position.set(x, 5.2, z + .8); cone.lookAt(x, 10, z + 1.5); cone.rotateX(Math.PI / 2); cone.rotateX(Math.PI); scene.add(cone); const r = { sp, cone, x, z, base: 60 }; spots.push(r); return r; }
+// moving background beams
+const beams = []; for (let i = 0; i < 4; i++) { const b = new THREE.Mesh(new THREE.ConeGeometry(1.4, 16, 24, 1, true), coneMat.clone()); b.material.uniforms.uC.value = new THREE.Color([0x8c6cff, 0x6fe3ff, 0xff7bc0, 0xffd166][i]); b.material.uniforms.uA.value = .09; const piv = new THREE.Group(); piv.position.set(-9 + i * 6, -.5, -8); piv.add(b); b.position.y = 8; scene.add(piv); beams.push(piv); }
+// audience silhouettes (foreground, instanced)
+const AUD = []; { const headG = new THREE.SphereGeometry(.34, 14, 10), bodyG = new THREE.CapsuleGeometry(.42, .6, 4, 10); const M = new THREE.MeshStandardMaterial({ color: 0x0a0b1a, roughness: .9 }); const n = 46; const heads = new THREE.InstancedMesh(headG, M, n), bodies = new THREE.InstancedMesh(bodyG, M, n); let k = 0; for (let row = 0; row < 3; row++) for (let i = 0; i < 16 && k < n; i++) { const x = -11 + i * 1.45 + (row % 2) * .7 + (hash(i, row) - .5) * .4, z = 11 + row * 1.5, y = -1.2 + row * .45; AUD.push({ x, y, z, ph: hash(i, row + 9) * 6, s: .9 + hash(row, i) * .25 }); k++; } heads.count = bodies.count = k; scene.add(heads, bodies); Object.assign(AUD, { heads, bodies }); }
+function updateAudience(t, hype) { const o = new THREE.Object3D(); AUD.forEach((a, i) => { const bob = Math.max(0, Math.sin(t * (6 + (i % 3)) + a.ph)) * .25 * hype; o.position.set(a.x, a.y + .55 + bob, a.z); o.scale.setScalar(a.s); o.updateMatrix(); AUD.bodies.setMatrixAt(i, o.matrix); o.position.y = a.y + 1.35 * a.s + bob; o.updateMatrix(); AUD.heads.setMatrixAt(i, o.matrix); }); AUD.heads.instanceMatrix.needsUpdate = AUD.bodies.instanceMatrix.needsUpdate = true; }
+// props
+for (const [x, z, s] of [[-8.2, -2.2, 2.2], [8.2, -2.2, 2.2], [-7.6, 2.8, 1.6], [7.6, 2.8, 1.6]]) { const pl = E.instance('plant', { scale: s }); pl.position.set(x, 0, z); studio.add(pl); }
+for (const [x, z] of [[-6.4, -2.6], [6.4, -2.6]]) { const pr = E.instance('present', { scale: .9 }); pr.position.set(x, 0, z); pr.rotation.y = x > 0 ? -.4 : .4; studio.add(pr); }
+
+/* ======================= contestants ======================= */
+const podiums = [];
+function makePodium(i) {
+  const grp = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(.82, .7, .95, 6, 1), E.pbr('paint', 0x2b2f5c, [2, 1])); body.position.y = .475; body.rotation.y = Math.PI / 6; body.castShadow = body.receiveShadow = true; grp.add(body);
+  const top = new THREE.Mesh(new THREE.CylinderGeometry(.9, .9, .1, 6), E.pbr('metal', 0xc9ced6, [1, 1])); top.position.y = .98; top.rotation.y = Math.PI / 6; top.castShadow = true; grp.add(top);
+  const band = new THREE.Mesh(new THREE.CylinderGeometry(.84, .84, .06, 6, 1, true), new THREE.MeshStandardMaterial({ color: 0, emissive: PCOL[i], emissiveIntensity: .9 })); band.position.y = .9; band.rotation.y = Math.PI / 6; grp.add(band);
+  const ct = canvasTex(512, 300); const panel = new THREE.Mesh(new THREE.PlaneGeometry(1.3, .76), new THREE.MeshBasicMaterial({ map: ct.t, toneMapped: false })); panel.position.set(0, .47, .63); grp.add(panel);
+  const btn = new THREE.Mesh(new THREE.SphereGeometry(.2, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshStandardMaterial({ color: PCOL[i], emissive: PCOL[i], emissiveIntensity: .3, roughness: .3 })); btn.position.set(0, 1.03, .25); grp.add(btn);
+  scene.add(grp); return { grp, panel, ct, btn, band };
+}
+function makeChar(model, i) { const g = new THREE.Group(); const body = E.instance(model, { scale: 1.62, fit: 'height', outline: false }); g.add(body); scene.add(g); const rig = E.bones(body); return { g, rig, model, i, state: 'idle', t: 0, react: 0 }; }
+const host = makeChar(HOST_MODEL, 9); host.g.position.set(-6.3, 0, -1.4); host.g.rotation.y = .55;
+const hostMic = new THREE.Mesh(new THREE.CylinderGeometry(.03, .02, .28, 8), E.mat(0x1b2430)); scene.add(hostMic);
+
+function drawPodium(p) {
+  const pl = G.players[p], pd = podiums[p], g = pd.ct.g, W = 512, H = 300;
+  g.clearRect(0, 0, W, H); const grd = g.createLinearGradient(0, 0, 0, H); grd.addColorStop(0, '#20244d'); grd.addColorStop(1, '#14173a'); g.fillStyle = grd; rrect(g, 6, 6, W - 12, H - 12, 36); g.fill();
+  g.lineWidth = 10; g.strokeStyle = PCSS[p]; rrect(g, 6, 6, W - 12, H - 12, 36); g.stroke();
+  g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle'; const nm = (pl.bot ? pl.bot.e + ' ' : '') + pl.name; const ft = fitText(g, nm, W - 60, 70, 60, 28, 900, 'Unbounded, Manrope, sans-serif'); g.font = `900 ${ft.f}px Unbounded, Manrope, sans-serif`; g.fillText(ft.L.join(' '), W / 2, 86);
+  g.font = '900 104px Unbounded, Manrope, sans-serif'; g.fillStyle = pl.score < 0 ? '#ffb3a8' : PCSS[p]; g.fillText(String(pl.score), W / 2, 200);
+  pd.ct.t.needsUpdate = true;
+}
+
+/* ======================= screen drawing ======================= */
+function drawScreen() {
+  const { c, g, t } = SCR.tex; const W = c.width, H = c.height, portrait = W < 1400; SCR.dirty = false;
+  const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#1d1650'); bg.addColorStop(1, '#0c0f2e'); g.fillStyle = bg; g.fillRect(0, 0, W, H);
+  g.globalAlpha = .08; for (let i = 0; i < 18; i++) { g.fillStyle = i % 2 ? '#8c6cff' : '#6fe3ff'; g.beginPath(); g.moveTo(W / 2, H * 1.2); g.arc(W / 2, H * 1.2, H * 1.6, -Math.PI + i / 18 * Math.PI, -Math.PI + (i + .5) / 18 * Math.PI); g.fill(); } g.globalAlpha = 1;
+  const pad = W * .04; g.textBaseline = 'middle';
+  if (!G || !G.cur) { g.textAlign = 'center'; g.fillStyle = '#fff'; g.font = `900 ${portrait ? 120 : 150}px Unbounded, Manrope, sans-serif`; g.fillText('PACT', W / 2, H * .38); g.fillStyle = '#ffd166'; g.fillText('TRIVIA', W / 2, H * .38 + (portrait ? 130 : 160)); g.font = `800 ${portrait ? 40 : 44}px Manrope, sans-serif`; g.fillStyle = '#c9d4ff'; g.fillText(G && G.banner ? G.banner : '★ ★ ★', W / 2, H * .82); t.needsUpdate = true; return; }
+  const q = G.cur, cat = CATS[q.cat], L = S.lang;
+  // header: category pill + counter + timer ring
+  g.font = `800 ${portrait ? 40 : 42}px Manrope, sans-serif`; const label = `${cat[0]} ${L === 'es' ? cat[2] : cat[1]}`; const lw = g.measureText(label).width + 50;
+  g.fillStyle = cat[3]; rrect(g, pad, pad, lw, 68, 34); g.fill(); g.fillStyle = '#14173a'; g.textAlign = 'left'; g.fillText(label, pad + 25, pad + 36);
+  g.textAlign = 'right'; g.fillStyle = '#c9d4ff'; g.font = `800 ${portrait ? 36 : 40}px Manrope, sans-serif`; const ctr = G.phase === 'final' || G.final ? T().allin + ' ★' : `${T().q} ${G.qi + 1} ${T().of} ${ROUND_Q}`; g.fillText(ctr + '  ' + '★'.repeat(q.d), W - pad - 130, pad + 36);
+  // timer ring
+  const tr = G.timer; const cx = W - pad - 54, cy = pad + 36, rr = 46; g.lineWidth = 12; g.strokeStyle = 'rgba(255,255,255,.18)'; g.beginPath(); g.arc(cx, cy, rr, 0, 7); g.stroke();
+  if (tr && tr.max) { const k = clamp(tr.left / tr.max, 0, 1); g.strokeStyle = k < .3 ? '#ff6b6b' : k < .6 ? '#ffd166' : '#6fe3ff'; g.beginPath(); g.arc(cx, cy, rr, -Math.PI / 2, -Math.PI / 2 + k * Math.PI * 2); g.stroke(); g.fillStyle = '#fff'; g.textAlign = 'center'; g.font = '900 40px Unbounded, Manrope, sans-serif'; g.fillText(String(Math.ceil(tr.left)), cx, cy + 2); }
+  // question
+  const qTop = pad + 100, qH = H * (portrait ? .36 : .34);
+  g.fillStyle = '#fff'; g.textAlign = 'center'; const ft = fitText(g, q.q, W - pad * 2, qH, portrait ? 76 : 80, 34, 900, 'Unbounded, Manrope, sans-serif', 1.16);
+  g.font = `900 ${ft.f}px Unbounded, Manrope, sans-serif`; const y0 = qTop + (qH - ft.L.length * ft.f * 1.16) / 2 + ft.f * .58; ft.L.forEach((l, i) => g.fillText(l, W / 2, y0 + i * ft.f * 1.16));
+  // choices 2x2
+  const top = qTop + qH + 18, gap = 16, cw = (W - pad * 2 - gap) / 2, chh = (H - top - pad - gap) / 2; const cols = ['#e2443a', '#2f7fd0', '#e0a100', '#1f9a63'];
+  q.ch.forEach((txt, i) => {
+    const x = pad + (i % 2) * (cw + gap), y = top + Math.floor(i / 2) * (chh + gap);
+    const out = G.out && G.out.includes(i), rev = G.revealed; const isC = i === q.correct; const picked = G.pickedShow === i;
+    g.globalAlpha = out && !rev ? .35 : rev && !isC ? .35 : 1;
+    g.fillStyle = rev && isC ? '#2fd18a' : picked ? '#fff3c4' : '#f4efe6'; rrect(g, x, y, cw, chh, 24); g.fill();
+    if (rev && isC) { g.lineWidth = 8; g.strokeStyle = '#fff'; rrect(g, x, y, cw, chh, 24); g.stroke(); }
+    g.fillStyle = cols[i]; rrect(g, x + 12, y + 12, chh - 24, chh - 24, 18); g.fill(); g.fillStyle = '#fff'; g.font = `900 ${Math.min(52, chh * .5)}px Unbounded, Manrope, sans-serif`; g.textAlign = 'center'; g.fillText('ABCD'[i], x + chh / 2, y + chh / 2 + 2);
+    g.fillStyle = '#14173a'; g.textAlign = 'left'; const ff = fitText(g, txt, cw - chh - 20, chh - 18, portrait ? 50 : 50, 24, 800); g.font = `800 ${ff.f}px Manrope, sans-serif`; const yy = y + chh / 2 - (ff.L.length - 1) * ff.f * 1.18 / 2; ff.L.forEach((l, k) => g.fillText(l, x + chh + 4, yy + k * ff.f * 1.18));
+    if (out && !rev) { g.strokeStyle = '#ff6b6b'; g.lineWidth = 10; g.beginPath(); g.moveTo(x + 20, y + 20); g.lineTo(x + cw - 20, y + chh - 20); g.stroke(); }
+    g.globalAlpha = 1;
+  });
+  t.needsUpdate = true;
+}
+
+/* ======================= layout ======================= */
+let LAY = null;
+function layout() {
+  const portrait = innerHeight > innerWidth; const key = portrait ? 'p' : 'l';
+  if (LAY === key && SCR.group) return; LAY = key; buildScreen(portrait);
+  const n = G ? G.players.length : 4; const sp = portrait ? 1.8 : 2.85; const ps = portrait ? .82 : 1;
+  podiums.forEach((pd, i) => { const x = (i - (n - 1) / 2) * sp; pd.grp.position.set(x, 0, 1.6); pd.grp.scale.setScalar(ps); pd.grp.visible = i < n; pd.x = x; });
+  chars.forEach((c, i) => { c.g.position.set(podiums[i].x, 0, .9); c.g.scale.setScalar(portrait ? .9 : 1); c.g.visible = i < n; c.g.rotation.y = 0; });
+  spots.forEach((s, i) => { s.x = podiums[i].x; s.sp.position.set(s.x, 10, 3.2); s.sp.target.position.set(s.x, 1, 1.2); aimCone(s.cone, new THREE.Vector3(s.x, 10, 3.2), new THREE.Vector3(s.x, .2, 1.0)); s.sp.visible = s.cone.visible = i < n; });
+  host.g.position.set(portrait ? -3.3 : -5.7, 0, portrait ? -1.1 : -1.0); host.g.rotation.y = portrait ? .3 : .5; host.g.visible = true;
+  AUD.heads.visible = AUD.bodies.visible = !portrait;
+  SCR.dirty = true; podiums.forEach((pd, i) => G && i < n && drawPodium(i));
+}
+addEventListener('resize', () => { layout(); });
+const chars = MODELS.map((m, i) => makeChar(m, i));
+for (let i = 0; i < 4; i++) { podiums.push(makePodium(i)); spotAt(0, 1.2, [0xffe8c8, 0xd8ecff, 0xfff1c0, 0xd8ffe8][i]); }
+
+/* ======================= camera ======================= */
+const cam = { pos: new THREE.Vector3(0, 4, 18), look: new THREE.Vector3(0, 3, 0), shake: 0 };
+function camTarget() {
+  const portrait = innerHeight > innerWidth; const a = innerWidth / innerHeight;
+  if (G && G.focus != null && G.focusT > 0) { const x = podiums[G.focus].x; return [new THREE.Vector3(x * .85, 2.4, portrait ? 7.4 : 6.0), new THREE.Vector3(x, 1.95, .8)]; }
+  if (portrait) { const d = 13.4 * clamp(.46 / a, .8, 1.4); return [new THREE.Vector3(0, 4.3, d), new THREE.Vector3(0, 3.55, 0)]; }
+  const d = 11.2 * clamp(1.79 / a, .85, 1.5); return [new THREE.Vector3(0, 3.3, d), new THREE.Vector3(0, 3.05, 0)];
+}
+function updateCamera(dt) {
+  const [p, l] = camTarget(); cam.pos.lerp(p, 1 - Math.pow(.05, dt)); cam.look.lerp(l, 1 - Math.pow(.03, dt));
+  cam.shake = Math.max(0, cam.shake - dt * 2); const sh = cam.shake * .05; const t = performance.now() / 1000;
+  camera.position.copy(cam.pos).add(new THREE.Vector3(Math.sin(t * .3) * .25 + rnd(-sh, sh), Math.sin(t * .23) * .08 + rnd(-sh, sh), 0)); camera.lookAt(cam.look);
+}
+
+/* ======================= character animation ======================= */
+function animChar(ch, dt, t) {
+  ch.t += dt; ch.react = Math.max(0, ch.react - dt);
+  const s = ch.react > 0 ? ch.state : (ch.state === 'think' ? 'think' : 'idle'); let p;
+  const breathe = Math.sin(t * 2 + ch.i) * .03;
+  if (s === 'cheer') { const k = Math.sin(ch.t * 10) * .2; p = { ...arms(ch, [0, 0, 1.15 + k], [0, 0, .35]), Head: [-.25, 0, 0], Spine: [-.12, 0, 0] }; ch.g.position.y = Math.abs(Math.sin(ch.t * 8)) * .18; }
+  else if (s === 'slump') { p = { ...arms(ch, [.35, 0, -1.35], [-.3, 0, 0]), Spine: [.38, 0, 0], Chest: [.15, 0, 0], Head: [.45, 0, 0] }; ch.g.position.y = 0; }
+  else if (s === 'buzz') { p = { ...arms(ch, [-.2, 0, -1.2], [-.4, 0, 0]), LeftArm: [0, 0, 1.35], LeftForeArm: [0, 0, .2], RightArm: arms(ch, [-.2, 0, -1.2], [-.4, 0, 0]).RightArm, Spine: [-.05, 0, -.08], Head: [-.15, 0, .1] }; ch.g.position.y = 0; }
+  else if (s === 'think') { const a = arms(ch, [.6, 0, -1.0], [-1.9, 0, 0]); p = { LeftArm: [-.3, 0, -1.2], LeftForeArm: [-.3, 0, 0], RightArm: a.RightArm, RightForeArm: a.RightForeArm, Head: [.1, .2 + Math.sin(ch.t * 1.3) * .1, .12], Spine: [.05, 0, 0] }; ch.g.position.y = 0; }
+  else if (s === 'talk') { const k = Math.sin(ch.t * 3); p = { ...arms(ch, [.5 + k * .15, 0, -1.0], [-.9, 0, 0]), Head: [Math.sin(ch.t * 6) * .05, Math.sin(ch.t * .9) * .25, 0], Spine: [.02, Math.sin(ch.t * .7) * .1, 0] }; }
+  else { p = { ...arms(ch, [.12, 0, -1.28 + breathe], [-.2, 0, 0]), Spine: [breathe, 0, 0], Head: [0, Math.sin(ch.t * .6 + ch.i) * .25, 0] }; ch.g.position.y = 0; }
+  E.pose(ch.rig, p);
+}
+function react(i, state, dur = 2) { const ch = chars[i]; ch.state = state; ch.react = dur; ch.t = 0; }
+
+/* ======================= confetti ======================= */
+const CONF_N = 260; const confM = new THREE.InstancedMesh(new THREE.PlaneGeometry(.12, .2), new THREE.MeshStandardMaterial({ side: THREE.DoubleSide, roughness: .5, emissive: 0x222222 }), CONF_N); confM.frustumCulled = false; scene.add(confM); const conf = []; const ccols = [0xff6b6b, 0x4fb3ff, 0xffd166, 0x2fd18a, 0xc9b8ff, 0xff7bc0].map(c => new THREE.Color(c));
+for (let i = 0; i < CONF_N; i++) { conf.push({ p: new THREE.Vector3(0, -50, 0), v: new THREE.Vector3(), r: new THREE.Vector3(rnd(0, 6), rnd(0, 6), 0), w: rnd(2, 8), on: false }); confM.setColorAt(i, ccols[i % ccols.length]); }
+function confetti(x = 0, n = 200) { let k = 0; for (const c of conf) { if (k >= n) break; c.p.set(x + rnd(-5, 5), rnd(9, 13), rnd(-1, 4)); c.v.set(rnd(-1, 1), rnd(-2, 0), rnd(-.5, .5)); c.on = true; k++; } }
+function updateConfetti(dt) { const o = new THREE.Object3D(); conf.forEach((c, i) => { if (c.on) { c.v.y = Math.max(-2.2, c.v.y - 3 * dt); c.p.addScaledVector(c.v, dt); c.p.x += Math.sin(c.r.x + c.p.y) * dt * .6; c.r.x += c.w * dt; c.r.y += c.w * .7 * dt; if (c.p.y < 0) c.on = false; } o.position.copy(c.on ? c.p : new THREE.Vector3(0, -50, 0)); o.rotation.set(c.r.x, c.r.y, 0); o.updateMatrix(); confM.setMatrixAt(i, o.matrix); }); confM.instanceMatrix.needsUpdate = true; }
+
+/* ======================= game flow ======================= */
+function later(sec, fn) { G.sched.push({ t: G.time + sec, fn }); }
+function runSched() { const due = G.sched.filter(e => e.t <= G.time); if (!due.length) return; G.sched = G.sched.filter(e => e.t > G.time); due.forEach(e => e.fn()); }
+function buildDeck() {
+  const pool = Q.map((r, i) => ({ r, i })).filter(o => S.kids ? o.r[1] === 1 : true);
+  const seen = new Set(E.store.get('inoa.trivia.seen', [])); let fresh = pool.filter(o => !seen.has(o.i)); if (fresh.length < ROUND_Q + 2) { fresh = pool; seen.clear(); }
+  fresh.sort(() => Math.random() - .5);
+  // pick a spread of categories and rising difficulty
+  const picked = []; const cats = new Set();
+  for (const o of fresh) { if (picked.length >= ROUND_Q) break; if (cats.has(o.r[0]) && cats.size < 8 && picked.length < 8) continue; picked.push(o); cats.add(o.r[0]); }
+  for (const o of fresh) { if (picked.length >= ROUND_Q) break; if (!picked.includes(o)) picked.push(o); }
+  picked.sort((a, b) => a.r[1] - b.r[1]);
+  const fin = fresh.filter(o => !picked.includes(o)).sort((a, b) => b.r[1] - a.r[1])[0];
+  [...picked, fin].forEach(o => seen.add(o.i)); E.store.set('inoa.trivia.seen', [...seen].slice(-140));
+  return { qs: picked.map(o => mkQ(o)), fin: mkQ(fin) };
+}
+function mkQ(o) { const r = o.r, es = S.lang === 'es'; const q = es ? r[4] : r[2], ch0 = es ? r[5] : r[3]; const order = [0, 1, 2, 3].sort(() => Math.random() - .5); return { id: o.i, cat: r[0], d: r[1], q, ch: order.map(k => ch0[k]), correct: order.indexOf(0) }; }
+function start(opts = {}) {
+  Object.assign(S, opts); save();
+  const humans = clamp(S.humans, 1, 4); const nb = humans === 1 ? 3 : S.bots ? 4 - humans : 0;
+  const players = []; for (let i = 0; i < humans; i++) players.push({ name: S.names[i] || `P${i + 1}`, human: true, score: 0 });
+  for (let i = 0; i < nb; i++) players.push({ name: BOTS[i].name, bot: BOTS[i], score: 0 });
+  const deck = buildDeck();
+  G = { time: 0, sched: [], players, deck, qi: -1, cur: null, phase: 'intro', timer: null, out: [], tried: new Set(), buzzer: null, revealed: false, focus: null, focusT: 0, hype: 0, paused: false, auto: !!window.__AUTO, finalPicks: [], banner: '' };
+  LAY = null; layout(); players.forEach((p, i) => drawPodium(i)); chars.forEach((c, i) => { c.state = 'idle'; c.react = 0; });
+  ensureHud(); buildBuzzers(); scores(); $('tvScores').hidden = false;
+  if (music) music.stop(); music = E.music(E.SONGS.bright);
+  G.banner = T().round1; SCR.dirty = true; hostTalk(2.5); E.say(T().welcome, { lang: S.lang }); big(T().round1);
+  later(3.2, nextQuestion);
+}
+function nextQuestion() {
+  G.qi++; if (G.qi >= ROUND_Q) { finalRound(); return; }
+  G.cur = G.deck.qs[G.qi]; G.out = []; G.tried = new Set(); G.buzzer = null; G.revealed = false; G.pickedShow = null; G.phase = 'read'; G.timer = null; SCR.dirty = true; showChoices(false);
+  E.tone(660, .15, 'triangle', .08); E.tone(990, .2, 'triangle', .07, 0, .12);
+  readAloud(G.cur); hostTalk(2);
+  later(1.2, () => openBuzz(S.kids ? 16 : 12));
+}
+function readAloud(q) { const t = `${q.q} ${q.ch.map((c, i) => 'ABCD'[i] + ': ' + c).join('. ')}.`; E.say(t, { lang: S.lang }); }
+function openBuzz(sec, steal) {
+  G.phase = steal ? 'steal' : 'buzz'; G.timer = { left: sec, max: sec, kind: 'buzz' }; setBuzzers(true); SCR.dirty = true;
+  // bots decide
+  G.players.forEach((pl, i) => { if (!(pl.bot || G.auto) || G.tried.has(i)) return; const b = pl.bot || BOTS[i % 3]; const know = Math.random() < b.acc[G.cur.d - 1] * (S.kids ? 1.05 : 1); pl.know = know; const go = know || Math.random() < b.bluff; if (!go) return; const tt = rnd(b.react[0], b.react[1]) * (steal ? .6 : 1) + (know ? 0 : 1.2); if (tt < sec - .3) later(tt, () => { if ((G.phase === 'buzz' || G.phase === 'steal') && !G.tried.has(i)) buzz(i); }); });
+}
+function buzz(i) {
+  if (!G || (G.phase !== 'buzz' && G.phase !== 'steal') || G.tried.has(i) || i >= G.players.length) return;
+  G.buzzer = i; G.tried.add(i); G.phase = 'answer'; setBuzzers(false); G.timer = { left: S.kids ? 10 : 7, max: S.kids ? 10 : 7, kind: 'answer' }; SCR.dirty = true;
+  E.tone(880, .12, 'square', .1); E.tone(1320, .2, 'square', .08, 0, .08); cam.shake = .4; G.focus = i; G.focusT = 1.6;
+  react(i, 'buzz', 30); podiums[i].btn.material.emissiveIntensity = 2.2; P.burst(new THREE.Vector3(podiums[i].x, 1.3, 1.85), { color: PCOL[i], n: 22, speed: 2, up: 3, size: .3, life: .6 });
+  const pl = G.players[i]; scores();
+  if (pl.human && !G.auto) { showChoices(true, i); E.say(pl.name, { lang: S.lang, interrupt: false }); }
+  else { showChoices(false); const b = pl.bot || BOTS[i % 3]; bubble(i, pick(b.lines[S.lang])); later(rnd(1.2, 2.6), () => { if (G.phase !== 'answer' || G.buzzer !== i) return; const avail = [0, 1, 2, 3].filter(k => !G.out.includes(k)); const k = pl.know !== false && (pl.know || Math.random() < .3) ? G.cur.correct : pick(avail.filter(x => x !== G.cur.correct)); answer(k); }); }
+}
+function answer(k) {
+  if (!G || G.phase !== 'answer') return; const i = G.buzzer, pl = G.players[i], q = G.cur; G.pickedShow = k; showChoices(false); podiums[i].btn.material.emissiveIntensity = .3;
+  const pts = 100 * q.d;
+  if (k === q.correct) {
+    pl.score += pts; G.phase = 'result'; G.revealed = true; G.timer = null; SCR.dirty = true; SFX.win(); react(i, 'cheer', 2.6); G.hype = 1; cam.shake = .3;
+    floatAt(i, `+${pts}`, 'gold'); P.burst(new THREE.Vector3(podiums[i].x, 2.4, 1.4), { color: 0xffd166, n: 40, speed: 3, up: 5, size: .35, life: 1.2, additive: false, gravity: 6 });
+    E.say(`${T().correct} ${q.ch[q.correct]}`, { lang: S.lang }); E.toast(`${T().correct} ${pl.name} +${pts}`, 1800);
+    drawPodium(i); scores(); later(2.8, nextQuestion);
+  } else {
+    if (!S.kids) pl.score -= pts / 2; G.out.push(k); SFX.bad(); react(i, 'slump', 2.4); SCR.dirty = true; drawPodium(i); scores(); floatAt(i, S.kids ? '✗' : `−${pts / 2}`, 'bad'); E.toast(`${T().wrong} ${pl.name}`, 1500);
+    const left = G.players.map((p, j) => j).filter(j => !G.tried.has(j));
+    if (left.length && G.out.length < 3) { G.phase = 'pre'; G.timer = null; later(1.2, () => { E.say(T().steal, { lang: S.lang }); big(T().steal.split('!')[0] + '!'); openBuzz(S.kids ? 9 : 6, true); }); }
+    else revealNobody();
+  }
+}
+function revealNobody() { G.phase = 'result'; G.revealed = true; G.timer = null; SCR.dirty = true; setBuzzers(false); showChoices(false); E.tone(330, .4, 'triangle', .08); E.say(`${T().answer} ${G.cur.ch[G.cur.correct]}`, { lang: S.lang }); hostTalk(2); later(3, nextQuestion); }
+function timeUp() {
+  if (G.phase === 'buzz' || G.phase === 'steal') { E.toast(T().nobody + ' ' + G.cur.ch[G.cur.correct], 2200); revealNobody(); }
+  else if (G.phase === 'answer') { const i = G.buzzer; E.toast(T().timeout, 1200); const avail = [0, 1, 2, 3].filter(k => !G.out.includes(k) && k !== G.cur.correct); answer(avail[0] ?? (G.cur.correct + 1) % 4); }
+  else if (G.phase === 'fpick') finalPick(null);
+}
+
+/* ---------- final round ---------- */
+function finalRound() {
+  G.phase = 'finalIntro'; G.final = true; G.cur = null; G.banner = T().final; SCR.dirty = true; showChoices(false); setBuzzers(false);
+  if (music) music.stop(); music = E.music(E.SONGS.tense);
+  big(T().allin + '!'); E.say(T().final, { lang: S.lang }); hostTalk(3); G.wagers = []; G.finalPicks = [];
+  later(3, () => wagerNext(0));
+}
+function wagerNext(i) {
+  if (i >= G.players.length) { finalQuestion(); return; }
+  const pl = G.players[i], maxW = Math.max(pl.score, 100);
+  if (!pl.human || G.auto) { const b = pl.bot || BOTS[i % 3]; const f = b.wager < 0 ? pick([.25, .5, .75, 1]) : b.wager; G.wagers[i] = Math.round(maxW * f / 10) * 10; bubble(i, `${T().yourWager}: ${G.wagers[i]}`); later(G.auto ? .3 : 1.1, () => wagerNext(i + 1)); return; }
+  const cat = CATS[G.deck.fin.cat]; const card = overlay(`<div class="ig-kicker" style="color:${PCSS[i]}">${T().allin} · ${T().cat}: ${cat[0]} ${S.lang === 'es' ? cat[2] : cat[1]}</div><h2>${esc(T().wager(pl.name))}</h2><p class="ig-sub">${T().score}: <b>${pl.score}</b></p><div class="wg">${[0, .25, .5, .75, 1].map(f => `<button data-f="${f}" class="${f === 1 ? 'all' : ''}"><b>${Math.round(maxW * f / 10) * 10}</b>${f === 1 ? T().allin : Math.round(f * 100) + '%'}</button>`).join('')}</div>`);
+  E.say(T().wager(pl.name), { lang: S.lang }); G.wagerCard = { card, i, maxW };
+  card.querySelectorAll('.wg button').forEach(b => b.onclick = () => setWager(+b.dataset.f));
+}
+function setWager(f) { const wc = G.wagerCard; if (!wc) return; G.wagerCard = null; wc.card.remove(); G.wagers[wc.i] = Math.round(wc.maxW * f / 10) * 10; SFX.coin(); wagerNext(wc.i + 1); }
+function finalQuestion() { G.cur = G.deck.fin; G.out = []; G.revealed = false; G.pickedShow = null; G.phase = 'fread'; SCR.dirty = true; readAloud(G.cur); hostTalk(3); later(2, () => finalPickNext(0)); }
+function finalPickNext(i) {
+  if (i >= G.players.length) { finalReveal(); return; }
+  const pl = G.players[i]; G.fi = i;
+  if (!pl.human || G.auto) { const b = pl.bot || BOTS[i % 3]; const know = Math.random() < b.acc[G.cur.d - 1]; G.finalPicks[i] = know ? G.cur.correct : pick([0, 1, 2, 3].filter(k => k !== G.cur.correct)); react(i, 'think', 1.4); later(G.auto ? .3 : 1.2, () => { bubble(i, T().locked); finalPickNext(i + 1); }); return; }
+  const card = overlay(`<div class="ig-kicker" style="color:${PCSS[i]}">${T().allin} · ${T().yourWager} ${G.wagers[i]}</div><h2>${esc(T().look(pl.name))}</h2><button class="ig-btn" data-a="ready">👀 ${T().ready}</button>`);
+  E.say(T().look(pl.name), { lang: S.lang });
+  G.fcard = card; card.querySelector('[data-a=ready]').onclick = () => showFinalChoices(i);
+}
+function showFinalChoices(i) {
+  const card = G.fcard; if (!card) return; const q = G.cur; G.phase = 'fpick'; G.timer = { left: S.kids ? 30 : 20, max: S.kids ? 30 : 20, kind: 'final' };
+  card.querySelector('.ig-card').innerHTML = `<div class="ig-kicker" style="color:${PCSS[i]}">${esc(G.players[i].name)} · ${T().choose}</div><div class="q">${esc(q.q)}</div><div class="opts">${q.ch.map((c, k) => `<button class="tv-ch" data-k="${k}"><b>${'ABCD'[k]}</b>${esc(c)}</button>`).join('')}</div>`;
+  card.querySelectorAll('.tv-ch').forEach(b => b.onclick = () => finalPick(+b.dataset.k));
+}
+function finalPick(k) { if (G.phase !== 'fpick') return; const i = G.fi; G.finalPicks[i] = k; G.phase = 'fwait'; G.timer = null; SFX.snap(); const card = G.fcard; const nxt = G.players.findIndex((p, j) => j > i && p.human); card.querySelector('.ig-card').innerHTML = `<h2>🔒 ${T().locked}</h2>${nxt >= 0 ? `<p class="ig-sub">${esc(T().pass(G.players[nxt].name))}</p>` : ''}<button class="ig-btn" data-a="ok">OK</button>`; card.querySelector('[data-a=ok]').onclick = () => { card.remove(); G.fcard = null; finalPickNext(i + 1); }; if (G.auto) { card.remove(); G.fcard = null; finalPickNext(i + 1); } }
+function finalReveal() {
+  G.phase = 'freveal'; G.timer = null; SCR.dirty = true; big(T().reveal); E.tone(220, .8, 'sawtooth', .06, 200);
+  G.players.forEach((pl, i) => later(1.4 + i * 1.3, () => { const ok = G.finalPicks[i] === G.cur.correct; const w = G.wagers[i] || 0; pl.score += ok ? w : -w; G.pickedShow = G.finalPicks[i]; SCR.dirty = true; drawPodium(i); scores(); react(i, ok ? 'cheer' : 'slump', 2.2); floatAt(i, (ok ? '+' : '−') + w, ok ? 'gold' : 'bad'); ok ? SFX.good() : SFX.bad(); G.focus = i; G.focusT = 1.1; }));
+  later(1.6 + G.players.length * 1.3, () => { G.revealed = true; G.pickedShow = null; SCR.dirty = true; E.say(`${T().answer} ${G.cur.ch[G.cur.correct]}`, { lang: S.lang }); later(2.6, endGame); });
+}
+function endGame() {
+  G.phase = 'end'; const rows = G.players.map((p, i) => ({ ...p, i })).sort((a, b) => b.score - a.score); const tie = rows.length > 1 && rows[0].score === rows[1].score;
+  const w = rows[0]; react(w.i, 'cheer', 99); G.players.forEach((p, i) => { if (i !== w.i && !(tie && p.score === w.score)) react(i, 'idle', 0); }); confetti(podiums[w.i].x, 240); SFX.win(); G.hype = 1.5; G.focus = w.i; G.focusT = 3;
+  E.say(tie ? T().tie : T().wins(w.name), { lang: S.lang }); big(tie ? T().tie : '🏆 ' + w.name);
+  later(3.4, () => { music && music.stop(); const me = G.players[0]; const place = rows.findIndex(r => r.i === 0) + 1; const correct = G.correctCount || 0;
+    E.results({ gameId: 'trivia', title: tie ? T().tie : T().wins(w.name), stats: rows.map((r, k) => [`${k + 1}. ${r.bot ? r.bot.e + ' ' : ''}${r.name}`, r.score]), xp: 40 + Math.max(0, me.score) / 10 + (place === 1 ? 40 : 0), coins: 8 + (place === 1 ? 20 : 6), best: G.players.filter(p => p.human).length === 1 ? me.score : null, bestLabel: 'Best solo score', onAgain: () => title(), share: `${w.name} won Pact Trivia with ${w.score} points! (Inoa Games) ${location.href}` }); });
+}
+
+/* ======================= UI ======================= */
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function ensureHud() { if (hudEl) { document.querySelector('.ig-top').hidden = false; return; } hudEl = E.shell({ title: 'Pact Trivia', onPause: pause, buttons: [] }); }
+function scores() { if (!G) return; $('tvScores').innerHTML = G.players.map((p, i) => `<span class="${G.buzzer === i && G.phase === 'answer' ? 'on' : ''}"><i style="background:${PCSS[i]}"></i>${esc(p.bot ? p.bot.e + ' ' + p.name : p.name)} <b>${p.score}</b></span>`).join(''); }
+function buildBuzzers() { const box = $('tvBuzzers'); box.innerHTML = ''; G.players.forEach((p, i) => { if (!p.human) return; const b = document.createElement('button'); b.className = 'tv-buz off'; b.dataset.c = i; b.style.background = PCSS[i]; b.innerHTML = `${T().buzz}<small>${esc(p.name)} · ${G.players.filter(x => x.human).length === 1 ? 'Space' : KEYN[i]}</small>`; b.addEventListener('pointerdown', e => { e.preventDefault(); E.audio(); b.classList.add('hit'); setTimeout(() => b.classList.remove('hit'), 150); buzz(i); }); box.appendChild(b); }); }
+function setBuzzers(on) { document.querySelectorAll('.tv-buz').forEach(b => b.classList.toggle('off', !on || G.tried.has(+b.dataset.c))); }
+function showChoices(on, i) {
+  const el = $('tvChoices'); $('tvScores').style.visibility = on ? 'hidden' : ''; if (!on) { el.hidden = true; return; } const q = G.cur, pl = G.players[i];
+  el.style.setProperty('--pc', PCSS[i]); el.hidden = false;
+  el.innerHTML = `<div class="who"><span><b>${esc(pl.name)}</b> ${T().answering}…</span><span>1 · 2 · 3 · 4</span></div><div class="tbar"><i id="tvBar"></i></div>${q.ch.map((c, k) => `<button class="tv-ch ${G.out.includes(k) ? 'out' : ''}" data-k="${k}"><b>${'ABCD'[k]}</b>${esc(c)}</button>`).join('')}`;
+  el.querySelectorAll('.tv-ch').forEach(b => b.onclick = () => answer(+b.dataset.k));
+}
+function overlay(html) { const d = document.createElement('div'); d.className = 'tv-card'; d.innerHTML = `<div class="ig-card">${html}</div>`; document.body.appendChild(d); return d; }
+function bubble(i, text) { const p = E.toScreen(new THREE.Vector3(podiums[i].x, 3.25, .85), camera); const d = document.createElement('div'); d.className = 'tv-bubble'; d.textContent = text; d.style.left = clamp(p.x, 60, innerWidth - 60) + 'px'; d.style.top = p.y + 'px'; document.body.appendChild(d); setTimeout(() => d.remove(), 1600); }
+function floatAt(i, text, cls) { const p = E.toScreen(new THREE.Vector3(podiums[i].x, 2.9, 1.2), camera); E.floatText(text, p.x, p.y, cls); }
+function big(t) { const d = document.createElement('div'); d.className = 'ig-big'; d.style.fontSize = 'clamp(36px,9vw,84px)'; d.style.textAlign = 'center'; d.style.width = '92vw'; d.textContent = t; document.body.appendChild(d); d.animate([{ transform: 'translate(-50%,-50%) scale(.5)', opacity: 0 }, { transform: 'translate(-50%,-50%) scale(1.1)', opacity: 1, offset: .25 }, { transform: 'translate(-50%,-50%) scale(1)', opacity: 1, offset: .7 }, { transform: 'translate(-50%,-60%) scale(1)', opacity: 0 }], { duration: 1300, easing: 'ease-out' }); setTimeout(() => d.remove(), 1300); }
+function hostTalk(sec) { host.state = 'talk'; host.react = sec; }
+
+/* ======================= input ======================= */
+addEventListener('keydown', e => {
+  if (!G || G.paused) return; if (e.target && e.target.tagName === 'INPUT') return;
+  if ((e.code === 'Escape' || e.code === 'KeyP')) { pause(); return; }
+  const humans = G.players.filter(p => p.human).length;
+  if (G.phase === 'buzz' || G.phase === 'steal') { const k = KEYS.indexOf(e.code); if (k >= 0 && G.players[k]?.human) buzz(k); if ((e.code === 'Space' || e.code === 'Enter') && humans === 1) buzz(0); }
+  const n = ['Digit1', 'Digit2', 'Digit3', 'Digit4'].indexOf(e.code); const n2 = ['Numpad1', 'Numpad2', 'Numpad3', 'Numpad4'].indexOf(e.code); const ci = n >= 0 ? n : n2;
+  if (ci >= 0) { if (G.phase === 'answer' && G.players[G.buzzer].human && !G.out.includes(ci)) answer(ci); else if (G.phase === 'fpick') finalPick(ci); else if (G.wagerCard) setWager([0, .25, .5, 1][ci]); }
+  if (G.phase === 'fwait' && (e.code === 'Enter' || e.code === 'Space') && G.fcard) G.fcard.querySelector('[data-a=ok]')?.click();
+  if (G.fcard && G.phase !== 'fpick' && G.phase !== 'fwait' && (e.code === 'Enter' || e.code === 'Space')) G.fcard.querySelector('[data-a=ready]')?.click();
+});
+const padPrev = [];
+function pollPads() {
+  const pads = navigator.getGamepads ? navigator.getGamepads() : []; let idx = 0;
+  for (const p of pads) { if (!p) continue; const i = idx++; const prev = padPrev[i] || []; const now = p.buttons.map(b => b.pressed); const pressed = k => now[k] && !prev[k]; padPrev[i] = now;
+    if (!G || G.paused) continue; const pi = i < G.players.length && G.players[i].human ? i : (G.players.filter(x => x.human).length === 1 ? 0 : -1); if (pi < 0) continue;
+    if ((G.phase === 'buzz' || G.phase === 'steal') && [0, 1, 2, 3].some(pressed)) buzz(pi);
+    else if (G.phase === 'answer' && G.buzzer === pi) { const k = [0, 1, 2, 3].find(pressed); if (k != null && !G.out.includes(k)) answer(k); }
+    else if (G.phase === 'fpick' && G.fi === pi) { const k = [0, 1, 2, 3].find(pressed); if (k != null) finalPick(k); }
+    if (pressed(9)) pause(); }
+}
+
+/* ======================= main loop ======================= */
+let lastScr = 0;
+function update(dt) {
+  const t = performance.now() / 1000;
+  pollPads();
+  if (G && !G.paused) {
+    G.time += dt; runSched();
+    if (G.timer) { const before = Math.ceil(G.timer.left); G.timer.left -= dt; const after = Math.ceil(G.timer.left); if (after !== before && after >= 0) { const urgent = after <= 3; E.tone(urgent ? 1180 : 880, .05, 'sine', urgent ? .09 : .05); if (urgent) E.tone(600, .05, 'sine', .05, 0, .25); SCR.dirty = true; } if (G.timer.left <= 0) { G.timer = null; timeUp(); } const bar = $('tvBar'); if (bar && G.timer) bar.style.width = (G.timer.left / G.timer.max * 100) + '%'; }
+    if (window.__AUTO && G.phase === 'answer' && G.players[G.buzzer]?.human && !G.autoQ) { G.autoQ = true; later(.6, () => { G.autoQ = false; if (G.phase === 'answer') answer(Math.random() < .75 ? G.cur.correct : [0, 1, 2, 3].find(k => k !== G.cur.correct && !G.out.includes(k))); }); }
+    if (window.__AUTO && (G.phase === 'buzz') && !G.autoB) { G.autoB = true; later(.8, () => { G.autoB = false; if (G.phase === 'buzz') buzz(0); }); }
+    if (window.__AUTO && G.wagerCard) setWager(.5);
+    if (window.__AUTO && G.fcard && G.phase !== 'fpick' && G.phase !== 'fwait') showFinalChoices(G.fi);
+    if (window.__AUTO && G.phase === 'fpick') finalPick(G.cur.correct);
+    G.focusT -= dt; if (G.focusT <= 0) G.focus = null; G.hype = Math.max(0, G.hype - dt * .5);
+  }
+  chars.forEach(c => animChar(c, dt, t)); animChar(host, dt, t);
+  { host.g.updateMatrixWorld(true); const hp = new THREE.Vector3(); host.rig.RightHand.getWorldPosition(hp); hostMic.position.copy(hp).add(new THREE.Vector3(0, .1, 0)); }
+  beams.forEach((b, i) => { b.rotation.z = Math.sin(t * .4 + i * 1.3) * .5; b.rotation.x = Math.sin(t * .3 + i) * .2; });
+  spots.forEach((s, i) => { const on = G && G.buzzer === i && G.phase === 'answer'; s.sp.intensity = damp(s.sp.intensity, on ? 120 : 45, .05, dt); s.cone.material.uniforms.uA.value = on ? .2 : .07; });
+  rim.material.emissiveIntensity = 1.3 + Math.sin(t * 3) * .4 + (G ? G.hype : 0);
+  updateAudience(t, G ? .2 + G.hype : .2); updateConfetti(dt); P.update(dt);
+  if (SCR.dirty && t - lastScr > .05) { lastScr = t; drawScreen(); }
+  updateCamera(dt);
+}
+function pause() { if (!G || G.paused || G.phase === 'end') return; G.paused = true; music && music.stop(); E.pauseMenu({ onResume: () => { G.paused = false; music = E.music(G.final ? E.SONGS.tense : E.SONGS.bright); }, onRestart: () => { cleanup(); start(); } }); }
+document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
+function cleanup() { document.querySelectorAll('.tv-card,.tv-bubble').forEach(e => e.remove()); showChoices(false); $('tvBuzzers').innerHTML = ''; }
+
+/* ======================= title ======================= */
+function title() {
+  cleanup(); if (G) G = null; $('tvScores').hidden = true; if (hudEl) document.querySelector('.ig-top').hidden = true; if (music) music.stop(); music = E.music(E.SONGS.chill); LAY = null; layout(); SCR.dirty = true;
+  const L = S.lang === 'es';
+  const extra = `<div><p class="ig-sub" style="margin-bottom:6px">${L ? 'Idioma' : 'Language'}</p><div class="pk" id="pL"><button data-l="en" class="${!L ? 'on' : ''}">🇬🇧 English</button><button data-l="es" class="${L ? 'on' : ''}">🇪🇸 Español</button></div></div>
+  <div><p class="ig-sub" style="margin-bottom:6px">${L ? 'Jugadores en este aparato' : 'Players on this device'}</p><div class="pk" id="pH">${[1, 2, 3, 4].map(n => `<button data-n="${n}" class="${n === S.humans ? 'on' : ''}">${n === 1 ? '🙂 Solo' : '👥 ' + n}<small>${n === 1 ? (L ? 'contra 3 bots' : 'vs 3 bots') : (L ? 'teclas ' : 'keys ') + KEYN.slice(0, n).join(' ')}</small></button>`).join('')}</div></div>
+  <div id="pN" ${S.humans > 1 ? '' : 'hidden'}><div class="names">${[0, 1, 2, 3].map(i => `<input data-i="${i}" maxlength="10" value="${esc(S.names[i])}" style="border-left:6px solid ${PCSS[i]}" ${i < S.humans ? '' : 'hidden'} aria-label="Player ${i + 1}">`).join('')}</div><div class="pk" style="margin-top:6px"><button id="pB" class="${S.bots ? 'on' : ''}">🤖 ${L ? 'Llenar con bots' : 'Fill empty podiums with bots'}</button></div></div>
+  <div class="pk"><button id="pK" class="${S.kids ? 'on' : ''}">🧸 ${T().kids}<small>${L ? 'preguntas fáciles, más tiempo, sin restar' : 'easy questions, more time, no minus points'}</small></button></div>`;
+  const how = L ? [['🔔', 'Pulsa tu botón: J1 A · J2 L · J3 Z · J4 M, un control cada uno, o toca tu botón de color'], ['1️⃣', 'Responde con 1–4 o tocando la opción. ¡Si fallas, los demás pueden robar!'], ['🎲', 'Ronda final: apuesta tus puntos y responde en secreto']] : [['🔔', 'Buzz: P1 A · P2 L · P3 Z · P4 M, one gamepad each, or tap your colored buzzer'], ['1️⃣', 'Answer with 1–4 or tap a choice. Miss it and the others can steal!'], ['🎲', 'Final round: wager your points and answer in secret']];
+  const d = E.titleScreen({ title: 'Pact Trivia', kicker: L ? 'Inoa Games · Concurso' : 'Inoa Games · Game show', lead: L ? 'Un concurso de preguntas para 1–4 jugadores en el mismo aparato. Cada pregunta se lee en voz alta.' : 'A family quiz show for 1–4 players on one device. Every question is read aloud.', how, extra, onPlay: () => { save(); start(); } });
+  wideTitle(d);
+  d.querySelectorAll('#pL button').forEach(b => b.onclick = () => { S.lang = b.dataset.l; save(); d.remove(); title(); });
+  d.querySelectorAll('#pH button').forEach(b => b.onclick = () => { S.humans = +b.dataset.n; d.querySelectorAll('#pH button').forEach(x => x.classList.toggle('on', x === b)); $('pN').hidden = S.humans < 2; d.querySelectorAll('.names input').forEach(inp => inp.hidden = +inp.dataset.i >= S.humans); SFX.click(); });
+  d.querySelectorAll('.names input').forEach(inp => { inp.addEventListener('input', () => { S.names[+inp.dataset.i] = inp.value.trim() || `P${+inp.dataset.i + 1}`; }); inp.addEventListener('keydown', e => e.stopPropagation()); });
+  $('pB').onclick = () => { S.bots = !S.bots; $('pB').classList.toggle('on', S.bots); };
+  $('pK').onclick = () => { S.kids = !S.kids; $('pK').classList.toggle('on', S.kids); };
+  E.say(L ? 'Pact Trivia. Elige jugadores y toca jugar.' : 'Pact Trivia. Choose players and press play.', { lang: S.lang });
+}
+function wideTitle(d) { const card = d.querySelector('.ig-card'); card.classList.add('ttl-scroll', 'tt-wide'); const kids = [...card.children]; const L = document.createElement('div'), Rr = document.createElement('div'); L.className = Rr.className = 'tt-col'; kids.forEach(k => (k.matches('.ig-kicker,h1,.ig-sub,.ig-how') ? L : Rr).appendChild(k)); card.append(L, Rr); }
+
+// idle preview: everyone on stage
+G = null; LAY = null; layout(); podiums.forEach((pd, i) => { pd.grp.visible = true; });
+title(); ld.done(); window.__READY = true;
+E.loop((dt) => { if (!window.__HOLD) update(dt); R.render(dt); });
+window.__GAME = { get G() { return G; }, S, Q, start, update, buzz, answer, title, warm: () => { R.render(1 / 60); R.renderer.getContext().finish(); }, setAuto: v => { window.__AUTO = v; if (G) G.auto = v; } };
+</script>
+</body></html>

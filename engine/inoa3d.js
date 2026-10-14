@@ -1,0 +1,264 @@
+// Inoa Games shared 3D engine (Three.js r170). Every game on the shelf imports this file.
+// Renderer + post (bloom, SMAA, vignette), sky dome, HDRI fill, packed GLB assets, toon outlines,
+// sprites/labels, particles, synth audio + music, speech, input (keys, touch, swipe, gamepad),
+// auto quality, shared player profile (XP/coins/hero level across every game).
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { SMAAPass } from 'three/addons/postprocessing/SMAAPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { clone as skClone } from 'three/addons/utils/SkeletonUtils.js';
+export { THREE };
+
+/* ---------------- math ---------------- */
+export const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+export const lerp = (a, b, t) => a + (b - a) * t;
+export const rnd = (a, b) => a + Math.random() * (b - a);
+export const pick = a => a[Math.floor(Math.random() * a.length)];
+export const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+export const damp = (a, b, k, dt) => lerp(a, b, 1 - Math.pow(k, dt)); // k = fraction remaining after 1s
+export const hash = (x, y = 0) => { let h = (x * 374761393 + y * 668265263) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+export const $ = id => document.getElementById(id);
+
+/* ---------------- storage + shared profile ---------------- */
+export const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } }
+};
+const PROFILE_KEY = 'inoa.profile';
+export function profile() { return Object.assign({ name: '', xp: 0, coins: 0, games: {}, lang: 'en', voice: true, sound: true }, store.get(PROFILE_KEY, {})); }
+export function heroLevel(xp) { let lv = 1, need = 100, x = xp; while (x >= need && lv < 50) { x -= need; lv++; need = Math.round(need * 1.12); } return { lv, into: x, need }; }
+// Called by a game at the end of a round. Returns {xp, coins, levelUp, level}.
+export function reward(gameId, { xp = 0, coins = 0, best = null, bestLower = false } = {}) {
+  const p = profile(); const before = heroLevel(p.xp).lv; p.xp += Math.round(xp); p.coins += Math.round(coins);
+  const g = p.games[gameId] || { plays: 0, best: null }; g.plays++; if (best != null && (g.best == null || (bestLower ? best < g.best : best > g.best))) { g.best = best; g.newBest = true; } else g.newBest = false; p.games[gameId] = g; store.set(PROFILE_KEY, p);
+  const after = heroLevel(p.xp); return { xp: Math.round(xp), coins: Math.round(coins), levelUp: after.lv > before, level: after.lv, best: g.best, newBest: g.newBest };
+}
+export function setProfile(patch) { store.set(PROFILE_KEY, Object.assign(profile(), patch)); }
+
+/* ---------------- renderer ---------------- */
+export function createRenderer(canvas, opts = {}) {
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: !!opts.preserve });
+  const DPR = Math.min(devicePixelRatio || 1, opts.maxDpr || 2);
+  renderer.setPixelRatio(DPR); renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1; renderer.shadowMap.enabled = opts.shadows !== false; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  const scene = new THREE.Scene(); scene.fog = new THREE.Fog(0xcfe9f5, 60, 160);
+  const camera = new THREE.PerspectiveCamera(opts.fov || 50, 1, .1, opts.far || 400);
+  const hemi = new THREE.HemisphereLight(0xeaf6ff, 0x9a7b55, .4); scene.add(hemi);
+  const sun = new THREE.DirectionalLight(0xfff0d6, 1.5); sun.position.set(8, 16, 6); sun.castShadow = renderer.shadowMap.enabled; const ss = opts.shadowSize || 20; sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left: -ss, right: ss, top: ss, bottom: -ss, near: 1, far: 90 }); sun.shadow.bias = -.0006; sun.shadow.normalBias = .02; scene.add(sun); scene.add(sun.target);
+  const pmrem = new THREE.PMREMGenerator(renderer); pmrem.compileEquirectangularShader();
+  const composer = new EffectComposer(renderer); composer.addPass(new RenderPass(scene, camera));
+  const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), .15, .4, .95); composer.addPass(bloom);
+  const vignette = new ShaderPass({ uniforms: { tDiffuse: { value: null }, uAmt: { value: .25 } }, vertexShader: 'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}', fragmentShader: 'uniform sampler2D tDiffuse;uniform float uAmt;varying vec2 vUv;void main(){vec4 c=texture2D(tDiffuse,vUv);float d=distance(vUv,vec2(.5));c.rgb*=1.-smoothstep(.45,.95,d)*uAmt;gl_FragColor=c;}' });
+  composer.addPass(vignette); composer.addPass(new OutputPass()); const smaa = new SMAAPass(1, 1); composer.addPass(smaa);
+  let low = false, fpsAcc = 0, fpsN = 0;
+  function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); composer.setSize(w, h); bloom.resolution.set(w / 2, h / 2); camera.aspect = w / h; if (opts.portraitFov) camera.fov = w < h ? opts.portraitFov : (opts.fov || 50); camera.updateProjectionMatrix(); }
+  addEventListener('resize', resize); resize();
+  function render(dt) { fpsAcc += dt; fpsN++; if (fpsAcc > 3) { const fps = fpsN / fpsAcc; fpsAcc = 0; fpsN = 0; if (fps < 40 && !low) { low = true; renderer.setPixelRatio(Math.min(DPR, 1.25)); bloom.enabled = false; resize(); } } composer.render(); }
+  // Look presets: sky, fog, light balance. Keeps the house style consistent across games.
+  let sky = null;
+  function setLook(L) {
+    renderer.toneMappingExposure = L.exposure ?? .95; scene.fog.color.set(L.fog ?? 0xcfe9f5); scene.fog.near = L.fogNear ?? 60; scene.fog.far = L.fogFar ?? 160;
+    sun.intensity = L.sun ?? 1.5; sun.color.set(L.sunColor ?? 0xfff0d6); hemi.intensity = L.hemi ?? .4; hemi.color.set(L.skyHor ?? 0xcfe9f5); hemi.groundColor.set(L.ground ?? 0x9a7b55);
+    bloom.strength = L.bloom ?? .14; bloom.threshold = L.bloomThreshold ?? .96; scene.environmentIntensity = L.env ?? .15;
+    if (sky) scene.remove(sky); sky = null; scene.background = null;
+    if (L.background != null) scene.background = new THREE.Color(L.background);
+    else { sky = skyDome(L); scene.add(sky); }
+  }
+  function setEnv(tex) { if (tex) scene.environment = tex; }
+  return { renderer, scene, camera, hemi, sun, composer, bloom, vignette, pmrem, resize, render, setLook, setEnv, get low() { return low; } };
+}
+export function skyDome(L) {
+  const g = new THREE.Group();
+  const mat = new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false, fog: false, toneMapped: false, uniforms: { uTop: { value: new THREE.Color(L.skyTop ?? 0x2f7fd0) }, uHor: { value: new THREE.Color(L.skyHor ?? 0xcfe9f5) }, uSun: { value: new THREE.Color(L.skyGlow ?? 0xfff0c0) }, uSunDir: { value: new THREE.Vector3(...(L.sunDir || [.35, .25, -.9])).normalize() } }, vertexShader: 'varying vec3 vP;void main(){vP=normalize(position);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}', fragmentShader: 'uniform vec3 uTop,uHor,uSun,uSunDir;varying vec3 vP;void main(){float h=clamp(vP.y,0.,1.);vec3 c=mix(uHor,uTop,pow(h,.55));float d=max(0.,dot(vP,uSunDir));c+=uSun*(pow(d,90.)*.3+pow(d,10.)*.04);gl_FragColor=vec4(c,1.);\n#include <colorspace_fragment>\n}' });
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(300, 32, 16), mat); dome.renderOrder = -10; g.add(dome);
+  if (L.stars) { const n = 600, sp = new Float32Array(n * 3); for (let i = 0; i < n; i++) { const a = Math.random() * Math.PI * 2, e = Math.random() * .9 + .08, r = 280; sp[i * 3] = Math.cos(a) * Math.cos(e) * r; sp[i * 3 + 1] = Math.sin(e) * r; sp[i * 3 + 2] = Math.sin(a) * Math.cos(e) * r; } const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.BufferAttribute(sp, 3)); g.add(new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xfff6d8, size: 2.2, sizeAttenuation: false, map: sparkTex(), transparent: true, opacity: .9, depthWrite: false, fog: false }))); }
+  if (L.clouds) for (let i = 0; i < 10; i++) { const cl = new THREE.Group(); for (let k = 0; k < 5; k++) { const puff = new THREE.Mesh(new THREE.SphereGeometry(6 + hash(i, k) * 6, 10, 8), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1, fog: false, transparent: true, opacity: .9 })); puff.position.set(k * 7 - 14, hash(k, i) * 3, hash(i + 3, k) * 4); puff.scale.y = .55; cl.add(puff); } const a = i / 10 * Math.PI * 2 + hash(i, 7); cl.position.set(Math.cos(a) * 200, 60 + hash(i, 9) * 30, Math.sin(a) * 200); cl.lookAt(0, cl.position.y, 0); g.add(cl); }
+  return g;
+}
+
+/* ---------------- assets ---------------- */
+export const ASSETS = { models: {}, hdri: {} };
+const gltfLoader = new GLTFLoader(), rgbeLoader = new RGBELoader();
+const b64 = str => { const bin = atob(str); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u.buffer; };
+// pack.json = { models: {name: base64 glb}, hdri: {name: base64 hdr} }
+export async function loadPack(url, eng, onProgress = () => { }) {
+  onProgress(.03); const res = await fetch(url); const total = Number(res.headers.get('content-length')) || 4e6; const reader = res.body.getReader(); const chunks = []; let got = 0;
+  while (true) { const { done, value } = await reader.read(); if (done) break; chunks.push(value); got += value.length; onProgress(.03 + .6 * Math.min(1, got / total)); }
+  const pack = JSON.parse(new TextDecoder().decode(await new Blob(chunks).arrayBuffer()));
+  const names = Object.keys(pack.models || {}), hn = Object.keys(pack.hdri || {}); let n = 0; const tick = () => onProgress(.63 + .37 * (++n / Math.max(1, names.length + hn.length)));
+  await Promise.all(names.map(name => new Promise(resolve => { try { gltfLoader.parse(b64(pack.models[name]), '', g => { ASSETS.models[name] = g.scene; ASSETS.models[name].userData.animations = g.animations; tick(); resolve(); }, e => { console.warn('model', name, e); tick(); resolve(); }); } catch (e) { tick(); resolve(); } })));
+  for (const name of hn) { try { const td = rgbeLoader.parse(b64(pack.hdri[name])); const t = new THREE.DataTexture(td.data, td.width, td.height, THREE.RGBAFormat, td.type); t.flipY = true; t.colorSpace = THREE.LinearSRGBColorSpace; t.mapping = THREE.EquirectangularReflectionMapping; t.needsUpdate = true; ASSETS.hdri[name] = eng ? eng.pmrem.fromEquirectangular(t).texture : t; } catch (e) { console.warn('hdri', name, e); } tick(); }
+  return ASSETS;
+}
+const MATS = {};
+export const mat = (col, extra) => { const k = col + JSON.stringify(extra || {}); if (!MATS[k]) MATS[k] = new THREE.MeshStandardMaterial(Object.assign({ color: col, roughness: .85, metalness: 0 }, extra || {})); return MATS[k]; };
+export const OUTLINE = new THREE.MeshBasicMaterial({ color: 0x2b2420, side: THREE.BackSide });
+export function addOutline(root, w = 1.03) { root.traverse(o => { if (o.isMesh && !o.isSkinnedMesh && !o.userData.outline) { const h = new THREE.Mesh(o.geometry, OUTLINE); h.scale.setScalar(w); h.userData.outline = true; h.renderOrder = -1; o.add(h); } }); return root; }
+// Clone a packed model, normalised: feet on y=0, centred, largest dimension = scale.
+export function instance(name, { scale = 1, shadow = true, outline = true, tint = null, fit = 'max' } = {}) {
+  const src = ASSETS.models[name]; const g = new THREE.Group(); g.name = name;
+  if (!src) { const m = new THREE.Mesh(new THREE.BoxGeometry(.8 * scale, .8 * scale, .8 * scale), mat(0xff00ff)); m.position.y = .4 * scale; g.add(m); console.warn('missing model', name); return g; }
+  let skinned = false; src.traverse(o => { if (o.isSkinnedMesh) skinned = true; });
+  const c = skinned ? skClone(src) : src.clone(true);
+  c.traverse(o => { if (o.isMesh) { o.castShadow = shadow; o.receiveShadow = shadow; if (o.isSkinnedMesh) o.frustumCulled = false; if (tint) { o.material = o.material.clone(); o.material.color.multiply(new THREE.Color(tint)); } } });
+  const box = new THREE.Box3().setFromObject(c); const size = box.getSize(new THREE.Vector3()); const d = fit === 'height' ? size.y : Math.max(size.x, size.y, size.z); const s = scale / (d || 1);
+  c.scale.setScalar(s); c.position.y = -box.min.y * s; c.position.x = -(box.min.x + size.x / 2) * s; c.position.z = -(box.min.z + size.z / 2) * s;
+  if (outline) addOutline(c); g.add(c); g.userData.size = size.clone().multiplyScalar(s); return g;
+}
+export function bones(root) { const b = {}; root.traverse(o => { if (o.isBone) b[o.name] = o; }); for (const k in b) { b[k].userData.rest = b[k].quaternion.clone(); b[k].userData.restPos = b[k].position.clone(); } return b; }
+// Pose a Kenney humanoid rig (T-pose rest). Values in radians; z = arm down/up, x = swing forward/back.
+export function pose(rig, p) { if (!rig) return; for (const k in rig) rig[k].quaternion.copy(rig[k].userData.rest); for (const n in p) { const b = rig[n]; if (!b) continue; const [x = 0, y = 0, z = 0] = p[n]; if (z) b.rotateZ(z); if (x) b.rotateX(x); if (y) b.rotateY(y); } }
+export const POSES = {
+  run: (t, s = 1) => { const ph = t * 11 * s, w = Math.sin(ph); return { LeftUpLeg: [w * .9], RightUpLeg: [-w * .9], LeftLeg: [-Math.max(0, -w) * 1.3], RightLeg: [-Math.max(0, w) * 1.3], LeftArm: [-w * .8, 0, -1.2], RightArm: [w * .8, 0, 1.2], LeftForeArm: [-.9], RightForeArm: [-.9], Spine: [.18] }; },
+  walk: (t, s = 1) => { const ph = t * 7 * s, w = Math.sin(ph); return { LeftUpLeg: [w * .55], RightUpLeg: [-w * .55], LeftLeg: [-Math.max(0, -w) * .8], RightLeg: [-Math.max(0, w) * .8], LeftArm: [-w * .45, 0, -1.25], RightArm: [w * .45, 0, 1.25], LeftForeArm: [-.3], RightForeArm: [-.3] }; },
+  idle: (t) => ({ LeftArm: [0, 0, -1.25 + Math.sin(t * 2) * .03], RightArm: [0, 0, 1.25 - Math.sin(t * 2) * .03], Spine: [Math.sin(t * 2) * .02], Head: [0, Math.sin(t * .7) * .2, 0] }),
+  jump: () => ({ LeftUpLeg: [1.1], RightUpLeg: [.3], LeftLeg: [-1.5], RightLeg: [-.6], LeftArm: [0, 0, .4], RightArm: [0, 0, -.4] }),
+  sit: () => ({ LeftUpLeg: [1.4, 0, .1], RightUpLeg: [1.4, 0, -.1], LeftLeg: [-1.3], RightLeg: [-1.3], LeftArm: [-.6, 0, -1.0], RightArm: [-.6, 0, 1.0], LeftForeArm: [-.6], RightForeArm: [-.6] }),
+  cheer: (t) => ({ LeftArm: [0, 0, 1.2 + Math.sin(t * 9) * .2], RightArm: [0, 0, -1.2 - Math.sin(t * 9) * .2], Head: [-.25], Spine: [-.1] }),
+  punch: (k) => ({ RightArm: [-1.6 * Math.sin(k * Math.PI), 0, 1.25 - 1.2 * Math.sin(k * Math.PI)], RightForeArm: [-.2], LeftArm: [-.6, 0, -1.0], LeftForeArm: [-1.4], Spine: [.1, -.5 * Math.sin(k * Math.PI), 0], LeftUpLeg: [.3], RightUpLeg: [-.3] }),
+  swing: (k) => ({ RightArm: [lerp(-2.4, .6, k), 0, lerp(.6, 1.0, k)], RightForeArm: [-.4], LeftArm: [-.6, 0, -1.0], Spine: [.15, lerp(.5, -.6, k), 0], LeftUpLeg: [.4], RightUpLeg: [-.3] }),
+  hit: (t) => ({ Spine: [-.4], Head: [-.4], LeftArm: [0, 0, .3], RightArm: [0, 0, -.3] })
+};
+
+/* ---------------- textures / sprites ---------------- */
+let _grain = null;
+export function grainTex(repeat = [6, 28]) { if (!_grain) { const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'); const d = g.createImageData(256, 256); for (let i = 0; i < d.data.length; i += 4) { const n = 215 + Math.random() * 40; d.data[i] = d.data[i + 1] = d.data[i + 2] = n; d.data[i + 3] = 255; } g.putImageData(d, 0, 0); for (let i = 0; i < 160; i++) { g.fillStyle = `rgba(0,0,0,${.04 + Math.random() * .06})`; g.beginPath(); g.ellipse(Math.random() * 256, Math.random() * 256, 2 + Math.random() * 6, 1 + Math.random() * 3, Math.random() * 3, 0, 6.3); g.fill(); } _grain = c; } const t = new THREE.CanvasTexture(_grain); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(...repeat); t.colorSpace = THREE.SRGBColorSpace; return t; }
+const TAGS = {};
+export function tagMaterial(emoji, text, bg = '#ffffff', fg = '#1b2430') { const k = emoji + text + bg + fg; if (TAGS[k]) return TAGS[k]; const c = document.createElement('canvas'); c.width = 512; c.height = 160; const g = c.getContext('2d'); g.fillStyle = bg; g.beginPath(); g.roundRect(8, 8, 496, 144, 40); g.fill(); g.lineWidth = 8; g.strokeStyle = '#1b2430'; g.stroke(); let x = 40; if (emoji) { g.font = '96px serif'; g.textBaseline = 'middle'; g.fillText(emoji, 28, 86); x = 140; } g.fillStyle = fg; let f = 54; g.font = `900 ${f}px Unbounded, Manrope, sans-serif`; while (g.measureText(text).width > 512 - x - 36 && f > 26) { f -= 4; g.font = `900 ${f}px Unbounded, Manrope, sans-serif`; } g.textBaseline = 'middle'; g.fillText(text, x, 86); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; const m = new THREE.SpriteMaterial({ map: t, depthTest: false, transparent: true, toneMapped: false, fog: false }); TAGS[k] = m; return m; }
+export function tag(emoji, text, opts = {}) { const s = new THREE.Sprite(tagMaterial(emoji, text, opts.bg, opts.fg)); const w = opts.width || 3.2; s.scale.set(w, w * .3125, 1); s.renderOrder = 6; return s; }
+
+/* ---------------- particles ---------------- */
+let _spark = null; function sparkTex() { if (_spark) return _spark; const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); const r = g.createRadialGradient(32, 32, 0, 32, 32, 32); r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(.4, 'rgba(255,255,255,.7)'); r.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = r; g.fillRect(0, 0, 64, 64); _spark = new THREE.CanvasTexture(c); _spark.colorSpace = THREE.SRGBColorSpace; return _spark; }
+export class Particles {
+  constructor(scene) { this.scene = scene; this.list = []; }
+  burst(pos, { color = 0xffe9a8, n = 18, speed = 4, up = 4, size = .45, life = .9, gravity = 12, additive = true } = {}) { const geo = new THREE.BufferGeometry(); const p = new Float32Array(n * 3), v = []; for (let i = 0; i < n; i++) { p[i * 3] = pos.x; p[i * 3 + 1] = pos.y; p[i * 3 + 2] = pos.z; v.push(new THREE.Vector3(rnd(-speed, speed), rnd(up * .4, up), rnd(-speed, speed))); } geo.setAttribute('position', new THREE.BufferAttribute(p, 3)); const m = new THREE.Points(geo, new THREE.PointsMaterial({ size, map: sparkTex(), color, transparent: true, depthWrite: false, blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending })); m.frustumCulled = false; this.scene.add(m); this.list.push({ m, v, t: 0, life, gravity }); }
+  update(dt) { for (const s of this.list.slice()) { s.t += dt; const p = s.m.geometry.attributes.position; for (let i = 0; i < s.v.length; i++) { s.v[i].y -= s.gravity * dt; p.setXYZ(i, p.getX(i) + s.v[i].x * dt, p.getY(i) + s.v[i].y * dt, p.getZ(i) + s.v[i].z * dt); } p.needsUpdate = true; s.m.material.opacity = 1 - s.t / s.life; if (s.t > s.life) { this.scene.remove(s.m); s.m.geometry.dispose(); s.m.material.dispose(); this.list.splice(this.list.indexOf(s), 1); } } }
+}
+
+/* ---------------- audio ---------------- */
+let AC = null, master = null, musicGain = null;
+export function audio() { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); master = AC.createGain(); master.gain.value = .9; master.connect(AC.destination); musicGain = AC.createGain(); musicGain.gain.value = .22; musicGain.connect(master); } catch (e) { } } if (AC && AC.state === 'suspended') AC.resume(); return AC; }
+export function tone(f, d, type = 'sine', g = .16, slide = 0, delay = 0, dest) { const c = audio(); if (!c || !profile().sound) return; const t0 = c.currentTime + delay; const o = c.createOscillator(), v = c.createGain(); o.type = type; o.frequency.setValueAtTime(f, t0); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), t0 + d); v.gain.setValueAtTime(0, t0); v.gain.linearRampToValueAtTime(g, t0 + .008); v.gain.exponentialRampToValueAtTime(.0008, t0 + d); o.connect(v); v.connect(dest || master); o.start(t0); o.stop(t0 + d + .02); }
+export function noise(d, g = .12, f = 1200, q = 1, delay = 0, type = 'bandpass') { const c = audio(); if (!c || !profile().sound) return; const t0 = c.currentTime + delay; const len = Math.max(1, Math.floor(c.sampleRate * d)); const buf = c.createBuffer(1, len, c.sampleRate); const ch = buf.getChannelData(0); for (let i = 0; i < len; i++) ch[i] = Math.random() * 2 - 1; const s = c.createBufferSource(); s.buffer = buf; const fl = c.createBiquadFilter(); fl.type = type; fl.frequency.value = f; fl.Q.value = q; const v = c.createGain(); v.gain.setValueAtTime(g, t0); v.gain.exponentialRampToValueAtTime(.0008, t0 + d); s.connect(fl); fl.connect(v); v.connect(master); s.start(t0); }
+export const SFX = {
+  good: () => { tone(660, .12, 'triangle'); tone(990, .18, 'triangle', .14, 0, .07); },
+  bad: () => tone(220, .3, 'sawtooth', .1, -120),
+  pop: () => tone(520, .08, 'square', .06),
+  click: () => tone(1400, .03, 'square', .04),
+  snap: () => { tone(110, .12, 'sine', .3, -40); tone(2200, .04, 'square', .05); noise(.05, .08, 3000, 2); }, // ASMR thock
+  coin: () => { tone(988, .08, 'square', .06); tone(1319, .16, 'square', .06, 0, .07); },
+  win: () => [523, 659, 784, 1046].forEach((f, i) => tone(f, .28, 'triangle', .14, 0, i * .11)),
+  lose: () => [392, 330, 262].forEach((f, i) => tone(f, .3, 'triangle', .12, 0, i * .14)),
+  whoosh: () => noise(.35, .12, 900, .7),
+  crash: () => { noise(.4, .25, 600, .5); tone(80, .3, 'sine', .25, -40); },
+  splash: () => { noise(.5, .16, 1600, .6); noise(.25, .1, 400, 1, .05); },
+  tick: () => tone(880, .05, 'sine', .05),
+  boost: () => tone(200, .5, 'sawtooth', .07, 500),
+  hit: () => { tone(160, .1, 'square', .14, -60); noise(.08, .12, 2000, 1); },
+  scrub: () => noise(.12, .05, 2600 + Math.random() * 1200, 1.5),
+  level: () => [784, 988, 1175, 1568].forEach((f, i) => tone(f, .22, 'square', .07, 0, i * .08))
+};
+// Tiny step-sequencer music. pattern: array of [noteSemitoneOffset|null], root Hz.
+export function music(song) { const c = audio(); if (!c) return { stop() { } }; let stopped = false, step = 0; const beat = 60 / (song.bpm || 110) / 2; const next = () => { if (stopped) return; if (profile().sound) { const n = song.lead[step % song.lead.length], b = song.bass[step % song.bass.length]; if (n != null) tone(song.root * Math.pow(2, n / 12), beat * .9, song.leadWave || 'triangle', .05, 0, 0, musicGain); if (b != null) tone(song.root / 2 * Math.pow(2, b / 12), beat * 1.6, 'sine', .07, 0, 0, musicGain); if (song.hat && step % 2 === 1) noise(.04, .025, 7000, 1); if (song.kick && step % 4 === 0) tone(90, .12, 'sine', .12, -50, 0, musicGain); } step++; setTimeout(next, beat * 1000); }; next(); return { stop() { stopped = true; } }; }
+export const SONGS = {
+  bright: { bpm: 112, root: 392, lead: [0, null, 4, 7, 9, null, 7, 4, 2, null, 4, null, 0, 2, 4, null], bass: [0, null, null, null, 5, null, null, null, 7, null, null, null, 5, null, 4, null], hat: true, kick: true },
+  chill: { bpm: 84, root: 330, lead: [0, null, null, 7, null, 4, null, null, 2, null, null, 9, null, 7, null, null], bass: [0, null, null, null, null, null, null, null, -3, null, null, null, null, null, null, null], leadWave: 'sine' },
+  race: { bpm: 140, root: 440, lead: [0, 0, 7, 0, 10, 0, 7, 5, 0, 0, 7, 0, 12, 10, 7, 5], bass: [0, null, 0, null, -2, null, -2, null, -4, null, -4, null, -5, null, -5, null], leadWave: 'square', hat: true, kick: true },
+  tense: { bpm: 120, root: 294, lead: [0, null, 3, null, 7, null, 6, null, 0, null, 3, null, 8, 7, 3, null], bass: [0, 0, null, 0, -2, -2, null, -2, -4, -4, null, -4, -5, null, -5, null], leadWave: 'sawtooth', kick: true }
+};
+
+/* ---------------- speech ---------------- */
+export function say(text, { lang, interrupt = true } = {}) { const p = profile(); if (!('speechSynthesis' in window) || !p.voice || !text) return; try { if (interrupt) speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(String(text)); u.lang = (lang || p.lang) === 'es' ? 'es-US' : 'en-US'; u.rate = .97; const vs = speechSynthesis.getVoices(); const v = vs.find(x => x.lang === u.lang) || vs.find(x => x.lang.startsWith(u.lang.slice(0, 2))); if (v) u.voice = v; speechSynthesis.speak(u); } catch (e) { } }
+
+/* ---------------- input ---------------- */
+// Unified input: keyboard, gamepad, touch buttons/stick, swipe. Read input.state each frame.
+export function createInput(opts = {}) {
+  const keys = {}; const state = { x: 0, y: 0, a: false, b: false, c: false, pause: false, aPressed: false, bPressed: false, cPressed: false, pausePressed: false, swipe: null, pointer: null };
+  const prev = { a: false, b: false, c: false, pause: false };
+  addEventListener('keydown', e => { keys[e.code] = true; if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault(); audio(); });
+  addEventListener('keyup', e => { keys[e.code] = false; });
+  const touch = { x: 0, y: 0, a: false, b: false, c: false };
+  let sw = null;
+  const el = opts.surface || window;
+  el.addEventListener('pointerdown', e => { audio(); sw = { x: e.clientX, y: e.clientY, t: performance.now() }; state.pointer = { x: e.clientX, y: e.clientY, down: true, start: true }; });
+  el.addEventListener('pointermove', e => { if (state.pointer) { state.pointer.x = e.clientX; state.pointer.y = e.clientY; } });
+  el.addEventListener('pointerup', e => { if (state.pointer) state.pointer.down = false; if (!sw) return; const dx = e.clientX - sw.x, dy = e.clientY - sw.y, dt = performance.now() - sw.t; if (dt < 450 && Math.hypot(dx, dy) > 34) state.swipe = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'); else if (dt < 300) state.swipe = 'tap'; sw = null; });
+  function bindButton(elm, key) { if (!elm) return; const on = e => { e.preventDefault(); e.stopPropagation(); audio(); touch[key] = true; elm.classList.add('on'); }, off = () => { touch[key] = false; elm.classList.remove('on'); }; elm.addEventListener('pointerdown', on); elm.addEventListener('pointerup', off); elm.addEventListener('pointercancel', off); elm.addEventListener('pointerleave', off); }
+  function bindStick(zone, knob) { if (!zone) return; let id = null, cx = 0, cy = 0; zone.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); audio(); id = e.pointerId; zone.setPointerCapture(id); const r = zone.getBoundingClientRect(); cx = e.clientX; cy = e.clientY; if (knob) { knob.style.left = (cx - r.left) + 'px'; knob.style.top = (cy - r.top) + 'px'; knob.classList.add('on'); } }); zone.addEventListener('pointermove', e => { if (e.pointerId !== id) return; const dx = e.clientX - cx, dy = e.clientY - cy, m = 46; touch.x = clamp(dx / m, -1, 1); touch.y = clamp(dy / m, -1, 1); if (knob) knob.style.transform = `translate(calc(-50% + ${touch.x * 30}px), calc(-50% + ${touch.y * 30}px))`; }); const end = e => { if (e.pointerId !== id) return; id = null; touch.x = touch.y = 0; if (knob) { knob.style.transform = 'translate(-50%,-50%)'; knob.classList.remove('on'); } }; zone.addEventListener('pointerup', end); zone.addEventListener('pointercancel', end); }
+  function poll() {
+    let x = 0, y = 0; if (keys.KeyA || keys.ArrowLeft) x -= 1; if (keys.KeyD || keys.ArrowRight) x += 1; if (keys.KeyW || keys.ArrowUp) y -= 1; if (keys.KeyS || keys.ArrowDown) y += 1;
+    let a = !!(keys.Space || keys.KeyJ || keys.Enter), b = !!(keys.KeyK || keys.ShiftLeft || keys.ShiftRight), c = !!(keys.KeyL || keys.KeyE), pause = !!(keys.Escape || keys.KeyP);
+    const pads = navigator.getGamepads ? navigator.getGamepads() : []; for (const p of pads) { if (!p) continue; const ax = p.axes[0] || 0, ay = p.axes[1] || 0; if (Math.abs(ax) > .2) x = ax; if (Math.abs(ay) > .2) y = ay; if (p.buttons[14]?.pressed) x = -1; if (p.buttons[15]?.pressed) x = 1; if (p.buttons[12]?.pressed) y = -1; if (p.buttons[13]?.pressed) y = 1; a = a || p.buttons[0]?.pressed; b = b || p.buttons[1]?.pressed || p.buttons[7]?.pressed; c = c || p.buttons[2]?.pressed || p.buttons[3]?.pressed; pause = pause || p.buttons[9]?.pressed; }
+    if (touch.x || touch.y) { x = touch.x; y = touch.y; } a = a || touch.a; b = b || touch.b; c = c || touch.c;
+    state.x = clamp(x, -1, 1); state.y = clamp(y, -1, 1); state.a = a; state.b = b; state.c = c; state.pause = pause;
+    state.aPressed = a && !prev.a; state.bPressed = b && !prev.b; state.cPressed = c && !prev.c; state.pausePressed = pause && !prev.pause; prev.a = a; prev.b = b; prev.c = c; prev.pause = pause;
+    return state;
+  }
+  function consumeSwipe() { const s = state.swipe; state.swipe = null; return s; }
+  return { state, keys, poll, bindButton, bindStick, consumeSwipe, touch };
+}
+
+/* ---------------- UI helpers ---------------- */
+export function loading(title, sub = 'Loading…') { const d = document.createElement('div'); d.className = 'ig-loading'; d.innerHTML = `<div><div class="ig-brand">INOA<span>GAMES</span></div><h1>${title}</h1><div class="ig-bar"><i></i></div><p>${sub}</p></div>`; document.body.appendChild(d); return { set(p, txt) { d.querySelector('i').style.width = Math.round(p * 100) + '%'; if (txt) d.querySelector('p').textContent = txt; }, done() { d.classList.add('out'); setTimeout(() => d.remove(), 500); } }; }
+let toastTO = 0;
+export function toast(text, ms = 1800, speak = false) { let t = document.querySelector('.ig-toast'); if (!t) { t = document.createElement('div'); t.className = 'ig-toast'; document.body.appendChild(t); } t.textContent = text; t.classList.add('show'); clearTimeout(toastTO); toastTO = setTimeout(() => t.classList.remove('show'), ms); if (speak) say(text); }
+export function floatText(text, x, y, cls = '') { const d = document.createElement('div'); d.className = 'ig-float ' + cls; d.textContent = text; d.style.left = x + 'px'; d.style.top = y + 'px'; document.body.appendChild(d); setTimeout(() => d.remove(), 1000); }
+// Results card shared by every game: grants XP/coins to the shared profile and shows hero level.
+export function results({ gameId, title, stats = [], xp = 0, coins = 0, best = null, bestLower = false, bestLabel = 'Best', onAgain, onHub = () => location.href = '../index.html', share }) {
+  const r = reward(gameId, { xp, coins, best, bestLower }); const lv = heroLevel(profile().xp);
+  const d = document.createElement('div'); d.className = 'ig-screen ig-results';
+  d.innerHTML = `<div class="ig-card"><div class="ig-kicker">${r.newBest ? 'NEW BEST' : 'ROUND OVER'}</div><h2>${title}</h2><div class="ig-stats">${stats.map(s => `<div><b>${s[1]}</b><small>${s[0]}</small></div>`).join('')}</div>${r.best != null ? `<p class="ig-sub">${bestLabel}: <b>${r.best}</b></p>` : ''}<div class="ig-reward"><span>+${r.xp} XP</span><span>+${r.coins} 🪙</span><span>Hero lv ${lv.lv}${r.levelUp ? ' ⬆' : ''}</span></div><div class="ig-xpbar"><i style="width:${Math.round(lv.into / lv.need * 100)}%"></i></div><div class="ig-row"><button class="ig-btn ghost" data-a="hub">Hub</button><button class="ig-btn" data-a="again">Play again</button></div>${share ? '<button class="ig-btn sun" data-a="share">📣 Share</button>' : ''}</div>`;
+  document.body.appendChild(d); if (r.levelUp) SFX.level();
+  d.querySelector('[data-a=again]').onclick = () => { d.remove(); onAgain && onAgain(); }; d.querySelector('[data-a=hub]').onclick = () => onHub();
+  const sh = d.querySelector('[data-a=share]'); if (sh) sh.onclick = async () => { try { if (navigator.share) await navigator.share({ text: share }); else { await navigator.clipboard.writeText(share); toast('Copied! Paste it anywhere.'); } } catch (e) { } };
+  return d;
+}
+export function hudChip(html, cls = '') { const d = document.createElement('div'); d.className = 'ig-chip ' + cls; d.innerHTML = html; return d; }
+// The standard game shell: back-to-hub, pause, touch controls container.
+export function shell({ title, onPause, buttons = [], stick = false, help = '' }) {
+  const top = document.createElement('div'); top.className = 'ig-top'; top.innerHTML = `<a class="ig-chip ig-home" href="../index.html" aria-label="Back to Inoa Games">⌂</a><div class="ig-hud" id="igHud"></div><button class="ig-chip ig-pause" aria-label="Pause">⏸</button>`; document.body.appendChild(top);
+  top.querySelector('.ig-pause').onclick = () => onPause && onPause();
+  const pad = document.createElement('div'); pad.className = 'ig-pad'; pad.innerHTML = `${stick ? '<div class="ig-stick" id="igStick"><div class="ig-knob" id="igKnob"></div></div>' : '<div></div>'}<div class="ig-btns">${buttons.map(b => `<button class="ig-tbtn ${b.cls || ''}" id="${b.id}" aria-label="${b.label}">${b.icon}</button>`).join('')}</div>`; document.body.appendChild(pad);
+  return { hud: top.querySelector('#igHud'), pad };
+}
+export function pauseMenu({ onResume, onRestart, extra = '' }) { const d = document.createElement('div'); d.className = 'ig-screen'; d.innerHTML = `<div class="ig-card"><h2>Paused</h2>${extra}<div class="ig-row"><button class="ig-btn ghost" data-a="hub">Hub</button><button class="ig-btn ghost" data-a="restart">Restart</button><button class="ig-btn" data-a="resume">Resume</button></div><div class="ig-row"><button class="ig-chipbtn" data-a="sound">🔊 Sound ${profile().sound ? 'on' : 'off'}</button><button class="ig-chipbtn" data-a="voice">🗣️ Read aloud ${profile().voice ? 'on' : 'off'}</button></div></div>`; document.body.appendChild(d); d.querySelector('[data-a=resume]').onclick = () => { d.remove(); onResume(); }; d.querySelector('[data-a=restart]').onclick = () => { d.remove(); onRestart(); }; d.querySelector('[data-a=hub]').onclick = () => location.href = '../index.html'; d.querySelector('[data-a=sound]').onclick = e => { const p = profile(); setProfile({ sound: !p.sound }); e.target.textContent = `🔊 Sound ${!p.sound ? 'on' : 'off'}`; }; d.querySelector('[data-a=voice]').onclick = e => { const p = profile(); setProfile({ voice: !p.voice }); e.target.textContent = `🗣️ Read aloud ${!p.voice ? 'on' : 'off'}`; }; return d; }
+export function titleScreen({ title, kicker, lead, how = [], onPlay, extra = '' }) { const d = document.createElement('div'); d.className = 'ig-screen ig-title'; d.innerHTML = `<div class="ig-card"><div class="ig-kicker">${kicker}</div><h1>${title}</h1><p class="ig-sub">${lead}</p>${how.length ? `<div class="ig-how">${how.map(h => `<div><span>${h[0]}</span>${h[1]}</div>`).join('')}</div>` : ''}${extra}<div class="ig-row"><a class="ig-btn ghost" href="../index.html">Hub</a><button class="ig-btn" data-a="play">Play</button></div></div>`; document.body.appendChild(d); d.querySelector('[data-a=play]').onclick = () => { audio(); d.remove(); onPlay(); }; return d; }
+
+/* ---------------- loop ---------------- */
+export function loop(fn) { let last = performance.now(); const f = now => { requestAnimationFrame(f); const dt = Math.min(.05, (now - last) / 1000); last = now; fn(dt, now / 1000); }; requestAnimationFrame(f); }
+// Screen position of a 3D point (for floating text)
+export function toScreen(v, camera) { const p = v.clone().project(camera); return { x: (p.x * .5 + .5) * innerWidth, y: (-p.y * .5 + .5) * innerHeight }; }
+
+/* ---------------- procedural PBR surfaces (no texture files) ---------------- */
+// Generates albedo + normal + roughness maps on canvas. kinds: asphalt, sand, grass, wood, metal, rust, tile, fabric, stone, snow, paint, plastic
+const PBR_CACHE = {};
+function noiseField(w, h, octaves, seed) { const f = new Float32Array(w * h); const val = (x, y, s) => hash(Math.floor(x) + s * 1013, Math.floor(y) + s * 7919); const smoothN = (x, y, s) => { const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi; const u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf); const a = val(xi, yi, s), b = val(xi + 1, yi, s), c = val(xi, yi + 1, s), d = val(xi + 1, yi + 1, s); return lerp(lerp(a, b, u), lerp(c, d, u), v); }; for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { let amp = 1, fr = 4 / w * 8, sum = 0, norm = 0; for (let o = 0; o < octaves; o++) { const p = Math.round(w * fr / 8) || 1; sum += smoothN((x % w) * fr, (y % h) * fr, seed + o) * amp; norm += amp; amp *= .5; fr *= 2; } f[y * w + x] = sum / norm; } return f; }
+export function pbr(kind, color = 0x888888, repeat = [4, 4], opts = {}) {
+  const key = kind + color + repeat.join('x') + JSON.stringify(opts); if (PBR_CACHE[key]) return PBR_CACHE[key];
+  const S = 256, base = new THREE.Color(color); const h = noiseField(S, S, 5, kind.length * 31 + 7); const fine = noiseField(S, S, 3, kind.length * 13 + 3);
+  const height = new Float32Array(S * S), alb = new Uint8ClampedArray(S * S * 4), rough = new Uint8ClampedArray(S * S * 4);
+  for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) { const i = y * S + x; let ht = h[i], col = base.clone(), r = opts.rough ?? .85;
+    if (kind === 'asphalt') { const grit = hash(x * 3, y * 7); ht = h[i] * .4 + grit * .6; col.multiplyScalar(.75 + grit * .45); r = .9; }
+    else if (kind === 'sand') { ht = h[i] * .7 + fine[i] * .3; col.multiplyScalar(.85 + ht * .3); r = .95; }
+    else if (kind === 'grass') { const blade = hash(x, y * 3); ht = blade; col.lerp(new THREE.Color(0x2f6b2f), blade * .35); col.multiplyScalar(.85 + h[i] * .3); r = .95; }
+    else if (kind === 'wood') { const ring = Math.sin((y / S * 22 + h[i] * 6) * Math.PI) * .5 + .5; ht = ring * .6 + fine[i] * .4; col.multiplyScalar(.72 + ring * .38); r = .7; if (x % (S / 4) < 2) { ht = 0; col.multiplyScalar(.6); } }
+    else if (kind === 'metal') { const br = hash(x, Math.floor(y / 2)) * .15; ht = fine[i] * .3 + br; col.multiplyScalar(.9 + br); r = .35 + h[i] * .25; }
+    else if (kind === 'rust') { const spot = smooth(.45, .62, h[i]); col.lerp(new THREE.Color(0x7a3b12), spot); col.multiplyScalar(.7 + fine[i] * .5); ht = spot * .8 + fine[i] * .5; r = .45 + spot * .5; }
+    else if (kind === 'tile') { const gx = x % (S / 4), gy = y % (S / 4); const grout = gx < 4 || gy < 4; ht = grout ? 0 : .8 + fine[i] * .2; if (grout) col.set(0xd8d0c4); else col.multiplyScalar(.92 + fine[i] * .14); r = grout ? .95 : .25; }
+    else if (kind === 'fabric') { const weave = ((x >> 1) + (y >> 1)) % 2 ? .6 : .4; ht = weave * .6 + fine[i] * .4; col.multiplyScalar(.85 + weave * .25); r = .95; }
+    else if (kind === 'stone') { ht = h[i]; col.multiplyScalar(.7 + h[i] * .5); r = .9; }
+    else if (kind === 'snow') { ht = h[i] * .6 + fine[i] * .4; col.multiplyScalar(.95 + fine[i] * .08); r = .8; }
+    else if (kind === 'paint') { ht = fine[i] * .2; col.multiplyScalar(.96 + fine[i] * .06); r = .4; }
+    else if (kind === 'plastic') { ht = fine[i] * .1; r = .3; }
+    height[i] = ht; alb[i * 4] = col.r * 255; alb[i * 4 + 1] = col.g * 255; alb[i * 4 + 2] = col.b * 255; alb[i * 4 + 3] = 255; const rv = clamp(r + (fine[i] - .5) * .15, 0, 1) * 255; rough[i * 4] = rv; rough[i * 4 + 1] = rv; rough[i * 4 + 2] = rv; rough[i * 4 + 3] = 255; }
+  const nrm = new Uint8ClampedArray(S * S * 4), str = opts.bump ?? 3; for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) { const hL = height[y * S + ((x - 1 + S) % S)], hR = height[y * S + ((x + 1) % S)], hU = height[((y - 1 + S) % S) * S + x], hD = height[((y + 1) % S) * S + x]; const nx = (hL - hR) * str, ny = (hU - hD) * str, nz = 1; const l = Math.hypot(nx, ny, nz); const i = (y * S + x) * 4; nrm[i] = (nx / l * .5 + .5) * 255; nrm[i + 1] = (ny / l * .5 + .5) * 255; nrm[i + 2] = (nz / l * .5 + .5) * 255; nrm[i + 3] = 255; }
+  const tex = (data, srgb) => { const t = new THREE.DataTexture(data, S, S, THREE.RGBAFormat); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(...repeat); t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace; t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter; t.anisotropy = 4; t.needsUpdate = true; return t; };
+  const m = new THREE.MeshStandardMaterial({ map: tex(alb, true), normalMap: tex(nrm, false), roughnessMap: tex(rough, false), roughness: 1, metalness: kind === 'metal' ? .7 : 0, normalScale: new THREE.Vector2(1, 1) });
+  PBR_CACHE[key] = m; return m;
+}
+// Give a loaded model real surface detail: adds a subtle normal + roughness micro-texture to every material.
+export function detail(root, kind = 'paint', strength = .5) { const p = pbr(kind, 0xffffff, [3, 3]); root.traverse(o => { if (o.isMesh && !o.userData.outline && o.material && !o.material.normalMap) { o.material = o.material.clone(); o.material.normalMap = p.normalMap; o.material.normalScale = new THREE.Vector2(strength, strength); o.material.roughnessMap = p.roughnessMap; } }); return root; }

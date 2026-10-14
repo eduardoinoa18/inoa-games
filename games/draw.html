@@ -1,0 +1,763 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Draw the Pact</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;800&family=Unbounded:wght@700;900&display=swap">
+<link rel="stylesheet" href="../engine/ui.css">
+<style>
+.dw{position:fixed;inset:0;z-index:21;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto minmax(0,1fr);gap:10px;padding:64px 14px 14px;box-sizing:border-box;pointer-events:none}
+.dw>*{pointer-events:auto}
+.dw-top{grid-column:1/-1;display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap}
+.dw-prompt{background:rgba(255,248,238,.95);border-radius:16px;padding:8px 14px;font-weight:800;font-size:15px;box-shadow:0 6px 18px rgba(0,0,0,.25);display:flex;gap:8px;align-items:center}
+.dw-prompt b{font-family:var(--f-d);font-size:19px}
+.dw-time{position:relative;width:54px;height:54px;flex:none}
+.dw-time svg{width:100%;height:100%;transform:rotate(-90deg)}
+.dw-time span{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--f-d);font-weight:900;color:#fff;font-size:17px;text-shadow:0 2px 0 rgba(0,0,0,.4)}
+.dw-stage{position:relative;display:grid;place-items:center;min-height:0;min-width:0}
+.dw-paper{position:relative;background:#fffdf7;border-radius:18px;box-shadow:0 18px 50px rgba(0,0,0,.35),0 0 0 6px #e9dcc5,0 0 0 9px #7a5232;touch-action:none;cursor:crosshair;max-width:100%;max-height:100%;aspect-ratio:4/3}
+.dw-paper canvas{width:100%;height:100%;display:block;border-radius:18px;touch-action:none}
+.dw-tools{display:flex;flex-direction:column;gap:8px;background:rgba(255,248,238,.95);border-radius:22px;padding:10px;box-shadow:0 10px 30px rgba(0,0,0,.3);align-self:center;max-height:100%;overflow:auto;box-sizing:border-box}
+.dw-pal{display:grid;grid-template-columns:repeat(3,38px);gap:6px}
+.dw-pal button{width:38px;height:38px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px rgba(0,0,0,.15);cursor:pointer;padding:0}
+.dw-pal button.on{box-shadow:0 0 0 3px #1b2430;transform:scale(1.08)}
+.dw-row{display:flex;gap:6px;justify-content:space-between}
+.dw-row button,.dw-act button{min-width:38px;height:42px;border-radius:12px;border:2px solid var(--line);background:#fff;cursor:pointer;font-size:18px;font-weight:800;display:grid;place-items:center;padding:0 8px;color:var(--ink)}
+.dw-row button.on{border-color:var(--mint-ink);background:var(--mint)}
+.dw-size i{display:block;border-radius:50%;background:#1b2430}
+.dw-act{display:grid;gap:6px}
+.dw-act button{height:auto;min-height:48px;font-size:14px;font-family:var(--f-d);font-weight:900}
+.dw-act button.go{background:var(--mint-ink);color:#fff;border-color:transparent}
+.dw-act button.sun{background:var(--sun);border-color:transparent}
+.dw-peek{user-select:none}
+.dw-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.dw-chips button{min-height:54px;padding:8px 14px;border-radius:16px;border:3px solid var(--c,#ccc);background:#fff;font-weight:900;font-family:var(--f-d);cursor:pointer;font-size:16px;color:var(--ink)}
+.dw-word{font-family:var(--f-d);font-weight:900;font-size:clamp(34px,9vw,64px);text-align:center;line-height:1.05;color:var(--ink);word-break:break-word}
+.dw-word small{display:block;font-size:.32em;color:#4c5868;margin-top:8px;font-family:var(--f-b)}
+.dw-board{display:grid;gap:6px}.dw-board div{display:grid;grid-template-columns:30px 1fr auto;gap:8px;align-items:center;background:#fff;border:2px solid var(--line);border-radius:14px;padding:8px 12px;font-weight:800}.dw-board b{font-family:var(--f-d)}
+.dw-in{width:100%;min-height:52px;border-radius:14px;border:2px solid var(--line);padding:0 14px;font:inherit;font-weight:800;font-size:18px;box-sizing:border-box;user-select:text;-webkit-user-select:text}
+.dw-show{max-width:100%;border-radius:16px;box-shadow:0 0 0 5px #e9dcc5,0 0 0 8px #7a5232;background:#fffdf7;display:block;margin:0 auto;max-height:46vh;aspect-ratio:4/3;object-fit:contain}
+.dw-slide{position:fixed;inset:0;z-index:28;display:grid;place-items:center;padding:16px;box-sizing:border-box;background:radial-gradient(120% 90% at 50% 40%,rgba(30,22,48,.55),rgba(10,8,20,.85));cursor:pointer}
+.dw-slide .ig-card{width:min(640px,100%)}
+.dw-slide .says{font-family:var(--f-d);font-size:clamp(22px,5vw,36px);text-align:center;line-height:1.15}
+.dw-slide .by{text-align:center;font-weight:800;color:#4c5868}
+.pk{display:flex;gap:6px;flex-wrap:wrap}.pk button{flex:1 1 70px;min-height:46px;border-radius:14px;border:2px solid var(--line);background:#fff;font-weight:800;cursor:pointer;color:var(--ink);padding:4px 6px}.pk button.on{border-color:var(--mint-ink);background:var(--mint)}
+.pk button small{display:block;font-weight:600;font-size:11px;color:#4c5868}
+.names{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:6px}.names input{min-height:40px;border-radius:12px;border:2px solid var(--line);padding:0 10px;font:inherit;font-weight:800;box-sizing:border-box;width:100%;user-select:text;-webkit-user-select:text}
+.ttl-scroll{max-height:calc(100dvh - 32px);overflow:auto}
+.tt-wide .tt-col{display:grid;gap:12px;align-content:start}
+.tt-wide .ig-row:last-child{position:sticky;bottom:-26px;background:var(--paper);padding:10px 0 14px;margin-bottom:-14px;z-index:2}
+@media (min-width:760px) and (orientation:landscape){.tt-wide{width:min(940px,100%);grid-template-columns:1fr 1.1fr;column-gap:22px}}
+@media (orientation:portrait){.dw{grid-template-columns:1fr;grid-template-rows:auto auto auto;align-content:start;padding:60px 10px 10px}.dw-tools{flex-direction:row;flex-wrap:wrap;justify-content:center;align-self:start}.dw-pal{grid-template-columns:repeat(6,34px)}.dw-pal button{width:34px;height:34px}.dw-act{grid-template-columns:repeat(auto-fit,minmax(110px,1fr));width:100%}.dw-paper{width:100%;height:auto}}
+@media (orientation:landscape) and (max-height:500px){.dw{padding-top:56px}.dw-pal{grid-template-columns:repeat(4,30px)}.dw-pal button{width:30px;height:30px}.dw-row button{height:36px}.dw-act button{min-height:40px}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+</head><body>
+<canvas class="ig-gl" id="gl"></canvas>
+<div class="dw" id="dw" hidden>
+  <div class="dw-top"><div class="dw-time" id="dwTime"><svg viewBox="0 0 54 54"><circle cx="27" cy="27" r="22" fill="rgba(13,27,38,.55)" stroke="rgba(255,255,255,.25)" stroke-width="6"/><circle id="dwRing" cx="27" cy="27" r="22" fill="none" stroke="#ffd166" stroke-width="6" stroke-linecap="round" stroke-dasharray="138.2" stroke-dashoffset="0"/></svg><span id="dwSec">60</span></div><div class="dw-prompt" id="dwPrompt"></div></div>
+  <div class="dw-stage" id="dwStage"><div class="dw-paper" id="dwPaper"><canvas id="pad" width="1024" height="768"></canvas></div></div>
+  <div class="dw-tools" id="dwTools"></div>
+</div>
+<script type="module">
+import * as E from '../engine/inoa3d.js';
+const { THREE, clamp, lerp, rnd, pick, hash, damp, SFX, $ } = E;
+
+/* ======================= words: "english|español|difficulty" ======================= */
+const WORDS_RAW = `cat|gato|1
+dog|perro|1
+fish|pez|1
+bird|pájaro|1
+house|casa|1
+tree|árbol|1
+sun|sol|1
+moon|luna|1
+star|estrella|1
+car|carro|1
+boat|barco|1
+ball|pelota|1
+apple|manzana|1
+pizza|pizza|1
+cake|pastel|1
+ice cream|helado|1
+flower|flor|1
+hat|sombrero|1
+shoe|zapato|1
+sock|calcetín|1
+chair|silla|1
+table|mesa|1
+bed|cama|1
+book|libro|1
+pencil|lápiz|1
+cup|taza|1
+spoon|cuchara|1
+fork|tenedor|1
+egg|huevo|1
+cookie|galleta|1
+bread|pan|1
+cheese|queso|1
+key|llave|1
+door|puerta|1
+window|ventana|1
+clock|reloj|1
+phone|teléfono|1
+snake|serpiente|1
+spider|araña|1
+snail|caracol|1
+frog|rana|1
+duck|pato|1
+cow|vaca|1
+pig|cerdo|1
+horse|caballo|1
+sheep|oveja|1
+rabbit|conejo|1
+mouse|ratón|1
+lion|león|1
+elephant|elefante|1
+giraffe|jirafa|1
+monkey|mono|1
+bear|oso|1
+penguin|pingüino|1
+turtle|tortuga|1
+butterfly|mariposa|1
+bee|abeja|1
+ant|hormiga|1
+owl|búho|1
+shark|tiburón|1
+whale|ballena|1
+octopus|pulpo|1
+crab|cangrejo|1
+rainbow|arcoíris|1
+cloud|nube|1
+rain|lluvia|1
+snowman|muñeco de nieve|1
+umbrella|paraguas|1
+kite|cometa|1
+balloon|globo|1
+banana|banana|1
+heart|corazón|1
+eye|ojo|1
+hand|mano|1
+foot|pie|1
+nose|nariz|1
+mouth|boca|1
+ear|oreja|1
+tooth|diente|1
+smile|sonrisa|1
+baby|bebé|1
+ghost|fantasma|1
+robot|robot|1
+train|tren|1
+bus|autobús|1
+bicycle|bicicleta|1
+airplane|avión|1
+rocket|cohete|1
+truck|camión|1
+drum|tambor|1
+guitar|guitarra|1
+crown|corona|1
+gift|regalo|1
+candle|vela|1
+lamp|lámpara|1
+coconut|coco|1
+mango|mango|1
+corn|maíz|1
+carrot|zanahoria|1
+pineapple|piña|1
+watermelon|sandía|1
+strawberry|fresa|1
+grapes|uvas|1
+lemon|limón|1
+mushroom|hongo|1
+cactus|cactus|1
+leaf|hoja|1
+worm|gusano|1
+helicopter|helicóptero|2
+submarine|submarino|2
+castle|castillo|2
+bridge|puente|2
+lighthouse|faro|2
+volcano|volcán|2
+island|isla|2
+mountain|montaña|2
+beach|playa|2
+waterfall|cascada|2
+desert|desierto|2
+palm tree|palmera|2
+sandwich|sándwich|2
+hamburger|hamburguesa|2
+hot dog|perro caliente|2
+taco|taco|2
+popcorn|palomitas|2
+piano|piano|2
+trumpet|trompeta|2
+microphone|micrófono|2
+camera|cámara|2
+computer|computadora|2
+television|televisión|2
+glasses|lentes|2
+sword|espada|2
+shield|escudo|2
+treasure|tesoro|2
+pirate|pirata|2
+dragon|dragón|2
+unicorn|unicornio|2
+mermaid|sirena|2
+wizard|mago|2
+king|rey|2
+queen|reina|2
+princess|princesa|2
+astronaut|astronauta|2
+doctor|doctor|2
+firefighter|bombero|2
+chef|cocinero|2
+farmer|granjero|2
+teacher|maestro|2
+clown|payaso|2
+superhero|superhéroe|2
+alien|extraterrestre|2
+tent|tienda de campaña|2
+campfire|fogata|2
+backpack|mochila|2
+ladder|escalera|2
+hammer|martillo|2
+scissors|tijeras|2
+toothbrush|cepillo de dientes|2
+soap|jabón|2
+bathtub|bañera|2
+pillow|almohada|2
+snowflake|copo de nieve|2
+sandcastle|castillo de arena|2
+fireworks|fuegos artificiales|2
+swing|columpio|2
+slide|tobogán|2
+skateboard|patineta|2
+roller skates|patines|2
+trophy|trofeo|2
+medal|medalla|2
+map|mapa|2
+compass|brújula|2
+anchor|ancla|2
+parachute|paracaídas|2
+hot air balloon|globo aerostático|2
+dinosaur|dinosaurio|2
+pyramid|pirámide|2
+mummy|momia|2
+knight|caballero|2
+hammock|hamaca|2
+maracas|maracas|2
+parrot|loro|2
+flamingo|flamenco|2
+domino|dominó|2
+baseball|béisbol|2
+nest|nido|2
+spiderweb|telaraña|2
+beehive|colmena|2
+mirror|espejo|2
+puddle|charco|2
+footprint|huella|2
+bubble|burbuja|2
+mustache|bigote|2
+beard|barba|2
+pajamas|pijama|2
+headphones|audífonos|2
+sunglasses|lentes de sol|2
+piggy bank|alcancía|2
+puzzle|rompecabezas|2
+wheel|rueda|2
+igloo|iglú|2
+fence|cerca|2
+windmill|molino de viento|2
+tractor|tractor|2
+ambulance|ambulancia|2
+police car|carro de policía|2
+fire truck|camión de bomberos|2
+ice cube|cubito de hielo|2
+fountain|fuente|2
+statue|estatua|2
+violin|violín|2
+paintbrush|pincel|2
+envelope|sobre|2
+stamp|sello|2
+calendar|calendario|2
+battery|batería|2
+magnet|imán|2
+run|correr|2
+jump|saltar|2
+swim|nadar|2
+sleep|dormir|2
+eat|comer|2
+drink|beber|2
+dance|bailar|2
+sing|cantar|2
+read|leer|2
+write|escribir|2
+laugh|reír|2
+cry|llorar|2
+fly|volar|2
+climb|escalar|2
+cook|cocinar|2
+paint|pintar|2
+kick|patear|2
+throw|lanzar|2
+catch|atrapar|2
+sneeze|estornudar|2
+yawn|bostezar|2
+wave|saludar|2
+hug|abrazar|2
+clap|aplaudir|2
+sweep|barrer|2
+surf|surfear|2
+ski|esquiar|2
+skate|patinar|2
+dig|cavar|2
+wash|lavar|2
+whistle|silbar|2
+snore|roncar|2
+hide|esconderse|2
+fish (verb)|pescar|2
+juggle|hacer malabares|3
+brush your teeth|cepillarse los dientes|3
+ride a bike|andar en bicicleta|3
+water the plants|regar las plantas|3
+knock on a door|tocar la puerta|3
+earthquake|terremoto|3
+tornado|tornado|3
+hurricane|huracán|3
+eclipse|eclipse|3
+echo|eco|3
+shadow|sombra|3
+reflection|reflejo|3
+dream|sueño|3
+music|música|3
+wind|viento|3
+electricity|electricidad|3
+telescope|telescopio|3
+microscope|microscopio|3
+skeleton|esqueleto|3
+fingerprint|huella digital|3
+traffic jam|embotellamiento|3
+roller coaster|montaña rusa|3
+carousel|carrusel|3
+ferris wheel|rueda de la fortuna|3
+escalator|escalera eléctrica|3
+elevator|ascensor|3
+vending machine|máquina expendedora|3
+washing machine|lavadora|3
+refrigerator|nevera|3
+microwave|microondas|3
+blender|licuadora|3
+traffic light|semáforo|3
+museum|museo|3
+library|biblioteca|3
+hospital|hospital|3
+airport|aeropuerto|3
+zoo|zoológico|3
+circus|circo|3
+birthday party|fiesta de cumpleaños|3
+wedding|boda|3
+picnic|pícnic|3
+sunrise|amanecer|3
+sunset|atardecer|3
+jungle|selva|3
+cave|cueva|3
+iceberg|iceberg|3
+constellation|constelación|3
+satellite|satélite|3
+black hole|agujero negro|3
+time travel|viaje en el tiempo|3
+invisible|invisible|3
+homework|tarea|3
+vacation|vacaciones|3
+secret|secreto|3
+surprise|sorpresa|3
+idea|idea|3
+happy|feliz|3
+angry|enojado|3
+scared|asustado|3
+tired|cansado|3
+hungry|hambriento|3
+teamwork|trabajo en equipo|3
+recycling|reciclaje|3
+sunscreen|protector solar|3
+haircut|corte de pelo|3
+hiccups|hipo|3
+bedtime|hora de dormir|3
+sleepwalking|sonambulismo|3
+daydream|soñar despierto|3
+magic trick|truco de magia|3
+hide and seek|escondidas|3
+tug of war|juego de la cuerda|3
+selfie|selfi|3
+password|contraseña|3
+wifi|wifi|3
+sandstorm|tormenta de arena|3
+avalanche|avalancha|3
+quicksand|arenas movedizas|3
+cocoon|capullo|3
+fossil|fósil|3
+carnival|carnaval|3
+gravity|gravedad|3
+lightning|relámpago|3
+thunder|trueno|3
+tide|marea|3
+melting|derretirse|3
+balance|equilibrio|3
+speed|velocidad|3
+noise|ruido|3
+silence|silencio|3
+friendship|amistad|3
+winter|invierno|3
+summer|verano|3
+autumn|otoño|3
+spring (season)|primavera|3
+morning|mañana|3
+midnight|medianoche|3
+weekend|fin de semana|3
+holiday|día festivo|3
+map reading|leer un mapa|3
+first place|primer lugar|3
+last place|último lugar|3
+road trip|viaje por carretera|3
+sleepover|pijamada|3
+tooth fairy|hada de los dientes|3
+snow day|día de nieve|3
+pet shop|tienda de mascotas|3
+bakery|panadería|3
+supermarket|supermercado|3
+lifeguard|salvavidas|3
+scarecrow|espantapájaros|3
+treasure map|mapa del tesoro|3
+haunted house|casa embrujada|3
+space station|estación espacial|3`;
+const WORDS = WORDS_RAW.trim().split('\n').map(l => { const [en, es, d] = l.split('|'); return { en, es, d: +d }; });
+
+/* ======================= strings ======================= */
+const L0 = E.profile().lang === 'es' ? 'es' : 'en';
+const STR = {
+  en: { pass: n => `Pass the device to ${n}`, noPeek: 'Everyone else: no peeking! 🙈', show: 'Show my word', start: 'Start drawing ▶', skip: 'New word', drawThis: 'Draw this:', drawer: n => `🎨 ${n} is drawing — shout your guesses!`, guessed: '✓ Someone guessed it!', who: 'Who guessed it?', timeUp: 'Time’s up!', wordWas: 'The word was', nobody: 'Nobody got it this time.', next: 'Next ▶', peek: '👁 Peek', done: 'Done ✓', sketch: n => `Sketch ${n}`, saved: 'Saved to the gallery wall!', desc: n => `${n}: describe this drawing in a few words`, descPh: 'It looks like…', drawDesc: n => `${n}: draw this description!`, story: 'It started as…', said: n => `${n} said:`, drew: n => `${n} drew:`, ended: 'And it ended as…', points: 'points', undo: 'Undo', clear: 'Clear', eraser: 'Eraser', gallery: 'Gallery', yourTurn: n => `${n}, your turn!`, ok: 'OK', send: 'Send ▶', guessOut: 'Guess out loud!' },
+  es: { pass: n => `Pásale el aparato a ${n}`, noPeek: '¡Los demás no miren! 🙈', show: 'Ver mi palabra', start: 'Empezar a dibujar ▶', skip: 'Otra palabra', drawThis: 'Dibuja esto:', drawer: n => `🎨 ${n} está dibujando — ¡griten sus respuestas!`, guessed: '✓ ¡Alguien adivinó!', who: '¿Quién adivinó?', timeUp: '¡Se acabó el tiempo!', wordWas: 'La palabra era', nobody: 'Esta vez nadie adivinó.', next: 'Siguiente ▶', peek: '👁 Ver', done: 'Listo ✓', sketch: n => `Boceto ${n}`, saved: '¡Guardado en la pared de la galería!', desc: n => `${n}: describe este dibujo en pocas palabras`, descPh: 'Parece…', drawDesc: n => `${n}: ¡dibuja esta descripción!`, story: 'Empezó como…', said: n => `${n} dijo:`, drew: n => `${n} dibujó:`, ended: 'Y terminó como…', points: 'puntos', undo: 'Deshacer', clear: 'Borrar todo', eraser: 'Borrador', gallery: 'Galería', yourTurn: n => `¡${n}, te toca!`, ok: 'OK', send: 'Enviar ▶', guessOut: '¡Adivinen en voz alta!' }
+};
+const PAL = ['#1b2430', '#ffffff', '#e2443a', '#ff8a2a', '#ffd166', '#2fbf8a', '#1f7a4a', '#4fb3ff', '#2f5fd0', '#8c6cff', '#ff7bc0', '#8a5a36'];
+const PCOL = ['#ff6b6b', '#4fb3ff', '#ffd166', '#2fd18a', '#c9b8ff', '#ff9a3c', '#ff7bc0', '#9fe3cf'];
+const SIZES = [.006, .013, .028];
+const GAL_KEY = 'inoa.draw.gallery', GAL_MAX = 12;
+const PAPER = '#fffdf7';
+
+/* ======================= engine ======================= */
+const ld = E.loading('Draw the Pact', 'Sharpening the pencils…');
+const R = E.createRenderer($('gl'), { fov: 50, portraitFov: 68, shadowSize: 10, far: 120 });
+const { scene, camera, sun, hemi } = R;
+await E.loadPack('../packs/draw.json', R, p => ld.set(p));
+R.setLook({ background: 0x3a2b24, fog: 0x3a2b24, fogNear: 30, fogFar: 60, sun: 2.0, sunColor: 0xffcf9a, hemi: .55, skyHor: 0xffe2c4, ground: 0x6b4a32, exposure: .92, env: .3, bloom: .14, bloomThreshold: .9 });
+R.setEnv(E.ASSETS.hdri.interior);
+sun.position.set(-12, 7, -1); sun.target.position.set(0, 0, -1); sun.target.updateMatrixWorld(); sun.shadow.camera.far = 40;
+const S = Object.assign({ lang: L0, mode: 'party', players: 4, rounds: 1, diff: 0, sketchSec: 30, names: ['Ana', 'Leo', 'Mia', 'Rafa', 'Luz', 'Teo', 'Sol', 'Gabi'] }, E.store.get('inoa.draw', {}));
+const save = () => E.store.set('inoa.draw', S);
+const T = () => STR[S.lang];
+let G = null, music = null, hudEl = null;
+
+/* ======================= studio ======================= */
+const room = new THREE.Group(); scene.add(room);
+const wallM = E.pbr('paint', 0xefe2cc, [4, 2], { bump: 1.5 }), woodFloor = E.pbr('wood', 0xb98557, [6, 6], { bump: 3 }), trimM = E.pbr('wood', 0x7a5232, [4, 1]);
+{ const fl = new THREE.Mesh(new THREE.PlaneGeometry(12, 11), woodFloor); fl.rotation.x = -Math.PI / 2; fl.receiveShadow = true; room.add(fl);
+  const back = new THREE.Mesh(new THREE.PlaneGeometry(12, 5), wallM); back.position.set(0, 2.5, -5); back.receiveShadow = true; room.add(back);
+  const right = new THREE.Mesh(new THREE.PlaneGeometry(11, 5), wallM); right.position.set(6, 2.5, .5); right.rotation.y = -Math.PI / 2; right.receiveShadow = true; room.add(right);
+  // left wall with a big window opening
+  const lw = new THREE.Group(); const parts = [[11, 1.1, .55, .5], [11, 1.1, 4.45, .5], [3.0, 2.8, 2.5, -3.5], [3.6, 2.8, 2.5, 3.2]]; for (const [w, h, y, z] of parts) { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), wallM); m.position.set(0, y, z); lw.add(m); }
+  lw.position.set(-6, 0, 0); lw.rotation.y = Math.PI / 2; room.add(lw); lw.children.forEach(m => m.receiveShadow = true);
+  const winFrameM = E.pbr('wood', 0xf4efe6, [1, 1]); const win = new THREE.Group(); for (const [w, h, y, z] of [[4.6, .12, 1.1, 0], [4.6, .12, 3.9, 0], [.12, 2.9, 2.5, -2.3], [.12, 2.9, 2.5, 2.3], [.08, 2.8, 2.5, 0], [4.5, .08, 2.5, 0]]) { const b = new THREE.Mesh(new THREE.BoxGeometry(.14, h, w > .2 ? w : .14), winFrameM); b.position.set(0, y, z); b.castShadow = true; win.add(b); }
+  const skyC = document.createElement('canvas'); skyC.width = 64; skyC.height = 256; const sg = skyC.getContext('2d'); const gr = sg.createLinearGradient(0, 0, 0, 256); gr.addColorStop(0, '#6f8fd8'); gr.addColorStop(.55, '#ffc89a'); gr.addColorStop(.85, '#ff9a6a'); gr.addColorStop(1, '#7a8a5a'); sg.fillStyle = gr; sg.fillRect(0, 0, 64, 256); const skyT = new THREE.CanvasTexture(skyC); skyT.colorSpace = THREE.SRGBColorSpace;
+  const sky = new THREE.Mesh(new THREE.PlaneGeometry(6, 4), new THREE.MeshBasicMaterial({ map: skyT, toneMapped: false })); sky.position.set(-1.2, 2.5, 0); sky.rotation.y = Math.PI / 2; win.add(sky);
+  win.position.set(-6, 0, -.1); room.add(win);
+  for (const [x, z, ry, len] of [[0, -4.97, 0, 12], [5.97, .5, -Math.PI / 2, 11]]) { const sk = new THREE.Mesh(new THREE.BoxGeometry(len, .18, .04), trimM); sk.position.set(x, .09, z); sk.rotation.y = ry; room.add(sk); const rail = new THREE.Mesh(new THREE.BoxGeometry(len, .06, .05), trimM); rail.position.set(x, 1.0, z); rail.rotation.y = ry; room.add(rail); }
+  const ceil = new THREE.Mesh(new THREE.PlaneGeometry(12, 11), E.pbr('paint', 0xf6eee0, [2, 2])); ceil.rotation.x = Math.PI / 2; ceil.position.y = 5; room.add(ceil);
+  for (let i = -2; i <= 2; i++) { const beam = new THREE.Mesh(new THREE.BoxGeometry(.25, .3, 11), trimM); beam.position.set(i * 2.6, 4.85, .5); room.add(beam); }
+  const rug = new THREE.Mesh(new THREE.CircleGeometry(2.4, 48), E.pbr('fabric', 0xc8503f, [3, 3])); rug.rotation.x = -Math.PI / 2; rug.position.set(-.4, .01, -1.2); rug.receiveShadow = true; room.add(rug);
+  const rug2 = new THREE.Mesh(new THREE.RingGeometry(1.9, 2.1, 48), new THREE.MeshStandardMaterial({ color: 0xffd166, roughness: 1 })); rug2.rotation.x = -Math.PI / 2; rug2.position.set(-.4, .015, -1.2); room.add(rug2);
+}
+// easel with the live drawing
+const padCanvas = $('pad'); const padCtx = padCanvas.getContext('2d');
+const easelTex = new THREE.CanvasTexture(padCanvas); easelTex.colorSpace = THREE.SRGBColorSpace; easelTex.anisotropy = 4;
+const easel = new THREE.Group(); {
+  const wm = E.pbr('wood', 0xc58a52, [1, 3], { bump: 2 });
+  const legGeo = new THREE.BoxGeometry(.08, 2.7, .06);
+  for (const sd of [-1, 1]) { const l = new THREE.Mesh(legGeo, wm); l.position.set(sd * .62, 1.3, 0); l.rotation.z = sd * .12; l.castShadow = true; easel.add(l); }
+  const back = new THREE.Mesh(legGeo, wm); back.position.set(0, 1.25, -.55); back.rotation.x = -.38; back.castShadow = true; easel.add(back);
+  const ledge = new THREE.Mesh(new THREE.BoxGeometry(1.7, .07, .16), wm); ledge.position.set(0, .98, .08); ledge.castShadow = true; easel.add(ledge);
+  const topbar = new THREE.Mesh(new THREE.BoxGeometry(.5, .06, .1), wm); topbar.position.set(0, 2.35, .02); easel.add(topbar);
+  const board = new THREE.Mesh(new THREE.BoxGeometry(1.66, 1.26, .05), E.pbr('wood', 0xe9dcc5, [1, 1])); board.position.set(0, 1.66, .05); board.castShadow = true; easel.add(board);
+  const art = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.2), new THREE.MeshStandardMaterial({ map: easelTex, roughness: .9 })); art.position.set(0, 1.66, .081); easel.add(art);
+  easel.position.set(-.5, 0, -1.6); easel.rotation.y = .18; easel.traverse(o => { if (o.isMesh) o.receiveShadow = true; }); room.add(easel); easel.userData.art = art;
+}
+// work table with paint jars and brushes
+{
+  const tw = new THREE.Group(); const top = new THREE.Mesh(new THREE.BoxGeometry(2.0, .08, 1.0), E.pbr('wood', 0x9b6a42, [2, 1], { bump: 3 })); top.position.y = .9; top.castShadow = top.receiveShadow = true; tw.add(top);
+  for (const [x, z] of [[-.9, -.42], [.9, -.42], [-.9, .42], [.9, .42]]) { const l = new THREE.Mesh(new THREE.BoxGeometry(.07, .9, .07), E.pbr('wood', 0x6b4428, [1, 1])); l.position.set(x, .45, z); l.castShadow = true; tw.add(l); }
+  const glassM = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: .32, roughness: .05, metalness: .1, depthWrite: false });
+  [0xe2443a, 0xffd166, 0x2f7fd0, 0x2fbf8a, 0x8c6cff, 0xff7bc0].forEach((c, i) => { const x = -.75 + (i % 3) * .26, z = -.25 + Math.floor(i / 3) * .24; const jar = new THREE.Mesh(new THREE.CylinderGeometry(.09, .085, .2, 18, 1, true), glassM); jar.position.set(x, 1.04, z); tw.add(jar); const paint = new THREE.Mesh(new THREE.CylinderGeometry(.082, .08, .12, 18), new THREE.MeshStandardMaterial({ color: c, roughness: .25 })); paint.position.set(x, .999, z); tw.add(paint); const lid = new THREE.Mesh(new THREE.CylinderGeometry(.095, .095, .035, 18), E.pbr('metal', 0xc9ced6, [1, 1])); lid.position.set(x + (i % 2 ? .12 : 0), (i % 2 ? .955 : 1.155), z + (i % 2 ? .12 : 0)); if (i % 2) lid.rotation.x = Math.PI / 2 * 0; tw.add(lid); });
+  const cup = E.instance('cup', { scale: .2 }); cup.position.set(.3, .94, -.2); tw.add(cup); for (let k = 0; k < 4; k++) { const br = new THREE.Group(); const h = new THREE.Mesh(new THREE.CylinderGeometry(.012, .016, .34, 6), E.mat([0xd9a35a, 0x2f7fd0, 0xe2443a, 0x1b2430][k])); h.position.y = .17; br.add(h); const tip = new THREE.Mesh(new THREE.ConeGeometry(.02, .07, 8), E.mat([0xffd166, 0xff7bc0, 0x4fb3ff, 0x2fbf8a][k])); tip.position.y = .37; br.add(tip); br.position.set(.3 + (k - 1.5) * .02, .96, -.2 + (k % 2 - .5) * .03); br.rotation.set((k - 1.5) * .15, 0, (k % 2 - .5) * .3); tw.add(br); }
+  const mug = E.instance('mug', { scale: .2 }); mug.position.set(.72, .94, .18); tw.add(mug); const bot = E.instance('bottle', { scale: .34 }); bot.position.set(.75, .94, -.25); tw.add(bot);
+  const bunny = E.instance('bunny', { scale: .36, outline: false }); bunny.traverse(o => { if (o.isMesh) o.material = new THREE.MeshStandardMaterial({ color: 0xf2ece2, roughness: .7 }); }); bunny.position.set(-.1, .94, .2); bunny.rotation.y = .6; tw.add(bunny);
+  // palette board
+  const pal = new THREE.Mesh(new THREE.CylinderGeometry(.22, .22, .02, 24), E.pbr('wood', 0xd9b68a, [1, 1])); pal.scale.set(1.3, 1, 1); pal.position.set(-.35, .95, .25); tw.add(pal); PAL.slice(2, 8).forEach((c, i) => { const dab = new THREE.Mesh(new THREE.SphereGeometry(.035, 10, 6), new THREE.MeshStandardMaterial({ color: c, roughness: .3 })); const a = i / 6 * Math.PI * 1.6 - .6; dab.scale.y = .35; dab.position.set(-.35 + Math.cos(a) * .2, .965, .25 + Math.sin(a) * .13); tw.add(dab); });
+  tw.position.set(2.5, 0, -3.6); tw.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); room.add(tw);
+}
+// lamps
+const lampLights = [];
+function floorLamp(x, z) { const g = new THREE.Group(); const M = E.pbr('metal', 0x2b2f38, [1, 2]); const base = new THREE.Mesh(new THREE.CylinderGeometry(.25, .3, .05, 20), M); base.position.y = .025; g.add(base); const pole = new THREE.Mesh(new THREE.CylinderGeometry(.025, .025, 1.9, 8), M); pole.position.y = .95; g.add(pole); const shade = new THREE.Mesh(new THREE.CylinderGeometry(.2, .36, .38, 24, 1, true), new THREE.MeshStandardMaterial({ color: 0xf6e6c8, emissive: 0xffb866, emissiveIntensity: .55, side: THREE.DoubleSide, roughness: .9 })); shade.position.y = 1.95; g.add(shade); const bulb = new THREE.Mesh(new THREE.SphereGeometry(.07, 12, 8), new THREE.MeshStandardMaterial({ color: 0xfff2c8, emissive: 0xffd08a, emissiveIntensity: 3 })); bulb.position.y = 1.86; g.add(bulb); const pl = new THREE.PointLight(0xffb870, 7, 7, 1.6); pl.position.y = 1.8; g.add(pl); lampLights.push(pl); g.traverse(o => { if (o.isMesh) o.castShadow = true; }); g.position.set(x, 0, z); room.add(g); }
+floorLamp(-3.4, -4.0); floorLamp(4.9, 2.6);
+{ const desk = new THREE.Group(); const shade = new THREE.Mesh(new THREE.ConeGeometry(.16, .18, 20, 1, true), new THREE.MeshStandardMaterial({ color: 0x2f7fd0, roughness: .4, side: THREE.DoubleSide })); shade.position.set(0, .42, .1); shade.rotation.x = .5; desk.add(shade); const arm = new THREE.Mesh(new THREE.CylinderGeometry(.015, .015, .45, 6), E.pbr('metal', 0x2b2f38, [1, 1])); arm.position.y = .22; desk.add(arm); const pl = new THREE.PointLight(0xfff0d8, 2.5, 3, 2); pl.position.set(0, .34, .2); desk.add(pl); desk.position.set(1.85, .94, -3.75); room.add(desk); }
+// bench with pillows, plants, guitar, sculpture on plinth
+{ const bench = new THREE.Group(); const seat = new THREE.Mesh(new THREE.BoxGeometry(.7, .14, 2.2), E.pbr('wood', 0x8a5a36, [1, 2])); seat.position.y = .45; bench.add(seat); for (const z of [-.95, .95]) { const l = new THREE.Mesh(new THREE.BoxGeometry(.6, .45, .1), E.pbr('wood', 0x6b4428, [1, 1])); l.position.set(0, .22, z); bench.add(l); } const cush = new THREE.Mesh(new THREE.BoxGeometry(.66, .12, 2.1), E.pbr('fabric', 0x2f7f8a, [2, 4])); cush.position.y = .58; bench.add(cush); bench.traverse(o => { if (o.isMesh) { o.castShadow = o.receiveShadow = true; } }); bench.position.set(-5.4, 0, 2.6); room.add(bench); for (const [z, ry] of [[1.9, .3], [3.1, -.4]]) { const pw = E.instance('pillow', { scale: .55 }); pw.position.set(-5.5, .62, z); pw.rotation.set(-.2, ry, .9); room.add(pw); } }
+for (const [x, z, s] of [[5.3, -4.4, 1.5], [-5.3, -4.4, 1.8], [-5.2, .9, 1.1], [3.9, 4.6, 1.3]]) { const pl = E.instance('plant', { scale: s }); pl.position.set(x, 0, z); room.add(pl); }
+{ const gt = E.instance('guitar', { scale: 1.15 }); gt.position.set(.9, 0, -4.75); gt.rotation.set(-.18, 0, 0); room.add(gt); }
+{ const plinth = new THREE.Mesh(new THREE.BoxGeometry(.5, 1.0, .5), E.pbr('paint', 0xf4efe6, [1, 1])); plinth.position.set(4.6, .5, -2.6); plinth.castShadow = plinth.receiveShadow = true; room.add(plinth); const lucy = E.instance('lucy', { scale: .9, outline: false }); lucy.traverse(o => { if (o.isMesh) o.material = new THREE.MeshStandardMaterial({ color: 0xf2ece2, roughness: .65 }); }); lucy.position.set(4.6, 1.0, -2.6); lucy.rotation.y = -.9; room.add(lucy); }
+{ const st = new THREE.Group(); const stoolM = E.pbr('wood', 0xa8743f, [1, 1]); const seat = new THREE.Mesh(new THREE.CylinderGeometry(.24, .24, .06, 20), stoolM); seat.position.y = .72; st.add(seat); for (let k = 0; k < 3; k++) { const l = new THREE.Mesh(new THREE.CylinderGeometry(.025, .03, .74, 6), stoolM); const a = k / 3 * Math.PI * 2; l.position.set(Math.cos(a) * .15, .36, Math.sin(a) * .15); l.rotation.set(Math.sin(a) * .15, 0, -Math.cos(a) * .15); st.add(l); } st.traverse(o => { if (o.isMesh) o.castShadow = true; }); st.position.set(.2, 0, -.6); room.add(st); const fr = E.instance('frappe', { scale: .24 }); fr.position.set(.25, .75, -.6); room.add(fr); }
+// gallery wall frames (right wall)
+const frames = []; const emptyTex = (() => { const c = document.createElement('canvas'); c.width = 128; c.height = 96; const g = c.getContext('2d'); g.fillStyle = '#f2e8d8'; g.fillRect(0, 0, 128, 96); g.strokeStyle = 'rgba(122,82,50,.35)'; g.lineWidth = 3; g.setLineDash([8, 6]); g.strokeRect(10, 10, 108, 76); g.fillStyle = 'rgba(122,82,50,.4)'; g.font = '800 40px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('+', 64, 50); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; })();
+{ const fm = [E.pbr('wood', 0x3b2a1e, [1, 1]), E.pbr('wood', 0xc58a52, [1, 1]), E.pbr('paint', 0x1b2430, [1, 1]), E.pbr('metal', 0xd9b066, [1, 1])];
+  for (let i = 0; i < GAL_MAX; i++) { const c = i % 4, r = Math.floor(i / 4); const g = new THREE.Group(); const fw = .92, fh = .72; const frame = new THREE.Mesh(new THREE.BoxGeometry(fw + .12, fh + .12, .06), fm[(i * 3) % 4]); frame.castShadow = true; g.add(frame); const mat = new THREE.Mesh(new THREE.PlaneGeometry(fw, fh), new THREE.MeshStandardMaterial({ map: emptyTex, roughness: .85 })); mat.position.z = .032; g.add(mat); g.position.set(5.93, 3.25 - r * 1.0, -3.4 + c * 1.2 + (r % 2) * .15); g.rotation.y = -Math.PI / 2; g.rotation.z = (hash(i, 3) - .5) * .05; room.add(g); frames.push({ g, mat }); }
+  const sign = E.tag('🖼️', 'GALLERY', { width: 2.2, bg: '#ffd166' }); sign.position.set(5.85, 4.1, -1.6); room.add(sign); }
+function loadGallery() { const list = E.store.get(GAL_KEY, []); frames.forEach((f, i) => { const it = list[i]; if (f.mat.material.map && f.mat.material.map !== emptyTex) f.mat.material.map.dispose(); if (!it) { f.mat.material.map = emptyTex; f.mat.material.needsUpdate = true; return; } const img = new Image(); img.onload = () => { const t = new THREE.Texture(img); t.colorSpace = THREE.SRGBColorSpace; t.needsUpdate = true; f.mat.material.map = t; f.mat.material.needsUpdate = true; }; img.src = it.img; }); return list; }
+function saveToGallery(word) { const c = document.createElement('canvas'); c.width = 320; c.height = 240; const g = c.getContext('2d'); g.fillStyle = PAPER; g.fillRect(0, 0, 320, 240); g.drawImage(padCanvas, 0, 0, 320, 240); let url = ''; try { url = c.toDataURL('image/jpeg', .62); } catch (e) { return; } const list = E.store.get(GAL_KEY, []); list.unshift({ img: url, word, t: Date.now() }); while (list.length > GAL_MAX) list.pop(); E.store.set(GAL_KEY, list); if (E.store.get(GAL_KEY, []).length === 0 && list.length) { list.length = Math.max(1, Math.floor(list.length / 2)); E.store.set(GAL_KEY, list); } loadGallery(); }
+
+/* ======================= drawing surface ======================= */
+const D = { strokes: [], cur: null, color: PAL[0], size: 1, eraser: false, enabled: false, ink: 0, dirty: false };
+function clearPad() { padCtx.fillStyle = PAPER; padCtx.fillRect(0, 0, 1024, 768); easelTex.needsUpdate = true; }
+function strokeWidth(s, pr) { return SIZES[s.s] * 1024 * (s.pen ? .35 + pr * 1.1 : 1); }
+function drawStroke(s, from = 0) {
+  const g = padCtx, P = s.p, W = 1024, H = 768; g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = s.e ? PAPER : s.c; g.fillStyle = g.strokeStyle;
+  if (P.length === 1) { g.beginPath(); g.arc(P[0][0] * W, P[0][1] * H, strokeWidth(s, P[0][2]) / 2, 0, 7); g.fill(); return; }
+  // quadratic smoothing through midpoints; drawn segment by segment so pen pressure can vary the width
+  for (let i = Math.max(1, from); i < P.length; i++) {
+    const a = P[i - 1], b = P[i]; const m0 = i === 1 ? a : [(P[i - 2][0] + a[0]) / 2, (P[i - 2][1] + a[1]) / 2]; const m1 = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+    g.lineWidth = strokeWidth(s, (a[2] + b[2]) / 2); g.beginPath(); g.moveTo(m0[0] * W, m0[1] * H); g.quadraticCurveTo(a[0] * W, a[1] * H, m1[0] * W, m1[1] * H); if (i === P.length - 1 && s.done) g.lineTo(b[0] * W, b[1] * H); g.stroke();
+  }
+}
+function redraw() { clearPad(); let start = 0; D.strokes.forEach((s, i) => { if (s.clear) start = i + 1; }); for (let i = start; i < D.strokes.length; i++) drawStroke(D.strokes[i]); D.dirty = true; }
+function resetPad() { D.strokes = []; D.cur = null; D.ink = 0; clearPad(); }
+function padPoint(e) { const r = padCanvas.getBoundingClientRect(); return [clamp((e.clientX - r.left) / r.width, 0, 1), clamp((e.clientY - r.top) / r.height, 0, 1), e.pointerType === 'pen' && e.pressure > 0 ? e.pressure : .5]; }
+function beginStroke(pt, pen) { D.cur = { c: D.color, s: D.size, e: D.eraser, pen: !!pen, p: [pt] }; D.strokes.push(D.cur); drawStroke(D.cur); scratch(true); }
+function extendStroke(pt) { const s = D.cur; if (!s) return; const last = s.p[s.p.length - 1]; const d = Math.hypot(pt[0] - last[0], pt[1] - last[1]); if (d < .002) return; s.p.push(pt); D.ink += d; drawStroke(s, s.p.length - 1); scratchSpeed(d); D.dirty = true; }
+function endStroke() { if (!D.cur) return; D.cur.done = true; const P = D.cur.p; if (P.length > 1) { const g = padCtx, a = P[P.length - 2], b = P[P.length - 1]; g.lineWidth = strokeWidth(D.cur, b[2]); g.strokeStyle = D.cur.e ? PAPER : D.cur.c; g.beginPath(); g.moveTo((a[0] + b[0]) / 2 * 1024, (a[1] + b[1]) / 2 * 768); g.lineTo(b[0] * 1024, b[1] * 768); g.stroke(); } D.cur = null; scratch(false); D.dirty = true; }
+let activePointer = null;
+padCanvas.addEventListener('pointerdown', e => { if (!D.enabled) return; e.preventDefault(); E.audio(); activePointer = e.pointerId; padCanvas.setPointerCapture(e.pointerId); beginStroke(padPoint(e), e.pointerType === 'pen'); });
+padCanvas.addEventListener('pointermove', e => { if (e.pointerId !== activePointer || !D.cur) return; const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e]; for (const ev of (evs.length ? evs : [e])) extendStroke(padPoint(ev)); });
+const up = e => { if (e.pointerId !== activePointer) return; activePointer = null; endStroke(); };
+padCanvas.addEventListener('pointerup', up); padCanvas.addEventListener('pointercancel', up);
+function undo() { if (!D.strokes.length) return; D.strokes.pop(); redraw(); SFX.pop(); }
+function clearAll() { if (!D.strokes.length) return; D.strokes.push({ clear: true }); redraw(); E.noise(.3, .08, 1200, .6); }
+// pencil scratch: looping filtered noise whose loudness follows stroke speed
+let scr = null;
+function scratch(on) { const ac = E.audio(); if (!ac || !E.profile().sound) return; if (!scr) { const len = ac.sampleRate; const buf = ac.createBuffer(1, len, ac.sampleRate); const ch = buf.getChannelData(0); for (let i = 0; i < len; i++) ch[i] = (Math.random() * 2 - 1) * (.6 + .4 * Math.sin(i / 37)); const src = ac.createBufferSource(); src.buffer = buf; src.loop = true; const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 3800; bp.Q.value = .9; const hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 1400; const gn = ac.createGain(); gn.gain.value = 0; src.connect(bp); bp.connect(hp); hp.connect(gn); gn.connect(ac.destination); src.start(); scr = { gn, bp, ac }; } if (!on) scr.gn.gain.setTargetAtTime(0, scr.ac.currentTime, .03); }
+function scratchSpeed(d) { if (!scr || !E.profile().sound) return; const v = clamp(d * 60, 0, 1); scr.gn.gain.setTargetAtTime(D.eraser ? v * .05 : .015 + v * .09, scr.ac.currentTime, .02); scr.bp.frequency.setTargetAtTime(3000 + v * 2500 + (SIZES[D.size] > .02 ? -1200 : 0), scr.ac.currentTime, .05); }
+
+/* ---------- tools UI ---------- */
+function tools(actions) {
+  const el = $('dwTools');
+  el.innerHTML = `<div class="dw-pal">${PAL.map((c, i) => `<button data-c="${c}" style="background:${c}" class="${!D.eraser && D.color === c ? 'on' : ''}" aria-label="Color ${i + 1}"></button>`).join('')}</div>
+  <div class="dw-row dw-size">${SIZES.map((s, i) => `<button data-s="${i}" class="${D.size === i ? 'on' : ''}" aria-label="Brush ${i + 1}"><i style="width:${6 + i * 7}px;height:${6 + i * 7}px"></i></button>`).join('')}</div>
+  <div class="dw-row"><button data-t="eraser" class="${D.eraser ? 'on' : ''}" title="${T().eraser}" aria-label="${T().eraser}">🧽</button><button data-t="undo" title="${T().undo}" aria-label="${T().undo}">↶</button><button data-t="clear" title="${T().clear}" aria-label="${T().clear}">🗑</button></div>
+  <div class="dw-act">${actions.map(a => `<button data-a="${a.id}" class="${a.cls || ''}">${a.label}</button>`).join('')}</div>`;
+  el.querySelectorAll('.dw-pal button').forEach(b => b.onclick = () => { D.color = b.dataset.c; D.eraser = false; tools(actions); SFX.click(); });
+  el.querySelectorAll('.dw-size button').forEach(b => b.onclick = () => { D.size = +b.dataset.s; tools(actions); SFX.click(); });
+  el.querySelector('[data-t=eraser]').onclick = () => { D.eraser = !D.eraser; tools(actions); SFX.click(); };
+  el.querySelector('[data-t=undo]').onclick = undo; el.querySelector('[data-t=clear]').onclick = clearAll;
+  actions.forEach(a => { const b = el.querySelector(`[data-a="${a.id}"]`); if (a.hold) { b.addEventListener('pointerdown', e => { e.preventDefault(); a.hold(true); }); ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => b.addEventListener(ev, () => a.hold(false))); } else b.onclick = a.fn; });
+}
+function fitPaper() { const st = $('dwStage'); const r = st.getBoundingClientRect(); const portrait = innerHeight > innerWidth; let w = r.width, h = w * .75; if (!portrait && h > r.height) { h = r.height; w = h / .75; } if (portrait) { const maxH = innerHeight * .5; if (h > maxH) { h = maxH; w = h / .75; } } $('dwPaper').style.width = Math.floor(w) + 'px'; $('dwPaper').style.height = Math.floor(h) + 'px'; }
+addEventListener('resize', () => { if (!$('dw').hidden) fitPaper(); });
+function openPad(prompt, sec, actions) { $('dw').hidden = false; D.enabled = true; $('dwPrompt').innerHTML = prompt; tools(actions); G.timer = sec ? { left: sec, max: sec } : null; $('dwTime').style.display = sec ? '' : 'none'; requestAnimationFrame(fitPaper); fitPaper(); showPad(false); }
+function closePad() { $('dw').hidden = true; D.enabled = false; endStroke(); scratch(false); }
+
+/* ======================= camera ======================= */
+const VIEWS = { room: [new THREE.Vector3(2.6, 2.5, 5.6), new THREE.Vector3(-.4, 1.5, -2.2)], easel: [new THREE.Vector3(.1, 1.75, 1.35), new THREE.Vector3(-.5, 1.62, -1.6)], draw: [new THREE.Vector3(1.4, 2.2, 3.6), new THREE.Vector3(-.3, 1.5, -1.8)], gallery: [new THREE.Vector3(.4, 2.3, -.4), new THREE.Vector3(6, 2.2, -1.6)] };
+const cam = { pos: VIEWS.room[0].clone(), look: VIEWS.room[1].clone(), view: 'room' };
+function camView(v) { cam.view = v; }
+function updateCamera(dt) { const [p, l] = VIEWS[cam.view]; const portrait = innerHeight > innerWidth; const pp = p.clone(); if (portrait) { if (cam.view === 'room') pp.set(2.0, 2.8, 7.4); if (cam.view === 'easel') pp.set(-.1, 1.7, 2.1); if (cam.view === 'gallery') pp.set(-1.2, 2.4, -.5); } cam.pos.lerp(pp, 1 - Math.pow(.08, dt)); cam.look.lerp(l, 1 - Math.pow(.05, dt)); const t = performance.now() / 1000; camera.position.copy(cam.pos).add(new THREE.Vector3(Math.sin(t * .2) * .08, Math.sin(t * .27) * .04, 0)); camera.lookAt(cam.look); }
+
+/* ======================= game flow ======================= */
+function later(sec, fn) { G.sched.push({ t: G.time + sec, fn }); }
+function runSched() { const due = G.sched.filter(e => e.t <= G.time); if (!due.length) return; G.sched = G.sched.filter(e => e.t > G.time); due.forEach(e => e.fn()); }
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function wordPool() { return WORDS.filter(w => S.diff === 0 || w.d === S.diff); }
+function drawWord(exclude = []) { const pool = wordPool().filter(w => !exclude.includes(w)); return pick(pool.length ? pool : WORDS); }
+const wtxt = w => S.lang === 'es' ? w.es : w.en;
+function card(html, cls = '') { const d = document.createElement('div'); d.className = 'ig-screen ' + cls; d.innerHTML = `<div class="ig-card">${html}</div>`; document.body.appendChild(d); G && (G.cards = G.cards || []).push(d); return d; }
+function killCards() { document.querySelectorAll('.ig-screen:not(.ig-title):not(.ig-results), .dw-slide').forEach(d => d.remove()); }
+function start(opts = {}) {
+  Object.assign(S, opts); save(); killCards();
+  G = { mode: S.mode, time: 0, sched: [], timer: null, paused: false, cards: [], used: [] };
+  ensureHud(); resetPad(); loadGallery();
+  if (music) music.stop(); music = E.music(E.SONGS.chill);
+  if (S.mode === 'party') partyStart(); else if (S.mode === 'sketch') sketchStart(); else phoneStart();
+}
+
+/* ---------- (a) party pass-and-play ---------- */
+function partyStart() { const n = clamp(S.players, 2, 8); G.players = S.names.slice(0, n).map((nm, i) => ({ name: nm || `P${i + 1}`, score: 0, i })); G.turn = 0; G.turns = n * clamp(S.rounds, 1, 3); partyPass(); }
+function partyPass() {
+  if (G.turn >= G.turns) { partyEnd(); return; }
+  const dr = G.players[G.turn % G.players.length]; G.drawer = dr; G.word = drawWord(G.used); G.used.push(G.word); G.skipped = false; camView('room'); resetPad(); hud();
+  const c = card(`<div class="ig-kicker">${S.lang === 'es' ? 'Turno' : 'Turn'} ${G.turn + 1}/${G.turns}</div><h2 style="color:${PCOL[dr.i]}">${esc(T().pass(dr.name))}</h2><p class="ig-sub">${T().noPeek}</p><button class="ig-btn" data-a="show">🔒 ${T().show}</button>`);
+  E.say(T().pass(dr.name), { lang: S.lang });
+  c.querySelector('[data-a=show]').onclick = () => { c.remove(); partyPeek(); };
+}
+function partyPeek() {
+  const c = card(`<div class="ig-kicker">${T().drawThis}</div><div class="dw-word">${esc(wtxt(G.word))}<small>${'★'.repeat(G.word.d)}${S.lang === 'es' ? '' : ''}</small></div><div class="ig-row"><button class="ig-btn ghost" data-a="skip" ${G.skipped ? 'disabled' : ''}>🔁 ${T().skip}</button><button class="ig-btn" data-a="go">${T().start}</button></div>`);
+  c.querySelector('[data-a=skip]').onclick = () => { if (G.skipped) return; G.skipped = true; G.word = drawWord(G.used); G.used.push(G.word); c.remove(); partyPeek(); SFX.pop(); };
+  c.querySelector('[data-a=go]').onclick = () => { c.remove(); partyDraw(); };
+  G.peekCard = c;
+}
+function partyDraw() {
+  G.phase = 'draw'; camView('draw'); resetPad();
+  openPad(`<span>${esc(T().drawer(G.drawer.name))}</span>`, 60, [{ id: 'peek', label: T().peek, cls: 'dw-peek', hold: on => { $('dwPrompt').innerHTML = on ? `<b>${esc(wtxt(G.word))}</b>` : `<span>${esc(T().drawer(G.drawer.name))}</span>`; } }, { id: 'got', label: T().guessed, cls: 'go', fn: partyWho }]);
+  big('🎨 ' + T().guessOut); E.say(T().guessOut, { lang: S.lang }); SFX.good();
+}
+function partyWho() {
+  if (G.phase !== 'draw') return; G.phase = 'who'; G.timer && (G.timer.frozen = true);
+  const others = G.players.filter(p => p !== G.drawer);
+  const c = card(`<h2>${T().who}</h2><div class="dw-chips">${others.map(p => `<button data-i="${p.i}" style="--c:${PCOL[p.i]}">${esc(p.name)}</button>`).join('')}</div><button class="ig-btn ghost" data-a="back">↩</button>`);
+  c.querySelectorAll('.dw-chips button').forEach(b => b.onclick = () => { c.remove(); partyScore(G.players[+b.dataset.i]); });
+  c.querySelector('[data-a=back]').onclick = () => { c.remove(); G.phase = 'draw'; G.timer && (G.timer.frozen = false); };
+}
+function partyScore(guesser) {
+  const left = G.timer ? G.timer.left : 0; const gp = left >= 40 ? 3 : left >= 20 ? 2 : 1; guesser.score += gp; G.drawer.score += 2; partyReveal(guesser, gp);
+}
+function partyReveal(guesser, gp) {
+  G.phase = 'reveal'; G.timer = null; closePad(); camView('easel'); D.dirty = true; hud();
+  if (guesser) { SFX.win(); confettiBurst(); } else SFX.lose();
+  const w = wtxt(G.word); E.say(`${T().wordWas} ${w}`, { lang: S.lang });
+  later(1.1, () => { const c = card(`<div class="ig-kicker">${guesser ? '🎉' : '⏰ ' + T().timeUp}</div><div class="dw-word">${esc(w)}</div>${guesser ? `<p class="ig-sub" style="text-align:center"><b style="color:${PCOL[guesser.i]}">${esc(guesser.name)}</b> +${gp} · <b style="color:${PCOL[G.drawer.i]}">${esc(G.drawer.name)}</b> +2</p>` : `<p class="ig-sub" style="text-align:center">${T().nobody}</p>`}${board()}<button class="ig-btn" data-a="next">${T().next}</button>`);
+    c.querySelector('[data-a=next]').onclick = () => { c.remove(); G.turn++; partyPass(); }; G.revealCard = c; });
+}
+function board() { const rows = [...G.players].sort((a, b) => b.score - a.score); return `<div class="dw-board">${rows.map((p, k) => `<div><b>${k + 1}</b><span style="border-left:6px solid ${PCOL[p.i]};padding-left:8px">${esc(p.name)}</span><b>${p.score}</b></div>`).join('')}</div>`; }
+function partyEnd() {
+  G.phase = 'end'; camView('room'); music && music.stop(); const rows = [...G.players].sort((a, b) => b.score - a.score); const tie = rows.length > 1 && rows[0].score === rows[1].score; SFX.win(); confettiBurst();
+  E.results({ gameId: 'draw', title: tie ? (S.lang === 'es' ? '¡Empate!' : 'It’s a tie!') : (S.lang === 'es' ? `¡Gana ${rows[0].name}!` : `${rows[0].name} wins!`), stats: rows.map((p, k) => [`${k + 1}. ${p.name}`, p.score]), xp: 40 + G.turns * 8, coins: 10 + G.turns * 2, onAgain: () => title(), share: `${rows[0].name} won our Draw the Pact party with ${rows[0].score} points! (Inoa Games) ${location.href}` });
+}
+
+/* ---------- (b) solo speed sketch ---------- */
+function sketchStart() { G.n = 5; G.k = 0; G.done = []; G.inkTotal = 0; sketchNext(); }
+function sketchNext() {
+  if (G.k >= G.n) { sketchEnd(); return; } G.word = drawWord(G.used); G.used.push(G.word); resetPad(); G.phase = 'draw'; camView('draw');
+  openPad(`<span>${T().sketch(G.k + 1 + '/' + G.n)}:</span> <b>${esc(wtxt(G.word))}</b>`, S.sketchSec, [{ id: 'done', label: T().done, cls: 'go', fn: sketchSave }]);
+  E.say(wtxt(G.word), { lang: S.lang }); big(wtxt(G.word));
+}
+function sketchSave() {
+  if (G.phase !== 'draw') return; G.phase = 'saved'; G.timer = null; closePad(); G.inkTotal += D.ink; G.done.push({ word: G.word, ink: D.ink, strokes: D.strokes.filter(s => !s.clear).length });
+  saveToGallery(wtxt(G.word)); camView('gallery'); SFX.snap(); later(.3, () => { E.toast(T().saved, 1500); frames[0].g.scale.setScalar(1.25); });
+  later(2.2, () => { frames[0].g.scale.setScalar(1); G.k++; sketchNext(); });
+}
+function sketchEnd() {
+  G.phase = 'end'; camView('gallery'); music && music.stop(); SFX.win(); const n = G.done.filter(d => d.strokes > 0).length;
+  E.results({ gameId: 'draw', title: S.lang === 'es' ? '¡Galería actualizada!' : 'Gallery updated!', stats: [[S.lang === 'es' ? 'Bocetos' : 'Sketches', `${n}/${G.n}`], [S.lang === 'es' ? 'Tinta' : 'Ink used', Math.round(G.inkTotal * 100) + ' cm'], [S.lang === 'es' ? 'Tiempo' : 'Timer', S.sketchSec + 's']], xp: 25 + n * 10, coins: 5 + n * 3, best: n, bestLabel: 'Most sketches in one session', onAgain: () => title(), share: `I sketched ${n} drawings in Draw the Pact Speed Sketch! (Inoa Games) ${location.href}` });
+}
+
+/* ---------- (c) telephone ---------- */
+function phoneStart() { const n = clamp(S.players, 3, 8); G.players = S.names.slice(0, n).map((nm, i) => ({ name: nm || `P${i + 1}`, i })); G.word = drawWord(); G.chain = [{ kind: 'word', text: wtxt(G.word) }]; G.step = 0; phonePass(); }
+function phonePass() {
+  if (G.step >= G.players.length) { phoneShow(); return; }
+  const pl = G.players[G.step], drawStep = G.step % 2 === 0; camView('room'); G.cur = pl; hud();
+  const c = card(`<div class="ig-kicker">${S.lang === 'es' ? 'Teléfono' : 'Telephone'} · ${G.step + 1}/${G.players.length}</div><h2 style="color:${PCOL[pl.i]}">${esc(T().pass(pl.name))}</h2><p class="ig-sub">${T().noPeek}</p><button class="ig-btn" data-a="go">${esc(T().yourTurn(pl.name))}</button>`);
+  E.say(T().pass(pl.name), { lang: S.lang });
+  c.querySelector('[data-a=go]').onclick = () => { c.remove(); drawStep ? phoneDraw() : phoneDescribe(); };
+}
+function phoneDraw() {
+  const pl = G.players[G.step]; const prev = G.chain[G.chain.length - 1]; resetPad(); G.phase = 'draw'; camView('draw');
+  const prompt = G.step === 0 ? `${T().drawThis} <b>${esc(prev.text)}</b>` : `${esc(T().drawDesc(pl.name))} <b>“${esc(prev.text)}”</b>`;
+  openPad(prompt, 45, [{ id: 'done', label: T().done, cls: 'go', fn: phoneDrawn }]); E.say(G.step === 0 ? `${T().drawThis} ${prev.text}` : prev.text, { lang: S.lang });
+}
+function phoneDrawn() { if (G.phase !== 'draw') return; G.phase = 'between'; G.timer = null; closePad(); const img = padCanvas.toDataURL('image/jpeg', .7); G.chain.push({ kind: 'draw', img, by: G.players[G.step].name, i: G.players[G.step].i, strokes: D.strokes.slice() }); SFX.snap(); G.step++; later(.4, phonePass); }
+function phoneDescribe() {
+  const pl = G.players[G.step]; const prev = G.chain[G.chain.length - 1]; G.phase = 'describe'; camView('easel');
+  restoreStrokes(prev.strokes);
+  const c = card(`<div class="ig-kicker" style="color:${PCOL[pl.i]}">${esc(pl.name)}</div><h2>${esc(T().desc(pl.name))}</h2><img class="dw-show" src="${prev.img}" alt=""><input class="dw-in" maxlength="60" placeholder="${T().descPh}" aria-label="Description"><button class="ig-btn" data-a="send">${T().send}</button>`);
+  const inp = c.querySelector('input'); inp.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') send(); }); setTimeout(() => inp.focus(), 50);
+  const send = () => { const v = inp.value.trim(); if (!v) { inp.focus(); E.toast('✏️', 600); return; } c.remove(); G.chain.push({ kind: 'text', text: v, by: pl.name, i: pl.i }); SFX.pop(); G.step++; later(.2, phonePass); };
+  c.querySelector('[data-a=send]').onclick = send; G.descCard = { c, inp, send };
+}
+function restoreStrokes(st) { D.strokes = (st || []).slice(); redraw(); }
+function phoneShow() {
+  G.phase = 'show'; camView('easel'); G.slide = 0; music && music.stop(); music = E.music(E.SONGS.bright); slideNext();
+}
+function slideNext() {
+  document.querySelectorAll('.dw-slide').forEach(d => d.remove());
+  const k = G.slide; if (k >= G.chain.length + 1) { phoneEnd(); return; }
+  let html; const it = G.chain[k];
+  if (k === G.chain.length) { const last = G.chain[G.chain.length - 1]; html = `<div class="ig-kicker">🎬 ${T().ended}</div><div class="says">${esc(G.chain[0].text)} ➜ ${last.kind === 'text' ? '“' + esc(last.text) + '”' : '🖼️'}</div>${last.kind === 'draw' ? `<img class="dw-show" src="${last.img}" alt="">` : ''}`; SFX.win(); confettiBurst(); E.say(`${G.chain[0].text}… ${last.kind === 'text' ? last.text : ''}`, { lang: S.lang }); }
+  else if (it.kind === 'word') { html = `<div class="ig-kicker">📜 ${T().story}</div><div class="dw-word">${esc(it.text)}</div>`; E.say(`${T().story} ${it.text}`, { lang: S.lang }); E.tone(523, .2, 'triangle', .08); }
+  else if (it.kind === 'draw') { html = `<div class="by" style="color:${PCOL[it.i]}">${esc(T().drew(it.by))}</div><img class="dw-show" src="${it.img}" alt="">`; restoreStrokes(it.strokes); D.dirty = true; E.tone(392 + k * 40, .25, 'triangle', .08); E.noise(.15, .06, 3000, 1); }
+  else { html = `<div class="by" style="color:${PCOL[it.i]}">${esc(T().said(it.by))}</div><div class="says">“${esc(it.text)}”</div>`; E.say(it.text, { lang: S.lang }); [660, 520, 780].forEach((f, j) => E.tone(f, .1, 'square', .05, 0, j * .08)); }
+  const d = document.createElement('div'); d.className = 'dw-slide'; d.innerHTML = `<div class="ig-card">${html}<p class="ig-sub" style="text-align:center;font-size:12px">${k + 1}/${G.chain.length + 1} · ${S.lang === 'es' ? 'toca para seguir' : 'tap to continue'}</p></div>`; document.body.appendChild(d);
+  d.addEventListener('pointerdown', () => { G.slideT = 0; G.slide++; slideNext(); }); G.slideT = 4.2;
+}
+function phoneEnd() { G.phase = 'end'; document.querySelectorAll('.dw-slide').forEach(d => d.remove()); music && music.stop(); const draws = G.chain.filter(c => c.kind === 'draw').length; E.results({ gameId: 'draw', title: S.lang === 'es' ? '¡Qué teléfono descompuesto!' : 'What a telephone!', stats: [[S.lang === 'es' ? 'Empezó' : 'Started', G.chain[0].text], [S.lang === 'es' ? 'Dibujos' : 'Drawings', draws], [S.lang === 'es' ? 'Jugadores' : 'Players', G.players.length]], xp: 30 + G.players.length * 8, coins: 8 + G.players.length * 2, onAgain: () => title(), share: `Our Draw the Pact telephone started as "${G.chain[0].text}" and ended as "${(G.chain.filter(c => c.kind === 'text').pop() || {}).text || '…'}" 😂 (Inoa Games) ${location.href}` }); }
+
+/* ======================= HUD / fx ======================= */
+function ensureHud() { if (hudEl) { document.querySelector('.ig-top').hidden = false; return; } hudEl = E.shell({ title: 'Draw the Pact', onPause: pause, buttons: [] }); }
+function showPad(on) { if (hudEl) hudEl.pad.hidden = !on; }
+function hud() { if (!hudEl || !G) return; let h = ''; if (G.mode === 'party' && G.players) h = G.players.map(p => `<span class="ig-chip" style="border-bottom:4px solid ${PCOL[p.i]}">${esc(p.name)} <b>${p.score}</b></span>`).join(''); else if (G.mode === 'sketch') h = `<span class="ig-chip">✏️ <b>${Math.min(G.k + 1, G.n)}/${G.n}</b></span>`; else if (G.players) h = `<span class="ig-chip">📞 <b>${Math.min(G.step + 1, G.players.length)}/${G.players.length}</b></span>`; hudEl.hud.innerHTML = h; }
+function big(t) { const d = document.createElement('div'); d.className = 'ig-big'; d.style.fontSize = 'clamp(30px,8vw,72px)'; d.style.textAlign = 'center'; d.style.width = '90vw'; d.style.zIndex = 26; d.textContent = t; document.body.appendChild(d); d.animate([{ transform: 'translate(-50%,-50%) scale(.5)', opacity: 0 }, { transform: 'translate(-50%,-50%) scale(1.1)', opacity: 1, offset: .25 }, { transform: 'translate(-50%,-50%) scale(1)', opacity: 1, offset: .7 }, { transform: 'translate(-50%,-60%) scale(1)', opacity: 0 }], { duration: 1200, easing: 'ease-out' }); setTimeout(() => d.remove(), 1200); }
+const P = new E.Particles(scene);
+function confettiBurst() { for (let k = 0; k < 4; k++) P.burst(new THREE.Vector3(-.5 + rnd(-1, 1), 2.6, -1.2), { color: pick([0xffd166, 0xff7b6b, 0x9fe3cf, 0x8c6cff, 0x4fb3ff]), n: 26, speed: 2.4, up: 3.5, size: .12, life: 1.6, additive: false, gravity: 4 }); }
+
+/* ======================= auto-draw (tests + demo) ======================= */
+function autoDraw(n = 6) {
+  const seed = Math.random() * 100; for (let k = 0; k < n; k++) {
+    D.color = PAL[(k * 5 + 2) % PAL.length === 1 ? 0 : (k * 5 + 2) % PAL.length]; D.size = k % 3; D.eraser = false;
+    const cx = .5 + Math.sin(seed + k * 1.7) * .25, cy = .5 + Math.cos(seed + k * 2.3) * .2, r = .06 + (k % 4) * .04; const kind = k % 3;
+    const pts = []; for (let i = 0; i <= 36; i++) { const t = i / 36; let x, y; if (kind === 0) { x = cx + Math.cos(t * 6.3) * r * 1.2; y = cy + Math.sin(t * 6.3) * r; } else if (kind === 1) { x = cx - r * 1.5 + t * r * 3; y = cy + Math.sin(t * 9 + k) * r * .5; } else { x = cx + Math.cos(t * 12) * r * t; y = cy + Math.sin(t * 12) * r * t; } pts.push([clamp(x, .02, .98), clamp(y, .02, .98), .5]); }
+    beginStroke(pts[0], false); for (const p of pts.slice(1)) extendStroke(p); endStroke();
+  }
+  D.dirty = true;
+}
+
+/* ======================= loop ======================= */
+let texT = 0;
+function update(dt) {
+  P.update(dt);
+  if (G && !G.paused) {
+    G.time += dt; runSched();
+    if (G.timer && !G.timer.frozen) { const before = Math.ceil(G.timer.left); G.timer.left -= dt; const after = Math.ceil(G.timer.left); if (after !== before && after <= 10 && after >= 0) E.tone(after <= 3 ? 1100 : 820, .05, 'sine', .05); $('dwSec').textContent = Math.max(0, Math.ceil(G.timer.left)); const k = clamp(G.timer.left / G.timer.max, 0, 1); $('dwRing').setAttribute('stroke-dashoffset', String(138.2 * (1 - k))); $('dwRing').setAttribute('stroke', k < .2 ? '#ff6b6b' : k < .5 ? '#ffd166' : '#9fe3cf'); if (G.timer.left <= 0) { G.timer = null; timeUp(); } }
+    if (G.phase === 'show' && G.slideT != null) { G.slideT -= dt; if (G.slideT <= 0) { G.slide++; slideNext(); } }
+  }
+  texT += dt; if (D.dirty && texT > .1) { texT = 0; D.dirty = false; easelTex.needsUpdate = true; }
+  lampLights.forEach((l, i) => l.intensity = 7 + Math.sin(performance.now() / 700 + i) * .25);
+  updateCamera(dt);
+}
+function timeUp() { closePad(); big(T().timeUp); if (G.mode !== 'party') E.tone(440, .25, 'triangle', .08, -120); if (G.mode === 'party') partyReveal(null, 0); else if (G.mode === 'sketch') { G.phase = 'draw'; sketchSave(); } else { G.phase = 'draw'; phoneDrawn(); } }
+function pause() { if (!G || G.paused || G.phase === 'end') return; G.paused = true; music && music.stop(); E.pauseMenu({ onResume: () => { G.paused = false; music = E.music(E.SONGS.chill); }, onRestart: () => { G.paused = false; closePad(); start(); } }); }
+addEventListener('keydown', e => { if (e.target && e.target.tagName === 'INPUT') return; if (!G || G.paused) return; if (e.code === 'Escape' || e.code === 'KeyP') pause(); if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') { e.preventDefault(); undo(); } else if (e.code === 'KeyZ' && D.enabled) undo(); if (e.code === 'KeyE' && D.enabled) { D.eraser = !D.eraser; $('dwTools').querySelector('[data-t=eraser]')?.classList.toggle('on', D.eraser); } if (/^Digit[1-3]$/.test(e.code) && D.enabled) { D.size = +e.code.slice(5) - 1; $('dwTools').querySelectorAll('.dw-size button').forEach((b, i) => b.classList.toggle('on', i === D.size)); } });
+document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
+
+/* ======================= title ======================= */
+function title() {
+  killCards(); closePad(); G = null; if (hudEl) document.querySelector('.ig-top').hidden = true; if (music) music.stop(); music = E.music(E.SONGS.chill); camView('room'); loadGallery(); resetPad(); autoDraw(5); D.strokes = [];
+  const es = S.lang === 'es';
+  const extra = `<div><p class="ig-sub" style="margin-bottom:6px">${es ? 'Modo' : 'Mode'}</p><div class="pk" id="pM"><button data-m="party" class="${S.mode === 'party' ? 'on' : ''}">🎉 ${es ? 'Fiesta' : 'Party'}<small>${es ? 'uno dibuja, todos adivinan' : 'one draws, everyone guesses'}</small></button><button data-m="sketch" class="${S.mode === 'sketch' ? 'on' : ''}">⏱ Speed Sketch<small>${es ? 'solo, a la galería' : 'solo, to the gallery'}</small></button><button data-m="phone" class="${S.mode === 'phone' ? 'on' : ''}">📞 ${es ? 'Teléfono' : 'Telephone'}<small>${es ? 'dibuja → describe → dibuja' : 'draw → describe → draw'}</small></button></div></div>
+  <div id="pPl"><p class="ig-sub" style="margin-bottom:6px">${es ? 'Jugadores' : 'Players'}</p><div class="pk" id="pN">${[2, 3, 4, 5, 6, 8].map(n => `<button data-n="${n}" class="${n === S.players ? 'on' : ''}">${n}</button>`).join('')}</div><div class="names" style="margin-top:6px">${S.names.map((nm, i) => `<input data-i="${i}" maxlength="10" value="${esc(nm)}" style="border-left:6px solid ${PCOL[i]}" ${i < S.players ? '' : 'hidden'} aria-label="Player ${i + 1}">`).join('')}</div></div>
+  <div><p class="ig-sub" style="margin-bottom:6px">${es ? 'Palabras' : 'Words'} · <span id="pT"></span></p><div class="pk" id="pD">${[[0, es ? 'Todas' : 'Mixed'], [1, es ? 'Fácil' : 'Easy'], [2, es ? 'Media' : 'Medium'], [3, es ? 'Difícil' : 'Hard']].map(([d, l]) => `<button data-d="${d}" class="${S.diff === d ? 'on' : ''}">${l}</button>`).join('')}</div></div>
+  <div class="pk" id="pL"><button data-l="en" class="${!es ? 'on' : ''}">🇬🇧 English</button><button data-l="es" class="${es ? 'on' : ''}">🇪🇸 Español</button></div>`;
+  const how = es ? [['✏️', 'Dibuja con el dedo, el mouse o un lápiz (con presión). 12 colores, 3 grosores, borrador, deshacer (Z)'], ['🙈', 'Pasa el aparato: solo quien dibuja ve la palabra'], ['🖼️', 'Tus bocetos rápidos se cuelgan en la pared de la galería']] : [['✏️', 'Draw with finger, mouse or stylus (pressure works). 12 colours, 3 sizes, eraser, undo (Z)'], ['🙈', 'Pass the device: only the drawer sees the word'], ['🖼️', 'Speed sketches hang on the studio gallery wall']];
+  const d = E.titleScreen({ title: 'Draw the Pact', kicker: es ? 'Inoa Games · Dibuja y adivina' : 'Inoa Games · Draw & guess', lead: es ? 'Un estudio de arte acogedor para dibujar, adivinar y reír en el mismo aparato.' : 'A cozy art studio for drawing, guessing and laughing together on one device.', how, extra, onPlay: () => { save(); E.say(es ? '¡A dibujar!' : 'Let’s draw!', { lang: S.lang }); start(); } });
+  wideTitle(d);
+  const sync = () => { $('pPl').hidden = S.mode === 'sketch'; const min = S.mode === 'phone' ? 3 : 2; if (S.players < min) S.players = min; d.querySelectorAll('#pN button').forEach(b => { b.classList.toggle('on', +b.dataset.n === S.players); b.disabled = +b.dataset.n < min; b.style.opacity = +b.dataset.n < min ? .4 : 1; }); d.querySelectorAll('.names input').forEach(inp => inp.hidden = +inp.dataset.i >= S.players); $('pT').textContent = `${wordPool().length} ${es ? 'palabras' : 'words'}`; };
+  d.querySelectorAll('#pM button').forEach(b => b.onclick = () => { S.mode = b.dataset.m; d.querySelectorAll('#pM button').forEach(x => x.classList.toggle('on', x === b)); sync(); SFX.click(); });
+  d.querySelectorAll('#pN button').forEach(b => b.onclick = () => { S.players = +b.dataset.n; sync(); SFX.click(); });
+  d.querySelectorAll('#pD button').forEach(b => b.onclick = () => { S.diff = +b.dataset.d; d.querySelectorAll('#pD button').forEach(x => x.classList.toggle('on', x === b)); sync(); SFX.click(); });
+  d.querySelectorAll('#pL button').forEach(b => b.onclick = () => { S.lang = b.dataset.l; save(); d.remove(); title(); });
+  d.querySelectorAll('.names input').forEach(inp => { inp.addEventListener('input', () => { S.names[+inp.dataset.i] = inp.value.trim() || `P${+inp.dataset.i + 1}`; }); inp.addEventListener('keydown', e => e.stopPropagation()); });
+  sync();
+}
+function wideTitle(d) { const card = d.querySelector('.ig-card'); card.classList.add('ttl-scroll', 'tt-wide'); const kids = [...card.children]; const L = document.createElement('div'), Rr = document.createElement('div'); L.className = Rr.className = 'tt-col'; kids.forEach(k => (k.matches('.ig-kicker,h1,.ig-sub,.ig-how') ? L : Rr).appendChild(k)); card.append(L, Rr); }
+
+clearPad(); title(); ld.done(); window.__READY = true;
+E.loop((dt) => { if (!window.__HOLD) update(dt); R.render(dt); });
+window.__GAME = { get G() { return G; }, S, D, WORDS, start, update, title, autoDraw, undo, clearAll, warm: () => { R.render(1 / 60); R.renderer.getContext().finish(); },
+  guessed: i => { if (G.phase !== 'draw') return; partyWho(); document.querySelector(`.dw-chips button[data-i="${i}"]`)?.click(); },
+  next: () => { document.querySelector('.ig-screen [data-a=next], .ig-screen [data-a=go], .ig-screen [data-a=show]')?.click(); },
+  done: () => document.querySelector('#dwTools [data-a=done]')?.click(),
+  describe: t => { if (G.descCard) { G.descCard.inp.value = t; G.descCard.send(); } },
+  gallery: () => E.store.get(GAL_KEY, []).length, camView };
+</script>
+</body></html>

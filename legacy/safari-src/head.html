@@ -1,0 +1,232 @@
+<title>Snack Squad Safari</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;800&family=Unbounded:wght@700;900&display=swap">
+<style>
+/* Snack Squad Safari v2: a 3D grocery-run for a kid and a grown-up. Bright, soft, never scary. */
+:root{
+  --ink:#1b2430; --paper:#fff8ee; --mint:#9fe3cf; --mint-ink:#0f5c48; --sun:#ffd166; --coral:#ff7b6b; --berry:#8c6cff; --sky:#bfe8ff; --line:rgba(27,36,48,.12);
+  --ok:#2fbf8a; --no:#ff6b6b; --f-d:"Unbounded","Manrope",system-ui,sans-serif; --f-b:"Manrope",system-ui,-apple-system,sans-serif;
+  color-scheme:light;
+}
+html,body{margin:0;height:100%;overflow:hidden;background:#bfe8ff;color:var(--ink);font-family:var(--f-b);-webkit-user-select:none;user-select:none;touch-action:none;-webkit-tap-highlight-color:transparent}
+#app{position:fixed;inset:0}
+#gl{position:absolute;inset:0;width:100%;height:100%;display:block}
+[hidden]{display:none!important}
+button{font:inherit}
+.screen{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom));box-sizing:border-box;overflow:auto;background:rgba(191,232,255,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.card{width:min(560px,100%);background:var(--paper);border-radius:28px;padding:26px 22px;box-shadow:0 20px 60px rgba(27,36,48,.18),inset 0 0 0 1px rgba(255,255,255,.7);display:grid;gap:16px;box-sizing:border-box}
+h1,h2,h3{margin:0;font-family:var(--f-d);letter-spacing:-.02em;text-wrap:balance}
+h1{font-size:clamp(34px,8vw,54px);line-height:.95}
+h1 span{color:var(--mint-ink)}
+h2{font-size:22px}
+p{margin:0;line-height:1.5}
+.sub{color:#4c5868;font-weight:600}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:54px;padding:12px 22px;border:0;border-radius:18px;background:var(--mint-ink);color:#fff;font-family:var(--f-d);font-weight:900;font-size:15px;cursor:pointer;box-shadow:0 6px 0 #0a4234;transition:transform .08s}
+.btn:active{transform:translateY(4px);box-shadow:0 2px 0 #0a4234}
+.btn.sun{background:var(--sun);color:var(--ink);box-shadow:0 6px 0 #d9a92e}.btn.sun:active{box-shadow:0 2px 0 #d9a92e}
+.btn.ghost{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 2px var(--line)}.btn.ghost:active{box-shadow:inset 0 0 0 2px var(--line)}
+.btn.coral{background:var(--coral);color:#fff;box-shadow:0 6px 0 #c8503f}.btn.coral:active{box-shadow:0 2px 0 #c8503f}
+.btn:focus-visible{outline:3px solid var(--berry);outline-offset:2px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row .btn{flex:1 1 auto}
+.chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.chip{display:flex;align-items:center;gap:8px;min-height:50px;padding:8px 12px;border-radius:16px;background:#fff;border:2px solid var(--line);cursor:pointer;font-weight:800;font-size:14px;text-align:left}
+.chip .e{font-size:22px}
+.chip.on{border-color:var(--mint-ink);background:var(--mint)}
+.chip:focus-visible{outline:3px solid var(--berry)}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg .chip{justify-content:center}
+input[type=text]{font:inherit;font-weight:800;font-size:16px;padding:12px 14px;border-radius:14px;border:2px solid var(--line);background:#fff;width:100%;box-sizing:border-box}
+.levels{display:grid;gap:10px}
+.lv{display:grid;grid-template-columns:54px 1fr auto;gap:12px;align-items:center;padding:12px;border-radius:18px;background:#fff;border:2px solid var(--line);cursor:pointer;text-align:left}
+.lv .ic{width:54px;height:54px;border-radius:14px;display:grid;place-items:center;font-size:28px;background:var(--sky)}
+.lv b{font-family:var(--f-d);font-size:15px}
+.lv small{display:block;color:#4c5868;font-weight:600}
+.lv .stars{font-size:14px;letter-spacing:2px;color:#d9a92e}
+.lv.lock{opacity:.55}
+.lv.on{border-color:var(--mint-ink)}
+/* HUD */
+#hud{position:absolute;inset:0;pointer-events:none;padding:max(10px,env(safe-area-inset-top)) 12px max(10px,env(safe-area-inset-bottom));box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between}
+#hud .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.pill{background:rgba(255,248,238,.92);border-radius:16px;padding:8px 12px;font-weight:800;font-size:14px;box-shadow:0 4px 14px rgba(27,36,48,.12);display:flex;align-items:center;gap:8px}
+.pill .hearts{letter-spacing:1px}
+#hud .btnp{pointer-events:auto;border:0;cursor:pointer;font-family:var(--f-d);font-weight:900}
+#goal{background:rgba(255,248,238,.92);border-radius:18px;padding:10px 14px;font-weight:800;font-size:14px;box-shadow:0 4px 14px rgba(27,36,48,.12);display:grid;gap:6px;max-width:min(420px,100%)}
+#goal .bar{height:8px;background:#e8e0d2;border-radius:6px;overflow:hidden}#goal .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--mint-ink),var(--mint))}
+#hud .bottom{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:end}
+.ctl{pointer-events:auto;display:flex;gap:10px}
+.ctl button{width:64px;height:64px;border-radius:22px;border:0;background:rgba(255,248,238,.9);box-shadow:0 6px 0 rgba(27,36,48,.18);font-size:28px;cursor:pointer}
+.ctl button:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(27,36,48,.18)}
+#btnRead{pointer-events:auto;min-height:64px;padding:0 22px;border-radius:22px;border:0;background:var(--sun);box-shadow:0 6px 0 #d9a92e;font-family:var(--f-d);font-weight:900;font-size:15px;cursor:pointer;display:flex;align-items:center;gap:8px;opacity:.5}
+#btnRead.ready{opacity:1;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+#scan{pointer-events:auto;justify-self:end;min-height:64px;padding:0 18px;border-radius:22px;border:0;background:var(--berry);color:#fff;box-shadow:0 6px 0 #5a44b8;font-family:var(--f-d);font-weight:900;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px}
+#scan.hold{transform:translateY(4px);box-shadow:0 2px 0 #5a44b8;filter:brightness(1.1)}
+#tip{position:absolute;left:50%;top:14%;transform:translateX(-50%);background:rgba(27,36,48,.86);color:#fff;padding:10px 16px;border-radius:16px;font-weight:800;font-size:15px;max-width:min(520px,90%);text-align:center;transition:opacity .25s;opacity:0;pointer-events:none}
+#tip.show{opacity:1}
+#float{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.ft{position:absolute;font-family:var(--f-d);font-weight:900;font-size:22px;color:var(--mint-ink);text-shadow:0 2px 0 #fff;animation:up 1s forwards}
+.ft.bad{color:var(--no)}
+@keyframes up{to{transform:translateY(-60px);opacity:0}}
+/* Label modal */
+.label{background:#fff;border:3px solid var(--ink);border-radius:8px;padding:16px;font-family:var(--f-b);font-size:18px;line-height:1.7;display:grid;gap:10px;font-weight:600}
+.label .nm{font-family:var(--f-d);font-size:20px;border-bottom:3px solid var(--ink);padding-bottom:6px}
+.label .ing{font-size:18px}
+.label mark{background:var(--sun);padding:0 5px;border-radius:5px;font-weight:800}
+.label mark.hid{background:#ffd1cc}
+.label .con{font-weight:800}
+.label .may{color:#7a4a00;font-weight:800}
+.lens{font-size:13px;color:#4c5868;font-weight:700;background:var(--sky);padding:8px 12px;border-radius:12px}
+/* Drill */
+.drill{display:grid;gap:10px}
+.screen.rescue{align-items:flex-end;justify-content:flex-end;background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;pointer-events:none}
+.screen.rescue .card{pointer-events:auto;width:min(420px,100%);max-height:62vh;overflow:auto;gap:10px;padding:18px 16px;background:rgba(255,248,238,.96)}
+.screen.rescue .step{padding:8px 10px}.screen.rescue .step small{font-size:12px}
+.screen.rescue h2{font-size:19px}.screen.rescue .sub{font-size:13px}
+.dialBtn{min-height:54px;border-radius:14px;border:2px solid var(--line);background:#fff;font-family:var(--f-d);font-weight:900;font-size:22px;cursor:pointer}
+.dialBtn.hot{background:var(--sun);border-color:#d9a92e;animation:pulse 1s infinite}
+.dialBtn.done{background:var(--ok);color:#fff;border-color:transparent}
+@media (max-width:640px){.screen.rescue{align-items:flex-end}.screen.rescue .card{max-height:52vh}}
+.step{display:grid;grid-template-columns:40px 1fr;gap:12px;align-items:center;padding:12px;border-radius:16px;background:#fff;border:2px solid var(--line)}
+.step .n{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-d);font-weight:900;background:var(--sky)}
+.step.done{border-color:var(--ok);background:#eafff5}.step.done .n{background:var(--ok);color:#fff}
+.step.now{border-color:var(--berry)}
+.hold{min-height:70px;border-radius:20px;border:0;background:var(--coral);color:#fff;font-family:var(--f-d);font-weight:900;font-size:16px;cursor:pointer;position:relative;overflow:hidden;width:100%}
+.hold i{position:absolute;left:0;top:0;bottom:0;width:0;background:rgba(255,255,255,.35)}
+.hold span{position:relative}
+/* Results */
+.res{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.res div{background:#fff;border-radius:16px;padding:12px 8px;border:2px solid var(--line)}
+.res b{display:block;font-family:var(--f-d);font-size:22px;color:var(--mint-ink)}
+.res small{font-weight:700;color:#4c5868}
+.learn{display:grid;gap:6px}
+.learn div{background:#fff;border-radius:12px;padding:8px 12px;font-size:14px;font-weight:600;border:2px solid var(--line)}
+.bigstars{font-size:40px;text-align:center;letter-spacing:4px;color:#d9a92e}
+.disc{font-size:12px;color:#4c5868;font-weight:600}
+@media (max-width:420px){.card{padding:20px 16px;border-radius:22px}.ctl button{width:58px;height:58px}}
+</style>
+<div id="app">
+  <canvas id="gl"></canvas>
+  <div id="loading" style="position:absolute;inset:0;display:grid;place-items:center;background:linear-gradient(180deg,#ffd7b0,#bfe8ff);z-index:5"><div style="text-align:center;display:grid;gap:12px"><div style="font-size:54px" id="ldE">🥚</div><h1 style="font-size:32px">Snack Squad <span style="color:var(--mint-ink)">Safari</span></h1><div class="bar" style="width:220px;margin:0 auto"><i id="ldBar" style="width:0"></i></div><p class="sub" id="ldTxt">Packing the cart…</p></div></div>
+  <div id="float"></div>
+  <div id="tip"></div>
+
+  <div id="hud" hidden>
+    <div class="top">
+      <div style="display:grid;gap:8px"><div class="pill"><span id="hScore">0</span> ★ <span id="hBuddy">🥚 Buddy lv 1</span> <span class="hearts" id="hHearts">😊</span></div><div id="goal"><span id="gText">Feed your buddy 12 safe snacks</span><div class="bar"><i id="gBar"></i></div></div></div>
+      <button class="btnp pill" id="btnPause" aria-label="Pause">⏸</button>
+    </div>
+    <div class="bottom">
+      <div class="ctl"><button id="btnL" aria-label="Move left">◀</button><button id="btnR" aria-label="Move right">▶</button></div>
+      <button id="btnRead">🔍 Read label</button>
+      <button id="scan" hidden>🧑‍🍳 Scanner <small>(hold)</small></button>
+    </div>
+  </div>
+
+  <div class="screen" id="scrTitle">
+    <div class="card">
+      <div><p class="sub" style="font-size:13px;letter-spacing:.08em;text-transform:uppercase" data-i="tag">An Allergy Safe Safari game · kids + grown-ups</p><h1>Snack Squad <span>Safari</span></h1></div>
+      <p class="sub" data-i="lead">Your buddy is hungry. Roll down the 3D aisle, catch the snacks that are safe for <b>you</b>, read the labels like a detective, and practice the rescue plan with a grown-up. Feed your buddy and watch it grow.</p>
+      <div class="row"><button class="btn" id="btnPlay" data-i="play">Let's play</button><button class="btn ghost" id="btnHow" data-i="how">How it works</button></div><div class="row"><button class="chip" id="btnLang"><span class="e">🌎</span>Español</button></div>
+      <p class="disc" data-i="disc">Snack Squad Safari teaches habits, not medicine. Always follow the action plan from your own doctor or allergist.</p>
+    </div>
+  </div>
+
+  <div class="screen" id="scrHow" hidden>
+    <div class="card">
+      <h2>How it works</h2>
+      <div class="learn">
+        <div>🥚 Your <b>buddy</b> rides in the cart. Catch snacks that are safe for you to feed it; it hatches and grows as you go.</div><div>🛒 Move left and right to <b>catch safe food</b> and dodge foods with your allergens. Mistakes just mean "let's look again".</div>
+        <div>📦 Packaged foods show a <b>?</b>. Press <b>Read label</b> to open the ingredients and decide: safe or not safe.</div>
+        <div>🧑‍🍳 A grown-up can play the <b>Scanner</b>: hold the purple button (or Shift) to reveal label hints early.</div>
+        <div>🚨 <b>Buddy Rescue:</b> if an allergen slips through, your buddy needs you. Practice the 3-step plan: tell a grown-up, auto-injector, call 911. Calm and clear.</div><div>🎁 Every 10 safe snacks opens a <b>Mystery Snack</b>: a rare safe treat for your collection.</div>
+        <div>🎮 Keyboard: A/D or ← → to move, Space to read, Shift for Scanner. Touch: the big buttons.</div>
+      </div>
+      <button class="btn" id="btnHowBack">Got it</button>
+    </div>
+  </div>
+
+  <div class="screen" id="scrSetup" hidden>
+    <div class="card">
+      <h2>Who is playing?</h2>
+      <input type="text" id="kidName" maxlength="14" placeholder="Your name (optional)" autocomplete="off">
+      <div><p class="sub" style="margin-bottom:8px">Pick the allergies to practice with</p><div class="chips" id="allergens"></div></div>
+      <div><p class="sub" style="margin-bottom:8px">Help</p><div class="seg"><button class="chip on" id="voiceOn"><span class="e">🗣️</span>Read everything aloud</button><button class="chip" id="voiceOff"><span class="e">🤫</span>Quiet, I can read</button></div></div>
+      <div><p class="sub" style="margin-bottom:8px">Mode</p><div class="seg"><button class="chip on" id="modeSolo"><span class="e">🧒</span>Just me</button><button class="chip" id="modeDuo"><span class="e">🧒🧑</span>Me + a grown-up</button></div></div>
+      <div class="row"><button class="btn ghost" id="btnSetupBack">Back</button><button class="btn" id="btnSetupGo">Choose a level</button></div>
+    </div>
+  </div>
+
+  <div class="screen" id="scrLevels" hidden>
+    <div class="card">
+      <h2>Where are we going?</h2>
+      <div class="levels" id="levels"></div>
+      <div class="row"><button class="btn ghost" id="btnLvBack">Back</button><button class="btn" id="btnLvGo">Start</button></div>
+    </div>
+  </div>
+
+  <div class="screen" id="scrLabel" hidden>
+    <div class="card">
+      <h2 id="lblTitle">Read the label</h2>
+      <div class="label" id="lblBox"></div>
+      <div class="lens" id="lblLens" hidden></div><button class="btn ghost" id="btnSay" style="min-height:48px">🔊 Read it to me</button>
+      <div class="row"><button class="btn coral" id="btnNotSafe">🚫 Not safe for me</button><button class="btn" id="btnSafe">✅ Safe, take it</button></div>
+      <p class="disc">When you are not sure, the safe move is to skip it and ask a grown-up.</p>
+    </div>
+  </div>
+
+  <div class="screen" id="scrOffer" hidden>
+    <div class="card">
+      <h2 id="offTitle">A friend offers you a cookie</h2>
+      <p class="sub" id="offText">"Want one? My mom made them!"</p>
+      <div class="levels" id="offChoices"></div><button class="btn ghost" id="btnOffSay" style="min-height:48px">🔊 Read the choices</button>
+    </div>
+  </div>
+
+  <div class="screen rescue" id="scrDrill" hidden>
+    <div class="card">
+      <h2 id="drillTitle">Buddy Rescue!</h2>
+      <p class="sub" id="drillSub">Itchy mouth, hives, a swollen lip, trouble breathing: those are the signs. Stay calm and follow the plan, in order.</p>
+      <div class="drill">
+        <div class="step now" id="st1"><div class="n">1</div><div><b>Tell a grown-up right away</b><br><small>Say: "I ate something and I feel sick."</small></div></div>
+        <div class="step" id="st2"><div class="n">2</div><div><b>Use the epinephrine auto-injector</b><br><small>Outer thigh, hold it there and count.</small></div></div>
+        <div class="step" id="st3"><div class="n">3</div><div><b>Call 911</b><br><small>Even if you feel better. Then lie down and wait.</small></div></div>
+      </div>
+      <button class="btn" id="drillA">🗣️ "I need help!"</button><button class="btn ghost" id="btnDrillSay" style="min-height:44px">🔊 Read this step</button>
+      <button class="hold" id="drillB" hidden><i></i><span>Hold on the thigh: 3… 2… 1…</span></button>
+      <div id="dial" hidden style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:260px;margin:0 auto"></div><button class="btn coral" id="drillC" hidden>📞 Call 911</button><button class="btn" id="drillD" hidden>🛏️ Lie down, legs up, wait together</button>
+      <p class="disc">Practice only. Your real plan comes from your doctor or allergist; grown-ups, keep two auto-injectors nearby.</p>
+    </div>
+  </div>
+
+  <div class="screen" id="scrMystery" hidden>
+    <div class="card" style="text-align:center">
+      <p class="sub" style="font-size:13px;letter-spacing:.08em;text-transform:uppercase">Mystery Snack</p>
+      <div id="mysE" style="font-size:72px;line-height:1">🎁</div>
+      <h2 id="mysName">…</h2>
+      <p class="sub" id="mysRar">Rare</p>
+      <button class="btn" id="btnMysOk">Add to my collection</button>
+    </div>
+  </div>
+  <div class="screen" id="scrPause" hidden>
+    <div class="card">
+      <h2>Paused</h2>
+      <div class="row"><button class="btn" id="btnResume">Keep going</button><button class="btn ghost" id="btnQuit">Back to levels</button></div>
+      <div class="row"><button class="chip" id="tglSound"><span class="e">🔊</span>Sound on</button><button class="chip" id="tglMotion"><span class="e">🎢</span>Camera sway on</button><button class="chip" id="tglVoice"><span class="e">🗣️</span>Read aloud on</button></div>
+    </div>
+  </div>
+
+  <div class="screen" id="scrResults" hidden>
+    <div class="card">
+      <div class="bigstars" id="resStars">★★★</div>
+      <h2 id="resTitle">Level clear!</h2>
+      <div class="res"><div><b id="rSafe">0</b><small>snacks fed</small></div><div><b id="rLabels">0</b><small>labels read</small></div><div><b id="rDodge">0</b><small>allergens dodged</small></div></div>
+      <div><p class="sub" style="margin-bottom:6px">Things you learned</p><div class="learn" id="resLearn"></div></div>
+      <div class="row"><button class="btn ghost" id="btnAgain">Play again</button><button class="btn" id="btnNext">Next level</button></div>
+      <div id="resCollect" class="learn"></div><button class="btn sun" id="btnShare">📣 Share my run</button>
+    </div>
+  </div>
+</div>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+<script type="module">
