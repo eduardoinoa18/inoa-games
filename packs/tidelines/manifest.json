@@ -16,11 +16,25 @@
   "house-5": "models/house-5.glb?h=77ff96ef",
   "house-7": "models/house-7.glb?h=65bf1f71",
   "boat-small": "models/boat-small.glb?h=95a1addc",
-  "ship-light": "models/ship-light.glb?h=701cb38e"
+  "ship-light": "models/ship-light.glb?h=701cb38e",
+  "plant": "models/plant.glb?h=eb44ede4",
+  "low-poly-tree": "models/low-poly-tree.glb?h=0a0be3f1",
+  "bench": "models/bench.glb?h=e6f3b898",
+  "watermelon": "models/watermelon.glb?h=80552c56",
+  "banana": "models/banana.glb?h=44ecd745",
+  "fish": "models/fish.glb?h=54b308d3",
+  "cabbage": "models/cabbage.glb?h=43953c02",
+  "wind-turbine": "models/wind-turbine.glb?h=b1286809",
+  "ferris-wheel": "models/ferris-wheel.glb?h=154929f1",
+  "chest": "models/chest.glb?h=3cd5506f",
+  "house-3": "models/house-3.glb?h=713a38b8",
+  "house-6": "models/house-6.glb?h=bdd98a98",
+  "coconut": "models/coconut.glb?h=12d8a615"
  },
  "hdri": {
-  "dawn": "hdri/dawn.hdr?h=b48993a4"
+  "dawn": "hdri/dawn.hdr?h=b48993a4",
+  "sunset": "hdri/sunset.hdr?h=0c90676a"
  },
  "lazy": [],
- "bytes": 1085128
+ "bytes": 1904843
 }
