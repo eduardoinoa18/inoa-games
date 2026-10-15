@@ -29,11 +29,14 @@
   "formation-stone": "models/formation-stone.glb?h=cf993936",
   "mushroom": "models/mushroom.glb?h=ab63ca7d",
   "pot": "models/pot.glb?h=c691d1e0",
-  "bottle": "models/bottle.glb?h=9686e7fa"
+  "bottle": "models/bottle.glb?h=9686e7fa",
+  "tree-big": "models/tree-big.glb?h=d1beaf82",
+  "fish": "models/fish.glb?h=54b308d3",
+  "mussel": "models/mussel.glb?h=4a4c1cba"
  },
  "hdri": {
   "interior": "hdri/interior.hdr?h=dd54c722"
  },
  "lazy": [],
- "bytes": 2021069
+ "bytes": 2043449
 }

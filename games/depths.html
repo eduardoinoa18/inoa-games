@@ -53,8 +53,11 @@ body{background:#07080d}
 .dp-intro i{display:block;font:700 15px var(--f-b);color:#e8d8c8;font-style:normal}
 .dp-room{font:900 12px var(--f-d)}
 .ig-toast{top:27%}
-.dp-big{top:36%;font-size:clamp(30px,9.5vw,80px);line-height:1.02;text-align:center;width:max-content;max-width:92vw;opacity:0;text-shadow:0 5px 0 rgba(0,0,0,.45),0 0 28px rgba(0,0,0,.5);transition:none}
+.dp-big{top:42%;font-size:clamp(28px,8vw,64px);line-height:1.02;text-align:center;width:max-content;max-width:92vw;opacity:0;text-shadow:0 5px 0 rgba(0,0,0,.45),0 0 28px rgba(0,0,0,.5);transition:none}
 @media (max-width:640px){.ig-toast{top:21%}}
+.dp-big small{display:block;font:800 clamp(14px,3.6vw,20px) var(--f-b);letter-spacing:.02em;margin-top:6px;color:#ffe7c2;text-shadow:0 2px 0 rgba(0,0,0,.6)}
+.pick button.lock{opacity:.55;cursor:not-allowed}
+.pick button .new{display:inline-block;margin-left:4px;font:900 10px var(--f-d);color:#fff;background:#ff7b6b;border-radius:8px;padding:1px 5px;vertical-align:middle}
 @media (max-width:640px){.ig-hud{flex-wrap:nowrap;gap:6px}.ig-hud .ig-chip{padding:6px 9px;font-size:13px;min-height:36px}}
 .ig-float.dp-d{font-size:20px}
 .ig-float.dp-ally{font-size:15px;opacity:.72}
@@ -111,11 +114,13 @@ const QS = new URLSearchParams(location.search);
 if (QS.has('touch') || matchMedia('(pointer:coarse)').matches || 'ontouchstart' in window) document.body.classList.add('dp-touch');
 
 /* ================= data ================= */
+// loc(o, 'name') → o.nameEs in Spanish (when present), else o.name
+const loc = (o, k) => (E.lang() === 'es' && o[k + 'Es']) || o[k];
 const CLASSES = {
-  knight: { id: 'knight', name: 'Knight', icon: '🛡️', color: '#5bb8ff', model: 'survivor-male', alt: 'survivor-female', hp: 150, speed: 5.3, dodges: 1, cd: 5, desc: 'Sword combo · shield bash', special: 'Shield Bash', ult: 'Blade Storm' },
-  ninja: { id: 'ninja', name: 'Ninja', icon: '🗡️', color: '#c9a8ff', model: 'skater-female', alt: 'skater-male', hp: 105, speed: 6.3, dodges: 2, cd: 4, desc: 'Fast cuts · dash strike', special: 'Dash Strike', ult: 'Thousand Cuts' },
-  mage: { id: 'mage', name: 'Mage', icon: '🔮', color: '#5ff0d8', model: 'cyborg-female', alt: 'survivor-female', hp: 95, speed: 5.3, dodges: 1, cd: 6.5, desc: 'Arcane orbs · frost nova', special: 'Frost Nova', ult: 'Meteor Rain' },
-  brawler: { id: 'brawler', name: 'Brawler', icon: '👊', color: '#ff9a3c', model: 'male', alt: 'skater-male', hp: 140, speed: 5.5, dodges: 1, cd: 6, desc: 'Punch combo · ground slam', special: 'Ground Slam', ult: 'Titan Quake' }
+  knight: { id: 'knight', name: 'Knight', nameEs: 'Caballero', icon: '🛡️', color: '#5bb8ff', model: 'survivor-male', alt: 'survivor-female', hp: 150, speed: 5.3, dodges: 1, cd: 5, desc: 'Sword combo · shield bash', descEs: 'Combo de espada · golpe de escudo', special: 'Shield Bash', specialEs: 'Golpe de Escudo', ult: 'Blade Storm', ultEs: 'Tormenta de Espadas' },
+  ninja: { id: 'ninja', name: 'Ninja', nameEs: 'Ninja', icon: '🗡️', color: '#c9a8ff', model: 'skater-female', alt: 'skater-male', hp: 105, speed: 6.3, dodges: 2, cd: 4, desc: 'Fast cuts · dash strike', descEs: 'Cortes rápidos · tajo veloz', special: 'Dash Strike', specialEs: 'Tajo Veloz', ult: 'Thousand Cuts', ultEs: 'Mil Cortes' },
+  mage: { id: 'mage', name: 'Mage', nameEs: 'Maga', icon: '🔮', color: '#5ff0d8', model: 'cyborg-female', alt: 'survivor-female', hp: 95, speed: 5.3, dodges: 1, cd: 6.5, desc: 'Arcane orbs · frost nova', descEs: 'Orbes arcanos · nova helada', special: 'Frost Nova', specialEs: 'Nova Helada', ult: 'Meteor Rain', ultEs: 'Lluvia de Meteoros' },
+  brawler: { id: 'brawler', name: 'Brawler', nameEs: 'Luchador', icon: '👊', color: '#ff9a3c', model: 'male', alt: 'skater-male', hp: 140, speed: 5.5, dodges: 1, cd: 6, desc: 'Punch combo · ground slam', descEs: 'Combo de puños · golpe sísmico', special: 'Ground Slam', specialEs: 'Golpe Sísmico', ult: 'Titan Quake', ultEs: 'Terremoto Titán' }
 };
 const CLS_ORDER = ['knight', 'ninja', 'mage', 'brawler'];
 // combo steps: t = duration, hit = fraction when the blow lands
@@ -126,51 +131,71 @@ const COMBOS = {
   brawler: [{ t: .27, hit: .45, dmg: 12, range: 2.0, arc: 1.7, kb: 3, lunge: 2, anim: 'punchR' }, { t: .27, hit: .45, dmg: 12, range: 2.0, arc: 1.7, kb: 3, lunge: 2, anim: 'punchL' }, { t: .5, hit: .5, dmg: 28, range: 2.2, arc: 1.9, kb: 11, lunge: 2.6, anim: 'upper', fin: true, heavy: true }]
 };
 const DIFF = {
-  story: { name: 'Story', e: '🌱', foeDmg: .5, foeHp: .8, count: .9, tele: 1.15, revive: 1.4, phoenix: 1, gold: 1, desc: 'Relaxed, extra revive' },
-  normal: { name: 'Normal', e: '⚔️', foeDmg: 1, foeHp: 1, count: 1, tele: 1, revive: 2.2, phoenix: 0, gold: 1.15, desc: 'The intended fight' },
-  hard: { name: 'Hard', e: '💀', foeDmg: 1.5, foeHp: 1.35, count: 1.25, tele: .82, revive: 3, phoenix: 0, gold: 1.4, desc: 'For veteran delvers' }
+  story: { name: 'Story', nameEs: 'Historia', e: '🌱', foeDmg: .5, foeHp: .8, count: .9, tele: 1.15, revive: 1.4, phoenix: 1, gold: 1, desc: 'Relaxed, extra revive', descEs: 'Tranquilo, revivir extra' },
+  normal: { name: 'Normal', nameEs: 'Normal', e: '⚔️', foeDmg: 1, foeHp: 1, count: 1, tele: 1, revive: 2.2, phoenix: 0, gold: 1.15, desc: 'The intended fight', descEs: 'La pelea pensada' },
+  hard: { name: 'Hard', nameEs: 'Difícil', e: '💀', foeDmg: 1.5, foeHp: 1.35, count: 1.25, tele: .82, revive: 3, phoenix: 0, gold: 1.4, desc: 'For veteran delvers', descEs: 'Para exploradores veteranos' }
 };
 const BOONS = [
-  { id: 'dmg', icon: '⚔️', name: 'Keen Edge', desc: '+20% damage for the party', max: 5 },
-  { id: 'dash', icon: '💨', name: 'Fleet Foot', desc: '+1 dodge charge', max: 2 },
-  { id: 'leech', icon: '🩸', name: 'Bloodthirst', desc: 'Heal 5% of damage you deal', max: 3 },
-  { id: 'orb', icon: '🔵', name: 'Spark Trail', desc: 'Dodging launches a seeking spark orb', max: 3 },
-  { id: 'chain', icon: '⚡', name: 'Storm Finisher', desc: 'Combo finishers chain lightning to 3 foes', max: 3 },
-  { id: 'vit', icon: '❤️', name: 'Vitality', desc: '+30 max health, heal the party', max: 5 },
-  { id: 'haste', icon: '⏳', name: 'Quick Hands', desc: 'Specials recharge 25% faster', max: 3 },
-  { id: 'trance', icon: '🔥', name: 'Battle Trance', desc: 'Ultimate charges 40% faster', max: 3 },
-  { id: 'thorns', icon: '🌵', name: 'Spiked Armor', desc: 'Foes that hit you take 12 damage', max: 3 },
-  { id: 'crit', icon: '🎯', name: 'Lucky Strikes', desc: '+15% critical hit chance', max: 3 },
-  { id: 'greed', icon: '🪙', name: 'Gold Fever', desc: '+50% gold from foes and chests', max: 2 },
-  { id: 'phoenix', icon: '🪶', name: 'Phoenix Ember', desc: 'One extra party revive', max: 2 },
-  { id: 'swift', icon: '👟', name: 'Swift Boots', desc: '+12% move speed', max: 2 },
-  { id: 'guard', icon: '🛡️', name: 'Iron Skin', desc: 'Take 15% less damage', max: 3 }
+  { id: 'dmg', icon: '⚔️', name: 'Keen Edge', nameEs: 'Filo Agudo', desc: '+20% damage for the party', descEs: '+20% de daño para el grupo', max: 5 },
+  { id: 'dash', icon: '💨', name: 'Fleet Foot', nameEs: 'Pies Ligeros', desc: '+1 dodge charge', descEs: '+1 carga de esquiva', max: 2 },
+  { id: 'leech', icon: '🩸', name: 'Bloodthirst', nameEs: 'Sed de Vida', desc: 'Heal 5% of damage you deal', descEs: 'Cura el 5% del daño que haces', max: 3 },
+  { id: 'orb', icon: '🔵', name: 'Spark Trail', nameEs: 'Estela de Chispas', desc: 'Dodging launches a seeking spark orb', descEs: 'Al esquivar lanzas un orbe que persigue', max: 3 },
+  { id: 'chain', icon: '⚡', name: 'Storm Finisher', nameEs: 'Remate Tormenta', desc: 'Combo finishers chain lightning to 3 foes', descEs: 'Los remates lanzan rayos a 3 enemigos', max: 3 },
+  { id: 'vit', icon: '❤️', name: 'Vitality', nameEs: 'Vitalidad', desc: '+30 max health, heal the party', descEs: '+30 de vida máxima y cura al grupo', max: 5 },
+  { id: 'haste', icon: '⏳', name: 'Quick Hands', nameEs: 'Manos Rápidas', desc: 'Specials recharge 25% faster', descEs: 'Los especiales cargan 25% más rápido', max: 3 },
+  { id: 'trance', icon: '🔥', name: 'Battle Trance', nameEs: 'Trance de Batalla', desc: 'Ultimate charges 40% faster', descEs: 'El definitivo carga 40% más rápido', max: 3 },
+  { id: 'thorns', icon: '🌵', name: 'Spiked Armor', nameEs: 'Armadura de Púas', desc: 'Foes that hit you take 12 damage', descEs: 'Quien te golpea recibe 12 de daño', max: 3 },
+  { id: 'crit', icon: '🎯', name: 'Lucky Strikes', nameEs: 'Golpes de Suerte', desc: '+15% critical hit chance', descEs: '+15% de probabilidad de crítico', max: 3 },
+  { id: 'greed', icon: '🪙', name: 'Gold Fever', nameEs: 'Fiebre de Oro', desc: '+50% gold from foes and chests', descEs: '+50% de oro de enemigos y cofres', max: 2 },
+  { id: 'phoenix', icon: '🪶', name: 'Phoenix Ember', nameEs: 'Brasa de Fénix', desc: 'One extra party revive', descEs: 'Un revivir extra para el grupo', max: 2 },
+  { id: 'swift', icon: '👟', name: 'Swift Boots', nameEs: 'Botas Veloces', desc: '+12% move speed', descEs: '+12% de velocidad', max: 2 },
+  { id: 'guard', icon: '🛡️', name: 'Iron Skin', nameEs: 'Piel de Hierro', desc: 'Take 15% less damage', descEs: 'Recibes 15% menos daño', max: 3 },
+  { id: 'frost', icon: '❄️', name: 'Frost Touch', nameEs: 'Toque Helado', desc: 'Your hits slow foes down', descEs: 'Tus golpes frenan a los enemigos', max: 2 },
+  { id: 'medic', icon: '💚', name: 'Field Medic', nameEs: 'Médico de Campo', desc: 'Clearing a room heals the party 20%', descEs: 'Limpiar una sala cura al grupo un 20%', max: 3 },
+  { id: 'rally', icon: '📯', name: 'Rally Cry', nameEs: 'Grito de Ánimo', desc: 'Revive allies 50% faster', descEs: 'Revives aliados un 50% más rápido', max: 2 },
+  { id: 'execute', icon: '💥', name: 'Finishing Blow', nameEs: 'Golpe Final', desc: '+40% damage to badly hurt foes', descEs: '+40% de daño a enemigos muy heridos', max: 2 },
+  { id: 'aegis', icon: '🫧', name: 'Bubble Guard', nameEs: 'Escudo Burbuja', desc: 'A bubble blocks one hit every 15 s', descEs: 'Una burbuja bloquea un golpe cada 15 s', max: 2 }
 ];
 const META = [
-  { id: 'hp', icon: '🍲', name: 'Hearty Stew', desc: '+12 max health for every hero', max: 5, cost: l => 40 + l * 40 },
-  { id: 'dmg', icon: '🪨', name: 'Whetstone', desc: '+6% damage per level', max: 5, cost: l => 50 + l * 50 },
-  { id: 'boon', icon: '🎴', name: 'Lucky Deck', desc: 'Start every run with a free boon', max: 1, cost: () => 160 },
-  { id: 'phoenix', icon: '🪶', name: 'Phoenix Feather', desc: '+1 party revive per run', max: 2, cost: l => 120 + l * 140 },
-  { id: 'gold', icon: '🗺️', name: 'Treasure Map', desc: '+15% gold found', max: 3, cost: l => 60 + l * 60 },
-  { id: 'cd', icon: '⌛', name: 'Rune of Haste', desc: 'Specials recharge 8% faster', max: 3, cost: l => 70 + l * 70 }
+  { id: 'hp', icon: '🍲', name: 'Hearty Stew', nameEs: 'Guiso Contundente', desc: '+12 max health for every hero', descEs: '+12 de vida máxima para cada héroe', max: 5, cost: l => 40 + l * 40 },
+  { id: 'dmg', icon: '🪨', name: 'Whetstone', nameEs: 'Piedra de Afilar', desc: '+6% damage per level', descEs: '+6% de daño por nivel', max: 5, cost: l => 50 + l * 50 },
+  { id: 'boon', icon: '🎴', name: 'Lucky Deck', nameEs: 'Baraja de la Suerte', desc: 'Start every run with a free boon', descEs: 'Empieza cada partida con un don gratis', max: 1, cost: () => 160 },
+  { id: 'phoenix', icon: '🪶', name: 'Phoenix Feather', nameEs: 'Pluma de Fénix', desc: '+1 party revive per run', descEs: '+1 revivir del grupo por partida', max: 2, cost: l => 120 + l * 140 },
+  { id: 'gold', icon: '🗺️', name: 'Treasure Map', nameEs: 'Mapa del Tesoro', desc: '+15% gold found', descEs: '+15% de oro encontrado', max: 3, cost: l => 60 + l * 60 },
+  { id: 'cd', icon: '⌛', name: 'Rune of Haste', nameEs: 'Runa de Prisa', desc: 'Specials recharge 8% faster', descEs: 'Los especiales cargan 8% más rápido', max: 3, cost: l => 70 + l * 70 }
 ];
 const ROOMS = {
-  cave: { name: 'Crystal Cavern', W: 24, D: 17, floor: ['stone', 0x6a7490], wall: 'rock', tint: 0x55627e, back: 0x262c3a, fog: 0x070a12, motes: 0x9fdcff, sun: 0xa8c4ff, look: { exposure: 1.08, sun: 1.5, hemi: .8, skyHor: 0x6a88b8, ground: 0x3a3630 } },
-  ruins: { name: 'Sunken Ruins', W: 26, D: 17, floor: ['stone', 0x8f8676], wall: 'block', tint: 0x8a8172, back: 0x5a554c, fog: 0x0a0b0f, motes: 0xffe2b0, sun: 0xd8e2ff, look: { exposure: 1.05, sun: 1.5, hemi: .75, skyHor: 0x8a9ab8, ground: 0x3a3226 } },
-  wreck: { name: 'Shipwreck Hold', W: 24, D: 16, floor: ['wood', 0x8a6040], wall: 'plank', tint: 0x6e4a30, back: 0x3a2618, fog: 0x0b0a0c, motes: 0xffd9a0, sun: 0xc8d6ff, look: { exposure: 1.05, sun: 1.4, hemi: .75, skyHor: 0x7a8aa8, ground: 0x3a2a1c } },
-  forge: { name: 'Lava Forge', W: 24, D: 17, floor: ['stone', 0x5a4e48], wall: 'rock', tint: 0x4e3a34, back: 0x22160f, fog: 0x120705, motes: 0xff9a4c, embers: true, sun: 0xffc8a8, look: { exposure: 1.05, sun: 1.2, hemi: .7, skyHor: 0x8a5a48, ground: 0x2a1610 } },
-  boss: { name: "Captain's Grotto", W: 30, D: 21, floor: ['stone', 0x5e6478], wall: 'rock', tint: 0x4a546a, back: 0x1c202c, fog: 0x080810, motes: 0xffb38a, sun: 0xc0ccff, look: { exposure: 1.05, sun: 1.4, hemi: .75, skyHor: 0x6a6a9a, ground: 0x2a1c18 } },
-  camp: { name: 'Camp', W: 16, D: 12, floor: ['stone', 0x5a5a66], wall: 'rock', tint: 0x55607a, back: 0x22283a, fog: 0x07080e, motes: 0xffc890, sun: 0x9fb8ff, look: { exposure: 1.0, sun: .55, hemi: .45, skyHor: 0x5a6a90, ground: 0x2a2018 } }
+  cave: { name: 'Crystal Cavern', nameEs: 'Caverna de Cristal', W: 24, D: 17, floor: ['stone', 0x6a7490], wall: 'rock', tint: 0x55627e, back: 0x262c3a, fog: 0x070a12, motes: 0x9fdcff, sun: 0xa8c4ff, look: { exposure: 1.08, sun: 1.5, hemi: .8, skyHor: 0x6a88b8, ground: 0x3a3630 } },
+  ruins: { name: 'Sunken Ruins', nameEs: 'Ruinas Hundidas', W: 26, D: 17, floor: ['stone', 0x8f8676], wall: 'block', tint: 0x8a8172, back: 0x5a554c, fog: 0x0a0b0f, motes: 0xffe2b0, sun: 0xd8e2ff, look: { exposure: 1.05, sun: 1.5, hemi: .75, skyHor: 0x8a9ab8, ground: 0x3a3226 } },
+  wreck: { name: 'Shipwreck Hold', nameEs: 'Bodega del Naufragio', W: 24, D: 16, floor: ['wood', 0x8a6040], wall: 'plank', tint: 0x6e4a30, back: 0x3a2618, fog: 0x0b0a0c, motes: 0xffd9a0, sun: 0xc8d6ff, look: { exposure: 1.05, sun: 1.4, hemi: .75, skyHor: 0x7a8aa8, ground: 0x3a2a1c } },
+  forge: { name: 'Lava Forge', nameEs: 'Forja de Lava', W: 24, D: 17, floor: ['stone', 0x5a4e48], wall: 'rock', tint: 0x4e3a34, back: 0x22160f, fog: 0x120705, motes: 0xff9a4c, embers: true, sun: 0xffc8a8, look: { exposure: 1.05, sun: 1.2, hemi: .7, skyHor: 0x8a5a48, ground: 0x2a1610 } },
+  boss: { boss: true, name: "Captain's Grotto", nameEs: 'Gruta del Capitán', W: 30, D: 21, floor: ['stone', 0x5e6478], wall: 'rock', tint: 0x4a546a, back: 0x1c202c, fog: 0x080810, motes: 0xffb38a, sun: 0xc0ccff, look: { exposure: 1.05, sun: 1.4, hemi: .75, skyHor: 0x6a6a9a, ground: 0x2a1c18 } },
+  // Act II: the Glowroot Hollow
+  grove: { name: 'Glowroot Grove', nameEs: 'Arboleda Raíz de Luz', W: 24, D: 17, floor: ['grass', 0x4f6e3c], wall: 'rock', tint: 0x4a5a40, back: 0x1e2a1a, fog: 0x050a06, motes: 0xc8ff8a, sun: 0xd8ffc8, look: { exposure: 1.06, sun: 1.35, hemi: .8, skyHor: 0x6a9a78, ground: 0x2a3a20 } },
+  reef: { name: 'Coral Grotto', nameEs: 'Gruta de Coral', W: 25, D: 17, floor: ['sand', 0xb8a47e], wall: 'rock', tint: 0x3e6a76, back: 0x183a44, fog: 0x04121a, motes: 0xbff6ff, embers: true, sun: 0xb8ecff, look: { exposure: 1.06, sun: 1.45, hemi: .85, skyHor: 0x5aa0b8, ground: 0x2a3a3a } },
+  mine: { name: 'Old Crystal Mine', nameEs: 'Vieja Mina de Cristal', W: 24, D: 17, floor: ['stone', 0x76685a], wall: 'rock', tint: 0x5a4a3c, back: 0x2a2018, fog: 0x0a0806, motes: 0xffd9a0, sun: 0xffe2c8, look: { exposure: 1.05, sun: 1.35, hemi: .75, skyHor: 0x8a7a68, ground: 0x2a2018 } },
+  spire: { name: 'Amethyst Halls', nameEs: 'Salas de Amatista', W: 26, D: 17, floor: ['stone', 0x6e6488], wall: 'block', tint: 0x6a5a88, back: 0x2a2240, fog: 0x08060f, motes: 0xd8b0ff, sun: 0xe0d0ff, look: { exposure: 1.05, sun: 1.45, hemi: .8, skyHor: 0x8a78b8, ground: 0x2a2238 } },
+  hollow: { boss: true, name: 'Colossus Hollow', nameEs: 'Hondonada del Coloso', W: 30, D: 21, floor: ['stone', 0x5c6470], wall: 'rock', tint: 0x48566a, back: 0x1a2230, fog: 0x060a10, motes: 0x9fefff, sun: 0xc8e0ff, look: { exposure: 1.05, sun: 1.4, hemi: .8, skyHor: 0x5a7aa0, ground: 0x22282e } },
+  camp: { name: 'Camp', nameEs: 'Campamento', W: 16, D: 12, floor: ['stone', 0x5a5a66], wall: 'rock', tint: 0x55607a, back: 0x22283a, fog: 0x07080e, motes: 0xffc890, sun: 0x9fb8ff, look: { exposure: 1.0, sun: .55, hemi: .45, skyHor: 0x5a6a90, ground: 0x2a2018 } }
 };
-const SEQ = ['cave', 'cave', 'ruins', 'ruins', 'wreck', 'wreck', 'forge', 'forge', 'boss'];
+// Two acts, each 8 rooms + a boss (one run = one act, about 10 to 15 minutes for a human party)
+const ACTS = {
+  1: { n: 1, icon: '⚓', seq: ['cave', 'cave', 'ruins', 'ruins', 'wreck', 'wreck', 'forge', 'forge', 'boss'], name: 'The Sunken Deep', nameEs: 'Las Profundidades Hundidas', boss: 'captain', bossName: 'Captain Brinehollow', bossNameEs: 'Capitán Brinehollow', bossSub: 'Terror of the drowned fleet', bossSubEs: 'Terror de la flota ahogada', desc: 'Pirates, zombies, cannons', descEs: 'Piratas, zombis, cañones' },
+  2: { n: 2, icon: '💎', seq: ['grove', 'grove', 'reef', 'reef', 'mine', 'mine', 'spire', 'spire', 'hollow'], name: 'The Glowroot Hollow', nameEs: 'La Hondonada Raíz de Luz', boss: 'golem', bossName: 'Grumblestone', bossNameEs: 'Gruñepiedra', bossSub: 'The crystal colossus', bossSubEs: 'El coloso de cristal', desc: 'Sporecaps, burrowers, crystal sentries', descEs: 'Hongos, topos de roca, centinelas' }
+};
 const FOE = {
   zombie: { hp: 44, speed: 1.9, dmg: 12, r: .45, gold: 1 },
   crew: { hp: 62, speed: 2.9, dmg: 16, r: .5, gold: 2 },
   officer: { hp: 46, speed: 2.5, dmg: 14, r: .5, gold: 2 },
   cannon: { hp: 85, speed: 0, dmg: 13, r: .75, gold: 3 },
-  boss: { hp: 4400, speed: 2.3, dmg: 24, r: 1.35, gold: 60 }
+  spore: { hp: 52, speed: 1.6, dmg: 11, r: .6, gold: 2 },
+  mole: { hp: 50, speed: 2.4, dmg: 14, r: .5, gold: 2 },
+  shard: { hp: 72, speed: 0, dmg: 11, r: .65, gold: 3 },
+  boss: { hp: 6500, speed: 2.3, dmg: 24, r: 1.35, gold: 60 },
+  golem: { hp: 8500, speed: 1.6, dmg: 24, r: 1.7, gold: 70 }
 };
-
+const STATIC = t => t === 'cannon' || t === 'shard';
+const FISH_YAW = 0; // the fish model's nose axis vs +Z
 /* ================= engine setup ================= */
 const ld = E.loading('Pixel Pact: Depths', 'Lighting the torches…');
 const R = E.createRenderer($('gl'), { fov: 40, portraitFov: 56, shadowSize: 17, far: 220 });
@@ -182,10 +207,11 @@ const input = E.createInput({ surface: $('gl') });
 const P = new E.Particles(scene);
 const burst = (pos, o) => { if (P.list.length < 70) P.burst(pos, o); };
 const SKEY = 'inoa.depths';
-const S = Object.assign({ cls: 'knight', allies: 2, diff: 'story', gold: 0, meta: {}, best: 0, wins: 0, runs: 0 }, E.store.get(SKEY, {}));
+const S = Object.assign({ cls: 'knight', allies: 2, diff: 'story', act: 1, gold: 0, meta: {}, best: 0, wins: 0, best2: 0, wins2: 0, runs: 0 }, E.store.get(SKEY, {}));
 S.meta = Object.assign({}, S.meta);
 const save = () => E.store.set(SKEY, S);
 const ml = id => S.meta[id] || 0;
+const act2Open = () => S.wins > 0 || S.best2 > 0 || QS.has('act2');
 
 /* ================= shared resources ================= */
 const _v1 = new THREE.Vector3(), _v2 = new THREE.Vector3(), _v3 = new THREE.Vector3(), _vw = new THREE.Vector3(), _vw2 = new THREE.Vector3(), _s1 = new THREE.Vector3();
@@ -211,6 +237,7 @@ const MAT = {
   hbBg: new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: .6, depthTest: false, toneMapped: false }),
   hbFg: new THREE.MeshBasicMaterial({ color: 0xff5a4f, depthTest: false, toneMapped: false }),
   sel: c => basic(c, { opacity: .55 }),
+  boulder: E.pbr('stone', 0x7a7f92, [1, 1], { bump: 3 }), bubble: new THREE.MeshBasicMaterial({ color: 0x9fe8ff, transparent: true, opacity: .22, depthWrite: false, toneMapped: false, blending: THREE.AdditiveBlending }),
   wood: E.pbr('wood', 0x6a4426, [1, 1]), woodDark: E.pbr('wood', 0x3e2817, [1, 1]), metal: E.pbr('metal', 0x7a808c, [1, 1]), iron: E.pbr('metal', 0x3a3d44, [1, 1], { rough: .6 })
 };
 const glowSprite = (color, s, op = 1) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color, transparent: true, opacity: op, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false })); sp.scale.setScalar(s); return sp; };
@@ -231,7 +258,7 @@ function updateMotes(dt, W, D, t) { for (let i = 0; i < MOTES_N; i++) { const k 
 
 /* ================= humanoids (rig helpers) ================= */
 const FIT = {};
-function ownMats(root) { const mats = []; root.traverse(o => { if (o.isMesh && !o.userData.outline && o.material && o.material.isMeshStandardMaterial) { o.material = o.material.clone(); o.material.emissive = new THREE.Color(0); mats.push(o.material); } }); return mats; }
+function ownMats(root) { const mats = []; root.traverse(o => { if (o.isMesh && !o.userData.outline && !o.userData.glow && o.material && o.material.isMeshStandardMaterial) { o.material = o.material.clone(); o.material.emissive = new THREE.Color(0); mats.push(o.material); } }); return mats; }
 function makeHumanoid(model, height) {
   const m = E.instance(model, { scale: 1.8, fit: 'height', outline: false });
   if (!FIT[model]) { m.updateMatrixWorld(true); const b = new THREE.Box3().setFromObject(m, true); FIT[model] = { s: 1 / (b.max.y - b.min.y), cx: (b.min.x + b.max.x) / 2, cz: (b.min.z + b.max.z) / 2, y: b.min.y }; }
@@ -319,6 +346,25 @@ function addBreakable(kind, x, z) {
   const m = E.instance(kind, { scale: kind === 'barrel' ? .95 : .8 }); m.position.set(x, 0, z); m.rotation.y = srnd() * TAU; roomGroup.add(m);
   const p = { kind, x, z, r: .42, hp: 1, m }; BR.props.push(p); BR.obst.push(p); return p;
 }
+function addGlowShroom(x, z, s, color, li = -1, collide = true) {
+  const m = E.instance('mushroom', { scale: s, tint: color, outline: s > 1 }); m.position.set(x, 0, z); m.rotation.y = srnd() * TAU;
+  m.traverse(o => { if (o.isMesh && !o.userData.outline && o.material && o.material.isMeshStandardMaterial) { o.material = o.material.clone(); o.material.emissive = new THREE.Color(color); o.material.emissiveIntensity = s > 1 ? .1 : .25; o.castShadow = s > 1; } }); roomGroup.add(m);
+  const gl = glowSprite(color, s * 1.6, s > 1 ? .12 : .2); gl.position.set(x, s * .75, z); roomGroup.add(gl);
+  if (collide) BR.obst.push({ x, z, r: s * .32 }); if (li >= 0) setLight(li, x, s + .6, z, color, 16, 10, .05);
+}
+const CORAL = {}; const coralMat = c => CORAL[c] || (CORAL[c] = new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: .22, roughness: .55 }));
+function addCoral(x, z, s, collide, li = -1) {
+  const g = new THREE.Group(); g.position.set(x, 0, z); roomGroup.add(g); const col = [0xff7b8a, 0xffa25a, 0xc890ff, 0xff6ac0][Math.floor(srnd() * 4)]; const m = coralMat(col); const n = 4 + Math.floor(srnd() * 3);
+  for (let i = 0; i < n; i++) { const h = s * sr(.7, 1.5); const b = mesh(GEO.cyl, m, sr(-.35, .35) * s, h / 2, sr(-.35, .35) * s, .09 * s, h, .09 * s, g); b.rotation.set(sr(-.35, .35), 0, sr(-.35, .35)); const tip = mesh(GEO.sph, m, 0, .5, 0, 1.6, .12, 1.6, b); tip.castShadow = false; }
+  if (collide) BR.obst.push({ x, z, r: s * .45 }); if (li >= 0) setLight(li, x, 1.6, z, col, 14, 9, .05);
+}
+function addCart(x, z, ore) {
+  const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = Math.PI / 2; roomGroup.add(g);
+  mesh(GEO.box, MAT.iron, 0, .75, 0, 1, .7, 1.5, g); mesh(GEO.box, MAT.woodDark, 0, 1.12, 0, 1.08, .08, 1.58, g);
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) mesh(GEO.cyl, MAT.metal, sx * .52, .25, sz * .5, .25, .08, .25, g).rotation.z = Math.PI / 2;
+  if (ore) for (let i = 0; i < 4; i++) { const c = new THREE.Mesh(GEO.oct, MAT.cryB); c.scale.set(.18, .35, .18); c.position.set(sr(-.3, .3), 1.2, sr(-.5, .5)); c.rotation.set(sr(-.4, .4), sr(0, 3), sr(-.4, .4)); g.add(c); }
+  BR.obst.push({ x, z, r: .85 });
+}
 function buildRoom(type, idx) {
   clearRoom(); const T = ROOMS[type]; seed = (G?.seed || 7) * 131 + idx * 977 + 3;
   const W = T.W, D = T.D;
@@ -361,7 +407,7 @@ function buildRoom(type, idx) {
     for (let x = -W / 2; x <= W / 2; x += sr(2.5, 4)) addRock('formation-stone', x, D / 2 + .8, sr(1, 1.6), tint, false);
     for (const s of [-1, 1]) addRock('formation-large-stone', s * 2.6, -D / 2 - .4, 3.2, tint, false, s > 0 ? Math.PI : 0);
   } else if (T.wall === 'block') {
-    const st = E.pbr('stone', 0x9a917f, [1, 1], { bump: 3 });
+    const st = E.pbr('stone', type === 'spire' ? 0x8e80b0 : 0x9a917f, [1, 1], { bump: 3 });
     for (let x = -W / 2; x <= W / 2 + .1; x += W / 6) if (Math.abs(x) > 2.5) mesh(own(boxUV(1.1, wallH + .3, 1)), st, x, (wallH + .3) / 2, -D / 2 - .3);
     for (const s of [-1, 1]) for (let z = -D / 2; z <= D / 2 + .1; z += D / 4) mesh(own(boxUV(.9, sideH + .3, 1)), st, s * (W / 2 + .2), (sideH + .3) / 2, z);
     mesh(own(boxUV(W + 3, .45, 1.6)), st, 0, wallH + .1, -D / 2 - .5);
@@ -421,6 +467,51 @@ function buildRoom(type, idx) {
     addCrystals(W / 2 - 1.8, D / 2 - 2, 1.6, true, true, 5); addCrystals(-W / 2 + 6, -D / 2 + 1.2, 1.3, false, true);
     addTorch(-4, -D / 2 + .05, 2.8, 1); addTorch(4, -D / 2 + .05, 2.8, 2); addTorch(9, -D / 2 + .05, 2.8, 6);
     for (const [x, z] of [[-8, 4], [8, 4], [10, -3]]) addPillar(x, z, true, 0x6a6458);
+  } else if (type === 'grove') {
+    // giant trees behind the walls, glowing mushroom caps you can hide behind, fireflies (motes)
+    for (let x = -W / 2; x <= W / 2; x += sr(3.4, 4.6)) { if (Math.abs(x) < 3.6) continue; const t = E.instance('tree-big', { scale: sr(5.5, 7.5), outline: false }); t.position.set(x, 0, -D / 2 - sr(.8, 1.8)); t.rotation.y = sr(0, TAU); roomGroup.add(t); }
+    for (const sx of [-1, 1]) for (let z = -D / 2 + 2; z < D / 2; z += sr(3.8, 5)) { const t = E.instance('tree-big', { scale: sr(5, 6.5), outline: false }); t.position.set(sx * (W / 2 + sr(.8, 1.6)), 0, z); t.rotation.y = sr(0, TAU); roomGroup.add(t); }
+    const caps = [[-6.5, -2.5], [6.5, -2], [-3, 3.2], [4, 3.6]]; caps.forEach((p, i) => { if (srnd() < .8) addGlowShroom(p[0] + sr(-1, 1), p[1] + sr(-.8, .8), sr(1.2, 1.6), i % 2 ? 0x5ab88a : 0x7ab84a, i + 1); });
+    for (let i = 0; i < 8; i++) addGlowShroom(srnd() < .5 ? -W / 2 + sr(.5, 1.4) : W / 2 - sr(.5, 1.4), sr(-D / 2 + 1, D / 2 - 1), sr(.5, .8), 0x9fffd0, -1, false);
+    addTorch(-4.5, -D / 2 + .05, 2.6, 5); addTorch(4.5, -D / 2 + .05, 2.6, 6);
+    for (let i = 0; i < 4; i++) addBreakable('pot', srnd() < .5 ? -W / 2 + sr(.8, 1.6) : W / 2 - sr(.8, 1.6), sr(-D / 2 + 2, D / 2 - 1));
+  } else if (type === 'reef') {
+    // tide pools (harmless), coral clusters, mussel beds and a school of fish circling overhead
+    const water = new THREE.MeshStandardMaterial({ color: 0x2a8aa8, transparent: true, opacity: .5, roughness: .08, metalness: .3, emissive: 0x0a3a4a, emissiveIntensity: .5 }); disposables.push(water);
+    for (let i = 0; i < 2; i++) { const x = (i ? 1 : -1) * sr(4, 7), z = sr(-3, 3), r = sr(1.6, 2.4); const pm = mesh(own(new THREE.CircleGeometry(r, 28)), water, x, .03, z); pm.rotation.x = -Math.PI / 2; pm.castShadow = false; }
+    for (let x = -W / 2 + 1; x <= W / 2 - 1; x += sr(2.4, 3.4)) if (Math.abs(x) > 3) addCoral(x, -D / 2 + sr(.6, 1.2), sr(1, 1.6), false);
+    for (const sx of [-1, 1]) for (let z = -D / 2 + 2; z < D / 2 - 1; z += sr(2.6, 3.6)) addCoral(sx * (W / 2 - sr(.5, 1)), z, sr(.9, 1.4), false);
+    addCoral(sr(-3, -1.5), sr(-1, 2), 1.5, true, 3); addCoral(sr(1.5, 3), sr(-3, 0), 1.4, true, 4);
+    for (let i = 0; i < 12; i++) { const m = E.instance('mussel', { scale: sr(.3, .45), outline: false }); m.position.set(sr(-W / 2 + 1, W / 2 - 1), 0, srnd() < .5 ? -D / 2 + sr(.4, 2) : D / 2 - sr(.4, 1.5)); m.rotation.y = sr(0, TAU); roomGroup.add(m); }
+    room.fish = []; for (let i = 0; i < 9; i++) { const f = E.instance('fish', { scale: sr(.45, .7), outline: false }); roomGroup.add(f); room.fish.push({ m: f, cx: sr(-6, 6), cz: sr(-4, 3), r: sr(2, 4.5), sp: sr(.35, .7) * (srnd() < .5 ? -1 : 1), ph: sr(0, TAU), y: sr(3, 4.4) }); }
+    addCrystals(-W / 2 + 1.6, -D / 2 + 1.8, 1.3, false, true, 1); addCrystals(W / 2 - 1.6, -D / 2 + 2, 1.2, false, true, 2);
+    setLight(5, 0, 4, 1, 0x7ae8ff, 16, 18, .03);
+    for (let i = 0; i < 3; i++) addBreakable('pot', srnd() < .5 ? -W / 2 + sr(.8, 1.6) : W / 2 - sr(.8, 1.6), sr(-D / 2 + 2, D / 2 - 1));
+  } else if (type === 'mine') {
+    // timber supports, a rail line with ore carts, crystal veins, hanging lanterns
+    for (let x = -W / 2 + 1; x <= W / 2 - 1; x += 4) { if (Math.abs(x) < 3) continue; mesh(GEO.box, MAT.woodDark, x, 2.2, -D / 2 + .25, .35, 4.4, .35); mesh(GEO.box, MAT.woodDark, x, 4.3, -D / 2 + .5, .4, .35, 1.1); }
+    for (const sx of [-1, 1]) for (let z = -D / 2 + 3; z < D / 2; z += 4) mesh(GEO.box, MAT.woodDark, sx * (W / 2 - .2), 2, z, .35, 4, .35);
+    const rz = sr(-1.5, 2.5); for (const s of [-1, 1]) mesh(GEO.box, MAT.metal, 0, .1, rz + s * .55, W, .1, .1);
+    const nSl = Math.floor(W / .9); const sl = new THREE.InstancedMesh(GEO.box, MAT.wood, nSl); sl.receiveShadow = true; for (let i = 0; i < nSl; i++) { _m4.compose(_v1.set(-W / 2 + .45 + i * .9, .04, rz), _q1.identity(), _s1.set(.25, .08, 1.5)); sl.setMatrixAt(i, _m4); } roomGroup.add(sl);
+    for (let i = 0; i < 2; i++) { const cx = (i ? 1 : -1) * sr(4, 8); addCart(cx, rz, i === 0); }
+    addCrystals(-W / 2 + 1.5, -D / 2 + 1.6, 1.3, true, true, 3); addCrystals(W / 2 - 1.5, D / 2 - 2, 1.2, false, true, 4);
+    for (let i = 0; i < 2; i++) { const lx = (i ? 1 : -1) * 5, lz = rz - 3.5; const lan = new THREE.Group(); lan.position.set(lx, 3.3, lz); roomGroup.add(lan); mesh(GEO.box, MAT.iron, 0, 0, 0, .3, .4, .3, lan); lan.add(glowSprite(0xffb050, 1.4, .8)); setLight(1 + i, lx, 3.1, lz, 0xffb060, 22, 12, .08); }
+    addTorch(0, -D / 2 + .05, 2.6, 5); setLight(6, 0, 3.5, D / 2 - 3, 0xffd8a8, 10, 14, .02);
+    for (let i = 0; i < 4; i++) addBreakable('barrel', srnd() < .5 ? -W / 2 + sr(.8, 1.6) : W / 2 - sr(.8, 1.6), sr(rz + 2, D / 2 - 1));
+  } else if (type === 'spire') {
+    // a hall of giant amethyst pillars
+    const lay = srnd(); const pts = lay < .5 ? [[-7, -3], [0, -3.5], [7, -3], [-7, 3], [7, 3]] : [0, 1, 2, 3, 4, 5].map(i => [Math.cos(i / 6 * TAU + .5) * 7, Math.sin(i / 6 * TAU + .5) * 4.2 - .5]);
+    pts.forEach((p, i) => addCrystals(p[0] + sr(-.3, .3), p[1], sr(1.5, 2.1), i % 3 !== 0, true, i < 3 ? 3 + i : -1));
+    addBrazier(-W / 2 + 1.5, -D / 2 + 1.5, 1); addBrazier(W / 2 - 1.5, -D / 2 + 1.5, 2);
+    for (let i = 0; i < 4; i++) addBreakable('pot', srnd() < .5 ? -W / 2 + sr(.7, 1.5) : W / 2 - sr(.7, 1.5), sr(-D / 2 + 3, D / 2 - 1));
+    setLight(6, 0, 3.5, 2, 0xc8a8ff, 14, 16, .02);
+  } else if (type === 'hollow') {
+    // the colossus' lair: crystal outcrops and roots, open floor to dodge in
+    addCrystals(-W / 2 + 2, -D / 2 + 2, 2.2, true, true, 3); addCrystals(W / 2 - 2, -D / 2 + 2.2, 2, false, true, 4); addCrystals(W / 2 - 2, D / 2 - 2.4, 1.6, true, true, 5); addCrystals(-W / 2 + 2.2, D / 2 - 2.2, 1.5, false, true);
+    for (let x = -W / 2; x <= W / 2; x += sr(4, 5.5)) { if (Math.abs(x) < 4) continue; const t = E.instance('tree-big', { scale: sr(6, 8), outline: false, tint: 0x6a8a7a }); t.position.set(x, 0, -D / 2 - sr(1, 2)); t.rotation.y = sr(0, TAU); roomGroup.add(t); }
+    addTorch(-4, -D / 2 + .05, 2.8, 1); addTorch(4, -D / 2 + .05, 2.8, 2); addTorch(9.5, -D / 2 + .05, 2.8, 6);
+    for (const [x, z] of [[-8, 4.5], [8.5, 4]]) addPillar(x, z, true, 0x6a6a7a);
+    for (let i = 0; i < 6; i++) addGlowShroom(srnd() < .5 ? -W / 2 + sr(.6, 1.4) : W / 2 - sr(.6, 1.4), sr(-D / 2 + 3, D / 2 - 3), sr(.6, .9), 0x9fffd0, -1, false);
   }
   roomGroup.updateMatrixWorld(true); roomGroup.traverse(o => { if (o.isMesh) { const wp = o.getWorldPosition(_v1); if (Math.abs(wp.x) > W / 2 - .2 || wp.z < -D / 2 + .2 || wp.z > D / 2 - .2) o.castShadow = false; } });
   seedMotes(W, D, !!T.embers); moteMat.color.set(T.motes); moteMat.size = T.embers ? .13 : .09;
@@ -433,6 +524,7 @@ function makeHero(clsId, ctrl, slot, modelOverride) {
   const e = Object.assign(H, { kind: 'hero', team: 'hero', cls: clsId, C, ctrl, slot, x: 0, z: 0, h: Math.PI, vx: 0, vz: 0, kx: 0, kz: 0, r: .45, maxHp: C.hp, hp: C.hp, state: 'move', st: 0, combo: 0, comboWin: 0, nextCombo: 0, queued: false, hitDone: false, dodges: C.dodges, dodgeT: 0, iframes: 0, cd: 0, ult: 0, flash: 0, down: false, reviveP: 0, animT: rnd(0, 5), runPh: 0, moveAmt: 0, pose: newPose(), tgt: newPose(), stats: { dmg: 0, kills: 0 }, hitSet: new Set(), aiT: 0, ai: {}, ctlPrev: {} });
   e.g.add(e.sel = new THREE.Mesh(GEO.selRing, MAT.sel(new THREE.Color(C.color).getHex()))); e.sel.position.y = .03; e.sel.scale.setScalar(1.1);
   const fill = new THREE.Mesh(GEO.disc, basic(0x60ff9a, { opacity: .35 })); fill.position.y = .04; fill.visible = false; e.g.add(fill); e.revFill = fill;
+  e.bubble = new THREE.Mesh(GEO.sph, MAT.bubble); e.bubble.scale.set(.75, 1.05, .75); e.bubble.position.y = 1; e.bubble.visible = false; e.g.add(e.bubble);
   if (ctrl !== 'bot') { const t = E.tag('', ctrl === 'p1' ? 'P1' : 'P2', { width: 1.1, bg: C.color }); t.position.y = 2.25; e.g.add(t); e.ptag = t; }
   // gear
   if (clsId === 'knight') { e.weapon = attachToBone(e, weaponPivot('sword', 1.05, .14), 'RightHand'); e.shield = attachToBone(e, makeShield(), 'LeftHand'); }
@@ -446,25 +538,43 @@ const partyAlive = () => G.heroes.filter(h => !h.down);
 function boon(id) { return G.boons[id] || 0; }
 
 /* ================= foes ================= */
+function addEyes(parent, x, y, z, s = 1, color = 0xffffff) { for (const sx of [-1, 1]) { const w = new THREE.Mesh(GEO.sph, eyeMat(color)); w.scale.setScalar(.09 * s); w.position.set(x + sx * .13 * s, y, z); parent.add(w); const p = new THREE.Mesh(GEO.sph, MAT.ball); p.scale.setScalar(.05 * s); p.position.set(x + sx * .13 * s, y, z + .06 * s); parent.add(p); } }
+const EYES = {}; const eyeMat = c => EYES[c] || (EYES[c] = new THREE.MeshBasicMaterial({ color: c }));
+// the act II boss: a colossus stacked from boulders around a glowing crystal core (arms are separate pivots so they can telegraph)
+function makeGolem() {
+  const pivot = new THREE.Group(); const g = new THREE.Group(); g.add(pivot); const tint = 0x585c6c;
+  const rock = (name, s, x, y, z, parent = pivot, ry = 0) => { const m = E.instance(name, { scale: s, tint }); m.position.set(x, y, z); m.rotation.y = ry; parent.add(m); return m; };
+  rock('formation-stone', 1.5, -.85, 0, 0); rock('formation-stone', 1.5, .85, 0, 0, pivot, 2);
+  rock('formation-large-rock', 3.4, 0, 1.0, 0, pivot, .4);
+  const head = new THREE.Group(); head.position.set(0, 4.05, .15); pivot.add(head); rock('formation-stone', 1.5, 0, 0, 0, head, 1.2);
+  for (const sx of [-1, 1]) { const ey = new THREE.Mesh(GEO.sph, MAT.orb); ey.scale.setScalar(.14); ey.position.set(sx * .3, .6, .62); head.add(ey); const gl = glowSprite(0x7ff8ff, .7, .8); gl.position.copy(ey.position); head.add(gl); }
+  const core = new THREE.Group(); core.position.set(0, 2.55, 1.15); pivot.add(core); const cm = new THREE.Mesh(GEO.oct, MAT.cryB.clone()); cm.userData.glow = true; cm.scale.set(.45, .7, .45); core.add(cm); const cg = glowSprite(0x40c8ff, 2.2, .55); core.add(cg);
+  for (let i = 0; i < 5; i++) { const c = new THREE.Mesh(GEO.oct, MAT.cryP); c.scale.set(.25, .8 + i * .1, .25); c.position.set((i - 2) * .45, 3.6 + Math.abs(i - 2) * -.2, -.9); c.rotation.set(-.5, 0, (i - 2) * .3); c.castShadow = true; c.userData.glow = true; pivot.add(c); }
+  const arms = []; for (const sx of [-1, 1]) { const arm = new THREE.Group(); arm.position.set(sx * 1.95, 3.25, 0); pivot.add(arm); rock('formation-rock', 1.25, 0, -1.2, 0, arm); const fist = rock('formation-rock', 1.55, 0, -2.85, 0, arm, sx); arms.push(arm); arm.userData.fist = fist; }
+  return { g, pivot, model: pivot, mats: ownMats(pivot), armL: arms[1], armR: arms[0], head, core, coreMat: cm.material, coreGlow: cg };
+}
 function makeFoe(type, x, z, o = {}) {
-  const F = FOE[type]; const d = DIFF[S.diff]; const idx = G.room.idx;
+  const golem = type === 'boss' && G.act === 2; const F = golem ? FOE.golem : FOE[type]; const d = DIFF[S.diff]; const idx = G.room.idx + (G.act - 1) * 3;
   const hpMul = d.foeHp * (type === 'boss' ? 1 : 1 + idx * .09) * (.8 + .12 * G.heroes.length);
   let e;
   if (type === 'zombie') { e = makeHumanoid(pick(['zombie-1', 'zombie-2']), 1.72); e.pose = newPose(); e.tgt = newPose(); }
-  else if (type === 'boss') { const m = E.instance('pirate-captain', { scale: 4.3, fit: 'height' }); m.rotation.y = Math.PI; const pivot = new THREE.Group(); pivot.add(m); const g = new THREE.Group(); g.add(pivot); e = { g, pivot, model: m, mats: ownMats(m) }; const arm = new THREE.Group(); arm.position.set(-1.3, 1.75, .35); pivot.add(arm); const sw = weaponPivot('sword-scimitar', 3.1, .1); sw.rotation.x = .25; arm.add(sw); e.arm = arm; }
+  else if (golem) { e = makeGolem(); e.boss = 'golem'; }
+  else if (type === 'boss') { const m = E.instance('pirate-captain', { scale: 4.3, fit: 'height' }); m.rotation.y = Math.PI; const pivot = new THREE.Group(); pivot.add(m); const g = new THREE.Group(); g.add(pivot); e = { g, pivot, model: m, mats: ownMats(m), boss: 'captain' }; const arm = new THREE.Group(); arm.position.set(-1.3, 1.75, .35); pivot.add(arm); const sw = weaponPivot('sword-scimitar', 3.1, .1); sw.rotation.x = .25; arm.add(sw); e.arm = arm; }
   else if (type === 'cannon') { const m = E.instance('cannon', { scale: 1.6 }); const pivot = new THREE.Group(); pivot.add(m); const g = new THREE.Group(); g.add(pivot); e = { g, pivot, model: m, mats: ownMats(m) }; const base = new THREE.Mesh(new THREE.CylinderGeometry(.9, 1, .25, 16), E.pbr('stone', 0x5a5550, [1, 1])); base.position.y = .12; base.receiveShadow = true; g.add(base); }
+  else if (type === 'spore') { const pivot = new THREE.Group(); const g = new THREE.Group(); g.add(pivot); const body = new THREE.Group(); pivot.add(body); const m = E.instance('mushroom', { scale: 1.35, tint: 0xd77cff }); body.add(m); const bb = new THREE.Box3().setFromObject(m); addEyes(body, 0, bb.max.y * .5, bb.max.z * .95, 1.6); e = { g, pivot, model: m, body, mats: ownMats(m) }; }
+  else if (type === 'mole') { const pivot = new THREE.Group(); const g = new THREE.Group(); g.add(pivot); const body = new THREE.Group(); pivot.add(body); const m = E.instance('formation-stone', { scale: 1.05, tint: 0xa08a70 }); body.add(m); addEyes(body, 0, .62, .42, 1.1, 0xfff2c8); const nose = new THREE.Mesh(GEO.sph, eyeMat(0xff8aa0)); nose.scale.set(.1, .08, .1); nose.position.set(0, .5, .56); body.add(nose); for (const sx of [-1, 1]) { const claw = new THREE.Mesh(GEO.cone, MAT.iron); claw.scale.set(.09, .25, .09); claw.position.set(sx * .38, .18, .42); claw.rotation.x = 1.3; body.add(claw); } e = { g, pivot, model: m, body, mats: ownMats(m) }; }
+  else if (type === 'shard') { const pivot = new THREE.Group(); const g = new THREE.Group(); g.add(pivot); const base = E.instance('formation-stone', { scale: 1.2, tint: 0x6a6478 }); pivot.add(base); const body = new THREE.Group(); body.position.y = .55; pivot.add(body); const cm = MAT.cryP.clone(); for (let i = 0; i < 4; i++) { const c = new THREE.Mesh(GEO.oct, cm); const h = i ? .55 : .95; c.scale.set(.22, h, .22); c.position.set(i ? Math.cos(i * 2.1) * .3 : 0, h * .55, i ? Math.sin(i * 2.1) * .3 : 0); c.rotation.set(i ? Math.sin(i) * .4 : 0, 0, i ? Math.cos(i) * .4 : 0); c.castShadow = true; body.add(c); } const gl = glowSprite(0xb070ff, 1.8, .35); gl.position.y = 1; body.add(gl); addEyes(body, 0, .75, .2, .9, 0xfff0ff); e = { g, pivot, model: body, body, mats: [cm], crystal: cm }; }
   else { const m = E.instance(type === 'crew' ? 'pirate-crew' : 'pirate-officer', { scale: type === 'crew' ? 1.6 : 1.7, fit: 'height' }); m.rotation.y = Math.PI; const pivot = new THREE.Group(); pivot.add(m); const g = new THREE.Group(); g.add(pivot); e = { g, pivot, model: m, mats: ownMats(m) }; const arm = new THREE.Group(); arm.position.set(-.42, type === 'crew' ? .75 : 1.15, .1); pivot.add(arm); e.arm = arm; if (type === 'crew') { const ax = weaponPivot('axe', 1.05, .2); ax.rotation.x = .35; arm.add(ax); } else { const b = new THREE.Mesh(GEO.sph, MAT.ball); b.scale.setScalar(.2); b.position.set(0, -.45, .12); b.castShadow = true; arm.add(b); e.ballInHand = b; } }
   e.g.traverse(o2 => { if (o2.isMesh) o2.castShadow = true; });
-  Object.assign(e, { kind: 'foe', type, team: 'foe', x, z, h: o.h ?? Math.atan2(-x, -z + 6), kx: 0, kz: 0, r: F.r, maxHp: Math.round(F.hp * hpMul), speed: F.speed * (S.diff === 'hard' ? 1.12 : 1), dmg: F.dmg * d.foeDmg, state: 'spawn', st: 0, cd: rnd(.6, 1.6), flash: 0, stun: 0, slow: 0, animT: rnd(0, 6), walkPh: rnd(0, 6), tele: null, hitSet: new Set(), dead: false, gold: F.gold });
+  Object.assign(e, { kind: 'foe', type, team: 'foe', x, z, h: o.h ?? Math.atan2(-x, -z + 6), kx: 0, kz: 0, r: F.r, maxHp: Math.round(F.hp * hpMul), speed: F.speed * (S.diff === 'hard' ? 1.12 : 1), dmg: F.dmg * d.foeDmg, state: 'spawn', untgt: true, st: 0, cd: rnd(.6, 1.6), flash: 0, stun: 0, slow: 0, animT: rnd(0, 6), walkPh: rnd(0, 6), tele: null, hitSet: new Set(), dead: false, gold: F.gold });
   e.hp = e.maxHp;
   // health bar
-  const hb = new THREE.Group(); const bg = new THREE.Mesh(GEO.plane, MAT.hbBg), fg = new THREE.Mesh(GEO.plane, MAT.hbFg); const w = type === 'boss' ? 0 : type === 'cannon' ? 1.3 : 1.0; bg.scale.set(w + .06, .16, 1); fg.scale.set(w, .1, 1); fg.position.z = .001; hb.add(bg, fg); hb.renderOrder = 8; bg.renderOrder = 8; fg.renderOrder = 9; hb.position.y = type === 'cannon' ? 1.9 : 2.15; hb.visible = false; e.g.add(hb); e.hb = { g: hb, fg, w };
+  const hb = new THREE.Group(); const bg = new THREE.Mesh(GEO.plane, MAT.hbBg), fg = new THREE.Mesh(GEO.plane, MAT.hbFg); const w = type === 'boss' ? 0 : STATIC(type) ? 1.3 : 1.0; bg.scale.set(w + .06, .16, 1); fg.scale.set(w, .1, 1); fg.position.z = .001; hb.add(bg, fg); hb.renderOrder = 8; bg.renderOrder = 8; fg.renderOrder = 9; hb.position.y = type === 'cannon' ? 1.9 : type === 'mole' ? 1.5 : type === 'shard' ? 2.3 : 2.15; hb.visible = false; e.g.add(hb); e.hb = { g: hb, fg, w };
   e.g.position.set(x, 0, z); scene.add(e.g); G.foes.push(e);
-  if (type === 'zombie') { e.pivot.position.y = e.PH - 1.9; burst(new THREE.Vector3(x, .2, z), { color: 0x6a5a48, n: 14, speed: 2, up: 3, size: .5, life: .8, additive: false, gravity: 8 }); }
+  if (type === 'zombie' || type === 'mole') { e.rise = type === 'zombie' ? e.PH : 0; e.pivot.position.y = e.rise - 1.9; burst(new THREE.Vector3(x, .2, z), { color: 0x6a5a48, n: 14, speed: 2, up: 3, size: .5, life: .8, additive: false, gravity: 8 }); }
   else if (type !== 'boss') { e.portal = shock(x, z, 1.2, 0x9a5cff, .8, .08); burst(new THREE.Vector3(x, 1, z), { color: 0xb08aff, n: 16, speed: 2.5, up: 3, size: .5, life: .7 }); e.pivot.position.y = 3; }
   return e;
 }
-
 /* ================= telegraphs / effects ================= */
 function teleCircle(x, z, r, dur, friendly) {
   const g = new THREE.Group(); const ring = new THREE.Mesh(GEO.ring, friendly ? MAT.tRingB : MAT.tRing), fill = new THREE.Mesh(GEO.disc, friendly ? MAT.tFillB : MAT.tFill);
@@ -487,7 +597,8 @@ function updateFX(dt) {
     if (f.kind === 'shock') { f.m.scale.setScalar(.2 + (f.r - .2) * (1 - Math.pow(1 - Math.min(1, k), 3))); f.m.material.opacity = .9 * (1 - k); }
     else if (f.kind === 'line') f.m.material.opacity = 1 - k;
     else if (f.kind === 'swoosh') { f.mat.opacity = .9 * (1 - k * k); f.m.scale.setScalar(1 + k * .12); }
-    if (k >= 1) { fxGroup.remove(f.m); if (f.m.geometry) f.m.geometry !== GEO.torus && f.m.geometry.dispose(); if (f.geo) f.geo.dispose(); (f.mat || f.m.material).dispose(); FX.splice(i, 1); } }
+    else if (f.kind === 'spike') f.m.scale.y = k < .15 ? Math.max(.01, k / .15) : Math.max(.01, 1 - sstep(.6, 1, k));
+    if (k >= 1) { fxGroup.remove(f.m); if (f.m.geometry) f.m.geometry !== GEO.torus && f.m.geometry.dispose(); if (f.geo) f.geo.dispose(); if (f.kind !== 'spike') (f.mat || f.m.material).dispose(); FX.splice(i, 1); } }
 }
 
 /* ================= audio ================= */
@@ -512,7 +623,10 @@ const SND = {
   zap: () => snd('zap', () => { E.noise(.15, .12, 5000, 2); E.tone(1600, .12, 'square', .04, -900); }),
   ult: () => { E.tone(220, .6, 'sawtooth', .08, 440); E.noise(.6, .1, 1200, .6); [523, 784, 1046].forEach((f, i) => E.tone(f, .3, 'triangle', .08, 0, .1 + i * .07)); },
   revive: () => [392, 523, 659, 784].forEach((f, i) => E.tone(f, .25, 'triangle', .1, 0, i * .07)),
-  break: () => snd('brk', () => { E.noise(.25, .15, 900, .7); E.tone(200, .1, 'triangle', .06, -100); })
+  break: () => snd('brk', () => { E.noise(.25, .15, 900, .7); E.tone(200, .1, 'triangle', .06, -100); }),
+  puff: () => snd('puff', () => { E.noise(.4, .1, 700, .5); E.tone(180, .25, 'sine', .06, -80); }, .1),
+  perfect: () => snd('pf', () => { E.tone(880, .12, 'triangle', .07, 440); E.tone(1320, .16, 'triangle', .05, 0, .06); }, .2),
+  bubble: () => snd('bub', () => { E.tone(660, .2, 'sine', .08, -300); E.noise(.12, .05, 3000, 1); }, .1)
 };
 
 /* ================= input ================= */
@@ -542,13 +656,13 @@ let layoutSent = false;
 function syncPhones() {
   if (E.net.role !== 'host' || !G) return; if (!layoutSent) { layoutSent = true; E.NET.setLayout(PAD_LAYOUT); }
   const phones = E.net.pads('pad').slice(1, 4);
-  for (const h of G.heroes) if (h.ctrl === 'net' && !phones.some(p => p.slot === h.netSlot)) { h.ctrl = 'bot'; if (h.ptag) { h.g.remove(h.ptag); h.ptag = null; } E.toast(`${h.netName} left: an AI ally takes over`, 1600); }
+  for (const h of G.heroes) if (h.ctrl === 'net' && !phones.some(p => p.slot === h.netSlot)) { h.ctrl = 'bot'; if (h.ptag) { h.g.remove(h.ptag); h.ptag = null; } E.toast(E.L(`${h.netName} left: an AI ally takes over`, `${h.netName} salió: un aliado IA toma su lugar`), 1600); }
   phones.forEach((p, k) => {
     if (G.heroes.some(h => h.ctrl === 'net' && h.netSlot === p.slot)) return;
     let h = G.heroes.find(o => o.ctrl === 'bot');
     if (!h) { const used = G.heroes.map(o => o.cls); const cls = CLS_ORDER.find(c => !used.includes(c)) || 'knight'; const p1 = G.heroes[0]; h = makeHero(cls, 'bot', G.heroes.length, used.includes(cls) ? CLASSES[cls].alt : null); h.x = p1.x + 1.5; h.z = p1.z + 1; h.maxHp = heroMaxHp(h); h.hp = h.maxHp; G.heroes.push(h); }
     h.ctrl = 'net'; h.netSlot = p.slot; h.netName = p.name; if (h.ptag) h.g.remove(h.ptag); const t = E.tag('', `P${k + 2}`, { width: 1.1, bg: p.color }); t.position.y = 2.25; h.g.add(t); h.ptag = t;
-    hudBuild(); E.toast(`📱 ${p.name} joined as P${k + 2}!`, 1800); SFX.good(); E.NET.rumble(p.slot, 120);
+    hudBuild(); E.toast(E.L(`📱 ${p.name} joined as P${k + 2}!`, `📱 ¡${p.name} se une como J${k + 2}!`), 1800); SFX.good(); E.NET.rumble(p.slot, 120);
   });
 }
 E.net.on('join', () => { layoutSent = false; });
@@ -565,21 +679,29 @@ function popText(text, pos, cls) { if (floatN > 14) return; const s = E.toScreen
 function popDmg(t, dmg, crit, hero, src) {
   const a = t.dacc || (t.dacc = { n: 0, crit: false, mine: false, open: -9 }); a.n += dmg; a.crit ||= crit; a.mine ||= hero || !src || src.ctrl !== 'bot';
   if (G.t - a.open < .5) return; a.open = G.t; // (re-opens if a room change dropped the pending timer)
-  setTimeoutG(.28, () => { a.open = -9; const n = a.n, c = a.crit, mine = a.mine; a.n = 0; a.crit = false; a.mine = false; if (!n || (t.dead && !hero && t.st > .3)) return;
+  setTimeoutG(.28, () => { a.open = -9; const n = a.n, c = a.crit, mine = a.mine; a.n = 0; a.crit = false; a.mine = false; if (!n || (t.dead && !hero && t.st > .3)) return; if (!hero && !mine && !c && n < 15) return; // small ally-only hits stay silent (less clutter)
     if (hero) popText('-' + n, _v1.set(t.x, 2, t.z), 'dp-hurt'); else popText(c ? n + '!' : String(n), _v1.set(t.x, (t.type === 'boss' ? 3.2 : 1.6) + rnd(0, .3), t.z), c ? 'dp-c' : mine ? 'dp-d' : 'dp-d dp-ally'); });
 }
 function heroDmgMul() { return (1 + ml('dmg') * .06) * (1 + boon('dmg') * .2); }
 function damageFoe(t, amount, src, o = {}) {
-  if (t.dead || t.state === 'spawn' || t.invuln) return 0;
+  if (t.dead || t.untgt || t.invuln) return 0;
   let dmg = amount * heroDmgMul(); let crit = false;
   if (Math.random() < .05 + boon('crit') * .15) { dmg *= 2; crit = true; }
   if (t.type === 'boss' && t.state === 'roar') dmg *= .2;
+  if (t.weak) { dmg *= 1.6; crit = true; }
+  if (boon('execute') && t.hp < t.maxHp * .35) dmg *= 1 + boon('execute') * .4;
+  if (t.type === 'boss') {
+    if (src && src.ctrl === 'bot') dmg *= .6; // AI allies help, but the boss is yours to beat
+    // phase gates: burst damage can't skip a phase; the boss stops at the threshold and roars into the next one
+    if (t.phase < 3) { const floor = t.maxHp * (t.phase === 1 ? .66 : .33) - 1; if (t.hp - dmg < floor) dmg = Math.max(0, t.hp - floor); }
+  }
   dmg = Math.round(dmg); t.hp -= dmg; t.flash = .12;
-  const kbm = t.type === 'boss' ? .12 : t.type === 'cannon' ? 0 : 1;
+  const kbm = t.type === 'boss' ? .12 : STATIC(t.type) ? 0 : 1;
   if (o.kb) { const d = Math.hypot(o.dx, o.dz) || 1; t.kx += o.dx / d * o.kb * kbm; t.kz += o.dz / d * o.kb * kbm; }
-  if (o.stun && t.type !== 'boss' && t.type !== 'cannon') { t.stun = Math.max(t.stun, o.stun); if (t.tele) { killTele(t.tele); t.tele = null; } if (t.state !== 'spawn') { t.state = 'chase'; t.st = 0; } }
+  if (o.stun && t.type !== 'boss' && !STATIC(t.type)) { t.stun = Math.max(t.stun, o.stun); if (t.tele) { killTele(t.tele); t.tele = null; } if (!t.untgt) { t.state = 'chase'; t.st = 0; } }
   if (o.slow) t.slow = Math.max(t.slow, o.slow);
-  if (o.heavy && t.type !== 'boss' && t.type !== 'cannon' && (t.state === 'wind')) { killTele(t.tele); t.tele = null; t.state = 'recover'; t.st = 0; }
+  if (src && src.kind === 'hero' && boon('frost')) t.slow = Math.max(t.slow, .6 + boon('frost') * .6);
+  if (o.heavy && t.type !== 'boss' && !STATIC(t.type) && t.state === 'wind' && t.type !== 'mole') { killTele(t.tele); t.tele = null; t.state = 'recover'; t.st = 0; }
   popDmg(t, dmg, crit, false, src);
   burst(_v1.set(t.x, 1.1, t.z), { color: crit ? 0xffd166 : 0xfff2c8, n: crit ? 14 : 8, speed: 3.5, up: 2.5, size: .35, life: .3, gravity: 6 });
   crit ? SND.crit() : SND.hit();
@@ -590,7 +712,8 @@ function damageFoe(t, amount, src, o = {}) {
 function healHero(h, amt, quiet) { if (h.down) return; const before = h.hp; h.hp = Math.min(h.maxHp, h.hp + amt); if (!quiet && h.hp - before >= 1) popText('+' + Math.round(h.hp - before), _v1.set(h.x, 2, h.z), 'dp-h'); }
 function damageHero(h, amount, src, o = {}) {
   if (h.down || G.over || G.won) return false;
-  if (h.iframes > 0) { if (h.ctrl !== 'bot' && !h.dodgeTxt || G.t - h.dodgeTxt > .6) { h.dodgeTxt = G.t; popText('dodged', _v1.set(h.x, 2.1, h.z), 'dp-h'); } return false; }
+  if (h.iframes > 0) { if (h.ctrl !== 'bot' && h.state === 'dodge' && (!h.dodgeTxt || G.t - h.dodgeTxt > .6)) { h.dodgeTxt = G.t; popText(E.L('Perfect dodge!', '¡Esquiva perfecta!'), _v1.set(h.x, 2.3, h.z), 'dp-h'); SND.perfect(); h.ult = Math.min(100, h.ult + 6); if (!E.reducedMotion()) G.slow = Math.max(G.slow, .16); burst(_v1.set(h.x, 1, h.z), { color: 0xbff6ff, n: 10, speed: 2.5, up: 1.5, size: .4, life: .4 }); } return false; }
+  if (boon('aegis') && G.t - (h.bubbleT ?? -99) > 15 / boon('aegis')) { h.bubbleT = G.t; h.iframes = Math.max(h.iframes, .4); SND.bubble(); if (h.ctrl !== 'bot') popText(E.L('Blocked!', '¡Bloqueado!'), _v1.set(h.x, 2.3, h.z), 'dp-h'); burst(_v1.set(h.x, 1.1, h.z), { color: 0x9fe8ff, n: 14, speed: 3, up: 2, size: .45, life: .45 }); return false; }
   let dmg = Math.round(amount * (1 - boon('guard') * .15)); h.hp -= dmg; h.flash = .2; h.stats.taken = (h.stats.taken || 0) + dmg;
   if (o.kb) { const d = Math.hypot(o.dx, o.dz) || 1; h.kx += o.dx / d * o.kb; h.kz += o.dz / d * o.kb; }
   h.ult = Math.min(100, h.ult + 4);
@@ -605,13 +728,13 @@ function downHero(h) {
   h.hp = 0; h.down = true; h.state = 'down'; h.st = 0; h.reviveP = 0; SFX.bad(); burst(_v1.set(h.x, 1, h.z), { color: 0x8a8aff, n: 18, speed: 2, up: 3, size: .5, life: .8 });
   if (h.ctrl !== 'bot') E.toast(G.heroes.some(o => !o.down) ? E.L('You are down! An ally can revive you.', '¡Caíste! Un aliado puede revivirte.') : E.L('Down…', 'Caído…'), 1800);
   if (partyAlive().length === 0) {
-    if (G.phoenix > 0) { G.phoenix--; setTimeoutG(.9, () => { if (!G || G.over) return; for (const o of G.heroes) reviveHero(o, .5); bigText(E.L('🪶 PHOENIX!', '🪶 ¡FÉNIX!')); E.toast('A phoenix feather revives the party', 2000); }); }
+    if (G.phoenix > 0) { G.phoenix--; setTimeoutG(.9, () => { if (!G || G.over) return; for (const o of G.heroes) reviveHero(o, .5); bigText(E.L('🪶 PHOENIX!', '🪶 ¡FÉNIX!'), { sub: E.L('A phoenix feather revives the party', 'Una pluma de fénix revive al grupo') }); }); }
     else gameOver();
   }
 }
 function reviveHero(h, frac) { if (!h.down) return; h.down = false; h.hp = Math.max(1, Math.round(h.maxHp * frac)); h.state = 'move'; h.st = 0; h.iframes = 1.5; h.pivot.rotation.set(0, 0, 0); SND.revive(); burst(_v1.set(h.x, 1, h.z), { color: 0x7dffb0, n: 22, speed: 2.5, up: 4, size: .5, life: .8 }); shock(h.x, h.z, 2.2, 0x60ff9a); }
 function killFoe(t, src) {
-  if (t.dead) return; t.dead = true; t.state = 'dead'; t.st = 0; killTele(t.tele); t.tele = null; t.hb.g.visible = false;
+  if (t.dead) return; t.dead = true; t.state = 'dead'; t.st = 0; killTele(t.tele); t.tele = null; if (t.teles) { t.teles.forEach(killTele); t.teles = null; } t.hb.g.visible = false;
   G.kills++; if (src && src.kind === 'hero') src.stats.kills++;
   burst(_v1.set(t.x, 1, t.z), { color: t.type === 'zombie' ? 0x7a6aa0 : 0xd8b890, n: 16, speed: 3, up: 3.5, size: .55, life: .7, additive: false, gravity: 9 });
   dropGold(t.x, t.z, t.gold + (Math.random() < .3 ? 1 : 0));
@@ -620,14 +743,14 @@ function killFoe(t, src) {
 }
 function meleeHit(src, o) {
   const fx = Math.sin(src.h), fz = Math.cos(src.h); let n = 0;
-  for (const t of G.foes) { if (t.dead || t.state === 'spawn' || src.hitSet.has(t)) continue; const dx = t.x - src.x, dz = t.z - src.z, d = Math.hypot(dx, dz); if (d > o.range + t.r) continue; if (d > t.r + .4 && o.arc < 6) { const dot = (dx * fx + dz * fz) / d; if (Math.acos(clamp(dot, -1, 1)) > o.arc / 2) continue; } if (o.once) src.hitSet.add(t); damageFoe(t, o.dmg, src, { kb: o.kb, dx, dz, stun: o.stun, heavy: o.heavy, slow: o.slow }); n++; if (o.fin && boon('chain')) chainLightning(t, src); }
+  for (const t of G.foes) { if (t.dead || t.untgt || src.hitSet.has(t)) continue; const dx = t.x - src.x, dz = t.z - src.z, d = Math.hypot(dx, dz); if (d > o.range + t.r) continue; if (d > t.r + .4 && o.arc < 6) { const dot = (dx * fx + dz * fz) / d; if (Math.acos(clamp(dot, -1, 1)) > o.arc / 2) continue; } if (o.once) src.hitSet.add(t); damageFoe(t, o.dmg, src, { kb: o.kb, dx, dz, stun: o.stun, heavy: o.heavy, slow: o.slow }); n++; if (o.fin && boon('chain')) chainLightning(t, src); }
   hitProps(src.x + fx * o.range * .6, src.z + fz * o.range * .6, o.range * .7);
   return n;
 }
-function areaHit(src, x, z, r, dmg, o = {}) { let n = 0; for (const t of G.foes) { if (t.dead || t.state === 'spawn') continue; const dx = t.x - x, dz = t.z - z; if (dx * dx + dz * dz > (r + t.r) ** 2) continue; damageFoe(t, dmg, src, { kb: o.kb, dx: dx || .01, dz, stun: o.stun, heavy: o.heavy, slow: o.slow }); n++; } hitProps(x, z, r); return n; }
+function areaHit(src, x, z, r, dmg, o = {}) { let n = 0; for (const t of G.foes) { if (t.dead || t.untgt) continue; const dx = t.x - x, dz = t.z - z; if (dx * dx + dz * dz > (r + t.r) ** 2) continue; damageFoe(t, dmg, src, { kb: o.kb, dx: dx || .01, dz, stun: o.stun, heavy: o.heavy, slow: o.slow }); n++; } hitProps(x, z, r); return n; }
 function hitProps(x, z, r) { for (const p of G.room.props) { if (p.hp <= 0) continue; if ((p.x - x) ** 2 + (p.z - z) ** 2 < (r + p.r) ** 2) breakProp(p); } }
 function breakProp(p) { p.hp = 0; roomGroup.remove(p.m); const i = G.room.obst.indexOf(p); if (i >= 0) G.room.obst.splice(i, 1); burst(_v1.set(p.x, .5, p.z), { color: p.kind === 'barrel' ? 0x8a5a30 : 0xb07850, n: 14, speed: 3, up: 4, size: .5, life: .7, additive: false, gravity: 12 }); SND.break(); if (Math.random() < .7) dropGold(p.x, p.z, 1 + Math.floor(Math.random() * 3)); }
-function chainLightning(from, src) { let cur = from; const hit = new Set([from]); for (let k = 0; k < 3; k++) { let best = null, bd = 36; for (const t of G.foes) { if (t.dead || hit.has(t) || t.state === 'spawn') continue; const d = (t.x - cur.x) ** 2 + (t.z - cur.z) ** 2; if (d < bd) { bd = d; best = t; } } if (!best) break; hit.add(best); streak(new THREE.Vector3(cur.x, 1.2, cur.z), new THREE.Vector3(best.x, 1.2, best.z), 0x9fdcff, .2, .35); damageFoe(best, 12 * boon('chain'), null, { kb: 1, dx: best.x - cur.x, dz: best.z - cur.z }); cur = best; } SND.zap(); }
+function chainLightning(from, src) { let cur = from; const hit = new Set([from]); for (let k = 0; k < 3; k++) { let best = null, bd = 36; for (const t of G.foes) { if (t.dead || hit.has(t) || t.untgt) continue; const d = (t.x - cur.x) ** 2 + (t.z - cur.z) ** 2; if (d < bd) { bd = d; best = t; } } if (!best) break; hit.add(best); streak(new THREE.Vector3(cur.x, 1.2, cur.z), new THREE.Vector3(best.x, 1.2, best.z), 0x9fdcff, .2, .35); damageFoe(best, 12 * boon('chain'), null, { kb: 1, dx: best.x - cur.x, dz: best.z - cur.z }); cur = best; } SND.zap(); }
 
 /* ================= gold ================= */
 function dropGold(x, z, n) { const mul = DIFF[S.diff].gold * (1 + ml('gold') * .15) * (1 + boon('greed') * .5); let v = Math.max(1, Math.round(n * mul)); const pieces = Math.min(8, v); for (let i = 0; i < pieces; i++) { const m = new THREE.Mesh(GEO.coin, MAT.gold); m.castShadow = true; m.position.set(x, .5, z); fxGroup.add(m); const val = i === pieces - 1 ? v - (pieces - 1) * Math.floor(v / pieces) : Math.floor(v / pieces); G.coins.push({ m, x, z, y: .6, vx: rnd(-3, 3), vz: rnd(-3, 3), vy: rnd(4, 7), t: 0, val }); } }
@@ -639,16 +762,16 @@ function updateCoins(dt) {
 }
 
 /* ================= projectiles ================= */
-function shoot(o) { let m; if (o.kind === 'orb' || o.kind === 'spark') { m = new THREE.Group(); const core = new THREE.Mesh(GEO.sph, o.kind === 'spark' ? MAT.orbHot : MAT.orb); core.scale.setScalar(o.r * .6); m.add(core); m.add(glowSprite(o.kind === 'spark' ? 0xffb050 : 0x40e8ff, o.r * 4.5, .9)); } else { m = new THREE.Mesh(GEO.sph, MAT.ball); m.scale.setScalar(o.kind === 'meteor' ? .55 : .26); m.castShadow = true; if (o.kind === 'meteor') { m.material = MAT.orbHot; m.add(glowSprite(0xff8030, 4, .9)); } } fxGroup.add(m); const p = Object.assign({ t: 0, y: 1.2, vy: 0, life: 2.5, hitSet: new Set(), m }, o); G.shots.push(p); m.position.set(p.x, p.y, p.z); return p; }
+function shoot(o) { let m; if (o.kind === 'orb' || o.kind === 'spark') { m = new THREE.Group(); const core = new THREE.Mesh(GEO.sph, o.kind === 'spark' ? MAT.orbHot : MAT.orb); core.scale.setScalar(o.r * .6); m.add(core); m.add(glowSprite(o.kind === 'spark' ? 0xffb050 : 0x40e8ff, o.r * 4.5, .9)); } else if (o.kind === 'shard') { m = new THREE.Mesh(GEO.oct, MAT.cryP); m.scale.set(.16, .16, .42); m.rotation.y = Math.atan2(o.vx, o.vz); m.add(glowSprite(0xc080ff, 4, .7)); } else { m = new THREE.Mesh(GEO.sph, o.big ? MAT.boulder : MAT.ball); m.scale.setScalar(o.kind === 'meteor' || o.big ? .55 : .26); m.castShadow = true; if (o.kind === 'meteor') { m.material = MAT.orbHot; m.add(glowSprite(0xff8030, 4, .9)); } } fxGroup.add(m); const p = Object.assign({ t: 0, y: 1.2, vy: 0, life: 2.5, hitSet: new Set(), m }, o); G.shots.push(p); m.position.set(p.x, p.y, p.z); return p; }
 function solidAt(x, z, pad = 0) { const Rm = G.room; if (Math.abs(x) > Rm.W / 2 + pad || Math.abs(z) > Rm.D / 2 + pad) return true; for (const o of Rm.obst) { if (o.lava) continue; if (o.r) { if ((x - o.x) ** 2 + (z - o.z) ** 2 < o.r * o.r) return true; } else if (Math.abs(x - o.x) < o.hw && Math.abs(z - o.z) < o.hd) return true; } return false; }
 function explodeLob(p) { burst(_v1.set(p.x, .4, p.z), { color: 0xffa040, n: 22, speed: 5, up: 5, size: .6, life: .6 }); burst(_v1, { color: 0x3a3430, n: 10, speed: 3, up: 3, size: 1, life: .9, additive: false, gravity: 2 }); shock(p.x, p.z, p.rad + .3, 0xff8040); SND.boom(); shake(.25); for (const h of G.heroes) { if ((h.x - p.x) ** 2 + (h.z - p.z) ** 2 < (p.rad + h.r) ** 2) damageHero(h, p.dmg, null, { kb: 6, dx: h.x - p.x, dz: h.z - p.z }); } }
 function updateShots(dt) {
   for (let i = G.shots.length - 1; i >= 0; i--) { const p = G.shots[i]; p.t += dt; let dead = false;
     if (p.kind === 'lob' || p.kind === 'meteor') { const k = Math.min(1, p.t / p.dur); p.x = lerp(p.sx, p.tx, k); p.z = lerp(p.sz, p.tz, k); p.y = p.kind === 'meteor' ? lerp(14, .3, k * k) : lerp(p.sy, .3, k) + Math.sin(k * Math.PI) * p.arc; if (p.kind === 'meteor' && Math.random() < .6) burst(_v1.set(p.x, p.y, p.z), { color: 0xff9030, n: 2, speed: .5, up: .5, size: .7, life: .3, gravity: 0 }); if (k >= 1) { dead = true; killTele(p.tele); if (p.kind === 'meteor') { burst(_v1.set(p.x, .5, p.z), { color: 0xff8030, n: 26, speed: 6, up: 6, size: .7, life: .7 }); shock(p.x, p.z, p.rad, 0xffa050); SND.boom(); shake(.3); areaHit(p.owner, p.x, p.z, p.rad, p.dmg, { kb: 7, heavy: true }); } else explodeLob(p); } }
     else {
-      if (p.kind === 'spark') { let best = null, bd = 100; for (const t of G.foes) { if (t.dead || t.state === 'spawn') continue; const d = (t.x - p.x) ** 2 + (t.z - p.z) ** 2; if (d < bd) { bd = d; best = t; } } if (best) { const a = Math.atan2(best.x - p.x, best.z - p.z), cur = Math.atan2(p.vx, p.vz), sp = Math.hypot(p.vx, p.vz); const na = cur + clamp(wrapA(a - cur), -6 * dt, 6 * dt); p.vx = Math.sin(na) * sp; p.vz = Math.cos(na) * sp; } }
+      if (p.kind === 'spark') { let best = null, bd = 100; for (const t of G.foes) { if (t.dead || t.untgt) continue; const d = (t.x - p.x) ** 2 + (t.z - p.z) ** 2; if (d < bd) { bd = d; best = t; } } if (best) { const a = Math.atan2(best.x - p.x, best.z - p.z), cur = Math.atan2(p.vx, p.vz), sp = Math.hypot(p.vx, p.vz); const na = cur + clamp(wrapA(a - cur), -6 * dt, 6 * dt); p.vx = Math.sin(na) * sp; p.vz = Math.cos(na) * sp; } }
       p.x += p.vx * dt; p.z += p.vz * dt;
-      if (p.team === 'hero') { for (const t of G.foes) { if (t.dead || t.state === 'spawn' || p.hitSet.has(t)) continue; if ((t.x - p.x) ** 2 + (t.z - p.z) ** 2 < (t.r + p.r) ** 2) { p.hitSet.add(t); damageFoe(t, p.dmg, p.owner, { kb: p.kb || 2.5, dx: p.vx, dz: p.vz, heavy: p.heavy }); if (p.owner && p.fin && boon('chain')) chainLightning(t, p.owner); if (!p.pierce) { dead = true; break; } } } for (const pr of G.room.props) if (pr.hp > 0 && (pr.x - p.x) ** 2 + (pr.z - p.z) ** 2 < (pr.r + p.r) ** 2) { breakProp(pr); if (!p.pierce) dead = true; } }
+      if (p.team === 'hero') { for (const t of G.foes) { if (t.dead || t.untgt || p.hitSet.has(t)) continue; if ((t.x - p.x) ** 2 + (t.z - p.z) ** 2 < (t.r + p.r) ** 2) { p.hitSet.add(t); damageFoe(t, p.dmg, p.owner, { kb: p.kb || 2.5, dx: p.vx, dz: p.vz, heavy: p.heavy }); if (p.owner && p.fin && boon('chain')) chainLightning(t, p.owner); if (!p.pierce) { dead = true; break; } } } for (const pr of G.room.props) if (pr.hp > 0 && (pr.x - p.x) ** 2 + (pr.z - p.z) ** 2 < (pr.r + p.r) ** 2) { breakProp(pr); if (!p.pierce) dead = true; } }
       else { for (const h of G.heroes) { if (h.down) continue; if ((h.x - p.x) ** 2 + (h.z - p.z) ** 2 < (h.r + p.r) ** 2) { if (damageHero(h, p.dmg, p.owner, { kb: 5, dx: p.vx, dz: p.vz }) || h.iframes <= 0) dead = true; } } }
       if (!dead && (p.t > p.life || solidAt(p.x, p.z))) dead = true;
       if (dead) burst(_v1.set(p.x, p.y, p.z), { color: p.team === 'hero' ? 0x8ff6ff : 0xffa060, n: 8, speed: 2.5, up: 2, size: .4, life: .3 });
@@ -659,8 +782,8 @@ function updateShots(dt) {
 }
 
 /* ================= hero logic ================= */
-function nearestFoe(x, z, maxD = 1e9, filter) { let best = null, bd = maxD * maxD; for (const t of G.foes) { if (t.dead || t.state === 'spawn') continue; if (filter && !filter(t)) continue; const d = (t.x - x) ** 2 + (t.z - z) ** 2; if (d < bd) { bd = d; best = t; } } return best; }
-function autoAim(h, c, range = 5, cone = 1.2) { const has = Math.hypot(c.x, c.z) > .2; const dir = has ? Math.atan2(c.x, c.z) : h.h; let best = null, bs = 1e9; for (const t of G.foes) { if (t.dead || t.state === 'spawn') continue; const dx = t.x - h.x, dz = t.z - h.z, d = Math.hypot(dx, dz); if (d > range + t.r) continue; const da = Math.abs(wrapA(Math.atan2(dx, dz) - dir)); if (da > cone && d > 1.6) continue; const s = d + da * 2; if (s < bs) { bs = s; best = t; } } if (best) h.h = Math.atan2(best.x - h.x, best.z - h.z); else if (has) h.h = dir; }
+function nearestFoe(x, z, maxD = 1e9, filter) { let best = null, bd = maxD * maxD; for (const t of G.foes) { if (t.dead || t.untgt) continue; if (filter && !filter(t)) continue; const d = (t.x - x) ** 2 + (t.z - z) ** 2; if (d < bd) { bd = d; best = t; } } return best; }
+function autoAim(h, c, range = 5, cone = 1.2) { const has = Math.hypot(c.x, c.z) > .2; const dir = has ? Math.atan2(c.x, c.z) : h.h; let best = null, bs = 1e9; for (const t of G.foes) { if (t.dead || t.untgt) continue; const dx = t.x - h.x, dz = t.z - h.z, d = Math.hypot(dx, dz); if (d > range + t.r) continue; const da = Math.abs(wrapA(Math.atan2(dx, dz) - dir)); if (da > cone && d > 1.6) continue; const s = d + da * 2; if (s < bs) { bs = s; best = t; } } if (best) h.h = Math.atan2(best.x - h.x, best.z - h.z); else if (has) h.h = dir; }
 function startAttack(h, i, c) { const step = COMBOS[h.cls][i]; h.state = 'attack'; h.st = 0; h.combo = i; h.hitDone = false; h.queued = false; h.hitSet.clear(); autoAim(h, c, h.cls === 'mage' ? 11 : 4.5, h.cls === 'mage' ? .6 : 1.2); h.anim = step.anim; if (step.heavy) SND.heavy(); else SND.swish(); }
 function startDodge(h, c) { if (h.dodges < 1) return; h.dodges--; h.dodgeT = Math.max(h.dodgeT, 0); const has = Math.hypot(c.x, c.z) > .2; h.h = has ? Math.atan2(c.x, c.z) : h.h; h.state = 'dodge'; h.st = 0; h.iframes = .34; SND.dodge(); burst(_v1.set(h.x, .3, h.z), { color: 0xb8b0a0, n: 8, speed: 1.6, up: 1, size: .6, life: .45, additive: false, gravity: 1 }); if (boon('orb')) for (let k = 0; k < boon('orb'); k++) shoot({ kind: 'spark', team: 'hero', owner: h, x: h.x, z: h.z, vx: Math.sin(h.h + Math.PI + (k - .5) * .8) * 9, vz: Math.cos(h.h + Math.PI + (k - .5) * .8) * 9, r: .3, dmg: 15, life: 2.2 }); }
 function startSpecial(h, c) {
@@ -672,19 +795,19 @@ function startSpecial(h, c) {
   else if (h.cls === 'brawler') { SND.swish(); h.iframes = .55; }
 }
 function startUlt(h) {
-  if (h.ult < 100) return; h.ult = 0; h.state = 'ult'; h.st = 0; h.hitSet.clear(); h.uk = 0; h.iframes = 99; SND.ult(); if (h.ctrl === 'bot') popText(h.C.ult, _v1.set(h.x, 2.6, h.z), 'dp-h'); else bigText(h.C.ult.toUpperCase()); G.slow = .45; shake(.3);
+  if (h.ult < 100) return; h.ult = 0; h.state = 'ult'; h.st = 0; h.hitSet.clear(); h.uk = 0; h.iframes = 99; SND.ult(); if (h.ctrl === 'bot') popText(loc(h.C, 'ult'), _v1.set(h.x, 2.6, h.z), 'dp-h'); else bigText(loc(h.C, 'ult').toUpperCase()); G.slow = .45; shake(.3);
   shock(h.x, h.z, 3, new THREE.Color(h.C.color).getHex(), .5);
-  if (h.cls === 'ninja') { h.targets = G.foes.filter(t => !t.dead && t.state !== 'spawn').sort((a, b) => ((a.x - h.x) ** 2 + (a.z - h.z) ** 2) - ((b.x - h.x) ** 2 + (b.z - h.z) ** 2)).slice(0, 8); h.home = [h.x, h.z]; }
-  if (h.cls === 'mage') { const tg = G.foes.filter(t => !t.dead && t.state !== 'spawn'); for (let k = 0; k < 9; k++) { const t = tg.length ? tg[k % tg.length] : null; const x = clamp((t ? t.x : h.x) + rnd(-1.6, 1.6) * (k >= tg.length ? 2.5 : .5), -G.room.W / 2 + 1, G.room.W / 2 - 1), z = clamp((t ? t.z : h.z) + rnd(-1.6, 1.6) * (k >= tg.length ? 2.5 : .5), -G.room.D / 2 + 1, G.room.D / 2 - 1); const delay = .25 + k * .2; setTimeoutG(delay, () => { const tl = teleCircle(x, z, 2.6, .75, true); shoot({ kind: 'meteor', team: 'hero', owner: h, sx: x + 3, sz: z - 6, tx: x, tz: z, x, z, dur: .75, rad: 2.6, dmg: 48, tele: tl }); }); } }
+  if (h.cls === 'ninja') { h.targets = G.foes.filter(t => !t.dead && !t.untgt).sort((a, b) => ((a.x - h.x) ** 2 + (a.z - h.z) ** 2) - ((b.x - h.x) ** 2 + (b.z - h.z) ** 2)).slice(0, 8); h.home = [h.x, h.z]; }
+  if (h.cls === 'mage') { const tg = G.foes.filter(t => !t.dead && !t.untgt); for (let k = 0; k < 9; k++) { const t = tg.length ? tg[k % tg.length] : null; const x = clamp((t ? t.x : h.x) + rnd(-1.6, 1.6) * (k >= tg.length ? 2.5 : .5), -G.room.W / 2 + 1, G.room.W / 2 - 1), z = clamp((t ? t.z : h.z) + rnd(-1.6, 1.6) * (k >= tg.length ? 2.5 : .5), -G.room.D / 2 + 1, G.room.D / 2 - 1); const delay = .25 + k * .2; setTimeoutG(delay, () => { const tl = teleCircle(x, z, 2.6, .75, true); shoot({ kind: 'meteor', team: 'hero', owner: h, sx: x + 3, sz: z - 6, tx: x, tz: z, x, z, dur: .75, rad: 2.6, dmg: 48, tele: tl }); }); } }
 }
 const timers = []; function setTimeoutG(t, fn) { timers.push({ t, fn }); }
 function heroUpdate(h, c, dt) {
   h.st += dt; h.animT += dt; h.iframes -= dt; h.flash = Math.max(0, h.flash - dt);
   const cdRate = (1 + boon('haste') * .25) * (1 + ml('cd') * .08); h.cd = Math.max(0, h.cd - dt * cdRate);
   const maxD = h.C.dodges + boon('dash'); if (h.dodges < maxD) { h.dodgeT += dt; if (h.dodgeT > .75) { h.dodgeT = 0; h.dodges++; } } else h.dodgeT = 0;
-  if (h.down) { h.revFill.visible = true; const helpers = G.heroes.filter(o => !o.down && (o.x - h.x) ** 2 + (o.z - h.z) ** 2 < 2.6 ** 2); if (helpers.length) { h.reviveP += dt * helpers.length / DIFF[S.diff].revive; if (h.reviveP >= 1) { h.revFill.visible = false; reviveHero(h, .4); popText('Revived!', _v1.set(h.x, 2, h.z), 'dp-h'); } } else h.reviveP = Math.max(0, h.reviveP - dt * .25); h.revFill.scale.setScalar(Math.max(.01, h.reviveP) * 1.3); h.moveAmt = 0; return; }
+  if (h.down) { h.revFill.visible = true; const helpers = G.heroes.filter(o => !o.down && (o.x - h.x) ** 2 + (o.z - h.z) ** 2 < 2.6 ** 2); if (helpers.length) { h.reviveP += dt * helpers.length * (1 + boon('rally') * .5) / DIFF[S.diff].revive; if (h.reviveP >= 1) { h.revFill.visible = false; reviveHero(h, .4); popText(E.L('Revived!', '¡Revivido!'), _v1.set(h.x, 2, h.z), 'dp-h'); } } else h.reviveP = Math.max(0, h.reviveP - dt * .25); h.revFill.scale.setScalar(Math.max(.01, h.reviveP) * 1.3); h.moveAmt = 0; return; }
   h.revFill.visible = false;
-  const spd = h.C.speed * (1 + boon('swift') * .12); const mag = Math.hypot(c.x, c.z);
+  const spd = h.C.speed * (1 + boon('swift') * .12) * (G.zones.length && inSpores(h) ? .55 : 1); const mag = Math.hypot(c.x, c.z);
   let mvx = 0, mvz = 0, turn = true;
   // combo window
   if (h.comboWin > 0) h.comboWin -= dt;
@@ -721,8 +844,8 @@ function heroUpdate(h, c, dt) {
 }
 function specialUpdate(h, c, dt) {
   const st = h.st; let mx = 0, mz = 0; const fx = Math.sin(h.h), fz = Math.cos(h.h);
-  if (h.cls === 'knight') { const dur = .5; if (st > .1 && st < .4) { mx = fx * 14; mz = fz * 14; for (const t of G.foes) { if (t.dead || t.state === 'spawn' || h.hitSet.has(t)) continue; if ((t.x - h.x - fx * .6) ** 2 + (t.z - h.z - fz * .6) ** 2 < (t.r + 1.1) ** 2) { h.hitSet.add(t); damageFoe(t, 22, h, { kb: 11, dx: t.x - h.x, dz: t.z - h.z, stun: 1.3, heavy: true }); shake(.2); } } if (Math.random() < .5) burst(_v1.set(h.x, .2, h.z), { color: 0xb8b0a0, n: 3, speed: 1.2, up: 1, size: .5, life: .4, additive: false, gravity: 1 }); hitProps(h.x + fx, h.z + fz, 1); } if (st > dur) h.state = 'move'; }
-  else if (h.cls === 'ninja') { const dur = .32; if (st < .26) { mx = fx * 26; mz = fz * 26; for (const t of G.foes) { if (t.dead || t.state === 'spawn' || h.hitSet.has(t)) continue; if ((t.x - h.x) ** 2 + (t.z - h.z) ** 2 < (t.r + 1.3) ** 2) { h.hitSet.add(t); damageFoe(t, 26, h, { kb: 4, dx: fz, dz: -fx, heavy: true }); streak(new THREE.Vector3(t.x - fz, 1.5, t.z + fx), new THREE.Vector3(t.x + fz, .6, t.z - fx), 0xe0d0ff, .2); } } burst(_v1.set(h.x, 1, h.z), { color: 0xc9a8ff, n: 3, speed: .5, up: .5, size: .6, life: .3, gravity: 0 }); hitProps(h.x, h.z, 1); } if (st > dur) { h.state = 'move'; } }
+  if (h.cls === 'knight') { const dur = .5; if (st > .1 && st < .4) { mx = fx * 14; mz = fz * 14; for (const t of G.foes) { if (t.dead || t.untgt || h.hitSet.has(t)) continue; if ((t.x - h.x - fx * .6) ** 2 + (t.z - h.z - fz * .6) ** 2 < (t.r + 1.1) ** 2) { h.hitSet.add(t); damageFoe(t, 22, h, { kb: 11, dx: t.x - h.x, dz: t.z - h.z, stun: 1.3, heavy: true }); shake(.2); } } if (Math.random() < .5) burst(_v1.set(h.x, .2, h.z), { color: 0xb8b0a0, n: 3, speed: 1.2, up: 1, size: .5, life: .4, additive: false, gravity: 1 }); hitProps(h.x + fx, h.z + fz, 1); } if (st > dur) h.state = 'move'; }
+  else if (h.cls === 'ninja') { const dur = .32; if (st < .26) { mx = fx * 26; mz = fz * 26; for (const t of G.foes) { if (t.dead || t.untgt || h.hitSet.has(t)) continue; if ((t.x - h.x) ** 2 + (t.z - h.z) ** 2 < (t.r + 1.3) ** 2) { h.hitSet.add(t); damageFoe(t, 26, h, { kb: 4, dx: fz, dz: -fx, heavy: true }); streak(new THREE.Vector3(t.x - fz, 1.5, t.z + fx), new THREE.Vector3(t.x + fz, .6, t.z - fx), 0xe0d0ff, .2); } } burst(_v1.set(h.x, 1, h.z), { color: 0xc9a8ff, n: 3, speed: .5, up: .5, size: .6, life: .3, gravity: 0 }); hitProps(h.x, h.z, 1); } if (st > dur) { h.state = 'move'; } }
   else if (h.cls === 'mage') { const dur = .6; if (!h.hitDone && st > .22) { h.hitDone = true; areaHit(h, h.x, h.z, 4.8, 30, { kb: 9, slow: 2.5, heavy: true }); shock(h.x, h.z, 4.8, 0x7ff8ff, .45); shock(h.x, h.z, 3.2, 0xc8ffff, .35, 1); SND.nova(); shake(.2); burst(_v1.set(h.x, 1, h.z), { color: 0xaaf8ff, n: 26, speed: 6, up: 2, size: .5, life: .5, gravity: 2 }); } if (st > dur) h.state = 'move'; }
   else if (h.cls === 'brawler') { const dur = .78, land = .55; const p = st / land; if (st < land) { mx = fx * 5; mz = fz * 5; } if (!h.hitDone && st >= land) { h.hitDone = true; areaHit(h, h.x + fx * .6, h.z + fz * .6, 4.3, 32, { kb: 9, stun: 1.2, heavy: true }); shock(h.x, h.z, 4.3, 0xffa040, .4); shock(h.x, h.z, 2.6, 0xffe0a0, .3); SND.slam(); shake(.45); hitStop(.08); burst(_v1.set(h.x, .3, h.z), { color: 0x9a8a70, n: 26, speed: 6, up: 4, size: .7, life: .7, additive: false, gravity: 10 }); } if (st > dur) h.state = 'move'; }
   return [mx, mz];
@@ -746,7 +869,11 @@ function steerDir(e, dx, dz) {
 function botControl(h, dt) {
   const c = { x: 0, z: 0, a: false, b: false, c: false, u: false }; if (h.down || G.cine) return c;
   const ai = h.ai; ai.t = (ai.t || 0) + dt;
-  const go = (tx, tz, sp = 1) => { const [x, z] = steerDir(h, tx - h.x, tz - h.z); c.x = x * sp; c.z = z * sp; };
+  let go = (tx, tz, sp = 1) => { let [x, z] = steerDir(h, tx - h.x, tz - h.z); if (ai.detour > 0) { const a = Math.atan2(x, z) + ai.detourS * 1.4; x = Math.sin(a); z = Math.cos(a); } c.x = x * sp; c.z = z * sp; if (sp > .5) ai.wantMove = true; };
+  // unstick: if a bot keeps trying to walk but barely moves, sidestep for a moment; after several tries, hop next to the leader
+  ai.detour = Math.max(0, (ai.detour || 0) - dt); ai.chk = (ai.chk || 0) + dt;
+  if (ai.chk > .8) { const moved = Math.hypot(h.x - (ai.px ?? h.x + 9), h.z - (ai.pz ?? h.z)); if (ai.wantMove && moved < .35 && h.state === 'move') { ai.stuckN = (ai.stuckN || 0) + 1; ai.detour = .7; ai.detourS = Math.random() < .5 ? -1 : 1; } else ai.stuckN = 0; ai.px = h.x; ai.pz = h.z; ai.chk = 0; ai.wantMove = false; }
+  if (ai.stuckN >= 5 && h.ctrl === 'bot') { ai.stuckN = 0; const L0 = G.heroes.find(o => o.ctrl !== 'bot' && !o.down) || G.heroes.find(o => o !== h && !o.down); if (L0) for (let k = 0; k < 8; k++) { const a = k / 8 * TAU, x = L0.x + Math.sin(a) * 1.5, z = L0.z + Math.cos(a) * 1.5; if (!solidAt(x, z, -.3)) { burst(_v1.set(h.x, 1, h.z), { color: 0xc8d0ff, n: 10, speed: 2, up: 2, size: .5, life: .4 }); h.x = x; h.z = z; G.unstuck = (G.unstuck || 0) + 1; break; } } }
   // 1) danger: telegraphs and incoming balls
   // Story allies react like people: a reaction delay per telegraph, sometimes they miss it, and they roll less often.
   const human = h.ctrl === 'bot' && S.diff === 'story';
@@ -754,14 +881,16 @@ function botControl(h, dt) {
     if (human) { const sn = T.seen || (T.seen = {}); const k = sn[h.slot] || (sn[h.slot] = { t: T.t, d: Math.random() < .22 ? 99 : rnd(.3, .65) }); if (T.t - k.t < k.d) continue; }
     danger = T; break; } }
   ai.rollCd = Math.max(0, (ai.rollCd || 0) - dt);
+  // shock rings: roll through toward the centre (Story allies only catch about half of them)
+  for (const Rg of G.rings) { const dd = Math.hypot(h.x - Rg.x, h.z - Rg.z) || 1, gap = dd - Rg.R; if (gap > 0 && gap < 1.3 && h.state === 'move' && h.dodges > 0) { const k = Rg.seen[h.slot] ?? (Rg.seen[h.slot] = !human || Math.random() < .55); if (k) { c.x = (Rg.x - h.x) / dd; c.z = (Rg.z - h.z) / dd; c.b = true; return c; } } }
   if (danger && h.state === 'move') { let ax, az; if (danger.kind === 'c') { ax = h.x - danger.x; az = h.z - danger.z; } else { const s = Math.sin(danger.ang), co = Math.cos(danger.ang); const lat = (h.x - danger.x) * co - (h.z - danger.z) * s; ax = co * Math.sign(lat || 1); az = -s * Math.sign(lat || 1); } const d = Math.hypot(ax, az) || 1; [c.x, c.z] = steerDir(h, ax / d, az / d); if (danger.t / danger.dur > .55 && h.dodges > 0 && !ai.rollCd && Math.random() < (human ? .12 : .5)) { c.b = true; if (human) ai.rollCd = rnd(1.2, 2.2); } return c; }
   // 2) revive
   const downed = G.heroes.filter(o => o.down && o !== h); if (downed.length) { const o = downed.sort((a, b) => ((a.x - h.x) ** 2 + (a.z - h.z) ** 2) - ((b.x - h.x) ** 2 + (b.z - h.z) ** 2))[0]; const threat = nearestFoe(o.x, o.z, 2.5); if (!threat || partyAlive().length === 1) { const d = Math.hypot(o.x - h.x, o.z - h.z); if (d > 1.4) go(o.x, o.z); return c; } }
   // 3) fight
-  if (!ai.tgt || ai.tgt.dead || ai.t > 1.5) { ai.tgt = nearestFoe(h.x, h.z); ai.t = 0; if (h.ctrl === 'bot' && ai.tgt && Math.random() < .35) { const alt = G.foes.filter(t => !t.dead && t.state !== 'spawn'); if (alt.length) ai.tgt = pick(alt); } }
+  if (!ai.tgt || ai.tgt.dead || ai.t > 1.5) { ai.tgt = nearestFoe(h.x, h.z); ai.t = 0; if (h.ctrl === 'bot' && ai.tgt && Math.random() < .35) { const alt = G.foes.filter(t => !t.dead && !t.untgt); if (alt.length) ai.tgt = pick(alt); } }
   const t = ai.tgt;
   if (t && !t.dead) {
-    const dx = t.x - h.x, dz = t.z - h.z, d = Math.hypot(dx, dz); const nearN = G.foes.filter(f => !f.dead && f.state !== 'spawn' && (f.x - h.x) ** 2 + (f.z - h.z) ** 2 < 25).length;
+    const dx = t.x - h.x, dz = t.z - h.z, d = Math.hypot(dx, dz); const nearN = G.foes.filter(f => !f.dead && !f.untgt && (f.x - h.x) ** 2 + (f.z - h.z) ** 2 < 25).length;
     if (h.ult >= 100 && (nearN >= 3 || t.type === 'boss') && h.state === 'move') { c.u = true; return c; }
     if (h.cls === 'mage') {
       if (d < 3.6) { go(h.x - dx, h.z - dz); if (d < 2 && h.cd <= 0) c.c = true; }
@@ -794,7 +923,7 @@ function foeUpdate(e, dt) {
   e.st += dt; e.animT += dt; e.flash = Math.max(0, e.flash - dt); e.slow = Math.max(0, e.slow - dt);
   let mvx = 0, mvz = 0; const tm = DIFF[S.diff].tele; const sp = e.speed * (e.slow > 0 ? .45 : 1);
   if (e.state === 'dead') { e.st += 0; return; }
-  if (e.state === 'spawn') { const dur = e.type === 'zombie' ? .9 : .6; const k = Math.min(1, e.st / dur); if (e.type === 'zombie') e.pivot.position.y = e.PH - 1.9 * (1 - k); else if (e.type !== 'boss') e.pivot.position.y = 3 * (1 - k) * (1 - k); if (k >= 1) { e.state = 'chase'; e.st = 0; if (e.type !== 'zombie' && e.type !== 'boss') { burst(_v1.set(e.x, .2, e.z), { color: 0x8a7a68, n: 10, speed: 2, up: 1.5, size: .6, life: .5, additive: false, gravity: 4 }); SND.slam(); } } return; }
+  if (e.state === 'spawn') { const dur = e.rise != null ? .9 : .6; const k = Math.min(1, e.st / dur); if (e.rise != null) e.pivot.position.y = e.rise - 1.9 * (1 - k); else if (e.type !== 'boss') e.pivot.position.y = 3 * (1 - k) * (1 - k); if (k >= 1) { e.state = 'chase'; e.st = 0; e.untgt = false; if (e.rise == null && e.type !== 'boss') { burst(_v1.set(e.x, .2, e.z), { color: 0x8a7a68, n: 10, speed: 2, up: 1.5, size: .6, life: .5, additive: false, gravity: 4 }); SND.slam(); } } return; }
   if (e.stun > 0) { e.stun -= dt; if (Math.random() < .1) burst(_v1.set(e.x, e.type === 'boss' ? 4.6 : 2.1, e.z), { color: 0xffe066, n: 2, speed: .8, up: .4, size: .3, life: .4, gravity: 0 }); e.kx = damp(e.kx, 0, .003, dt); e.kz = damp(e.kz, 0, .003, dt); e.x += e.kx * dt; e.z += e.kz * dt; return; }
   const T = foeTarget(e); if (!T) { e.x += e.kx * dt; e.z += e.kz * dt; e.kx = damp(e.kx, 0, .003, dt); e.kz = damp(e.kz, 0, .003, dt); return; }
   const dx = T.x - e.x, dz = T.z - e.z, d = Math.hypot(dx, dz), aT = Math.atan2(dx, dz);
@@ -818,7 +947,27 @@ function foeUpdate(e, dt) {
     if (e.state === 'chase') { turnTo(e, aT, 1.4, dt); e.cd -= dt; if (e.cd <= 0 && Math.abs(wrapA(aT - e.h)) < .3) { e.state = 'wind'; e.st = 0; e.tele = teleRect(e.x + fx * .9, e.z + fz * .9, e.h, 15, .9, .9 * tm); } }
     else if (e.state === 'wind') { if (e.st > .9 * tm) { killTele(e.tele); e.tele = null; shoot({ kind: 'ball', team: 'foe', owner: e, x: e.x + fx * 1.1, z: e.z + fz * 1.1, vx: fx * 15, vz: fz * 15, r: .35, dmg: e.dmg, life: 1.4 }); SND.cannon(); shake(.12); burst(_v1.set(e.x + fx * 1.3, .9, e.z + fz * 1.3), { color: 0xd8d0c0, n: 12, speed: 2, up: 1.5, size: .8, life: .6, additive: false, gravity: -1 }); e.recoil = .25; e.state = 'recover'; e.st = 0; } }
     else if (e.state === 'recover') { if (e.st > .6) { e.state = 'chase'; e.st = 0; e.cd = rnd(2.2, 3.2); } }
-  } else if (e.type === 'boss') { const r = bossUpdate(e, T, dx, dz, d, aT, dt, tm); mvx = r[0]; mvz = r[1]; }
+  } else if (e.type === 'spore') {
+    // Sporecap: waddles close, swells up (red circle), then bursts and leaves a purple cloud that slows heroes
+    if (e.state === 'chase') { turnTo(e, aT, 3, dt); e.cd -= dt; if (d > 2) { const [sx, sz] = steerDir(e, dx, dz); mvx = sx * sp; mvz = sz * sp; } if (e.cd <= 0 && d < 4.2) { e.state = 'wind'; e.st = 0; e.tele = teleCircle(e.x, e.z, 2.7, 1.0 * tm); E.tone(260, .5, 'sine', .05, 260); } }
+    else if (e.state === 'wind') { if (e.st > 1.0 * tm) { const tl = e.tele; e.tele = null; for (const h of G.heroes) if (!h.down && inTele(h, tl)) damageHero(h, e.dmg, e, { kb: 6, dx: h.x - e.x, dz: h.z - e.z }); killTele(tl); sporeCloud(e.x, e.z, 2.7, 3.5); SND.puff(); e.state = 'recover'; e.st = 0; } }
+    else if (e.state === 'recover') { if (e.st > 1.1) { e.state = 'chase'; e.st = 0; e.cd = rnd(2.2, 3.4); } }
+  } else if (e.type === 'mole') {
+    // Burrower: digs in, a dirt trail races toward a hero, a red circle marks where it pops out, then it is dizzy (free hits)
+    if (e.state === 'chase') { turnTo(e, aT, 6, dt); e.cd -= dt; const [sx, sz] = steerDir(e, dx, dz); mvx = sx * sp; mvz = sz * sp; if (d < 1.7 && e.cd < 1.2) { e.state = 'wind'; e.st = 0; e.atk = 'scratch'; e.tele = teleCircle(e.x + fx * .9, e.z + fz * .9, 1.15, .55 * tm); } else if (e.cd <= 0 && d > 2.5) { e.state = 'dig'; e.st = 0; burst(_v1.set(e.x, .2, e.z), { color: 0x7a6a50, n: 14, speed: 2.5, up: 3, size: .55, life: .6, additive: false, gravity: 8 }); } }
+    else if (e.state === 'dig') { if (e.st > .45) { e.state = 'under'; e.st = 0; e.untgt = true; } }
+    else if (e.state === 'under') { const [sx, sz] = steerDir(e, dx, dz); mvx = sx * 5; mvz = sz * 5; e.trail = (e.trail || 0) - dt; if (e.trail <= 0) { e.trail = .06; burst(_v1.set(e.x, .1, e.z), { color: 0x6a5a40, n: 3, speed: 1.2, up: 2, size: .55, life: .45, additive: false, gravity: 8 }); } if (d < .8 || e.st > 2.4) { e.state = 'wind'; e.atk = 'erupt'; e.st = 0; e.tele = teleCircle(e.x, e.z, 1.9, .85 * tm); snd('rumble', () => E.noise(.8, .1, 220, .6), .3); } }
+    else if (e.state === 'wind') {
+      if (e.atk === 'scratch' && e.tele) { e.tele.x = e.x + fx * .9; e.tele.z = e.z + fz * .9; e.tele.g.position.set(e.tele.x, .045, e.tele.z); }
+      else if (Math.random() < .5) burst(_v1.set(e.x + rnd(-.5, .5), .1, e.z + rnd(-.5, .5)), { color: 0x6a5a40, n: 2, speed: 1, up: 2.5, size: .5, life: .4, additive: false, gravity: 8 });
+      if (e.st > (e.atk === 'erupt' ? .85 : .55) * tm) { const tl = e.tele; e.tele = null; for (const h of G.heroes) if (!h.down && inTele(h, tl)) damageHero(h, e.dmg, e, { kb: e.atk === 'erupt' ? 8 : 5, dx: h.x - e.x, dz: h.z - e.z }); killTele(tl); if (e.atk === 'erupt') { e.untgt = false; burst(_v1.set(e.x, .3, e.z), { color: 0x7a6a50, n: 24, speed: 4, up: 6, size: .7, life: .8, additive: false, gravity: 10 }); shock(e.x, e.z, 1.9, 0xffb070, .35); SND.slam(); shake(.15); } else SND.swish(); e.state = 'recover'; e.st = 0; } }
+    else if (e.state === 'recover') { if (e.st > (e.atk === 'erupt' ? 1.5 : .7)) { e.state = 'chase'; e.st = 0; e.cd = rnd(2.4, 3.8); } }
+  } else if (e.type === 'shard') {
+    // Crystal sentry: turns slowly, shows three red lanes, then fires three crystal shards down them
+    if (e.state === 'chase') { turnTo(e, aT, 1.6, dt); e.cd -= dt; if (e.cd <= 0 && d < 14 && Math.abs(wrapA(aT - e.h)) < .35) { e.state = 'wind'; e.st = 0; e.teles = [-.38, 0, .38].map(a => teleRect(e.x + Math.sin(e.h + a) * .8, e.z + Math.cos(e.h + a) * .8, e.h + a, 11, .6, 1.0 * tm)); SND.tele(); } }
+    else if (e.state === 'wind') { if (e.st > 1.0 * tm) { e.teles.forEach(killTele); e.teles = null; for (const a of [-.38, 0, .38]) { const ang = e.h + a; shoot({ kind: 'shard', team: 'foe', owner: e, x: e.x + Math.sin(ang) * .9, z: e.z + Math.cos(ang) * .9, vx: Math.sin(ang) * 10, vz: Math.cos(ang) * 10, r: .3, dmg: e.dmg, life: 1.1 }); } SND.zap(); e.state = 'recover'; e.st = 0; } }
+    else if (e.state === 'recover') { if (e.st > .8) { e.state = 'chase'; e.st = 0; e.cd = rnd(2.6, 3.6); } }
+  } else if (e.type === 'boss') { const r = (e.boss === 'golem' ? golemUpdate : bossUpdate)(e, T, dx, dz, d, aT, dt, tm); mvx = r[0]; mvz = r[1]; }
   e.x += (mvx + e.kx) * dt; e.z += (mvz + e.kz) * dt; e.kx = damp(e.kx, 0, .003, dt); e.kz = damp(e.kz, 0, .003, dt);
   e.moving = Math.hypot(mvx, mvz); if (e.moving > .1) e.walkPh += dt * (e.type === 'zombie' ? 5 : 9) * Math.min(1.6, e.moving / Math.max(.1, e.speed));
 }
@@ -826,7 +975,7 @@ function foeUpdate(e, dt) {
 /* ================= boss ================= */
 function bossUpdate(e, T, dx, dz, d, aT, dt, tm) {
   let mx = 0, mz = 0; const fx = Math.sin(e.h), fz = Math.cos(e.h); const frac = e.hp / e.maxHp; const ph = frac > .66 ? 1 : frac > .33 ? 2 : 3; const spd = ph === 3 ? .78 : 1;
-  if (ph > e.phase && e.state !== 'roar' && e.state !== 'jump') { e.phase = ph; killTele(e.tele); e.tele = null; e.state = 'roar'; e.st = 0; bigText(ph === 2 ? E.L('PHASE 2', 'FASE 2') : E.L('FINAL PHASE', 'FASE FINAL')); SND.roar(); shake(.6); E.toast(ph === 2 ? 'The captain calls his crew!' : 'The captain is enraged!', 1800); for (const h of G.heroes) { const ddx = h.x - e.x, ddz = h.z - e.z; const dd = Math.hypot(ddx, ddz) || 1; if (dd < 6 && !h.down) { h.kx += ddx / dd * 10; h.kz += ddz / dd * 10; } } shock(e.x, e.z, 6, 0xff5030, .6); }
+  if (ph > e.phase && e.state !== 'roar' && e.state !== 'jump') { e.phase = ph; killTele(e.tele); e.tele = null; e.state = 'roar'; e.st = 0; const sub = ph === 2 ? E.L('The captain calls his crew!', '¡El capitán llama a su tripulación!') : E.L('The captain is enraged! Cannonballs fly from his slams', '¡El capitán está furioso! Sus golpes lanzan balas'); bigText(ph === 2 ? E.L('PHASE 2', 'FASE 2') : E.L('FINAL PHASE', 'FASE FINAL'), { sub, dur: 2 }); E.say(sub, { interrupt: false }); SND.roar(); shake(.6); for (const h of G.heroes) { const ddx = h.x - e.x, ddz = h.z - e.z; const dd = Math.hypot(ddx, ddz) || 1; if (dd < 6 && !h.down) { h.kx += ddx / dd * 10; h.kz += ddz / dd * 10; } } shock(e.x, e.z, 6, 0xff5030, .6); }
   const s = e.state;
   if (s === 'chase') { turnTo(e, aT, 2.6, dt); if (d > 3) { const [sx, sz] = steerDir(e, dx, dz); mx = sx * e.speed * (ph === 3 ? 1.3 : 1); mz = sz * e.speed * (ph === 3 ? 1.3 : 1); } e.cd -= dt;
     if (e.cd <= 0) { const opts = []; if (d < 5) opts.push('sweep', 'sweep'); opts.push('slam', 'charge'); if (ph >= 2) { opts.push('barrage'); if (G.foes.filter(f => !f.dead && f.type === 'zombie').length < 3) opts.push('summon'); } let a = pick(opts); if (a === e.lastAtk && Math.random() < .6) a = pick(opts); e.lastAtk = a; e.atk = a; e.state = 'wind'; e.st = 0;
@@ -854,11 +1003,64 @@ function bossUpdate(e, T, dx, dz, d, aT, dt, tm) {
   else if (s === 'roar') { if (e.st > 1.5) { e.state = 'chase'; e.st = 0; e.cd = .3; if (e.phase >= 2) { e.atk = 'summon'; e.state = 'wind'; e.st = 0; } } }
   return [mx, mz];
 }
+/* ================= act II boss: Grumblestone, the crystal colossus ================= */
+// Phase 1: fist smash (the fist gets stuck: weak spot, extra damage) + boulder toss.
+// Phase 2: + crystal spike lanes toward each hero, calls crystal sentries / burrowers.
+// Phase 3: + shock rings that roll outward (dodge-roll through them), faster.
+function golemUpdate(e, T, dx, dz, d, aT, dt, tm) {
+  let mx = 0, mz = 0; const fx = Math.sin(e.h), fz = Math.cos(e.h); const frac = e.hp / e.maxHp; const ph = frac > .66 ? 1 : frac > .33 ? 2 : 3; const spd = ph === 3 ? .85 : 1;
+  if (ph > e.phase && e.state !== 'roar') {
+    e.phase = ph; killTele(e.tele); e.tele = null; (e.lines || []).forEach(killTele); e.lines = null; e.weak = false; e.state = 'roar'; e.st = 0;
+    const sub = ph === 2 ? E.L('Crystal spikes! Step out of the red lanes', '¡Púas de cristal! Sal de los carriles rojos') : E.L('Shock rings! Roll right through them', '¡Anillos de choque! Rueda a través de ellos');
+    bigText(ph === 2 ? E.L('PHASE 2', 'FASE 2') : E.L('FINAL PHASE', 'FASE FINAL'), { sub, dur: 2 }); E.say(sub, { interrupt: false }); SND.roar(); shake(.6);
+    for (const h of G.heroes) { const ddx = h.x - e.x, ddz = h.z - e.z; const dd = Math.hypot(ddx, ddz) || 1; if (dd < 6 && !h.down) { h.kx += ddx / dd * 10; h.kz += ddz / dd * 10; } } shock(e.x, e.z, 6, 0x60d0ff, .6);
+  }
+  const s = e.state;
+  if (s === 'chase') {
+    turnTo(e, aT, 1.8, dt); if (d > 3.6) { const [sx, sz] = steerDir(e, dx, dz); mx = sx * e.speed * (ph === 3 ? 1.25 : 1); mz = sz * e.speed * (ph === 3 ? 1.25 : 1); } e.cd -= dt;
+    if (e.cd <= 0) {
+      const opts = ['rocks']; if (d < 7.5) opts.push('smash', 'smash'); if (ph >= 2) { opts.push('spikes', 'spikes'); if (G.foes.filter(f => !f.dead && f.type !== 'boss').length < 3) opts.push('summon'); } if (ph === 3) opts.push('ring', 'ring');
+      let a = pick(opts); if (a === e.lastAtk && Math.random() < .6) a = pick(opts); e.lastAtk = a; e.atk = a; e.state = 'wind'; e.st = 0;
+      e.wd = { smash: 1.15, rocks: .9, spikes: 1.1, ring: 1.05, summon: .8 }[a] * (a === 'summon' || a === 'rocks' ? 1 : tm * spd);
+      if (a === 'smash') { e.h = aT; e.side = Math.random() < .5 ? 1 : -1; const f2x = Math.sin(e.h), f2z = Math.cos(e.h); const lx = -Math.cos(e.h) * e.side, lz = Math.sin(e.h) * e.side; e.tx = clamp(e.x + f2x * 3 + lx * 1.6, -G.room.W / 2 + 1, G.room.W / 2 - 1); e.tz = clamp(e.z + f2z * 3 + lz * 1.6, -G.room.D / 2 + 1, G.room.D / 2 - 1); e.tele = teleCircle(e.tx, e.tz, 2.6, e.wd); }
+      else if (a === 'rocks') { const n = ph === 3 ? 5 : 3; for (let i = 0; i < n; i++) { const tg = G.heroes.filter(h => !h.down)[i] || null; const tx = clamp(tg ? tg.x + rnd(-.8, .8) : rnd(-G.room.W / 2 + 2, G.room.W / 2 - 2), -G.room.W / 2 + 1, G.room.W / 2 - 1), tz = clamp(tg ? tg.z + rnd(-.8, .8) : rnd(-G.room.D / 2 + 2, G.room.D / 2 - 2), -G.room.D / 2 + 1, G.room.D / 2 - 1); setTimeoutG(.55 + i * .2, () => { if (e.dead) return; const dur = 1.3 * tm; const tl = teleCircle(tx, tz, 1.8, dur); shoot({ kind: 'lob', big: true, team: 'foe', owner: e, sx: e.x, sz: e.z, sy: 5, x: e.x, z: e.z, tx, tz, dur, arc: 5, rad: 1.8, dmg: e.dmg * .6, tele: tl }); SND.swish(); }); } }
+      else if (a === 'spikes') { const tg = G.heroes.filter(h => !h.down); const angs = tg.map(h => Math.atan2(h.x - e.x, h.z - e.z)); while (angs.length < 3) angs.push(aT + (angs.length - 1.5) * 1.6); e.lines = angs.slice(0, 4).map(a2 => teleRect(e.x + Math.sin(a2) * 1.6, e.z + Math.cos(a2) * 1.6, a2, 13, 1.5, e.wd)); }
+      else if (a === 'ring') { e.tele = teleCircle(e.x, e.z, 3, e.wd); }
+      else if (a === 'summon') { SND.roar(); shock(e.x, e.z, 5, 0x9a5cff, .6); }
+    }
+  }
+  else if (s === 'wind') {
+    if (e.st > e.wd) {
+      const a = e.atk; const tl = e.tele; e.tele = null; e.st = 0; e.hitSet.clear();
+      if (a === 'smash') { for (const h of G.heroes) if (!h.down && inTele(h, tl)) damageHero(h, e.dmg, e, { kb: 9, dx: h.x - e.tx, dz: h.z - e.tz }); shock(e.tx, e.tz, 2.6, 0xffb070, .4); SND.slam(); shake(.55); burst(_v1.set(e.tx, .3, e.tz), { color: 0x8a8a9a, n: 26, speed: 6, up: 5, size: .8, life: .8, additive: false, gravity: 10 }); e.state = 'stuck'; e.weak = true; popText(E.L('Weak spot! Hit the crystal!', '¡Punto débil! ¡Golpea el cristal!'), _v1.set(e.x, 5.4, e.z), 'dp-h'); }
+      else if (a === 'rocks') e.state = 'recover';
+      else if (a === 'spikes') { for (const L2 of e.lines || []) { for (const h of G.heroes) if (!h.down && inTele(h, L2)) damageHero(h, e.dmg * .8, e, { kb: 7, dx: h.x - L2.x, dz: h.z - L2.z }); spikeLine(L2); killTele(L2); } e.lines = null; SND.zap(); SND.slam(); shake(.35); e.state = 'recover'; }
+      else if (a === 'ring') { for (const h of G.heroes) if (!h.down && inTele(h, tl)) damageHero(h, e.dmg * .7, e, { kb: 9, dx: h.x - e.x, dz: h.z - e.z }); SND.slam(); shake(.5); shock(e.x, e.z, 3, 0x9fefff, .4); shockRing(e.x, e.z, e.dmg * .55); if (S.diff === 'hard') setTimeoutG(.7, () => { if (!e.dead) shockRing(e.x, e.z, e.dmg * .55); }); e.state = 'recover'; }
+      else if (a === 'summon') { const kinds = Math.random() < .5 ? ['shard', 'mole'] : ['mole', 'mole']; kinds.forEach((k, i) => { const ang = e.h + (i ? 1 : -1) * 1.4 + Math.PI; const x = clamp(e.x + Math.sin(ang) * 4, -G.room.W / 2 + 1.5, G.room.W / 2 - 1.5), z = clamp(e.z + Math.cos(ang) * 4, -G.room.D / 2 + 1.5, G.room.D / 2 - 1.5); if (!solidAt(x, z)) makeFoe(k, x, z); }); e.state = 'recover'; }
+      killTele(tl);
+    }
+  }
+  else if (s === 'stuck') { if (Math.random() < .2) burst(_v1.set(e.x, 2.6, e.z), { color: 0x7ff8ff, n: 2, speed: 1, up: 1.5, size: .4, life: .5, gravity: 0 }); if (e.st > 1.8) { e.weak = false; e.state = 'recover'; e.st = .3; } }
+  else if (s === 'recover') { if (e.st > .95 * spd) { e.state = 'chase'; e.st = 0; e.cd = rnd(.5, 1.1) * spd; } }
+  else if (s === 'roar') { if (e.st > 1.6) { e.state = 'chase'; e.st = 0; e.cd = .4; if (e.phase >= 2) { e.atk = 'summon'; e.state = 'wind'; e.st = 0; e.wd = .8; } } }
+  return [mx, mz];
+}
+function spikeLine(T) { const g = new THREE.Group(); fxGroup.add(g); const s = Math.sin(T.ang), c = Math.cos(T.ang); for (let k = .6; k < T.len; k += .9) { const m = new THREE.Mesh(GEO.oct, MAT.cryP); m.scale.set(.32, rnd(.9, 1.6), .32); m.position.set(T.x + s * k + rnd(-.3, .3), 0, T.z + c * k + rnd(-.3, .3)); m.rotation.set(rnd(-.3, .3), rnd(0, 3), rnd(-.3, .3)); g.add(m); } g.scale.y = .01; FX.push({ m: g, t: 0, dur: .8, kind: 'spike' }); }
+// spore clouds (slow heroes inside) and shock rings (expand outward; a dodge roll passes through)
+function sporeCloud(x, z, r, dur) { const m = new THREE.Mesh(GEO.disc, new THREE.MeshBasicMaterial({ color: 0xb06aff, transparent: true, opacity: 0, depthWrite: false, toneMapped: false })); m.position.set(x, .06, z); m.scale.setScalar(r); fxGroup.add(m); G.zones.push({ x, z, r, t: 0, dur, m }); }
+const inSpores = h => G.zones.some(Z => (h.x - Z.x) ** 2 + (h.z - Z.z) ** 2 < Z.r * Z.r);
+function shockRing(x, z, dmg) { const m = new THREE.Mesh(GEO.ring, basic(0xff5030, { opacity: .9 })); m.position.set(x, .12, z); m.scale.setScalar(1); fxGroup.add(m); const w = new THREE.Mesh(GEO.torus, basic(0xffc8a0, { opacity: .7 })); w.position.set(x, .35, z); fxGroup.add(w); G.rings.push({ x, z, R: 1.5, v: 5.2, dmg, hit: new Set(), m, w, seen: {} }); }
+function updateZones(dt) {
+  for (let i = G.zones.length - 1; i >= 0; i--) { const Z = G.zones[i]; Z.t += dt; const k = Z.t / Z.dur; Z.m.material.opacity = .3 * Math.min(1, Z.t * 4) * (k > .8 ? (1 - k) / .2 : 1); if (Math.random() < .2) burst(_v1.set(Z.x + rnd(-Z.r, Z.r) * .7, .3, Z.z + rnd(-Z.r, Z.r) * .7), { color: 0xc890ff, n: 1, speed: .3, up: .8, size: .7, life: .9, gravity: -.4 }); if (k >= 1) { fxGroup.remove(Z.m); Z.m.material.dispose(); G.zones.splice(i, 1); } }
+  for (let i = G.rings.length - 1; i >= 0; i--) { const Rg = G.rings[i]; Rg.R += Rg.v * dt; Rg.m.scale.setScalar(Rg.R); Rg.w.scale.setScalar(Rg.R); const fade = clamp((17 - Rg.R) / 3, 0, 1); Rg.m.material.opacity = .9 * fade; Rg.w.material.opacity = .7 * fade;
+    for (const h of G.heroes) { if (h.down || Rg.hit.has(h)) continue; const dd = Math.hypot(h.x - Rg.x, h.z - Rg.z); if (Math.abs(dd - Rg.R) < .5 + h.r * .5) { Rg.hit.add(h); damageHero(h, Rg.dmg, null, { kb: 6, dx: h.x - Rg.x, dz: h.z - Rg.z }); } }
+    if (Rg.R > 17) { fxGroup.remove(Rg.m); fxGroup.remove(Rg.w); Rg.m.material.dispose(); Rg.w.material.dispose(); G.rings.splice(i, 1); } }
+}
 function bossDefeated(b) {
   G.won = true; G.slow = 2.2; SND.roar(); setTimeout(() => SFX.win(), 400); bigText(E.L('VICTORY!', '¡VICTORIA!'), { top: true, dur: 1.8 }); shake(.7); $('boss').hidden = true;
   for (const f of G.foes) if (!f.dead && f !== b) killFoe(f, null);
   for (let i = 0; i < 4; i++) setTimeoutG(i * .25, () => { burst(_v1.set(b.x + rnd(-1, 1), rnd(1, 3), b.z + rnd(-1, 1)), { color: pick([0xffd166, 0xff7b6b, 0xffffff]), n: 26, speed: 6, up: 6, size: .7, life: 1 }); SND.boom(); });
-  G.roomsCleared = 9; dropGold(b.x, b.z, 60);
+  G.roomsCleared = 9; dropGold(b.x, b.z, b.gold);
   setTimeoutG(4.2, () => endRun(true));
 }
 
@@ -916,6 +1118,7 @@ function heroVisual(h, dt) {
   const ultGlow = h.ult >= 100 ? .12 + Math.sin(G.t * 6) * .08 : 0;
   for (const m of h.mats) m.emissive.setRGB(fl * .9 + ifr + ultGlow, fl * .2 + ifr + ultGlow * .7, fl * .15 + ifr + ultGlow * .2);
   h.sel.material.opacity = h.down ? .15 : h.ctrl === 'bot' ? .35 : .7;
+  if (h.bubble) h.bubble.visible = !!(G.boons && boon('aegis') && !h.down && G.t - (h.bubbleT ?? -99) > 15 / boon('aegis'));
 }
 function zombieVisual(e, dt) {
   const T = e.tgt, s = e.state; let rate = 14; const mv = Math.min(1, (e.moving || 0) / 2);
@@ -955,11 +1158,49 @@ function pirateVisual(e, dt) {
   if (e.arm) { e.arm.rotation.x = damp(e.arm.rotation.x, armX, s === 'chop' || s === 'swing' ? 1e-8 : .0005, dt); e.arm.rotation.z = damp(e.arm.rotation.z, armZ, .001, dt); }
   if (e.type === 'cannon') { e.pivot.position.z = -(e.recoil || 0); e.recoil = Math.max(0, (e.recoil || 0) - dt); }
 }
+function critterVisual(e, dt) {
+  const s = e.state, b = e.body; e.g.position.set(e.x, 0, e.z); e.g.rotation.y = e.h; let sy = 1, sxz = 1, py = 0, tiltX = 0, rz = 0;
+  if (e.type === 'spore') { const hop = e.moving > .1 ? Math.abs(Math.sin(e.walkPh * .7)) : 0; py = hop * .3; sy = 1 + Math.sin(e.animT * 3) * .04; if (s === 'wind') { const k = clamp(e.st / DIFF[S.diff].tele, 0, 1); sxz = 1 + k * .35; sy = 1 - k * .12 + Math.sin(e.st * 40) * .03 * k; } else if (s === 'recover') sxz = 1 - Math.max(0, .2 - e.st); }
+  else if (e.type === 'mole') {
+    if (s === 'chase') { py = e.moving > .1 ? Math.abs(Math.sin(e.walkPh)) * .12 : 0; tiltX = .15; }
+    else if (s === 'dig') { py = -1.5 * clamp(e.st / .45, 0, 1); tiltX = .6; }
+    else if (s === 'under') py = -1.6;
+    else if (s === 'wind') { if (e.atk === 'erupt') py = -1.25 + Math.sin(e.st * 50) * .05; else tiltX = -.35; }
+    else if (s === 'recover') { if (e.atk === 'erupt') { py = Math.max(0, Math.sin(Math.min(1, e.st / .4) * Math.PI)) * 1.1; rz = Math.sin(e.st * 9) * .25; } else tiltX = .4; }
+  }
+  else if (e.type === 'shard') { if (s === 'wind') sy = 1 + Math.sin(e.st * 30) * .06; b.rotation.y = s === 'wind' ? Math.sin(e.st * 40) * .08 : 0; e.crystal.emissiveIntensity = s === 'wind' ? 2 + Math.sin(e.st * 30) * .6 : 1.3; }
+  if (s === 'dead') { const k = Math.min(1, e.st / .4); sy *= 1 - k * .7; sxz *= 1 + k * .3; py -= Math.max(0, e.st - 1) * .8; }
+  if (e.stun > 0) rz = Math.sin(e.animT * 10) * .15;
+  b.scale.set(sxz, sy, sxz); b.rotation.z = rz; if (s !== 'spawn') e.pivot.position.y = py; e.pivot.rotation.x = damp(e.pivot.rotation.x, tiltX, .001, dt);
+}
+function golemVisual(e, dt) {
+  const s = e.state, a = e.atk; e.g.position.set(e.x, 0, e.z); e.g.rotation.y = e.h;
+  const walk = e.moving > .1; let tiltX = 0, tiltZ = walk ? Math.sin(e.walkPh * .6) * .07 : 0, py = walk ? Math.abs(Math.sin(e.walkPh * .6)) * .14 : Math.sin(e.animT * 1.5) * .03;
+  let aL = -.12 + (walk ? Math.sin(e.walkPh * .6) * .35 : 0), aR = -.12 - (walk ? Math.sin(e.walkPh * .6) * .35 : 0), zL = .12, zR = -.12, snap = false;
+  const k = s === 'wind' ? clamp(e.st / (e.wd || 1), 0, 1) : 0;
+  if (s === 'wind') {
+    if (a === 'smash') { const up = -2.7 * sstep(0, .55, k); if (e.side > 0) aR = up; else aL = up; tiltX = -.12 * k; py += Math.sin(e.st * 30) * .02 * k; }
+    else if (a === 'rocks') { aR = aL = -2.6 * sstep(0, .45, k); tiltX = -.18; }
+    else if (a === 'spikes') { aL = aR = -.3; zL = 1.1 * k; zR = -1.1 * k; py = -.25 * k; }
+    else if (a === 'ring') { aL = aR = -2.9 * sstep(0, .7, k); tiltX = -.22 * k; py = .2 * k; }
+    else { aL = aR = -1.6; tiltX = -.2; }
+  }
+  else if (s === 'stuck') { snap = e.st < .1; if (e.side > 0) aR = -1.05; else aL = -1.05; tiltX = .38; py = -.2; tiltZ = Math.sin(e.st * 6) * .04; }
+  else if (s === 'recover') { aL = aR = -.4; tiltX = .1; if (e.st < .12) { snap = true; if (a === 'spikes' || a === 'ring') { aL = aR = -.9; zL = .3; zR = -.3; tiltX = .25; } } }
+  else if (s === 'roar' || s === 'intro') { aL = aR = -2.3 + Math.sin(e.st * 18) * .12; zL = .5; zR = -.5; tiltX = -.28; py = Math.sin(e.st * 40) * .04; }
+  if (s === 'dead') { const kd = Math.min(1, e.st / 1.2); tiltX = -kd * .5; py = -kd * 2.2; aL = aR = .3; }
+  const r = snap ? 1e-12 : .0008;
+  e.armL.rotation.x = damp(e.armL.rotation.x, aL, r, dt); e.armR.rotation.x = damp(e.armR.rotation.x, aR, r, dt); e.armL.rotation.z = damp(e.armL.rotation.z, zL, .002, dt); e.armR.rotation.z = damp(e.armR.rotation.z, zR, .002, dt);
+  e.pivot.position.y = damp(e.pivot.position.y, py, .001, dt); e.pivot.rotation.x = damp(e.pivot.rotation.x, tiltX, snap ? 1e-9 : .002, dt); e.pivot.rotation.z = damp(e.pivot.rotation.z, tiltZ, .002, dt);
+  const pulse = Math.sin(e.animT * (e.weak ? 14 : 3));
+  e.coreMat.emissiveIntensity = e.weak ? 3 + pulse : 1.2 + pulse * .25; e.coreGlow.material.opacity = e.weak ? .85 : .45; e.core.scale.setScalar(e.weak ? 1.25 + pulse * .1 : 1); e.core.rotation.y += dt * (e.weak ? 5 : 1);
+}
 function foeVisual(e, dt) {
-  if (e.type === 'zombie') zombieVisual(e, dt); else pirateVisual(e, dt);
-  const wind = e.state === 'wind' ? (Math.sin(e.st * 30) > 0 ? .9 : .25) : 0; const fl = e.flash > 0 ? e.flash / .12 : 0; const slow = e.slow > 0 ? .25 : 0; const tint = e.portal ? 0 : 0;
-  for (const m of e.mats) m.emissive.setRGB(fl + wind * .8 + tint, fl + slow * .4, fl + slow);
-  if (e.hb.w) { e.hb.g.visible = !e.dead && e.hp < e.maxHp; if (e.hb.g.visible) { const p = clamp(e.hp / e.maxHp, 0, 1); e.hb.fg.scale.x = e.hb.w * p; e.hb.fg.position.x = -e.hb.w * (1 - p) / 2; e.hb.g.quaternion.copy(camera.quaternion); } }
+  if (e.type === 'zombie') zombieVisual(e, dt); else if (e.boss === 'golem') golemVisual(e, dt); else if (e.body) critterVisual(e, dt); else pirateVisual(e, dt);
+  // hit flash: soft on bosses so a pale boss never blows out to white under constant ally hits
+  const big = e.type === 'boss'; const wind = e.state === 'wind' ? (Math.sin(e.st * 30) > 0 ? .9 : .25) * (big ? .45 : 1) : 0; const fl = (e.flash > 0 ? e.flash / .12 : 0) * (big ? .28 : .75); const slow = e.slow > 0 ? .25 : 0;
+  if (e.crystal) e.crystal.emissive.setRGB(.54 + fl + wind * .6, .24 + fl * .6, 1 + fl); else for (const m of e.mats) m.emissive.setRGB(fl + wind * .8, fl * .85 + slow * .4, fl * .7 + slow);
+  if (e.hb.w) { e.hb.g.visible = !e.dead && !e.untgt && e.hp < e.maxHp; if (e.hb.g.visible) { const p = clamp(e.hp / e.maxHp, 0, 1); e.hb.fg.scale.x = e.hb.w * p; e.hb.fg.position.x = -e.hb.w * (1 - p) / 2; e.hb.g.quaternion.copy(camera.quaternion); } }
 }
 
 /* ================= collision ================= */
@@ -970,23 +1211,30 @@ function collide(e, isHero) {
   for (const o of Rm.obst) { if (o.r) { const dx = e.x - o.x, dz = e.z - o.z, d = Math.hypot(dx, dz), m = o.r + e.r; if (d < m) { if (d < 1e-4) { e.x += m; continue; } e.x = o.x + dx / d * m; e.z = o.z + dz / d * m; } } else { const dx = e.x - o.x, dz = e.z - o.z, px = o.hw + e.r - Math.abs(dx), pz = o.hd + e.r - Math.abs(dz); if (px > 0 && pz > 0) { if (px < pz) e.x += Math.sign(dx || 1) * px; else e.z += Math.sign(dz || 1) * pz; } } }
 }
 function separate() {
-  const A = [...G.heroes.filter(h => !h.down), ...G.foes.filter(f => !f.dead && f.state !== 'spawn')];
-  for (let i = 0; i < A.length; i++) for (let j = i + 1; j < A.length; j++) { const a = A[i], b = A[j]; const dx = b.x - a.x, dz = b.z - a.z, m = a.r + b.r; const d2 = dx * dx + dz * dz; if (d2 >= m * m || d2 < 1e-6) continue; const d = Math.sqrt(d2), push = (m - d) / 2; const wa = a.type === 'boss' || a.type === 'cannon' ? 0 : b.type === 'boss' || b.type === 'cannon' ? 2 : 1, wb = 2 - wa; const ux = dx / d, uz = dz / d; if (a.kind === 'hero' && a.state === 'dodge' || b.kind === 'hero' && b.state === 'dodge') continue; a.x -= ux * push * wa; a.z -= uz * push * wa; b.x += ux * push * wb; b.z += uz * push * wb; }
+  const A = [...G.heroes.filter(h => !h.down), ...G.foes.filter(f => !f.dead && !f.untgt)];
+  for (let i = 0; i < A.length; i++) for (let j = i + 1; j < A.length; j++) { const a = A[i], b = A[j]; const dx = b.x - a.x, dz = b.z - a.z, m = a.r + b.r; const d2 = dx * dx + dz * dz; if (d2 >= m * m || d2 < 1e-6) continue; const d = Math.sqrt(d2), push = (m - d) / 2; const wa = a.type === 'boss' || STATIC(a.type) ? 0 : b.type === 'boss' || STATIC(b.type) ? 2 : 1, wb = 2 - wa; const ux = dx / d, uz = dz / d; if (a.kind === 'hero' && a.state === 'dodge' || b.kind === 'hero' && b.state === 'dodge') continue; a.x -= ux * push * wa; a.z -= uz * push * wa; b.x += ux * push * wb; b.z += uz * push * wb; }
 }
 
 /* ================= room flow ================= */
 function roomPlan(idx) {
   const d = DIFF[S.diff]; const n = Math.round((5 + idx * 1.15) * d.count * (.75 + .15 * G.heroes.length));
-  const types = []; for (let i = 0; i < n; i++) { const r = Math.random(); let t = 'zombie'; if (idx >= 1 && r < .3) t = 'crew'; if (idx >= 2 && r > .72) t = 'officer'; types.push(t); }
-  let cannons = idx >= 3 ? (idx >= 6 ? 2 : 1) : 0; if (G.room.type === 'wreck') cannons++;
+  const types = []; let statics = 0;
+  if (G.act === 2) {
+    // Act II: burrowers and sporecaps first, then a few drowned and pirates mixed in; crystal sentries hold the far side
+    for (let i = 0; i < n; i++) { const r = Math.random(); let t = r < .38 ? 'mole' : r < .66 ? 'spore' : 'zombie'; if (idx >= 3 && r > .86) t = 'crew'; if (idx >= 5 && r > .66 && r < .76) t = 'officer'; types.push(t); }
+    statics = idx >= 1 ? (idx >= 5 ? 2 : 1) : 0; if (G.room.type === 'spire') statics++;
+  } else {
+    for (let i = 0; i < n; i++) { const r = Math.random(); let t = 'zombie'; if (idx >= 1 && r < .3) t = 'crew'; if (idx >= 2 && r > .72) t = 'officer'; types.push(t); }
+    statics = idx >= 3 ? (idx >= 6 ? 2 : 1) : 0; if (G.room.type === 'wreck') statics++;
+  }
   const waves = idx >= 5 ? 3 : 2; const per = Math.ceil(types.length / waves); const W = []; for (let w = 0; w < waves; w++) W.push(types.slice(w * per, (w + 1) * per));
-  if (cannons) W[0].push(...Array(cannons).fill('cannon'));
+  if (statics) W[0].push(...Array(statics).fill(G.act === 2 ? 'shard' : 'cannon'));
   return W;
 }
 function spawnPoint(type) {
   const Rm = G.room;
   for (let k = 0; k < 60; k++) {
-    let x, z; if (type === 'cannon') { const side = pick(['n', 'w', 'e']); if (side === 'n') { x = rnd(-Rm.W / 2 + 3, Rm.W / 2 - 3); z = -Rm.D / 2 + 1.3; if (Math.abs(x) < 3) continue; } else { x = (side === 'w' ? -1 : 1) * (Rm.W / 2 - 1.3); z = rnd(-Rm.D / 2 + 2, Rm.D / 2 - 4); } }
+    let x, z; if (STATIC(type)) { const side = pick(['n', 'w', 'e']); if (side === 'n') { x = rnd(-Rm.W / 2 + 3, Rm.W / 2 - 3); z = -Rm.D / 2 + 1.3; if (Math.abs(x) < 3) continue; } else { x = (side === 'w' ? -1 : 1) * (Rm.W / 2 - 1.3); z = rnd(-Rm.D / 2 + 2, Rm.D / 2 - 4); } }
     else { x = rnd(-Rm.W / 2 + 1.5, Rm.W / 2 - 1.5); z = rnd(-Rm.D / 2 + 1.5, Rm.D / 2 - 2); }
     if (solidAt(x, z, -.2)) continue; let ok = true; for (const o of Rm.obst) { if ((o.r && (x - o.x) ** 2 + (z - o.z) ** 2 < (o.r + 1) ** 2) || (!o.r && Math.abs(x - o.x) < o.hw + 1 && Math.abs(z - o.z) < o.hd + 1)) { ok = false; break; } } if (!ok) continue;
     if (G.heroes.some(h => (h.x - x) ** 2 + (h.z - z) ** 2 < 36)) continue; if (G.foes.some(f => !f.dead && (f.x - x) ** 2 + (f.z - z) ** 2 < 2.5)) continue;
@@ -996,37 +1244,43 @@ function spawnPoint(type) {
 }
 function enterRoom(idx) {
   // clean actors
-  for (const f of G.foes) scene.remove(f.g); G.foes = []; for (const s of G.shots) fxGroup.remove(s.m); G.shots = []; G.teles = []; G.coins = []; FX.length = 0; timers.length = 0; G.pending = 0; bigClear();
-  G.roomIdx = idx; const type = SEQ[idx]; buildRoom(type, idx);
-  G.room.phase = 'intro'; G.room.t = 0; G.room.waveI = 0; G.room.waves = type === 'boss' ? [] : roomPlan(idx);
-  const n = G.heroes.length; G.heroes.forEach((h, i) => { h.x = (i - (n - 1) / 2) * 1.6; h.z = G.room.D / 2 - 1.2; h.h = Math.PI; h.vx = h.vz = h.kx = h.kz = 0; if (h.down && type !== 'boss') reviveHero(h, .3); if (h.down) reviveHero(h, .3); h.state = 'move'; h.iframes = 1; });
+  for (const f of G.foes) scene.remove(f.g); G.foes = []; for (const s of G.shots) fxGroup.remove(s.m); G.shots = []; G.teles = []; G.coins = []; G.zones = []; G.rings = []; FX.length = 0; timers.length = 0; G.pending = 0; bigClear(); document.querySelectorAll('.ig-float').forEach(el => el.remove());
+  G.roomIdx = idx; const type = G.seq[idx]; buildRoom(type, idx); const boss = !!ROOMS[type].boss;
+  G.room.phase = 'intro'; G.room.t = 0; G.room.waveI = 0; G.room.waves = boss ? [] : roomPlan(idx);
+  const n = G.heroes.length; G.heroes.forEach((h, i) => { h.x = (i - (n - 1) / 2) * 1.6; h.z = G.room.D / 2 - 1.2; h.h = Math.PI; h.vx = h.vz = h.kx = h.kz = 0; if (h.down) reviveHero(h, .3); h.state = 'move'; h.iframes = 1; h.ai = {}; });
   camState.look.set(0, 0, G.room.D / 2 - 4); placeCamera(1, true);
   $('boss').hidden = true;
-  E.toast(type === 'boss' ? E.L("Captain's Grotto", 'Gruta del Capitán') : `${ROOMS[type].name} · ${E.L('Room', 'Sala')} ${idx + 1} ${E.L('of', 'de')} 8`, 1800);
-  if (type === 'boss') startBossIntro();
+  E.toast(boss ? loc(ROOMS[type], 'name') : `${loc(ROOMS[type], 'name')} · ${E.L('Room', 'Sala')} ${idx + 1} ${E.L('of', 'de')} 8`, 1800);
+  if (idx === 0 && G.act === 2) setTimeoutG(1.2, () => E.say(E.L('The Glowroot Hollow. Watch for dirt trails: a burrower pops up where the red circle shows.', 'La Hondonada Raíz de Luz. Cuidado con los rastros de tierra: un topo sale donde aparece el círculo rojo.'), { once: true }));
+  if (boss) startBossIntro();
   hudBuild();
 }
 function roomUpdate(dt) {
-  const Rm = G.room; Rm.t += dt;
-  if (Rm.phase === 'intro') { if (Rm.t > .9 && Rm.type !== 'boss') { Rm.phase = 'fight'; Rm.t = 0; spawnWave(); } }
+  const Rm = G.room, boss = !!Rm.T.boss; Rm.t += dt;
+  if (Rm.phase === 'intro') { if (Rm.t > .9 && !boss) { Rm.phase = 'fight'; Rm.t = 0; spawnWave(); } }
   else if (Rm.phase === 'fight') {
     const alive = G.foes.filter(f => !f.dead).length;
-    if (Rm.type !== 'boss' && Rm.waveI < Rm.waves.length && !G.pending && (alive <= 2 || (Rm.t > 22 && alive < 8))) { spawnWave(); Rm.t = 0; }
-    if (alive === 0 && !G.pending && Rm.waveI >= Rm.waves.length && Rm.type !== 'boss') { Rm.phase = 'clear'; Rm.t = 0; roomCleared(); }
+    if (!boss && Rm.waveI < Rm.waves.length && !G.pending && (alive <= 2 || (Rm.t > 22 && alive < 8))) { spawnWave(); Rm.t = 0; }
+    if (alive === 0 && !G.pending && Rm.waveI >= Rm.waves.length && !boss) { Rm.phase = 'clear'; Rm.t = 0; roomCleared(); }
   } else if (Rm.phase === 'clear') { if (Rm.t > 1.8 && !G.coins.length || Rm.t > 4) { Rm.phase = 'cards'; Rm.t = 0; showCards(); } }
-  else if (Rm.phase === 'exit') { Rm.door.open = Math.min(1, Rm.door.open + dt * .8); if (G.heroes.some(h => !h.down && h.ctrl !== 'bot' && h.z < -Rm.D / 2 - 1.5) || (G.heroes.every(h => h.ctrl === 'bot' || h.down) && G.heroes.some(h => h.z < -Rm.D / 2 - 1.5))) { Rm.phase = 'leaving'; nextRoom(); } }
+  else if (Rm.phase === 'exit') {
+    Rm.door.open = Math.min(1, Rm.door.open + dt * .8);
+    if (G.heroes.some(h => !h.down && h.ctrl !== 'bot' && h.z < -Rm.D / 2 - 1.5) || (G.heroes.every(h => h.ctrl === 'bot' || h.down) && G.heroes.some(h => h.z < -Rm.D / 2 - 1.5))) { Rm.phase = 'leaving'; nextRoom(); }
+    // a nudge if nobody walks through: the arrow sign bobs and the hint repeats once
+    else if (Rm.t > 12 && !Rm.nudged) { Rm.nudged = true; E.toast(E.L('⬆ Walk through the open gate (north)', '⬆ Cruza la puerta abierta (norte)'), 2200, true); }
+  }
   const dr = Rm.door; dr.bars.position.y = dr.open * 3.3; dr.glow.material.opacity = dr.open * .9; dr.sign.visible = dr.open > .5; if (dr.sign.visible) dr.sign.position.y = 4.6 + Math.sin(G.t * 3) * .15;
-  // spawn telegraph of pending foes
 }
 function spawnWave() { const Rm = G.room; const list = Rm.waves[Rm.waveI++] || []; const cap = 10; let alive = G.foes.filter(f => !f.dead).length + (G.pending || 0); const over = []; list.forEach((t, i) => { if (alive >= cap) { over.push(t); return; } alive++; G.pending = (G.pending || 0) + 1; setTimeoutG(i * .18, () => { G.pending--; const [x, z] = spawnPoint(t); makeFoe(t, x, z); }); }); if (over.length) Rm.waves.splice(Rm.waveI, 0, over); }
 function roomCleared() {
   const Rm = G.room; Rm.cleared = true; G.roomsCleared = Rm.idx + 1; SFX.win(); bigText(E.L('ROOM CLEAR', '¡SALA LIMPIA!'));
   for (const h of G.heroes) if (h.down) reviveHero(h, .35);
+  if (boon('medic')) for (const h of G.heroes) healHero(h, h.maxHp * .2 * boon('medic'));
   // chest
   const ch = E.instance('chest', { scale: 1.1 }); ch.position.set(0, 0, -1); scene.add(ch); fxGroup.add(ch);
   setTimeoutG(.7, () => { burst(_v1.set(0, .8, -1), { color: 0xffd166, n: 30, speed: 4, up: 6, size: .5, life: 1 }); dropGold(0, -1, 10 + Rm.idx * 3); SFX.coin(); ch.scale.setScalar(1.15); setTimeoutG(.6, () => { fxGroup.remove(ch); burst(_v1.set(0, .5, -1), { color: 0xfff2c8, n: 12, speed: 2, up: 2, size: .5, life: .5 }); }); });
 }
-function openDoor() { const Rm = G.room; Rm.doorOpen = true; Rm.phase = 'exit'; Rm.t = 0; SND.door(); shake(.2); E.toast(Rm.idx === 7 ? E.L('The captain awaits… head north', 'El capitán espera… ve al norte') : E.L('The way is open, head north', 'El camino está abierto, ve al norte'), 2000); }
+function openDoor() { const Rm = G.room; Rm.doorOpen = true; Rm.phase = 'exit'; Rm.t = 0; SND.door(); shake(.2); E.toast(Rm.idx === 7 ? (G.act === 2 ? E.L('Something huge stirs… head north', 'Algo enorme despierta… ve al norte') : E.L('The captain awaits… head north', 'El capitán espera… ve al norte')) : E.L('The way is open, head north', 'El camino está abierto, ve al norte'), 2000); }
 function nextRoom() {
   const fade = $('fade'); fade.classList.add('on');
   setTimeoutG(.38, () => { if (!G) return; enterRoom(G.roomIdx + 1); setTimeoutG(.12, () => fade.classList.remove('on')); });
@@ -1035,9 +1289,10 @@ function nextRoom() {
 /* ================= boss intro ================= */
 let bossRef = null;
 function startBossIntro() {
-  const b = makeFoe('boss', 0, -G.room.D / 2 + 4, { h: 0 }); b.state = 'intro'; b.invuln = true; b.phase = 1; b.h = 0; bossRef = b;
+  const A = ACTS[G.act]; const b = makeFoe('boss', 0, -G.room.D / 2 + 4, { h: 0 }); b.state = 'intro'; b.invuln = true; b.phase = 1; b.h = 0; bossRef = b;
+  $('bossName').textContent = loc(A, 'bossName'); $('introK').textContent = loc(A, 'name'); $('introN').textContent = loc(A, 'bossName'); $('introS').textContent = loc(A, 'bossSub');
   G.cine = { t: 0, dur: 4.4, roared: false }; $('boss').hidden = true; music && music.stop(); music = E.music(Object.assign({}, E.SONGS.tense, { bpm: 138 }));
-  E.say(E.L('Captain Brinehollow! Watch the red zones on the floor and dodge out of them.', '¡El capitán Brinehollow! Mira las zonas rojas del suelo y esquívalas rodando.'));
+  E.say(G.act === 2 ? E.L('Grumblestone, the crystal colossus! Dodge the red zones. When his fist gets stuck, hit the glowing crystal!', '¡Gruñepiedra, el coloso de cristal! Esquiva las zonas rojas. ¡Cuando su puño se atasque, golpea el cristal brillante!') : E.L('Captain Brinehollow! Watch the red zones on the floor and dodge out of them.', '¡El capitán Brinehollow! Mira las zonas rojas del suelo y esquívalas rodando.'));
 }
 function cineUpdate(dt) {
   const c = G.cine; c.t += dt; const b = bossRef;
@@ -1046,7 +1301,7 @@ function cineUpdate(dt) {
   if (c.t > 1.3 && !c.roared) { c.roared = true; SND.roar(); shake(.6); $('intro').classList.add('on'); b.state = 'roar'; b.st = 0; }
   if (b && b.state === 'roar') { b.st += dt; }
   if (c.t > 3.6) $('intro').classList.remove('on');
-  if (c.t > c.dur) { R.bloom.strength = .2; R.renderer.toneMappingExposure = 1.05; LIGHTS[0].base = 22; G.cine = null; b.state = 'chase'; b.st = 0; b.invuln = false; b.cd = 1.2; G.room.phase = 'fight'; $('boss').hidden = false; bigText(E.L('FIGHT!', '¡A LUCHAR!')); }
+  if (c.t > c.dur) { R.bloom.strength = .2; R.renderer.toneMappingExposure = 1.05; LIGHTS[0].base = 22; G.cine = null; b.state = 'chase'; b.st = 0; b.invuln = false; b.untgt = false; b.cd = 1.2; G.room.phase = 'fight'; $('boss').hidden = false; bigText(E.L('FIGHT!', '¡A LUCHAR!')); }
 }
 
 /* ================= cards ================= */
@@ -1055,13 +1310,14 @@ function rollCards() { const pool = BOONS.filter(b => boon(b.id) < b.max); const
 function showCards() {
   G.paused = true; G.cardsOpen = true; cardChoices = rollCards(); cardSel = 0;
   cardsEl = document.createElement('div'); cardsEl.className = 'ig-screen dp-cards';
-  cardsEl.innerHTML = `<div class="dp-cwrap"><h2>${E.L('Choose a boon', 'Elige un don')}</h2><p>${E.L('It powers up the whole party for this run', 'Mejora a todo el grupo en esta partida')}</p><div class="dp-crow">${cardChoices.map((b, i) => `<button class="dp-card ${i === 0 ? 'sel' : ''}" data-i="${i}"><span class="k">${i + 1}</span><span class="ic">${b.icon}</span><b>${b.name}</b><small>${b.desc}</small>${boon(b.id) ? `<span class="lv">Lv ${boon(b.id) + 1}</span>` : ''}</button>`).join('')}</div></div>`;
+  cardsEl.innerHTML = `<div class="dp-cwrap"><h2>${E.L('Choose a boon', 'Elige un don')}</h2><p>${E.L('It powers up the whole party for this run', 'Mejora a todo el grupo en esta partida')}</p><div class="dp-crow">${cardChoices.map((b, i) => `<button class="dp-card ${i === 0 ? 'sel' : ''}" data-i="${i}"><span class="k">${i + 1}</span><span class="ic">${b.icon}</span><b>${loc(b, 'name')}</b><small>${loc(b, 'desc')}</small>${boon(b.id) ? `<span class="lv">Lv ${boon(b.id) + 1}</span>` : ''}</button>`).join('')}</div></div>`;
   document.body.appendChild(cardsEl); cardsEl.querySelectorAll('.dp-card').forEach(b => b.onclick = () => pickCard(+b.dataset.i));
   E.say(E.L('Choose a boon.', 'Elige un don.'), { interrupt: false, once: true }); SFX.good(); G.cardT = 0;
 }
 function pickCard(i) {
   if (!G || !G.cardsOpen) return; const b = cardChoices[i]; if (!b) return; G.cardsOpen = false; G.paused = false; cardsEl && cardsEl.remove(); cardsEl = null;
-  G.boons[b.id] = (G.boons[b.id] || 0) + 1; G.picked.push(b.id); SFX.level(); E.toast(`${b.icon} ${b.name}`, 1500);
+  G.boons[b.id] = (G.boons[b.id] || 0) + 1; G.picked.push(b.id); SFX.level(); E.toast(`${b.icon} ${loc(b, 'name')}`, 1500);
+  for (const h of G.heroes) { if (h.down) continue; shock(h.x, h.z, 1.6, 0xffd166, .5); burst(_v1.set(h.x, 1.2, h.z), { color: 0xffd166, n: 14, speed: 2.5, up: 4, size: .45, life: .7, gravity: 3 }); h.flash = .15; }
   if (b.id === 'vit') for (const h of G.heroes) { h.maxHp = heroMaxHp(h); if (!h.down) h.hp = h.maxHp; }
   if (b.id === 'phoenix') G.phoenix++;
   if (b.id === 'dash') for (const h of G.heroes) h.dodges++;
@@ -1078,18 +1334,18 @@ function cardsInput(dt) {
 let hudRefs = [];
 function hudBuild() {
   if (!shellUI) {
-    shellUI = E.shell({ title: 'Depths', onPause: pause, stick: true, party: { hint: 'Phone 1 plays P1. Phones 2 to 4 jump in as P2 to P4 (they take over the AI allies).' }, buttons: [{ id: 'bU', icon: '🔥<i class="cd" id="bUcd"></i>', label: 'Ultimate' }, { id: 'bC', icon: '✨<i class="cd" id="bCcd"></i>', label: 'Special' }, { id: 'bB', icon: '💨', label: 'Dodge' }, { id: 'bA', icon: '⚔️', label: 'Attack', cls: 'big' }] });
+    shellUI = E.shell({ title: 'Depths', onPause: pause, stick: true, party: { hint: E.L('Phone 1 plays P1. Phones 2 to 4 jump in as P2 to P4 (they take over the AI allies).', 'El teléfono 1 es J1. Los teléfonos 2 a 4 entran como J2 a J4 (reemplazan a los aliados IA).') }, buttons: [{ id: 'bU', icon: '🔥<i class="cd" id="bUcd"></i>', label: E.L('Ultimate', 'Definitivo') }, { id: 'bC', icon: '✨<i class="cd" id="bCcd"></i>', label: E.L('Special', 'Especial') }, { id: 'bB', icon: '💨', label: E.L('Dodge', 'Esquivar') }, { id: 'bA', icon: '⚔️', label: E.L('Attack', 'Atacar'), cls: 'big' }] });
     input.bindStick($('igStick'), $('igKnob')); input.bindButton($('bA'), 'a'); input.bindButton($('bB'), 'b'); input.bindButton($('bC'), 'c'); input.bindButton($('bU'), 'u');
   }
   shellUI.pad.style.visibility = ''; const party = $('party'); party.hidden = false;
-  party.innerHTML = G.heroes.map(h => `<div class="dp-hero" style="--c:${h.C.color}"><div class="dp-ico"><span>${h.C.icon}</span></div><div class="dp-info"><div class="dp-name"><span>${h.C.name}</span><em>${h.ctrl === 'bot' ? 'ALLY' : h.ctrl === 'net' ? '📱 ' + (h.netName || 'PHONE') : h.ctrl.toUpperCase()}</em></div><div class="dp-bar"><i></i></div><div class="dp-ult"><i></i></div></div></div>`).join('');
+  party.innerHTML = G.heroes.map(h => `<div class="dp-hero" style="--c:${h.C.color}"><div class="dp-ico"><span>${h.C.icon}</span></div><div class="dp-info"><div class="dp-name"><span>${loc(h.C, 'name')}</span><em>${h.ctrl === 'bot' ? E.L('ALLY', 'ALIADO') : h.ctrl === 'net' ? '📱 ' + (h.netName || E.L('PHONE', 'TELÉFONO')) : h.ctrl.toUpperCase()}</em></div><div class="dp-bar"><i></i></div><div class="dp-ult"><i></i></div></div></div>`).join('');
   hudRefs = [...party.children].map((el, i) => ({ el, ico: el.querySelector('.dp-ico'), hp: el.querySelector('.dp-bar'), hpi: el.querySelector('.dp-bar i'), ult: el.querySelector('.dp-ult'), ulti: el.querySelector('.dp-ult i'), last: '' }));
   G.hudKey = '';
 }
 function hud() {
   if (!shellUI) return;
   G.heroes.forEach((h, i) => { const r = hudRefs[i]; if (!r) return; const hp = Math.max(0, h.hp / h.maxHp), cd = 1 - h.cd / h.C.cd; const key = `${Math.round(hp * 100)}|${Math.round(cd * 40)}|${Math.round(h.ult)}|${h.down}`; if (key === r.last) return; r.last = key; r.hpi.style.width = hp * 100 + '%'; r.hp.classList.toggle('low', hp < .3); r.ico.style.setProperty('--p', cd.toFixed(3)); r.ulti.style.width = h.ult + '%'; r.ult.classList.toggle('full', h.ult >= 100); r.el.classList.toggle('down', h.down); });
-  const room = G.room.type === 'boss' ? '☠️ <b>Boss</b>' : `🚪 <b>${G.roomIdx + 1}/8</b>`; const t = Math.floor(G.runT); const key = room + G.gold + t + G.phoenix;
+  const room = G.room.T.boss ? `☠️ <b>${E.L('Boss', 'Jefe')}</b>` : `${G.act === 2 ? '💎' : '🚪'} <b>${G.roomIdx + 1}/8</b>`; const t = Math.floor(G.runT); const key = room + G.gold + t + G.phoenix;
   if (key !== G.hudKey) { G.hudKey = key; shellUI.hud.innerHTML = `<span class="ig-chip" title="Room">${room}</span><span class="ig-chip">🪙 <b>${G.gold}</b>${G.phoenix ? ` <span title="Revives">🪶<b>${G.phoenix}</b></span>` : ''}</span><span class="ig-chip">⏱ <b>${fmt(G.runT)}</b></span>`; }
   const me = G.heroes.find(h => h.ctrl === 'p1'); if (me) { const cdp = (me.cd / me.C.cd).toFixed(3); const el = $('bCcd'); if (el && el.dataset.p !== cdp) { el.dataset.p = cdp; el.style.setProperty('--p', cdp); } const u = $('bU'); if (u) { u.classList.toggle('ready', me.ult >= 100); $('bUcd').style.setProperty('--p', (1 - me.ult / 100).toFixed(3)); } }
   if (bossRef && !$('boss').hidden) { const p = clamp(bossRef.hp / bossRef.maxHp, 0, 1) * 100 + '%'; $('bossFill').style.width = p; $('bossLag').style.width = p; }
@@ -1101,12 +1357,12 @@ const fmt = t => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2,
 const BIG = { q: [], cur: null, el: null };
 function bigText(t, o = {}) {
   if (!G) return; if (BIG.cur?.t === t || BIG.q.some(b => b.t === t)) return;
-  const b = { t, dur: o.dur || 1.15, a: 0 };
+  const b = { t, sub: o.sub, dur: o.dur || (o.sub ? 1.9 : 1.15), a: 0 };
   if (o.top) { BIG.q = [b]; if (BIG.cur) BIG.cur.a = Math.max(BIG.cur.a, BIG.cur.dur * .8); } else { BIG.q.push(b); if (BIG.q.length > 2) BIG.q.splice(0, BIG.q.length - 2); }
 }
 function bigClear() { BIG.q = []; BIG.cur = null; if (BIG.el) BIG.el.style.opacity = 0; }
 function bigUpdate(dt) {
-  if (!BIG.cur && BIG.q.length && !(G && G.cine)) { BIG.cur = BIG.q.shift(); if (!BIG.el) { BIG.el = document.createElement('div'); BIG.el.className = 'ig-big dp-big'; document.body.appendChild(BIG.el); } BIG.el.textContent = BIG.cur.t; }
+  if (!BIG.cur && BIG.q.length && !(G && G.cine)) { BIG.cur = BIG.q.shift(); if (!BIG.el) { BIG.el = document.createElement('div'); BIG.el.className = 'ig-big dp-big'; document.body.appendChild(BIG.el); } BIG.el.textContent = BIG.cur.t; if (BIG.cur.sub) { const sm = document.createElement('small'); sm.textContent = BIG.cur.sub; BIG.el.appendChild(sm); } }
   const c = BIG.cur; if (!c) { if (BIG.el && BIG.el.style.opacity !== '0') BIG.el.style.opacity = 0; return; }
   c.a += dt; const k = c.a / c.dur, rm = E.reducedMotion(); let sc = 1, op = 1, y = 0;
   if (k < .18) { op = k / .18; sc = rm ? 1 : lerp(.6, 1.08, k / .18); } else if (k < .28) sc = rm ? 1 : lerp(1.08, 1, (k - .18) / .1); else if (k > .78) { const q = (k - .78) / .22; op = 1 - q; y = rm ? 0 : -q * 12; }
@@ -1121,7 +1377,7 @@ function placeCamera(dt, snap) {
   for (const h of list) { cx += h.x; cz += h.z; n++; } cx /= n; cz /= n; for (const h of list) spread = Math.max(spread, Math.hypot((h.x - cx) * (portrait ? 1.6 : 1), (h.z - cz) * (portrait ? .8 : 1.3)));
   // portrait: higher, steeper and farther so the room fills the tall screen (the south apron covers the bottom edge)
   let dist = (portrait ? 19.5 : 14) + spread * (portrait ? 1.3 : 1.0); if (window.__GAME && window.__GAME.zoom) dist = window.__GAME.zoom; let pitch = portrait ? 1.12 : .92;
-  if (G.room.type === 'boss' && bossRef && !bossRef.dead) { cx = lerp(cx, bossRef.x, .3); cz = lerp(cz, bossRef.z, .3); dist += 3; }
+  if (G.room.T.boss && bossRef && !bossRef.dead) { cx = lerp(cx, bossRef.x, .3); cz = lerp(cz, bossRef.z, .3); dist += bossRef.boss === 'golem' ? 4.5 : 3; }
   if (G.cine) { const k = sstep(.2, 1.1, G.cine.t) * (1 - sstep(3.6, 4.4, G.cine.t)); cx = lerp(cx, bossRef.x, k); cz = lerp(cz, bossRef.z + 1, k); dist = lerp(dist, portrait ? 13 : 9.5, k); pitch = lerp(pitch, .45, k); }
   cz = clamp(cz - (portrait ? 2.2 : 0), -G.room.D / 2 + (portrait ? 2 : 3), G.room.D / 2 - (portrait ? 3.4 : 3.6)); cx = clamp(cx, -G.room.W / 2 + 4, G.room.W / 2 - 4);
   const want = _v1.set(cx, G.cine ? lerp(0, 2.4, sstep(.2, 1.1, G.cine.t) * (1 - sstep(3.6, 4.4, G.cine.t))) : 0, cz);
@@ -1162,11 +1418,11 @@ function update(dt) {
   for (const h of G.heroes) collide(h, true); for (const f of G.foes) if (!f.dead) collide(f, false);
   // lava damage
   for (const h of G.heroes) { if (h.down) continue; for (const o of G.room.obst) if (o.lava && (h.x - o.x) ** 2 + (h.z - o.z) ** 2 < (o.r + h.r + .05) ** 2) { if (!h.lavaT || G.t - h.lavaT > .8) { h.lavaT = G.t; damageHero(h, 6, null, { kb: 4, dx: h.x - o.x, dz: h.z - o.z }); } } }
-  updateShots(dt);
+  updateShots(dt); updateZones(dt);
   for (let i = G.teles.length - 1; i >= 0; i--) { const T = G.teles[i]; if (T.done) { G.teles.splice(i, 1); continue; } T.t += dt; const k = clamp(T.t / T.dur, 0, 1); if (T.kind === 'c') T.fill.scale.setScalar(Math.max(.01, k)); else T.fill.scale.z = Math.max(.01, k) * T.len; if (T.t > T.dur + 2) killTele(T); }
   updateFX(dt); updateCoins(dt);
   // remove dead foes
-  for (let i = G.foes.length - 1; i >= 0; i--) { const f = G.foes[i]; if (f.dead && f.st > 1.8) { scene.remove(f.g); G.foes.splice(i, 1); } else if (f.portal && f.state !== 'spawn') f.portal = null; }
+  for (let i = G.foes.length - 1; i >= 0; i--) { const f = G.foes[i]; if (f.dead && f.st > 1.8) { scene.remove(f.g); G.foes.splice(i, 1); } else if (f.portal && !f.untgt) f.portal = null; }
   if (!G.over && !G.won) roomUpdate(dt);
   idleVisuals(dt);
   for (const h of G.heroes) heroVisual(h, dt);
@@ -1179,19 +1435,20 @@ function idleVisuals(dt) {
   for (const Lh of LIGHTS) if (Lh.base) Lh.l.intensity = Lh.base * (1 + (Math.sin(t * 11 + Lh.ph) * .5 + Math.sin(t * 23.7 + Lh.ph * 2) * .3 + Math.sin(t * 5.3 + Lh.ph) * .2) * Lh.fl);
   const fl = (G || camp)?.flames || []; for (let i = 0; i < fl.length; i++) { const f = fl[i]; const s = 1 + Math.sin(t * 17 + i * 2.1) * .08 + Math.sin(t * 9 + i) * .06; f.scale.y = f.userData.h || (f.userData.h = f.scale.y); f.scale.set(f.userData.w || (f.userData.w = f.scale.x), f.userData.h * s, 1); }
   const Rm = (G || camp)?.room; if (Rm) updateMotes(dt, Rm.W, Rm.D, t);
+  if (Rm && Rm.fish) for (const f of Rm.fish) { const a = f.ph + t * f.sp; f.m.position.set(f.cx + Math.cos(a) * f.r, f.y + Math.sin(t * 1.3 + f.ph) * .2, f.cz + Math.sin(a) * f.r); f.m.rotation.y = Math.atan2(-Math.sin(a) * f.sp, Math.cos(a) * f.sp) + FISH_YAW; }
 }
 
 /* ================= run flow ================= */
 function newRun(opts = {}) {
   cleanupRun();
-  const cls = opts.cls || S.cls, allies = opts.allies ?? S.allies;
-  G = { seed: Math.floor(Math.random() * 1e6), heroes: [], foes: [], shots: [], teles: [], coins: [], boons: {}, picked: [], gold: 0, kills: 0, t: 0, runT: 0, freeze: 0, slow: 0, roomsCleared: 0, phoenix: DIFF[S.diff].phoenix + ml('phoenix'), paused: false, over: false, won: false, flames: [] };
+  const cls = opts.cls || S.cls, allies = opts.allies ?? S.allies; const act = opts.act || (S.act === 2 && act2Open() ? 2 : 1);
+  G = { act, seq: ACTS[act].seq, seed: Math.floor(Math.random() * 1e6), heroes: [], foes: [], shots: [], teles: [], coins: [], zones: [], rings: [], boons: {}, picked: [], gold: 0, kills: 0, t: 0, runT: 0, freeze: 0, slow: 0, roomsCleared: 0, phoenix: DIFF[S.diff].phoenix + ml('phoenix'), paused: false, over: false, won: false, flames: [] };
   p2Active = false; bossRef = null;
   if (camp) { for (const h of camp.heroes) scene.remove(h.g); camp = null; }
   const order = [cls, ...CLS_ORDER.filter(c => c !== cls)];
   G.heroes.push(makeHero(cls, 'p1', 0));
   for (let i = 1; i <= allies; i++) G.heroes.push(makeHero(order[i], 'bot', i));
-  if (ml('boon')) { const b = pick(BOONS.filter(b => !['phoenix', 'vit'].includes(b.id))); G.boons[b.id] = 1; setTimeout(() => E.toast(`🎴 Lucky Deck: ${b.name}`, 1800), 2200); }
+  if (ml('boon')) { const b = pick(BOONS.filter(b => !['phoenix', 'vit'].includes(b.id))); G.boons[b.id] = 1; setTimeout(() => E.toast(`🎴 ${E.L('Lucky Deck', 'Baraja de la Suerte')}: ${loc(b, 'name')}`, 1800), 2200); }
   for (const h of G.heroes) { h.maxHp = heroMaxHp(h); h.hp = h.maxHp; h.dodges = h.C.dodges + boon('dash'); }
   if (titleEl) { titleEl.remove(); titleEl = null; }
   music && music.stop(); music = E.music(E.SONGS.tense);
@@ -1204,23 +1461,26 @@ function joinP2() {
   if (bot) { bot.ctrl = 'p2'; const t = E.tag('', 'P2', { width: 1.1, bg: bot.C.color }); t.position.y = 2.25; bot.g.add(t); bot.ptag = t; bot.slot = 1; }
   else { const used = G.heroes.map(h => h.cls); const cls = CLS_ORDER.find(c => !used.includes(c)) || 'knight'; const p1 = G.heroes[0]; const h = makeHero(cls, 'p2', 1, used.includes(cls) ? CLASSES[cls].alt : null); h.x = p1.x + 1.5; h.z = p1.z; h.maxHp = heroMaxHp(h); h.hp = h.maxHp; G.heroes.push(h); }
   for (const h of G.heroes) if (h.ctrl === 'p2') h.slot = 1;
-  hudBuild(); E.toast('Player 2 joined! Arrows to move, Numpad 1/2/3/0 or Enter to act', 2600, false); SFX.good();
+  hudBuild(); E.toast(E.L('Player 2 joined! Arrows to move, Numpad 1/2/3/0 or Enter to act', '¡Jugador 2 se une! Flechas para moverse, Numpad 1/2/3/0 o Enter para actuar'), 2600, false); SFX.good();
 }
-function cleanupRun() { if (!G) return; for (const h of G.heroes) scene.remove(h.g); for (const f of G.foes) scene.remove(f.g); for (const s of G.shots) fxGroup.remove(s.m); FX.length = 0; timers.length = 0; cardsEl && cardsEl.remove(); cardsEl = null; $('boss').hidden = true; $('party').hidden = true; $('intro').classList.remove('on'); bigClear(); G = null; }
+function cleanupRun() { if (!G) return; for (const h of G.heroes) scene.remove(h.g); for (const f of G.foes) scene.remove(f.g); for (const s of G.shots) fxGroup.remove(s.m); FX.length = 0; timers.length = 0; cardsEl && cardsEl.remove(); cardsEl = null; $('boss').hidden = true; $('party').hidden = true; $('intro').classList.remove('on'); $('fade').classList.remove('on'); bigClear(); G = null; }
 function gameOver() {
-  if (G.over) return; G.over = true; SFX.lose(); bigText(E.L('FALLEN', 'CAÍDOS'), { top: true, dur: 1.8 }); E.toast('The depths claim the party…', 2200);
+  if (G.over) return; G.over = true; SFX.lose(); bigText(E.L('FALLEN', 'CAÍDOS'), { top: true, dur: 1.8 }); E.toast(E.L('The depths claim the party… your gold is safe at camp', 'Las profundidades vencen al grupo… tu oro está a salvo en el campamento'), 2400);
   setTimeoutG(2.6, () => endRun(false));
 }
 function endRun(win) {
   if (!G || G.ended) return; G.ended = true; G.paused = true; music && music.stop(); music = null;
-  const rooms = win ? 9 : G.roomsCleared, roomsN = Math.min(8, rooms); const xp = 30 + rooms * 18 + G.kills * 2 + (win ? 160 : 0); const coins = Math.round(G.gold * .5 + (win ? 40 : 0));
-  S.gold += G.gold; if (win) S.wins++; S.best = Math.max(S.best, rooms); save();
+  const A = ACTS[G.act]; const rooms = win ? 9 : G.roomsCleared, roomsN = Math.min(8, rooms); const xp = Math.round((30 + rooms * 18 + G.kills * 2 + (win ? 160 : 0)) * (G.act === 2 ? 1.25 : 1)); const coins = Math.round(G.gold * .5 + (win ? 40 : 0));
+  const bk = G.act === 2 ? 'best2' : 'best', wk = G.act === 2 ? 'wins2' : 'wins'; const firstAct1 = win && G.act === 1 && !S.wins;
+  S.gold += G.gold; if (win) S[wk]++; S[bk] = Math.max(S[bk], rooms); save();
   const bossTxt = win ? E.L('Yes', 'Sí') : E.L('No', 'No');
-  const rd = E.results({ gameId: 'depths', title: win ? E.L('The Depths are conquered!', '¡Las Profundidades son tuyas!') : E.L('Fallen in the Depths', 'Caídos en las Profundidades'), stats: [[E.L('Rooms cleared', 'Salas superadas'), `${roomsN}/8`], [E.L('Boss beaten', 'Jefe vencido'), bossTxt], [E.L('Foes defeated', 'Enemigos vencidos'), G.kills], [E.L('Time', 'Tiempo'), fmt(G.runT)], [E.L('Gold found', 'Oro'), `🪙 ${G.gold}`]], xp, coins, best: rooms, bestLabel: E.L('Best depth', 'Mejor profundidad'), won: win, onAgain: () => title(), share: `I ${win ? 'defeated Captain Brinehollow' : 'reached room ' + rooms} in Pixel Pact: Depths (Inoa Games)! ${location.href}` });
+  const titleTxt = win ? (G.act === 2 ? E.L('The Glowroot Hollow is safe!', '¡La Hondonada está a salvo!') : E.L('The Depths are conquered!', '¡Las Profundidades son tuyas!')) : E.L('Fallen in the Depths', 'Caídos en las Profundidades');
+  const rd = E.results({ gameId: 'depths', title: titleTxt, stats: [[E.L('Act', 'Acto'), `${A.icon} ${G.act === 2 ? 'II' : 'I'}`], [E.L('Rooms cleared', 'Salas superadas'), `${roomsN}/8`], [E.L('Boss beaten', 'Jefe vencido'), bossTxt], [E.L('Foes defeated', 'Enemigos vencidos'), G.kills], [E.L('Time', 'Tiempo'), fmt(G.runT)], [E.L('Gold found', 'Oro'), `🪙 ${G.gold}`]], xp, coins, best: rooms, bestLabel: E.L('Best depth', 'Mejor profundidad') + (G.act === 2 ? ' (II)' : ''), won: win, onAgain: () => title(), share: `I ${win ? 'defeated ' + A.bossName : 'reached room ' + roomsN + ' of ' + A.name} in Pixel Pact: Depths (Inoa Games)! ${location.href}` });
   const bp = rd && rd.querySelector('p.ig-sub b'); if (bp && /^\d+$/.test(bp.textContent)) bp.textContent = depthTxt(+bp.textContent);
   const hubBtn = document.querySelector('.ig-results [data-a=again]'); if (hubBtn) hubBtn.textContent = E.L('Back to camp', 'Volver al campamento');
+  if (firstAct1) { S.act = 2; save(); setTimeout(() => E.toast(E.L('💎 Act II unlocked: the Glowroot Hollow!', '💎 ¡Acto II desbloqueado: la Hondonada Raíz de Luz!'), 3000, true), 1200); }
 }
-function pause() { if (!G || G.paused || G.over || G.ended) return; G.paused = true; music && music.stop(); const extra = `<p class="ig-sub">${G.roomIdx >= 8 ? E.L('Boss', 'Jefe') : E.L('Room', 'Sala') + ' ' + (G.roomIdx + 1) + '/8'} · 🪙 ${G.gold} · Boons: ${G.picked.map(id => BOONS.find(b => b.id === id).icon).join(' ') || 'none yet'}</p>`; E.pauseMenu({ extra, onResume: () => { G.paused = false; music = E.music(E.SONGS.tense); }, onRestart: () => newRun() }); }
+function pause() { if (!G || G.paused || G.over || G.ended) return; G.paused = true; music && music.stop(); const extra = `<p class="ig-sub">${ACTS[G.act].icon} ${G.room.T.boss ? E.L('Boss', 'Jefe') : E.L('Room', 'Sala') + ' ' + (G.roomIdx + 1) + '/8'} · 🪙 ${G.gold} · ${E.L('Boons', 'Dones')}: ${G.picked.map(id => BOONS.find(b => b.id === id).icon).join(' ') || E.L('none yet', 'ninguno aún')}</p>`; E.pauseMenu({ extra, onResume: () => { G.paused = false; music = E.music(E.SONGS.tense); }, onRestart: () => newRun({ act: G.act }) }); }
 addEventListener('inoa:settings', () => { if (!G && titleEl) showTitle(); });
 addEventListener('keydown', e => { if ((e.code === 'Escape' || e.code === 'KeyP') && G && !G.paused) pause(); });
 document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
@@ -1238,20 +1498,24 @@ function title() {
 }
 function showTitle() {
   if (titleEl) titleEl.remove();
-  const extra = `<div class="dp-opts"><div><p class="ig-sub" style="margin-bottom:6px">${E.L('Hero class', 'Clase de héroe')}</p><div class="pick" id="pC">${CLS_ORDER.map(c => { const C = CLASSES[c]; return `<button data-c="${c}" class="${S.cls === c ? 'on' : ''}" style="border-left:8px solid ${C.color}"><span class="ci">${C.icon}</span>${C.name}<small>${C.desc}</small></button>`; }).join('')}</div></div>
-  <div><p class="ig-sub" style="margin-bottom:6px">${E.L('Party', 'Grupo')}</p><div class="pick" id="pA">${[0, 1, 2, 3].map(n => `<button data-n="${n}" class="${S.allies === n ? 'on' : ''}">${n ? '+' + n + ' all' + (n > 1 ? 'ies' : 'y') : 'Solo'}<small>${n ? 'AI allies fight and revive you' : 'Just you'}</small></button>`).join('')}</div><p class="ig-sub" style="font-size:12.5px;margin-top:6px">👥 Player 2 can drop in anytime: press Enter / Numpad 1 or A on a second gamepad.</p></div>
-  <div><p class="ig-sub" style="margin-bottom:6px">${E.L('Difficulty', 'Dificultad')}</p><div class="pick" id="pD">${Object.entries(DIFF).map(([k, d]) => `<button data-d="${k}" class="${S.diff === k ? 'on' : ''}">${d.e} ${d.name}<small>${d.desc}</small></button>`).join('')}</div></div>
-  <div class="ig-row"><button class="ig-btn sun" data-a="camp">⛺ Camp · 🪙 ${S.gold}</button></div>${S.runs ? `<p class="ig-sub" style="text-align:center;font-size:13px">${E.L('Best depth', 'Mejor profundidad')} ${depthTxt(S.best)} · ${E.L('Victories', 'Victorias')} ${S.wins}</p>` : ''}</div>`;
-  titleEl = E.titleScreen({ party: { label: E.L('Phones as controllers (up to 4 players)', 'Teléfonos como controles (hasta 4 jugadores)'), hint: E.L('Phone 1 plays P1. Phones 2 to 4 jump in as P2 to P4 (they take over the AI allies).', 'El teléfono 1 es J1. Los teléfonos 2 a 4 entran como J2 a J4 (reemplazan a los aliados IA).') }, title: 'Pixel Pact: Depths', kicker: 'Inoa Games · Signature 3D', lead: E.L('Dive beneath the islands with your party. Clear 8 rooms, choose boons, and defeat the drowned captain.', 'Bucea bajo las islas con tu grupo. Supera 8 salas, elige dones y derrota al capitán ahogado.'), how: [['🕹️', E.L('Move: WASD / arrows / stick', 'Moverse: WASD / flechas / palanca')], ['⚔️', E.L('Attack: J or Space (pad A), tap in rhythm for combos', 'Atacar: J o Espacio (mando A), pulsa a ritmo para combos')], ['💨', E.L('Dodge roll: K or Shift (pad B), untouchable mid-roll', 'Rodar: K o Shift (mando B), intocable al rodar')], ['✨', E.L('Special: L or E (pad X) · 🔥 Ultimate: I or Q (pad Y)', 'Especial: L o E (mando X) · 🔥 Definitivo: I o Q (mando Y)')], ['🟥', E.L('Red zones on the floor = incoming attack. Roll out!', 'Zonas rojas en el suelo = ataque. ¡Rueda fuera!')]], extra, onPlay: () => { save(); titleEl = null; newRun(); } });
+  const open2 = act2Open(); if (!open2) S.act = 1;
+  const actBtn = n => { const A = ACTS[n]; const lock = n === 2 && !open2; const fresh = n === 2 && open2 && !S.best2; return `<button data-x="${n}" class="${S.act === n ? 'on' : ''}${lock ? ' lock' : ''}"><span class="ci">${lock ? '🔒' : A.icon}</span>${E.L('Act', 'Acto')} ${n === 2 ? 'II' : 'I'}: ${loc(A, 'name')}${fresh ? `<span class="new">${E.L('NEW', 'NUEVO')}</span>` : ''}<small>${lock ? E.L('Beat Captain Brinehollow to unlock', 'Vence al capitán Brinehollow para abrirlo') : loc(A, 'desc')}</small></button>`; };
+  const extra = `<div class="dp-opts"><div><p class="ig-sub" style="margin-bottom:6px">${E.L('Expedition', 'Expedición')}</p><div class="pick" id="pX">${actBtn(1)}${actBtn(2)}</div></div>
+  <div><p class="ig-sub" style="margin-bottom:6px">${E.L('Hero class', 'Clase de héroe')}</p><div class="pick" id="pC">${CLS_ORDER.map(c => { const C = CLASSES[c]; return `<button data-c="${c}" class="${S.cls === c ? 'on' : ''}" style="border-left:8px solid ${C.color}"><span class="ci">${C.icon}</span>${loc(C, 'name')}<small>${loc(C, 'desc')}</small></button>`; }).join('')}</div></div>
+  <div><p class="ig-sub" style="margin-bottom:6px">${E.L('Party', 'Grupo')}</p><div class="pick" id="pA">${[0, 1, 2, 3].map(n => `<button data-n="${n}" class="${S.allies === n ? 'on' : ''}">${n ? '+' + n + ' ' + (n > 1 ? E.L('allies', 'aliados') : E.L('ally', 'aliado')) : E.L('Solo', 'Solo')}<small>${n ? E.L('AI allies fight and revive you', 'Aliados IA luchan y te reviven') : E.L('Just you', 'Solo tú')}</small></button>`).join('')}</div><p class="ig-sub" style="font-size:12.5px;margin-top:6px">👥 ${E.L('Player 2 can drop in anytime: press Enter / Numpad 1 or A on a second gamepad.', 'El jugador 2 puede unirse cuando quiera: Enter / Numpad 1 o A en un segundo mando.')}</p></div>
+  <div><p class="ig-sub" style="margin-bottom:6px">${E.L('Difficulty', 'Dificultad')}</p><div class="pick" id="pD">${Object.entries(DIFF).map(([k, d]) => `<button data-d="${k}" class="${S.diff === k ? 'on' : ''}">${d.e} ${loc(d, 'name')}<small>${loc(d, 'desc')}</small></button>`).join('')}</div></div>
+  <div class="ig-row"><button class="ig-btn sun" data-a="camp">⛺ ${E.L('Camp', 'Campamento')} · 🪙 ${S.gold}</button></div>${S.runs ? `<p class="ig-sub" style="text-align:center;font-size:13px">${E.L('Best depth', 'Mejor profundidad')} ${depthTxt(S.best)}${S.best2 ? ` · II: ${depthTxt(S.best2)}` : ''} · ${E.L('Victories', 'Victorias')} ${S.wins + S.wins2}</p>` : ''}</div>`;
+  titleEl = E.titleScreen({ party: { label: E.L('Phones as controllers (up to 4 players)', 'Teléfonos como controles (hasta 4 jugadores)'), hint: E.L('Phone 1 plays P1. Phones 2 to 4 jump in as P2 to P4 (they take over the AI allies).', 'El teléfono 1 es J1. Los teléfonos 2 a 4 entran como J2 a J4 (reemplazan a los aliados IA).') }, title: 'Pixel Pact: Depths', kicker: 'Inoa Games · Signature 3D', lead: E.L('Dive beneath the islands with your party. Two acts of 8 rooms each: choose boons, beat the captain, then face the crystal colossus.', 'Bucea bajo las islas con tu grupo. Dos actos de 8 salas: elige dones, vence al capitán y luego enfrenta al coloso de cristal.'), how: [['🕹️', E.L('Move: WASD / arrows / stick', 'Moverse: WASD / flechas / palanca')], ['⚔️', E.L('Attack: J or Space (pad A), tap in rhythm for combos', 'Atacar: J o Espacio (mando A), pulsa a ritmo para combos')], ['💨', E.L('Dodge roll: K or Shift (pad B), untouchable mid-roll', 'Rodar: K o Shift (mando B), intocable al rodar')], ['✨', E.L('Special: L or E (pad X) · 🔥 Ultimate: I or Q (pad Y)', 'Especial: L o E (mando X) · 🔥 Definitivo: I o Q (mando Y)')], ['🟥', E.L('Red zones on the floor = incoming attack. Roll out!', 'Zonas rojas en el suelo = ataque. ¡Rueda fuera!')]], extra, onPlay: () => { save(); titleEl = null; newRun(); } });
   const d = titleEl;
-  d.querySelectorAll('#pC button').forEach(b => b.onclick = () => { S.cls = b.dataset.c; d.querySelectorAll('#pC button').forEach(x => x.classList.toggle('on', x === b)); E.say(CLASSES[S.cls].name + '. ' + CLASSES[S.cls].desc.replace('·', 'and')); });
+  d.querySelectorAll('#pX button').forEach(b => b.onclick = () => { const n = +b.dataset.x; if (n === 2 && !act2Open()) { SFX.bad(); E.toast(E.L('Beat Captain Brinehollow (Act I) to unlock Act II', 'Vence al capitán Brinehollow (Acto I) para abrir el Acto II'), 2200, true); return; } S.act = n; d.querySelectorAll('#pX button').forEach(x => x.classList.toggle('on', x === b)); E.say(loc(ACTS[n], 'name')); });
+  d.querySelectorAll('#pC button').forEach(b => b.onclick = () => { S.cls = b.dataset.c; d.querySelectorAll('#pC button').forEach(x => x.classList.toggle('on', x === b)); const C = CLASSES[S.cls]; E.say(loc(C, 'name') + '. ' + loc(C, 'desc').replace('·', E.L('and', 'y'))); });
   d.querySelectorAll('#pA button').forEach(b => b.onclick = () => { S.allies = +b.dataset.n; d.querySelectorAll('#pA button').forEach(x => x.classList.toggle('on', x === b)); });
   d.querySelectorAll('#pD button').forEach(b => b.onclick = () => { S.diff = b.dataset.d; d.querySelectorAll('#pD button').forEach(x => x.classList.toggle('on', x === b)); });
   d.querySelector('[data-a=camp]').onclick = () => { d.remove(); titleEl = null; showCamp(); };
 }
 function showCamp() {
   const el = document.createElement('div'); el.className = 'ig-screen';
-  const render = () => { el.innerHTML = `<div class="ig-card"><div class="ig-kicker">Between runs</div><h2>⛺ The Camp</h2><p class="ig-sub">Spend gold from your runs on permanent upgrades.</p><div class="dp-gold">🪙 ${S.gold}</div><div class="dp-meta">${META.map(m => { const l = ml(m.id), maxed = l >= m.max, cost = m.cost(l); return `<div><span>${m.icon}</span><p><b>${m.name} ${'●'.repeat(l)}${'○'.repeat(m.max - l)}</b><small>${m.desc}</small></p><button class="ig-chipbtn" data-m="${m.id}" ${maxed || S.gold < cost ? 'disabled' : ''}>${maxed ? 'Max' : '🪙 ' + cost}</button></div>`; }).join('')}</div><div class="ig-row"><button class="ig-btn" data-a="back">Back</button></div></div>`;
+  const render = () => { el.innerHTML = `<div class="ig-card"><div class="ig-kicker">${E.L('Between runs', 'Entre partidas')}</div><h2>⛺ ${E.L('The Camp', 'El Campamento')}</h2><p class="ig-sub">${E.L('Spend gold from your runs on permanent upgrades.', 'Gasta el oro de tus partidas en mejoras permanentes.')}</p><div class="dp-gold">🪙 ${S.gold}</div><div class="dp-meta">${META.map(m => { const l = ml(m.id), maxed = l >= m.max, cost = m.cost(l); return `<div><span>${m.icon}</span><p><b>${loc(m, 'name')} ${'●'.repeat(l)}${'○'.repeat(m.max - l)}</b><small>${loc(m, 'desc')}</small></p><button class="ig-chipbtn" data-m="${m.id}" ${maxed || S.gold < cost ? 'disabled' : ''}>${maxed ? E.L('Max', 'Máx') : '🪙 ' + cost}</button></div>`; }).join('')}</div><div class="ig-row"><button class="ig-btn" data-a="back">${E.L('Back', 'Volver')}</button></div></div>`;
     el.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { const m = META.find(x => x.id === b.dataset.m); const l = ml(m.id), cost = m.cost(l); if (l >= m.max || S.gold < cost) return; S.gold -= cost; S.meta[m.id] = l + 1; save(); SFX.level(); render(); });
     el.querySelector('[data-a=back]').onclick = () => { el.remove(); showTitle(); }; };
   render(); document.body.appendChild(el); E.say(E.L('The camp. Spend gold on upgrades that last forever.', 'El campamento. Gasta oro en mejoras permanentes.'), { once: true });
@@ -1278,7 +1542,7 @@ window.__GAME = {
     G.paused = true; camState.look.set(0, 0, 0); window.__GAME.zoom = arguments[2] || 10; placeCamera(1, true); },
   clearFoes() { for (const f of G.foes) scene.remove(f.g); G.foes = []; G.room.waves = []; },
   killAll() { if (!G) return; for (const f of G.foes) if (!f.dead && f.type !== 'boss') killFoe(f, null); },
-  state() { if (!G) return { title: true }; return { room: G.roomIdx, phase: G.room.phase, foes: G.foes.filter(f => !f.dead).length, heroes: G.heroes.map(h => [h.cls, Math.round(h.hp), h.down, h.state, h.stats.taken || 0, +h.iframes.toFixed(2)]), gold: G.gold, kills: G.kills, over: G.over, won: G.won, ended: !!G.ended, boss: bossRef && G.room.type === 'boss' ? Math.round(bossRef.hp) : null, t: +G.runT.toFixed(1) }; }
+  state() { if (!G) return { title: true }; return { room: G.roomIdx, phase: G.room.phase, foes: G.foes.filter(f => !f.dead).length, heroes: G.heroes.map(h => [h.cls, Math.round(h.hp), h.down, h.state, h.stats.taken || 0, +h.iframes.toFixed(2)]), gold: G.gold, kills: G.kills, over: G.over, won: G.won, ended: !!G.ended, boss: bossRef && G.room.T.boss ? Math.round(bossRef.hp) : null, bossPhase: bossRef && G.room.T.boss ? bossRef.phase : null, act: G.act, roomType: G.room.type, foeTypes: [...new Set(G.foes.filter(f => !f.dead).map(f => f.type))], unstuck: G.unstuck || 0, t: +G.runT.toFixed(1) }; }
 };
 </script>
 </body></html>
