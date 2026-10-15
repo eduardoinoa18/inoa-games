@@ -28,3 +28,6 @@ Files touched: `games/tidelines.html`, `test/tidelines.js` (only).
 
 ## Engine requests
 - An optional engine `fadeOccluders(camera, target, list)` helper. Builders, Drift and Depths have the same occluder problem. The local version here (`occluder()` + `fadeOccluders()`) could be lifted as-is.
+
+# Elevation pass (2026-10-15)
+See `docs/AUDIT.md` → "Tide Lines elevation pass". Summary: arenas are data (`MAPS` in the page: `layout()` fills PLATS/RAMPS/SOLIDS, `build()` makes the meshes, `zones` = Tide Pools), `buildMap(id)` rebuilds the arena + grid + look; ramps take `{ax, s}`; water solids (`pass: 1`) block walking but not ink; `route()` handles bridges and ramps for bots. Test hooks added: `setMap`, `setMode`, `setSkill`, `zones()`, `map`, `route`, `groundAt`, `solidAt`, `units[i].bot.unstuck`; `window.__CAM = {..., free: true}` skips the safe-camera lift for overview shots. `TL_QUICK=1` skips the full pier match in `test/tidelines.js`.

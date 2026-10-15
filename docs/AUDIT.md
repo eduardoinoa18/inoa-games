@@ -234,3 +234,29 @@ Pixel Pact: Depths (`games/depths.html`) re-audited and extended by one game age
 - The autopilot is a sharp stand-in; Story balance (boss HP, Act II foe density) needs a play test with kids.
 - Online (separate-screen) play is still Drift-only; Depths phones are controllers for the big screen.
 - Engine: none changed. Requests: an engine `bigText` queue with subtitles (several games hand-roll it).
+
+## Tide Lines elevation pass (2026-10-15)
+Tide Lines (`games/tidelines.html`) re-audited and extended by one game agent. Tested with `test/tidelines.js` (full Sunny Pier match + Rooftop Garden and Island Market in Tide Pools) at 1000×560 and 390×844 (both `NO_ERRORS`, screenshots reviewed), `TL_QUICK=1` re-runs after each fix, `test/party.js test/party_games.js` (phone 2 joins your team, `NO_ERRORS`) and hub `test/index.js` (`NO_ERRORS`).
+
+**Bugs fixed**
+- Bots picked the rival base as a paint target: it is pre-painted in the rival colour (so it scores as "worth flipping") but can never be painted, so bots stood there spraying. Targets near the rival base are now skipped.
+- Spawn camping: baseline runs had coral bots fighting at z ≈ 16 (inside the teal spawn, e.g. `Zuri:fight:-10,16`). Bots no longer chase rivals who are on their own base, and each base is a safe zone (no damage on your own pad). The test counts camping samples (0 on every arena).
+- Bots stalled at the foot of a ramp (they walked to the waypoint and stopped) and against ramp sides in fights (`Luna@7.4,-0.0`, `Mateo@-1.5,3.1` in the stuck watch). Ramps now give generic low/high waypoints, reaching the foot continues up, and fight movement sidesteps when blocked. Long standoffs (6 s without a splat) break off into painting; in the last 30 s bots fight less and paint more. Teammates spread out instead of piling onto the same patch.
+- Team colour relied on hue only. Teal ink now carries light dots and coral ink diagonal stripes (canvas patterns), teal rings are circles and coral rings triangles, and ● / ▲ appear on name tags, the % bar, the minimap, the judge card and the base flags.
+- Ink bomb had no aim feedback: a landing ring shows where a bomb would land whenever one is ready, the 💣 button dims when ink is short, impacts show a splash ring and "+N m²".
+- Phone join/leave toasts were English only; title cards could stack when the title was reopened; camera shake ignored reduced motion.
+- Default bots were "Normal"; the kid-friendly "Chill" tier is now the default for new saves.
+
+**Added**
+- **3 arenas** (same 40 × 40 m paint field, different layouts/themes, all existing CC0 models): Sunny Pier (original), **Rooftop Garden** (sunset roof deck over an instanced city skyline, central deck with two ramps, flower beds, skylights, tree tubs, hedges, water tanks, string lights, neutral pavers so unpainted floor never reads as coral), **Island Market** (canal across the middle with three bridges, ink flies over water but painters can't walk in it, striped fruit stalls with produce, two fish-dock decks, ferris wheel and town backdrop). Title picker with a live preview; pack adds `plant`, `low-poly-tree`, `bench`, `watermelon`, `banana`, `fish`, `cabbage`, `wind-turbine`, `ferris-wheel`, `chest`, `house-3`, `house-6`, `coconut` + the `sunset` HDRI (pack 1.09 → 1.90 MB; every file already in `packs/assets`).
+- **Tide Pools mode** (original name; generic hold-the-zones idea): three glowing pools per arena; half the pool painted takes a neutral pool, 58 % takes a held one (hysteresis: an early build flipped the market centre pool 100 times in 70 s); 1 point per pool per second; first to 180 is a KNOCKOUT, else most points at 2:30 (turf breaks a tie). Pool chips in the HUD, rings on the minimap, points bar with a goal line, toasts + read-aloud (rate-limited) on every change of hands. Pool bots go for the pool their team is losing.
+- **Star ladder**: a win on Chill / Normal / Fierce earns ★ / ★★ / ★★★ per arena + mode, shown on the arena buttons and the results card (+25 XP, +10 coins for a new star).
+- Drama: 30 s "final push" call, 5-4-3-2-1 big countdown, drum-roll judge (ticks speed up), winning bar pulses, margin line ("by a hair: 0.7%"), "KNOCKOUT!" banner. Hit vignette when hurt, "Splatted by Kai, back in 2…".
+- Test: fresh-save defaults (Chill, 3 arenas), stuck/water/base-camp watch on all arenas, pools must change hands and score, knockout, stars, Spanish title (arena + mode names).
+
+**Still open**
+- Real-device feel/FPS (headless only). The rooftop adds 40 instanced towers, ~60 bulb instances and a few lines; the market ~20 small produce models. Cheap, but unmeasured on a 2021 phone.
+- Touch aiming is unchanged in design (spray where you walk, drag 💦 to aim, soft snap to a rival in front); it needs a real-phone play test, as does Tide Pools balance on Chill (bots sometimes win the pools 120–40).
+- The held blaster still follows the aim heading, not the forearm (visible in close-ups only).
+- Phones: 8-player mapping is unchanged (phone 1 = you, 2–4 your team, 5–8 the other team); the party test drives 2 phones. Online (separate-screen) Tide Lines is still not built.
+- Engine: none changed. `tag()` draws its emoji slot in the pill colour for plain text glyphs (● ▲ vanish), so shapes are put in the text instead.

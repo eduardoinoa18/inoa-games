@@ -39,7 +39,7 @@ It is a **static site**: `index.html` (hub) + `games/*.html` (one page per game)
 | `games/drift.html` | **Island Drift** — kart racer, drift turbos, items, 5 AI with personalities, 4 tracks (incl. a figure-eight bridge), time trial with ghost, Island Cup, Easy/Normal/Hard | Reference game. Elevation pass done 2026-10-15 (docs/AUDIT.md). Open: real-phone feel/FPS, ghost/cup offline only |
 | `games/safari.html` | **Snack Squad Safari** — allergy-safety game, buddy pet, labels read aloud EN/ES, 3D rescue cutscene, 5 levels | **On the shared engine now**, gamepad added. **Allergist review required** (`docs/audit-notes/safari.md`); rescue steps lack Spanish |
 | `games/runner.html` | **Tide Runner** — boardwalk runner, daily seed, ghost | Passing; uses hub hero |
-| `games/tidelines.html` | **Tide Lines** — 4v4 paint-turf vs bots | Phase 1 done (camera distance, prop fade, EN/ES); uses hub hero. One map |
+| `games/tidelines.html` | **Tide Lines** — 4v4 paint battles vs bots or up to 8 phones | Elevation pass done: 3 arenas (Sunny Pier, Rooftop Garden, Island Market), Tide Pools mode, Chill default + star ladder, colour-blind patterns/shapes, bot routing fixes; uses hub hero |
 | `games/fit.html` | **Perfect Fit** — ASMR organizing, 8+ levels, Zen mode | Phase 1 done (drop under pointer, portrait framing, EN/ES). Real-phone feel unverified |
 | `games/junk.html` | **Junkyard to Jewel** — wash/sand/paint/polish, 8 vehicles | Phase 1 done (stroke tracing, portrait framing, EN/ES). Real-phone feel unverified |
 | `games/brew.html` | **Brew and Bloom** — cozy idle café + greenhouse | Phase 1 done (barista, portrait tray, safe offline summary, EN/ES) |
