@@ -16,9 +16,17 @@ html,body{background:#1d1915}
 .jk-steps div.ok{opacity:.9;background:#dff4ea}
 .jk-pal{position:fixed;left:50%;bottom:max(14px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:21;display:flex;flex-wrap:wrap;justify-content:center;gap:7px;padding:8px 12px;background:rgba(255,248,238,.92);border-radius:22px;box-shadow:0 8px 24px rgba(0,0,0,.3);width:max-content;max-width:calc(100vw - 210px);box-sizing:border-box}
 @media (max-width:760px){.jk-pal{bottom:max(96px,calc(env(safe-area-inset-bottom) + 96px));max-width:calc(100vw - 24px)}}
-.jk-pal button{width:38px;height:38px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px rgba(27,36,48,.2);cursor:pointer}
-.jk-pal button.on{box-shadow:0 0 0 3px var(--ink);transform:scale(1.12)}
+.jk-pal{flex-direction:column;align-items:center;gap:6px;padding:8px 10px}
+.jk-tabs{display:flex;gap:4px;flex-wrap:wrap;justify-content:center}
+.jk-tabs button{border:0;border-radius:12px;padding:5px 10px;font:800 12px var(--f-b,inherit);background:rgba(27,36,48,.08);color:var(--ink);cursor:pointer;min-height:30px}
+.jk-tabs button.on{background:var(--ink);color:#fff}
+.jk-sw{display:flex;flex-wrap:wrap;justify-content:center;gap:7px;max-width:560px}
+.jk-sw button{width:36px;height:36px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px rgba(27,36,48,.2);cursor:pointer;padding:0}
+.jk-sw button.pill{width:auto;height:36px;border-radius:18px;padding:0 11px;background:#fff;font:800 12px var(--f-b,inherit);color:var(--ink);display:inline-flex;align-items:center;gap:5px}
+.jk-sw button.pill b{font-size:16px}.jk-sw button.pill i{width:14px;height:14px;border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.3)}
+.jk-sw button.on{box-shadow:0 0 0 3px var(--ink);transform:scale(1.1)}
 .jk-pal .lbl{width:100%;text-align:center;font-weight:800;font-size:13px}
+@media (max-width:640px){.jk-sw{gap:5px}.jk-sw button{width:32px;height:32px}.jk-sw button.pill{height:32px;padding:0 8px}.jk-tabs button{padding:4px 8px}}
 .jk-slider{position:fixed;inset:0;z-index:18;touch-action:none;cursor:ew-resize}
 .jk-line{position:absolute;top:0;bottom:0;width:4px;margin-left:-2px;background:#fff;box-shadow:0 0 16px rgba(255,255,255,.8)}
 .jk-knob{position:absolute;top:50%;left:50%;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:50%;background:#fff8ee;display:grid;place-items:center;font-weight:900;font-size:22px;box-shadow:0 6px 18px rgba(0,0,0,.35);color:var(--ink)}
@@ -32,6 +40,12 @@ html,body{background:#1d1915}
 .pick i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:middle;box-shadow:0 0 0 1px rgba(0,0,0,.25)}
 .jk-lbl{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#4c5868;margin:0 0 6px}
 .jk-extra{display:grid;gap:12px}
+.jk-photo .ig-card{width:min(720px,100%)}.jk-photo img{width:100%;border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.25);display:block;margin:6px 0 4px}
+.jk-orders{display:grid;gap:6px}
+.jk-orders button{display:flex;gap:10px;align-items:center;text-align:left;border-radius:16px;border:2px dashed #e0b25a;background:#fff8e6;padding:7px 10px;font-weight:700;font-size:13px;color:var(--ink);cursor:pointer;line-height:1.25}
+.jk-orders button .who{font-size:24px}.jk-orders button small{display:block;font-weight:600;color:#4c5868;font-size:12px}
+.jk-orders button i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:middle;box-shadow:0 0 0 1px rgba(0,0,0,.25)}
+.jk-orders button:disabled{opacity:.55;border-style:solid;cursor:default}
 @media (max-height:640px) and (min-width:720px){
   .ig-title .ig-card{width:min(900px,100%);grid-template-columns:1fr 1.1fr;column-gap:20px;align-items:start}
   .ig-title .ig-card>*{grid-column:1}
@@ -57,14 +71,30 @@ const VEH = [
   { id: 'police-car', name: 'Patrol Cruiser', es: 'Patrulla', len: 4.4, story: 'Decommissioned, still has a siren', storyEs: 'Retirada, pero aún tiene sirena' },
   { id: 'truck', name: 'Pickup Truck', es: 'Camioneta', len: 4.4, story: 'Pulled out of a riverbank', storyEs: 'Sacada de la orilla de un río' },
   { id: 'tractor', name: 'Farm Tractor', es: 'Tractor de granja', len: 3.7, story: 'Grandpa’s favourite', storyEs: 'El favorito del abuelo' },
-  { id: 'ice-cream-truck', name: 'Ice Cream Truck', es: 'Camión de helados', len: 4.4, story: 'Its jingle still plays, off-key', storyEs: 'Su musiquita aún suena, desafinada', bodyKey: 0xe3e3e3 }
+  { id: 'ice-cream-truck', name: 'Ice Cream Truck', es: 'Camión de helados', len: 4.4, story: 'Its jingle still plays, off-key', storyEs: 'Su musiquita aún suena, desafinada', bodyKey: 0xe3e3e3 },
+  // added in the elevation pass (appended so old saves keep their ids and order)
+  { id: 'boat-small', name: 'Rowboat', es: 'Bote de remos', len: 3.6, story: 'Washed up on the beach after a storm', storyEs: 'Llegó a la playa tras una tormenta', kind: 'boat', body: /./ },
+  { id: 'suv', name: 'Trail Wagon', es: 'Todoterreno', len: 4.4, story: 'Stuck in the mud since spring', storyEs: 'Atascado en el barro desde la primavera' },
+  { id: 'race-car', name: 'Track Racer', es: 'Bólido de pista', len: 4.3, story: 'Lost its last race, kept its smile', storyEs: 'Perdió su última carrera, pero no la sonrisa', acc: /paintYellow/i },
+  { id: 'delivery-truck', name: 'Box Truck', es: 'Camión de caja', len: 4.8, story: 'Delivered 10,000 birthday presents', storyEs: 'Repartió 10.000 regalos de cumpleaños', acc: /paintWhite/i },
+  { id: 'ambulance', name: 'Rescue Van', es: 'Ambulancia', len: 4.7, story: 'Helped half the town, now it needs help', storyEs: 'Ayudó a medio pueblo; ahora necesita ayuda', acc: /paintRed/i },
+  { id: 'firetruck', name: 'Fire Engine', es: 'Camión de bomberos', len: 5, story: 'Its ladder squeaks a happy tune', storyEs: 'Su escalera chirría una canción alegre', acc: /paintGreen/i },
+  { id: 'race-futrure', name: 'Rocket Racer', es: 'Bólido cohete', len: 4.4, story: 'From the year 3000 (probably)', storyEs: 'Del año 3000 (seguramente)', acc: /paintYellow/i },
+  { id: 'ship-light', name: 'Little Sail Ship', es: 'Velerito', len: 5.4, story: 'Found in a dry dock, sails and all', storyEs: 'Hallado en un dique seco, con velas y todo', kind: 'boat', body: /^wood/i, acc: /woodDark/i }
 ];
+// paint-stage designs (original simple shapes, drawn by the grime shader in the vehicle's own space) and wheel finishes
+const STYLES = [['Solid', 'Liso', '⬤'], ['Two-tone', 'Dos tonos', '◐'], ['Stripes', 'Rayas', '‖'], ['Band', 'Franja', '═'], ['Wave', 'Ola', '〰'], ['Dots', 'Lunares', '⁘'], ['Stars', 'Estrellas', '★']];
+const RIMS = [['Steel', 'Acero', 0x8a8f96, .5, .45], ['Chrome', 'Cromo', 0xeef2f6, 1, .12], ['Gold', 'Oro', 0xe2b448, 1, .2], ['Black', 'Negro', 0x1c1d20, .3, .5], ['White', 'Blanco', 0xf4f4f0, .1, .35]];
+const CUSTOMERS = [['Mila', '🐶'], ['Theo', '🎸'], ['Kenji', '🌻'], ['Lucía', '🎨'], ['Finn', '⚽'], ['Ada', '🔬'], ['Noor', '🌙'], ['Sami', '🛹'], ['Rosa', '🌹'], ['Omar', '🎈']];
 const COLORS = [['Cherry', 0xd4313e, 'Cereza'], ['Tangerine', 0xf08a2a, 'Mandarina'], ['Sunflower', 0xf3c331, 'Girasol'], ['Mint', 0x5fd0a0, 'Menta'], ['Teal', 0x14858a, 'Turquesa'], ['Sky', 0x48a6e6, 'Cielo'], ['Royal', 0x2c47b8, 'Azul rey'], ['Grape', 0x7a4cc2, 'Uva'], ['Bubblegum', 0xf07fb4, 'Chicle'], ['Pearl', 0xf1eee6, 'Perla'], ['Graphite', 0x2a2e35, 'Grafito'], ['Racing', 0x1c5a38, 'Verde carreras']];
-const T = E.L, vn = V => T(V.name, V.es), cname = i => T(COLORS[i][0], COLORS[i][2]), sname = st => T(st.name, st.es), ssay = st => T(st.say, st.sayEs);
+const T = E.L, vn = V => T(V.name, V.es), cname = i => T(COLORS[i][0], COLORS[i][2]), yname = i => T(STYLES[i][0], STYLES[i][1]), rname = i => T(RIMS[i][0], RIMS[i][1]);
+const isBoat = () => G && G.V && G.V.kind === 'boat';
+// stage names/lines: boats get wood words (varnish, not rust; boat, not car)
+const sname = st => isBoat() && st.boat ? T(st.boat[0], st.boat[1]) : T(st.name, st.es), ssay = st => isBoat() && st.boat ? T(st.boat[2], st.boat[3]) : T(st.say, st.sayEs);
 const STAGES = [
-  { id: 'wash', name: 'Pressure wash', es: 'Lavado a presión', icon: '🚿', say: 'Spray off all the dirt. Drag over the car.', sayEs: 'Quita toda la suciedad. Arrastra sobre el coche.', rad: .48, rate: 3.6 },
-  { id: 'sand', name: 'Sand the rust', es: 'Lijar el óxido', icon: '🧽', say: 'Now sand away the rusty spots.', sayEs: 'Ahora lija las manchas de óxido.', rad: .36, rate: 2.4 },
-  { id: 'paint', name: 'Spray paint', es: 'Pintar', icon: '🎨', say: 'Pick a colour, then spray it on.', sayEs: 'Elige un color y píntalo con el aerosol.', rad: .5, rate: 4.5 },
+  { id: 'wash', name: 'Pressure wash', es: 'Lavado a presión', icon: '🚿', say: 'Spray off all the dirt. Drag over the car.', sayEs: 'Quita toda la suciedad. Arrastra sobre el coche.', rad: .48, rate: 3.6, boat: ['Pressure wash', 'Lavado a presión', 'Spray off all the dirt. Drag over the boat.', 'Quita toda la suciedad. Arrastra sobre el barco.'] },
+  { id: 'sand', name: 'Sand the rust', es: 'Lijar el óxido', icon: '🧽', say: 'Now sand away the rusty spots.', sayEs: 'Ahora lija las manchas de óxido.', rad: .36, rate: 2.4, boat: ['Sand old varnish', 'Lijar el barniz viejo', 'Now sand away the old, cracked varnish.', 'Ahora lija el barniz viejo y agrietado.'] },
+  { id: 'paint', name: 'Spray paint', es: 'Pintar', icon: '🎨', say: 'Pick a colour and a design, then spray it on.', sayEs: 'Elige un color y un diseño, y píntalo con el aerosol.', rad: .5, rate: 4.5 },
   { id: 'polish', name: 'Polish', es: 'Pulir', icon: '✨', say: 'Polish it until it shines!', sayEs: '¡Púlelo hasta que brille!', rad: .44, rate: 3.2 }
 ];
 const AUTO = .92; // auto-complete threshold
@@ -79,8 +109,26 @@ R.setLook(LOOK); R.setEnv(E.ASSETS.hdri.studio);
 sun.position.set(-5, 11, 6); sun.target.position.set(0, .8, 0); sun.target.updateMatrixWorld(); sun.shadow.camera.far = 40; sun.shadow.bias = -.0005; sun.shadow.normalBias = .02;
 const input = E.createInput({ surface: $('gl') });
 const P = new E.Particles(scene);
-const S = Object.assign({ unlocked: 1, sel: 0, garage: {}, best: {} }, E.store.get('inoa.junk', {}));
+const S = loadSave(E.store.get('inoa.junk', {}));
 const save = () => E.store.set('inoa.junk', S);
+// save v2: garage entries gain {colorIdx, accent, style, rim, photo date}; daily shop orders; stars. v1 saves keep every restored vehicle.
+function loadSave(raw) {
+  const s = { v: 2, unlocked: 1, sel: 0, garage: {}, best: {}, orders: { day: '', done: [] }, stars: 0, ordersDone: 0 };
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return s;
+  const num = (v, d, lo, hi) => Number.isFinite(+v) ? clamp(Math.round(+v), lo, hi) : d;
+  s.unlocked = num(raw.unlocked, 1, 1, VEH.length); s.sel = num(raw.sel, 0, 0, VEH.length - 1);
+  s.stars = num(raw.stars, 0, 0, 1e6); s.ordersDone = num(raw.ordersDone, 0, 0, 1e6);
+  if (raw.orders && typeof raw.orders === 'object' && typeof raw.orders.day === 'string') s.orders = { day: raw.orders.day.slice(0, 10), done: Array.isArray(raw.orders.done) ? raw.orders.done.filter(n => Number.isInteger(n) && n >= 0 && n < 3) : [] };
+  const g = raw.garage && typeof raw.garage === 'object' ? raw.garage : {};
+  VEH.forEach((V, i) => {
+    const e = g[V.id]; if (!e || typeof e !== 'object') return;
+    let ci = Number.isInteger(e.colorIdx) && COLORS[e.colorIdx] ? e.colorIdx : COLORS.findIndex(c => c[0] === e.name || c[1] === e.color); if (ci < 0) ci = 0;
+    s.garage[V.id] = { color: COLORS[ci][1], name: COLORS[ci][0], colorIdx: ci, accent: Number.isInteger(e.accent) && COLORS[e.accent] ? e.accent : 9, style: Number.isInteger(e.style) && STYLES[e.style] ? e.style : 0, rim: Number.isInteger(e.rim) && RIMS[e.rim] ? e.rim : 0, t: num(e.t, 0, 0, 1e6) };
+    s.unlocked = Math.max(s.unlocked, Math.min(VEH.length, i + 2)); // v1 players who finished the old last car unlock the new ones
+  });
+  const b = raw.best && typeof raw.best === 'object' ? raw.best : {}; for (const V of VEH) if (Number.isFinite(+b[V.id])) s.best[V.id] = Math.round(+b[V.id]);
+  return s;
+}
 let G = null, music = null, hudEl = null;
 
 /* ---------------- canvas textures ---------------- */
@@ -170,16 +218,41 @@ const tools = {};
   for (const k in tools) { tools[k].visible = false; tools[k].traverse(o => { if (o.isMesh) o.castShadow = true; }); scene.add(tools[k]); }
 }
 
+// brush ring: shows exactly where and how big the tool works (follows the surface, also on mouse hover before clicking)
+const reticle = new THREE.Mesh(new THREE.RingGeometry(.86, 1, 40), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .75, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, side: THREE.DoubleSide, toneMapped: false }));
+reticle.renderOrder = 5; reticle.visible = false; scene.add(reticle);
+const RET_COL = [0x9fdcff, 0xffd08a, 0xffffff, 0xfff4b0];
+function showReticle(h, st) { const n = tmpN.copy(h.face.normal).transformDirection(h.object.matrixWorld).normalize(); reticle.position.copy(h.point).addScaledVector(n, .025); reticle.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), n); reticle.scale.setScalar(st.rad); reticle.material.color.set(G.stage === 2 && G.colorIdx >= 0 ? COLORS[G.colorIdx][1] : RET_COL[G.stage]); reticle.visible = true; }
+
 /* ---------------- grime shader ---------------- */
-const U = { uMask: { value: null }, uInfo: { value: null }, uBoxMin: { value: new THREE.Vector3() }, uBoxSize: { value: new THREE.Vector3(1, 1, 1) }, uW2C: { value: new THREE.Matrix4() }, uPaint: { value: new THREE.Color(0xd4313e) }, uSplit: { value: -1 }, uGlow: { value: 0 }, uDbg: { value: 0 } };
+const U = { uMask: { value: null }, uInfo: { value: null }, uBoxMin: { value: new THREE.Vector3() }, uBoxSize: { value: new THREE.Vector3(1, 1, 1) }, uW2C: { value: new THREE.Matrix4() }, uPaint: { value: new THREE.Color(0xd4313e) }, uPaint2: { value: new THREE.Color(0xf1eee6) }, uStyle: { value: 0 }, uLongX: { value: 0 }, uLine: { value: .5 }, uSplit: { value: -1 }, uGlow: { value: 0 }, uDbg: { value: 0 } };
 const GLSL_HEAD = `
-uniform highp sampler3D uMask; uniform highp sampler3D uInfo; uniform vec3 uBoxMin; uniform vec3 uBoxSize; uniform vec3 uPaint; uniform float uSplit; uniform float uIsBody; uniform float uBodyKeyOn; uniform vec3 uBodyKey; uniform float uKind; uniform float uDbg;
+uniform highp sampler3D uMask; uniform highp sampler3D uInfo; uniform vec3 uBoxMin; uniform vec3 uBoxSize; uniform vec3 uPaint; uniform float uSplit; uniform float uIsBody; uniform float uBodyKeyOn; uniform vec3 uBodyKey; uniform float uKind; uniform float uDbg; uniform vec3 uPaint2; uniform float uStyle; uniform float uLongX; uniform float uLine; uniform float uAcc;
 varying vec3 vCarP;
 float jPolish = 0.; float jBody = 0.; float jRough = 0.; float jPaint = 0.; vec3 jDbg = vec3(0.);
 float jH(vec3 p){ p = fract(p * .3183099 + .1); p *= 17.; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
 float jN(vec3 x){ vec3 i = floor(x), f = fract(x); f = f * f * (3. - 2. * f);
   return mix(mix(mix(jH(i), jH(i + vec3(1,0,0)), f.x), mix(jH(i + vec3(0,1,0)), jH(i + vec3(1,1,0)), f.x), f.y), mix(mix(jH(i + vec3(0,0,1)), jH(i + vec3(1,0,1)), f.x), mix(jH(i + vec3(0,1,1)), jH(i + vec3(1,1,1)), f.x), f.y), f.z); }
 float jF(vec3 p){ return jN(p) * .5 + jN(p * 2.03) * .25 + jN(p * 4.1) * .125 + jN(p * 8.3) * .0625; }
+float jStar(vec2 p, float r, float rf){ const vec2 k1 = vec2(.809016994375, -.587785252292); const vec2 k2 = vec2(-k1.x, k1.y);
+  p.x = abs(p.x); p -= 2. * max(dot(k1, p), 0.) * k1; p -= 2. * max(dot(k2, p), 0.) * k2; p.x = abs(p.x); p.y -= r;
+  vec2 ba = rf * vec2(-k1.y, k1.x) - vec2(0, 1); float h = clamp(dot(p, ba) / dot(ba, ba), 0., r); return length(p - ba * h) * sign(p.y * ba.x - p.x * ba.y); }
+// accent design mask (1 = accent colour). l/a = along / across the vehicle (0..1), h = height (0..1); dots and stars use a box projection by face normal
+float jPat(vec3 q, vec3 uvw){
+  float l = mix(uvw.z, uvw.x, uLongX), a = mix(uvw.x, uvw.z, uLongX), h = uvw.y, lm = mix(q.z, q.x, uLongX), am = mix(q.x, q.z, uLongX);
+  vec3 cn = abs(normalize(cross(dFdx(q), dFdy(q))));
+  if (uStyle < .5) return 0.;
+  if (uStyle < 1.5) return 1. - smoothstep(uLine - .008, uLine + .008, h);
+  if (uStyle < 2.5) { float d = abs(abs(a - .5) - .075); return (1. - smoothstep(.026, .032, d)) * step(.25, h); }
+  if (uStyle < 3.5) return 1. - smoothstep(.028, .036, abs(h - uLine - .07));
+  if (uStyle < 4.5) { float w = uLine + .02 + .07 * sin(lm * 3.6 + 1.); return 1. - smoothstep(w - .01, w + .01, h); }
+  float side = mix(cn.x, cn.z, uLongX);
+  vec2 p2 = cn.y > .62 ? vec2(lm, am) : side > .55 ? vec2(lm, q.y) : vec2(am, q.y);
+  vec2 c = p2 / .62 + .5; vec2 id = floor(c); vec2 f = fract(c) - .5;
+  if (uStyle < 5.5) return 1. - smoothstep(.19, .215, length(f));
+  float rot = (jH(vec3(id, 3.)) - .5) * 1.1; float cr = cos(rot), sr = sin(rot);
+  return 1. - smoothstep(-.012, .012, jStar(mat2(cr, -sr, sr, cr) * f, .3, .45));
+}
 `;
 const GLSL_MAIN = `
 {
@@ -193,7 +266,8 @@ const GLSL_MAIN = `
   float lum = dot(col, vec3(.3, .59, .11));
   vec3 faded = mix(col, vec3(lum) * .85 + vec3(.05, .045, .035), .5);
   col = mix(col, faded, body * (1. - mk.b));
-  col = mix(col, uPaint * (.96 + .08 * n2), body * mk.b);
+  vec3 pc = mix(uPaint, uPaint2, max(uAcc, jPat(vCarP, uvw)));
+  col = mix(col, pc * (.96 + .08 * n2), body * mk.b);
   float rust0 = inf.r;
   float rustShape = smoothstep(.24, .52, rust0 * (.75 + .5 * n1));
   float primer = rustShape * smoothstep(.2, .8, mk.g) * (1. - mk.b);
@@ -210,8 +284,8 @@ const GLSL_MAIN = `
   jPolish = mk.a; jBody = body; jPaint = mk.b; jRough = clamp(rust * .5 + dirt * .6, 0., 1.);
 }
 `;
-function patchMaterial(m, isBody, kind, bodyKey) {
-  m.userData.u = { uIsBody: { value: isBody ? 1 : 0 }, uBodyKeyOn: { value: bodyKey ? 1 : 0 }, uBodyKey: { value: new THREE.Color(bodyKey || 0) }, uKind: { value: kind } };
+function patchMaterial(m, isBody, kind, bodyKey, acc = 0) {
+  m.userData.u = { uAcc: { value: acc }, uIsBody: { value: isBody ? 1 : 0 }, uBodyKeyOn: { value: bodyKey ? 1 : 0 }, uBodyKey: { value: new THREE.Color(bodyKey || 0) }, uKind: { value: kind } };
   m.onBeforeCompile = sh => {
     Object.assign(sh.uniforms, U, m.userData.u);
     sh.vertexShader = 'uniform mat4 uW2C;\nvarying vec3 vCarP;\n' + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\nvCarP = (uW2C * modelMatrix * vec4(transformed, 1.0)).xyz;');
@@ -225,7 +299,7 @@ function patchMaterial(m, isBody, kind, bodyKey) {
       .replace('#include <metalnessmap_fragment>', '#include <metalnessmap_fragment>\nmetalnessFactor = mix(metalnessFactor, .18, jPolish * jBody);')
       .replace('#include <lights_physical_fragment>', THREE.ShaderChunk.lights_physical_fragment.replace('material.clearcoat = clearcoat;', 'material.clearcoat = clearcoat * jPolish * jBody * (1. - jRough);'));
   };
-  m.customProgramCacheKey = () => 'junk-grime-1';
+  m.customProgramCacheKey = () => 'junk-grime-2';
   m.needsUpdate = true;
 }
 
@@ -240,10 +314,12 @@ function buildVehicle(vi, { full = false, color = null } = {}) {
   if (U.uMask.value) U.uMask.value.dispose(); if (U.uInfo.value) U.uInfo.value.dispose();
   const V = VEH[vi]; const car = E.instance(V.id, { scale: V.len, outline: false }); car.rotation.y = V.yaw || 0; car.position.y = TABLE_Y; table.add(car); table.updateMatrixWorld(true);
   const meshes = []; const keyCol = V.bodyKey ? new THREE.Color(V.bodyKey) : null;
-  car.traverse(o => { if (!o.isMesh) return; const src = o.material; const cls = V.bodyKey ? (src.map ? 1 : classOf(src)) : classOf(src);
+  const rims = [];
+  car.traverse(o => { if (!o.isMesh) return; const src = o.material; const base = classOf(src); const cls = V.bodyKey ? (src.map ? 1 : base) : V.body ? (V.body.test(src.name || '') && base !== 2 ? 1 : base === 1 ? 5 : base) : base;
     const m = new THREE.MeshPhysicalMaterial({ name: src.name, color: src.color.clone(), map: src.map || null, roughness: .8, metalness: 0, clearcoat: 1, clearcoatRoughness: .05, envMapIntensity: 1 });
     if (cls === 2) { m.color.set(0x1b2733); m.roughness = .06; m.metalness = .3; } else if (cls === 3) { m.color.set(0x1e1f22); m.roughness = .85; } else if (cls === 4) { m.roughness = .2; m.emissive = src.color.clone(); m.emissiveIntensity = 0; } else if (cls === 1) { m.roughness = .7; } else { m.roughness = .6; m.metalness = /_default|rim/i.test(src.name) ? .5 : 0; }
-    patchMaterial(m, cls === 1 && !V.bodyKey, cls, V.bodyKey && src.map ? V.bodyKey : 0); o.material = m; o.castShadow = o.receiveShadow = true; o.userData.cls = cls; meshes.push(o); });
+    patchMaterial(m, cls === 1 && !V.bodyKey, cls, V.bodyKey && src.map ? V.bodyKey : 0, V.acc && cls === 1 && V.acc.test(src.name || '') ? 1 : 0); o.material = m; o.castShadow = o.receiveShadow = true; o.userData.cls = cls; meshes.push(o);
+    if (cls === 5 && /_default|rim/i.test(src.name || '') && V.kind !== 'boat') rims.push(o); });
   // grid in car-local space
   const inv = new THREE.Matrix4().copy(car.matrixWorld).invert(); const box = new THREE.Box3(); const tmpM = new THREE.Matrix4();
   for (const o of meshes) { tmpM.multiplyMatrices(inv, o.matrixWorld); const pa = o.geometry.attributes.position; const v = new THREE.Vector3(); for (let i = 0; i < pa.count; i++) box.expandByPoint(v.fromBufferAttribute(pa, i).applyMatrix4(tmpM)); }
@@ -292,12 +368,20 @@ function buildVehicle(vi, { full = false, color = null } = {}) {
   const maskTex = mk(mask), infoTex = mk(info);
   U.uMask.value = maskTex; U.uInfo.value = infoTex; U.uBoxMin.value.copy(box.min); U.uBoxSize.value.set(nx * cell, ny * cell, nz * cell);
   if (color != null) U.uPaint.value.set(color);
+  U.uLongX.value = size.x > size.z ? 1 : 0; U.uLine.value = V.line || .5;
   // per-stage weights over exterior voxels
   const E2 = Int32Array.from(ext); const W = [new Float32Array(E2.length), new Float32Array(E2.length), new Float32Array(E2.length), new Float32Array(E2.length)];
   for (let i = 0; i < E2.length; i++) { const k = E2[i]; W[0][i] = info[k * 4 + 1] / 255; const r = info[k * 4] / 255; W[1][i] = r > .35 ? r : 0; const bd = info[k * 4 + 2] ? 1 : 0; W[2][i] = bd; W[3][i] = bd; }
+  // progress only counts surface the brush can actually reach: a voxel counts if a straight line of sight from one of the camera's
+  // orbit directions (any yaw, low to high pitch) leaves the grid without crossing the vehicle (wheel wells, the cab floor and
+  // the gaps between the body and the wheels no longer hold the bar under 92%)
+  const reach = new Uint8Array(E2.length); { const dirs = []; for (const pt of [.12, .55, 1]) for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2 + (pt > .5 ? .26 : 0); dirs.push([Math.sin(a) * Math.cos(pt), Math.sin(pt), Math.cos(a) * Math.cos(pt)]); }
+    for (let i = 0; i < E2.length; i++) { const k = E2[i]; const x0 = k % nx + .5, y0 = Math.floor(k / nx) % ny + .5, z0 = Math.floor(k / (nx * ny)) + .5;
+      for (const d of dirs) { let ok = true; for (let t = 1.8; ; t += .9) { const x = Math.floor(x0 + d[0] * t), y = Math.floor(y0 + d[1] * t), z = Math.floor(z0 + d[2] * t); if (x < 0 || y < 0 || z < 0 || x >= nx || y >= ny || z >= nz) break; if (occ[id(x, y, z)]) { ok = false; break; } } if (ok) { reach[i] = 1; break; } } } }
+  for (let i = 0; i < E2.length; i++) if (!reach[i]) for (const w of W) w[i] = 0;
   const sums = W.map(w => w.reduce((s, v) => s + v, 0) || 1);
   const ctr = box.getCenter(new THREE.Vector3());
-  return { car, meshes, V, grid: { nx, ny, nz, N, cell, min: box.min.clone(), size }, mask, maskTex, info, ext: E2, W, sums, center: ctr, radius: size.length() / 2 };
+  return { reachN: reach.reduce((s, v) => s + v, 0), car, meshes, rims, V, grid: { nx, ny, nz, N, cell, min: box.min.clone(), size }, mask, maskTex, info, ext: E2, W, sums, center: ctr, radius: size.length() / 2 };
 }
 function paintAt(pl, ch, rad, amt) {
   const g = G.grid, r = rad / g.cell; const fx = (pl.x - g.min.x) / g.cell - .5, fy = (pl.y - g.min.y) / g.cell - .5, fz = (pl.z - g.min.z) / g.cell - .5;
@@ -308,14 +392,35 @@ function paintAt(pl, ch, rad, amt) {
 }
 function progress(ch) { const w = G.W[ch], m = G.mask, e = G.ext; let s = 0; for (let i = 0; i < e.length; i++) if (w[i]) s += w[i] * m[e[i] * 4 + ch]; return s / 255 / G.sums[ch]; }
 
+/* ---------------- shop orders: three friendly customer wishes a day (no timers, no fail; a matching job earns a star) ---------------- */
+const todayKey = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+function dailyOrders() {
+  const day = todayKey(); if (S.orders.day !== day) { S.orders = { day, done: [] }; save(); }
+  const seed = [...day].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 1000003, 7); const r = k => hash(seed, k);
+  const pool = VEH.map((v, i) => i).filter(i => i < S.unlocked); const used = new Set(), whoUsed = new Set(); const out = [];
+  for (let n = 0; n < 3; n++) {
+    let vi = pool[Math.floor(r(n * 7 + 1) * pool.length)]; for (let t = 0; used.has(vi) && t < pool.length; t++) vi = pool[(pool.indexOf(vi) + 1) % pool.length]; used.add(vi);
+    let w = Math.floor(r(n * 7 + 2) * CUSTOMERS.length); while (whoUsed.has(w)) w = (w + 1) % CUSTOMERS.length; whoUsed.add(w);
+    const color = Math.floor(r(n * 7 + 3) * COLORS.length); let accent = Math.floor(r(n * 7 + 4) * COLORS.length); if (accent === color) accent = (accent + 4) % COLORS.length;
+    const style = n === 0 ? 0 : 1 + Math.floor(r(n * 7 + 5) * (STYLES.length - 1));
+    out.push({ n, vi, who: CUSTOMERS[w], color, accent, style, done: S.orders.done.includes(n) });
+  }
+  return out;
+}
+const orderLook = o => `${cname(o.color)}${o.style ? T(` with ${yname(o.style)} (${cname(o.accent)})`, ` con ${yname(o.style)} (${cname(o.accent)})`) : ''}`;
+const orderText = o => `${o.who[1]} ${o.who[0]}: ${vn(VEH[o.vi])} · ${orderLook(o)}`;
+const orderSay = o => T(`${o.who[0]} would love the ${VEH[o.vi].name} in ${orderLook(o)}.`, `A ${o.who[0]} le encantaría: ${VEH[o.vi].es}, en ${orderLook(o)}.`);
+const orderMatch = g => !!(g.order && g.colorIdx === g.order.color && (g.style || 0) === g.order.style);
+
 /* ---------------- game flow ---------------- */
-function startVehicle(vi, mode = 'play') {
+function startVehicle(vi, mode = 'play', order = null) {
   cleanupUI(); vi = clamp(vi, 0, VEH.length - 1); S.sel = vi; save();
   const saved = S.garage[VEH[vi].id];
   const built = buildVehicle(vi, { full: mode === 'gallery' || (mode === 'attract' && !!saved), color: mode === 'play' ? COLORS[0][1] : (saved ? saved.color : COLORS[0][1]) });
-  G = Object.assign(built, { vi, mode, stage: 0, prog: [0, 0, 0, 0], t: 0, stageT: [0, 0, 0, 0], paused: false, phase: mode === 'play' ? 'play' : mode, yaw: mode === 'play' ? (innerHeight > innerWidth ? 2.1 : .6) : (innerHeight > innerWidth ? 1.9 : 0), yawV: 0, az: .78, pitch: .3, pitchT: .3, brush: null, auto: 0, autoT: 0, colorIdx: -1, sndT: 0, revealT: 0, glow: 0, split: -1, kbT: 0 });
-  lampLevel(0); table.rotation.y = G.yaw; fitCam(true);
-  if (mode === 'play') { ensureHud(); hud(true); $('steps').hidden = false; steps(); if (music) music.stop(); music = E.music(E.SONGS.chill); E.toast(`${vn(VEH[vi])} · ${T(VEH[vi].story, VEH[vi].storyEs)}`, 2600); setTimeout(() => G && G.vi === vi && G.phase === 'play' && E.say(`${vn(VEH[vi])}. ${ssay(STAGES[0])}`), 400); }
+  const look = mode !== 'play' && saved ? { accent: saved.accent, style: saved.style, rim: saved.rim } : { accent: 9, style: 0, rim: 0 };
+  G = Object.assign(built, look, { order, vi, mode, stage: 0, prog: [0, 0, 0, 0], t: 0, stageT: [0, 0, 0, 0], paused: false, phase: mode === 'play' ? 'play' : mode, yaw: mode === 'play' ? (innerHeight > innerWidth ? 2.1 : .6) : (innerHeight > innerWidth ? 1.9 : 0), yawV: 0, az: .78, pitch: .3, pitchT: .3, brush: null, auto: 0, autoT: 0, colorIdx: -1, sndT: 0, revealT: 0, glow: 0, split: -1, kbT: 0 });
+  applyLook(); lampLevel(0); table.rotation.y = G.yaw; fitCam(true);
+  if (mode === 'play') { ensureHud(); hud(true); $('steps').hidden = false; steps(); if (music) music.stop(); music = E.music(E.SONGS.chill); E.toast(order ? `🧾 ${orderText(order)}` : `${vn(VEH[vi])} · ${T(VEH[vi].story, VEH[vi].storyEs)}`, 2600); setTimeout(() => G && G.vi === vi && G.phase === 'play' && E.say(`${order ? orderSay(order) + ' ' : vn(VEH[vi]) + '. '}${ssay(STAGES[0])}`), 400); }
   fitCam(true); // again now that the HUD / step chips exist (phones frame the car in the space they leave)
   return G;
 }
@@ -327,21 +432,48 @@ function ensureHud() {
 let hudKey = '';
 function hud(force) {
   if (!G || !hudEl || G.mode !== 'play') return; const st = STAGES[G.stage]; const pc = Math.round(clamp(G.prog[G.stage], 0, 1) * 100); const k = `${G.stage}|${pc}|${G.phase}|${Math.floor(G.t)}|${E.lang()}`; if (k === hudKey && !force) return; hudKey = k;
-  hudEl.hud.innerHTML = `<span class="ig-chip">🚗 <b>${vn(G.V)}</b></span><span class="ig-chip jk-prog">${st.icon} <b>${G.phase === 'reveal' || G.phase === 'slider' ? T('Done!', '¡Listo!') : pc + '%'}</b><span class="jk-bar"><i style="width:${G.phase === 'play' ? pc : 100}%"></i></span></span><span class="ig-chip">⏱ <b>${fmt(G.t)}</b></span>`;
+  hudEl.hud.innerHTML = `<span class="ig-chip">${G.order ? '🧾 ' + G.order.who[1] : G.V.kind === 'boat' ? '⛵' : '🚗'} <b>${vn(G.V)}</b></span><span class="ig-chip jk-prog">${st.icon} <b>${G.phase === 'reveal' || G.phase === 'slider' ? T('Done!', '¡Listo!') : pc + '%'}</b><span class="jk-bar"><i style="width:${G.phase === 'play' ? pc : 100}%"></i></span></span><span class="ig-chip">⏱ <b>${fmt(G.t)}</b></span>`;
 }
 function steps() { if (!G || G.mode !== 'play') return; $('steps').innerHTML = STAGES.map((s, i) => `<div class="${i === G.stage && G.phase === 'play' ? 'on' : i < G.stage || G.phase !== 'play' ? 'ok' : ''}">${i < G.stage || G.phase !== 'play' ? '✅' : s.icon} ${i + 1}. ${sname(s)}</div>`).join(''); }
 const fmt = t => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
 function cleanupUI() { document.querySelectorAll('.jk-pal,.jk-slider,.jk-day,.jk-cta,.ig-results').forEach(e => e.remove()); $('steps').hidden = true; for (const k in tools) tools[k].visible = false; }
+const TABS = [['color', '🎨', 'Colour', 'Color'], ['accent', '🖌️', 'Accent', 'Acento'], ['style', '✨', 'Design', 'Diseño'], ['rim', '⚙️', 'Wheels', 'Ruedas']];
+const hexOf = c => '#' + new THREE.Color(c).getHexString(THREE.SRGBColorSpace);
 function showPalette() {
-  document.querySelectorAll('.jk-pal').forEach(e => e.remove()); const d = document.createElement('div'); d.className = 'jk-pal'; d.innerHTML = `<div class="lbl" id="palLbl">${T('Pick a colour', 'Elige un color')}</div>` + COLORS.map((c, i) => `<button aria-label="${cname(i)}" data-i="${i}" style="background:#${new THREE.Color(c[1]).getHexString(THREE.SRGBColorSpace)}"></button>`).join(''); document.body.appendChild(d);
-  d.querySelectorAll('button').forEach(b => b.onclick = e => { e.stopPropagation(); setColor(+b.dataset.i); });
+  document.querySelectorAll('.jk-pal').forEach(e => e.remove()); const d = document.createElement('div'); d.className = 'jk-pal'; G.palTab = G.palTab || 'color';
+  d.innerHTML = `<div class="jk-tabs" role="tablist">${TABS.filter(t => t[0] !== 'rim' || G.rims.length).map(t => `<button data-tab="${t[0]}" role="tab">${t[1]} ${T(t[2], t[3])}</button>`).join('')}</div><div class="lbl" id="palLbl"></div><div class="jk-sw" id="palSw"></div>`;
+  document.body.appendChild(d);
+  d.querySelectorAll('[data-tab]').forEach(b => b.onclick = e => { e.stopPropagation(); G.palTab = b.dataset.tab; palSync(); SFX.click(); });
+  palSync();
 }
-function setColor(i) { G.colorIdx = i; U.uPaint.value.set(COLORS[i][1]); tools.paint.userData.cup.material = E.mat(COLORS[i][1], { roughness: .4 }); document.querySelectorAll('.jk-pal button').forEach(b => b.classList.toggle('on', +b.dataset.i === i)); const l = $('palLbl'); if (l) l.textContent = T(`${COLORS[i][0]} — now spray it on`, `${COLORS[i][2]}: ahora píntalo`); SFX.pop(); E.tone(660 + i * 30, .08, 'sine', .06); }
+function palSync() {
+  const d = document.querySelector('.jk-pal'); if (!d || !G) return; const tab = G.palTab;
+  d.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+  const sw = $('palSw'), cur = { color: G.colorIdx, accent: G.accent, style: G.style, rim: G.rim }[tab];
+  const key = tab + '|' + E.lang();
+  if (sw.dataset.k !== key) { sw.dataset.k = key;
+    sw.innerHTML = tab === 'style' ? STYLES.map((y, i) => `<button class="pill" data-i="${i}" aria-label="${yname(i)}"><b>${y[2]}</b>${yname(i)}</button>`).join('')
+      : tab === 'rim' ? RIMS.map((r, i) => `<button class="pill" data-i="${i}" aria-label="${rname(i)}"><i style="background:${hexOf(r[2])}"></i>${rname(i)}</button>`).join('')
+      : COLORS.map((c, i) => `<button data-i="${i}" aria-label="${cname(i)}" style="background:${hexOf(c[1])}"></button>`).join('');
+    sw.querySelectorAll('button').forEach(b => b.onclick = e => { e.stopPropagation(); const i = +b.dataset.i; if (G.palTab === 'color') setColor(i); else setLook(G.palTab, i); }); }
+  sw.querySelectorAll('button').forEach(b => b.classList.toggle('on', +b.dataset.i === cur));
+  const l = $('palLbl'); if (l) l.textContent = G.colorIdx < 0 ? T('Pick a colour', 'Elige un color') : lookText(G) + (G.prog[2] < .1 ? T(' — now spray it on', ': ahora píntalo') : '');
+}
+const lookText = g => [cname(g.colorIdx ?? 0), g.style ? `${yname(g.style)} (${cname(g.accent ?? 9)})` : '', g.rims && g.rims.length && g.rim ? rname(g.rim) : ''].filter(Boolean).join(' · ');
+function cyclePal(dir) { if (!G) return; const tab = G.palTab || 'color', n = tab === 'style' ? STYLES.length : tab === 'rim' ? RIMS.length : COLORS.length, cur = { color: G.colorIdx, accent: G.accent, style: G.style, rim: G.rim }[tab]; const i = ((cur < 0 ? 0 : cur + dir) + n) % n; if (tab === 'color') setColor(i); else setLook(tab, i); }
+function cycleTab() { if (!G) return; const ts = TABS.map(t => t[0]).filter(t => t !== 'rim' || G.rims.length); G.palTab = ts[(ts.indexOf(G.palTab || 'color') + 1) % ts.length]; palSync(); SFX.click(); }
+// customisation: body colour, accent colour, design and wheel finish (all live in the shader / rim materials, so a change shows at once on the sprayed parts)
+function applyLook() { if (!G) return; if (G.colorIdx >= 0) U.uPaint.value.set(COLORS[G.colorIdx][1]); U.uPaint2.value.set(COLORS[G.accent ?? 9][1]); U.uStyle.value = G.style || 0; const r = RIMS[G.rim || 0]; for (const o of G.rims) { o.material.color.set(r[2]); o.material.metalness = r[3]; o.material.roughness = r[4]; } }
+function setColor(i, quiet) { G.colorIdx = i; applyLook(); tools.paint.userData.cup.material = E.mat(COLORS[i][1], { roughness: .4 }); palSync(); if (!quiet) { SFX.pop(); E.tone(660 + i * 30, .08, 'sine', .06); } }
+function setLook(k, i) { if (!G) return; G[k] = i; applyLook(); palSync(); SFX.pop(); E.tone(k === 'style' ? 520 + i * 40 : k === 'rim' ? 440 + i * 50 : 700 + i * 25, .08, 'triangle', .05); if (k === 'style' && i && G.prog[2] < .05) E.toast(T('The design shows where you spray', 'El diseño aparece donde pintas'), 1500); }
 function nextStage() {
   G.stageT[G.stage] = G.t; SFX.good(); bigText(`${STAGES[G.stage].icon} ${G.stage === 3 ? T('Shiny!', '¡Brilla!') : T('Done!', '¡Listo!')}`); try { navigator.vibrate && navigator.vibrate(30); } catch (e) { }
   if (G.stage === 3) { startReveal(); return; }
   G.stage++; G.auto = 0; steps(); hud(true); E.say(ssay(STAGES[G.stage]));
-  if (G.stage === 2) { showPalette(); if (G.colorIdx < 0) setColor(Math.floor(rnd(0, COLORS.length))); }
+  if (G.stage === 2) { showPalette();
+    if (G.order) { G.style = G.order.style; G.accent = G.order.accent; setColor(G.order.color, true); setTimeout(() => G && G.order && E.toast(T(`🧾 ${G.order.who[0]} asked for ${lookText(G)} — it's loaded in the spray gun!`, `🧾 ${G.order.who[0]} pidió ${lookText(G)}: ¡ya está en la pistola!`), 2600), 900); }
+    else if (G.colorIdx < 0) setColor(Math.floor(rnd(0, COLORS.length)), true);
+    E.say(T('Tip: tap the tabs to add a design, an accent colour or shiny wheels.', 'Consejo: toca las pestañas para añadir un diseño, un color de acento o ruedas brillantes.'), { once: true, interrupt: false }); }
   else document.querySelectorAll('.jk-pal').forEach(e => e.remove());
   fitCam(false);
 }
@@ -350,16 +482,30 @@ function bigText(t) { const d = document.createElement('div'); d.className = 'ig
 /* ---------------- input: scrub vs spin ---------------- */
 const cv = $('gl'), ray = new THREE.Raycaster(), ndc = new THREE.Vector2(); let ptr = null;
 function hitCar(x, y) { const r = cv.getBoundingClientRect(); ndc.set((x - r.left) / (r.width || innerWidth) * 2 - 1, -((y - r.top) / (r.height || innerHeight)) * 2 + 1); ray.setFromCamera(ndc, camera); const h = ray.intersectObjects(G.meshes, false); return h.length ? h[0] : null; }
+// one finger on the vehicle = work, on the floor = spin; a second finger anywhere turns the gesture into a two-finger spin (handy on
+// phones where the vehicle fills the screen). Every coalesced pointer sample joins the stroke path, so quick curves stay continuous.
+const fingers = new Map(); let hover = null;
 cv.addEventListener('pointerdown', e => {
   E.audio(); if (!G || G.paused) return; try { cv.setPointerCapture(e.pointerId); } catch (er) { }
+  fingers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (ptr && fingers.size >= 2) { ptr.mode = 'spin2'; G.brush = null; return; }
   const working = G.mode === 'play' && G.phase === 'play' && G.auto === 0 && !(G.stage === 2 && G.colorIdx < 0);
   const h = working ? hitCar(e.clientX, e.clientY) : null;
-  ptr = { id: e.pointerId, x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY, mode: h ? 'brush' : 'spin' }; if (h) G.brush = { x: e.clientX, y: e.clientY, last: null };
+  ptr = { id: e.pointerId, x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY, mode: h ? 'brush' : 'spin' }; if (h) G.brush = { x: e.clientX, y: e.clientY, last: null, path: [] };
 });
-cv.addEventListener('pointermove', e => { if (!ptr || e.pointerId !== ptr.id || !G) return; const dx = e.clientX - ptr.lx, dy = e.clientY - ptr.ly; ptr.lx = e.clientX; ptr.ly = e.clientY; if (ptr.mode === 'spin') { G.yawV = dx * .012 / Math.max(1 / 60, .016); G.yaw += dx * .012; G.pitchT = clamp(G.pitchT + dy * .005, .06, 1.05); } else if (G.brush) { G.brush.x = e.clientX; G.brush.y = e.clientY; } });
+cv.addEventListener('pointermove', e => {
+  if (!G) return; const f = fingers.get(e.pointerId);
+  if (!ptr) { if (e.pointerType === 'mouse') hover = { x: e.clientX, y: e.clientY }; return; }
+  if (ptr.mode === 'spin2' && f) { const dx = e.clientX - f.x, dy = e.clientY - f.y; f.x = e.clientX; f.y = e.clientY; G.yaw += dx * .006; G.yawV = dx * .006 * 60; G.pitchT = clamp(G.pitchT + dy * .0025, .06, 1.05); return; }
+  if (f) { f.x = e.clientX; f.y = e.clientY; }
+  if (e.pointerId !== ptr.id) return; const dx = e.clientX - ptr.lx, dy = e.clientY - ptr.ly; ptr.lx = e.clientX; ptr.ly = e.clientY;
+  if (ptr.mode === 'spin') { G.yawV = dx * .012 / Math.max(1 / 60, .016); G.yaw += dx * .012; G.pitchT = clamp(G.pitchT + dy * .005, .06, 1.05); }
+  else if (G.brush) { const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : []; for (const ev of (evs.length ? evs : [e])) if (G.brush.path.length < 240) G.brush.path.push({ x: ev.clientX, y: ev.clientY }); G.brush.x = e.clientX; G.brush.y = e.clientY; }
+});
+cv.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') hover = null; });
 // pointerup ends the stroke; pointercancel / lost capture / window blur end it too, without painting anything more
-const endP = e => { if (!ptr || (e.pointerId != null && e.pointerId !== ptr.id)) return; ptr = null; if (G) { G.brush = null; G.yawV = clamp(G.yawV, -6, 6); } };
-cv.addEventListener('pointerup', endP); cv.addEventListener('pointercancel', endP); cv.addEventListener('lostpointercapture', e => { if (ptr && e.pointerId === ptr.id) setTimeout(() => endP(e), 0); }); addEventListener('blur', () => endP({}));
+const endP = e => { if (e.pointerId != null) fingers.delete(e.pointerId); else fingers.clear(); if (!ptr || (e.pointerId != null && e.pointerId !== ptr.id && ptr.mode !== 'spin2')) return; if (ptr.mode === 'spin2' && fingers.size) return; ptr = null; if (G) { G.brush = null; G.yawV = clamp(G.yawV, -6, 6); } };
+cv.addEventListener('pointerup', endP); cv.addEventListener('pointercancel', endP); cv.addEventListener('lostpointercapture', e => { if (fingers.has(e.pointerId) || (ptr && e.pointerId === ptr.id)) setTimeout(() => endP(e), 0); }); addEventListener('blur', () => endP({}));
 addEventListener('keydown', e => { if ((e.code === 'Escape' || e.code === 'KeyP') && G && !G.paused && G.mode === 'play') pause(); });
 
 /* ---------------- update ---------------- */
@@ -391,8 +537,10 @@ function update(dt) {
   if (G.brush) { bx = G.brush.x; by = G.brush.y; }
   else if (playing && s.a && G.auto === 0 && !(G.stage === 2 && G.colorIdx < 0)) { G.kbT += dt; const c = E.toScreen(G.car.localToWorld(G.center.clone()), camera); const ext = Math.min(innerWidth, innerHeight) * .3; bx = c.x + Math.sin(G.kbT * 2.3) * ext * 1.1; by = c.y + Math.sin(G.kbT * 3.1) * ext * .45; }
   else G.kbT = 0;
-  for (const k in tools) tools[k].visible = false;
-  if (playing && bx != null && G.auto === 0) work(bx, by, dt); else hissSet(false, G.stage);
+  for (const k in tools) tools[k].visible = false; reticle.visible = false;
+  if (playing && bx != null && G.auto === 0) work(bx, by, dt); else { hissSet(false, G.stage); if (playing && hover && !ptr && G.auto === 0) { const h = hitCar(hover.x, hover.y); if (h) showReticle(h, STAGES[G.stage]); } }
+  // paint stage: B / Shift cycles the swatch in the open tab, X / E switches tab (colour, accent, design, wheels)
+  if (playing && G.stage === 2) { if (s.bPressed) cyclePal(1); if (s.cPressed) cycleTab(); }
   if (playing) { G.progT = (G.progT || 0) + dt; if (G.progT > .12) { G.progT = 0; G.prog[G.stage] = progress(G.stage); hud(); if (G.prog[G.stage] >= AUTO && G.auto === 0) { G.auto = 1; G.autoT = 0; E.toast(T('Auto-finishing the last bits ✨', 'Terminando los últimos detalles ✨'), 1200); E.tone(880, .2, 'sine', .06, 400); } } }
   // auto-complete ramp
   if (G.auto === 1) { G.autoT += dt / .8; const v = Math.min(255, Math.round(G.autoT * 255)); const ch = G.stage, m = G.mask; for (let k = ch; k < m.length; k += 4) if (m[k] < v) m[k] = v; G.dirty = true; if (Math.random() < .5) { const e = G.ext[Math.floor(Math.random() * G.ext.length)]; glintAtVoxel(e, [0x8fd3ff, 0xffd08a, COLORS[Math.max(0, G.colorIdx)][1], 0xffffff][ch]); } if (G.autoT >= 1) { G.auto = 2; G.prog[ch] = 1; hud(true); nextStage(); } }
@@ -403,11 +551,19 @@ function update(dt) {
 }
 function glintAtVoxel(k, col) { const g = G.grid; const x = k % g.nx, y = Math.floor(k / g.nx) % g.ny, z = Math.floor(k / (g.nx * g.ny)); const p = new THREE.Vector3(g.min.x + (x + .5) * g.cell, g.min.y + (y + .5) * g.cell, g.min.z + (z + .5) * g.cell); G.car.localToWorld(p); spray.emit(p, new THREE.Vector3(rnd(-.2, .2), rnd(.2, .6), rnd(-.2, .2)), col, .5, .5, .9); }
 function work(x, y, dt) {
-  const h = hitCar(x, y); const st = STAGES[G.stage]; if (!h) { if (G.brush) G.brush.lastScr = null; hissSet(false, G.stage); return; }
-  const lp = G.car.worldToLocal(h.point.clone()); const amt = st.rate * dt;
-  // fast strokes: re-cast along the screen path since the last frame, so the trail follows the pointer over curves and edges
-  const b = G.brush, ls = b && b.lastScr; if (ls) { const dx = x - ls.x, dy = y - ls.y, n = Math.min(40, Math.floor(Math.hypot(dx, dy) / 10)); for (let i = 1; i <= n; i++) { const hh = hitCar(ls.x + dx * i / (n + 1), ls.y + dy * i / (n + 1)); if (hh) paintAt(G.car.worldToLocal(hh.point.clone()), G.stage, st.rad, Math.max(amt / (n + 1) * 1.5, amt * .35)); } }
+  const st = STAGES[G.stage], amt = st.rate * dt, b = G.brush;
+  // fast strokes: re-cast along every pointer sample since the last frame (coalesced events included), at most ~10 px apart and
+  // 80 rays a frame, so quick curves and zig-zags leave a continuous trail; rays that miss the vehicle paint nothing (no bridges over air)
+  if (b && b.path && b.path.length) { const pts = b.path.splice(0); let prev = b.lastScr; let tot = 0; for (const q of pts) { if (prev) tot += Math.hypot(q.x - prev.x, q.y - prev.y); prev = q; }
+    const step = Math.max(10, tot / 80); prev = b.lastScr;
+    for (const q of pts) { if (prev) { const dx = q.x - prev.x, dy = q.y - prev.y, n = Math.floor(Math.hypot(dx, dy) / step); for (let i = 1; i <= n; i++) { const hh = hitCar(prev.x + dx * i / (n + 1), prev.y + dy * i / (n + 1)); if (hh) paintAt(G.car.worldToLocal(hh.point.clone()), G.stage, st.rad, Math.max(amt * step / Math.max(tot, 1) * 1.5, amt * .35)); } }
+      if (q.x !== x || q.y !== y) { const hq = hitCar(q.x, q.y); if (hq) paintAt(G.car.worldToLocal(hq.point.clone()), G.stage, st.rad, amt * .5); prev = hq ? q : null; } else prev = q; }
+    b.lastScr = prev; }
+  const h = hitCar(x, y); if (!h) { if (b) b.lastScr = null; hissSet(false, G.stage); reticle.visible = false; return; }
+  const lp = G.car.worldToLocal(h.point.clone());
+  const ls = b && b.lastScr; if (ls && (ls.x !== x || ls.y !== y)) { const dx = x - ls.x, dy = y - ls.y, n = Math.min(40, Math.floor(Math.hypot(dx, dy) / 10)); for (let i = 1; i <= n; i++) { const hh = hitCar(ls.x + dx * i / (n + 1), ls.y + dy * i / (n + 1)); if (hh) paintAt(G.car.worldToLocal(hh.point.clone()), G.stage, st.rad, Math.max(amt / (n + 1) * 1.5, amt * .35)); } }
   paintAt(lp, G.stage, st.rad, amt); if (b) { b.last = lp; b.lastScr = { x, y }; }
+  showReticle(h, st);
   tmpN.copy(h.face.normal).transformDirection(h.object.matrixWorld).normalize();
   camera.matrixWorld.extractBasis(camRight, camUp, camFwd);
   hissSet(true, G.stage); G.sndT -= dt;
@@ -418,11 +574,13 @@ function work(x, y, dt) {
     const col = st.id === 'wash' ? 0xbfe6ff : COLORS[Math.max(0, G.colorIdx)][1];
     for (let i = 0; i < (st.id === 'wash' ? 7 : 6); i++) { const f = rnd(3.5, 5); const sp = toHit.clone().multiplyScalar(len * f).add(new THREE.Vector3(rnd(-.25, .25), rnd(-.25, .25), rnd(-.25, .25)).multiplyScalar(len)); spray.emit(nozzle.clone().addScaledVector(toHit, rnd(0, .2)), sp, col, rnd(.8, .97) / f, 1, st.id === 'wash' ? .7 : .5); }
     for (let i = 0; i < 4; i++) { const v = tmpN.clone().multiplyScalar(rnd(.8, 2.2)).add(new THREE.Vector3(rnd(-1.4, 1.4), rnd(-.2, 1.2), rnd(-1.4, 1.4))); spray.emit(h.point.clone().addScaledVector(tmpN, .05), v, st.id === 'wash' ? (Math.random() < .5 ? 0xd8f0ff : 0x7a6a52) : col, rnd(.3, .6), st.id === 'wash' ? 7 : 2, st.id === 'wash' ? .8 : .4); }
+    if (st.id === 'wash' && Math.random() < .7) spray.emit(h.point.clone().addScaledVector(tmpN, .04).add(new THREE.Vector3(rnd(-.18, .18), rnd(-.1, .12), rnd(-.18, .18))), new THREE.Vector3(rnd(-.05, .05), rnd(-.12, .02), rnd(-.05, .05)), 0xffffff, rnd(.9, 1.6), .15, .95); // suds that cling, then slide
     if (G.sndT <= 0 && st.id === 'wash') { SFX.scrub(); G.sndT = .09; }
+    if (G.sndT <= 0 && st.id === 'paint') { E.noise(.07, .018, 6500, .8); G.sndT = .08; }
   } else {
     tool.position.copy(h.point).addScaledVector(tmpN, .02 + (st.id === 'sand' ? Math.sin(performance.now() / 30) * .02 : 0)); tool.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), tmpN); tool.rotateY(st.id === 'polish' ? performance.now() / 40 : Math.sin(performance.now() / 70) * .3);
     if (st.id === 'sand') { if (Math.random() < .9) for (let i = 0; i < 3; i++) spray.emit(h.point.clone().addScaledVector(tmpN, .05), tmpN.clone().multiplyScalar(rnd(.5, 1.6)).add(new THREE.Vector3(rnd(-1, 1), rnd(0, 1), rnd(-1, 1))), Math.random() < .6 ? 0x8a4a22 : 0xc9b79a, rnd(.4, .8), 5, .8); if (G.sndT <= 0) { E.noise(.08, .05, rnd(700, 1300), 1.2); G.sndT = .07; } }
-    else { if (Math.random() < .5) spray.emit(h.point.clone().addScaledVector(tmpN, .12).add(new THREE.Vector3(rnd(-.3, .3), rnd(-.1, .3), rnd(-.3, .3))), new THREE.Vector3(0, .3, 0), 0xffffff, .5, 0, 1); if (G.sndT <= 0) { E.tone(rnd(1800, 2600), .09, 'sine', .025, rnd(-400, 400)); G.sndT = .11; } }
+    else { if (Math.random() < .5) spray.emit(h.point.clone().addScaledVector(tmpN, .12).add(new THREE.Vector3(rnd(-.3, .3), rnd(-.1, .3), rnd(-.3, .3))), new THREE.Vector3(0, .3, 0), 0xffffff, .5, 0, 1); if (Math.random() < .25) spray.emit(h.point.clone().addScaledVector(tmpN, .08), tmpN.clone().multiplyScalar(.4).add(new THREE.Vector3(rnd(-.3, .3), .2, rnd(-.3, .3))), 0xfff6c8, .7, 0, 1); if (G.sndT <= 0) { E.tone(rnd(1800, 2600), .09, 'sine', .025, rnd(-400, 400)); G.sndT = .11; } }
   }
 }
 
@@ -430,14 +588,14 @@ function work(x, y, dt) {
 function lampLevel(k) { lampLights.forEach(l => l.intensity = 30 + k * 26); lampBulbs.forEach(b => b.material.emissiveIntensity = 1.4 + k * 1.6); sun.intensity = LOOK.sun + k * .3; hemi.intensity = LOOK.hemi + k * .12; ledMat.emissiveIntensity = .35 + k * 1.6; R.bloom.strength = LOOK.bloom + k * .1; G && G.meshes.forEach(o => { if (o.userData.cls === 4) o.material.emissiveIntensity = k * 1.6; }); }
 function startReveal() {
   G.phase = 'reveal'; G.revealT = 0; G.az0 = G.az; G.yaw0 = G.yaw; hissSet(false); $('steps').hidden = true; hud(true); document.querySelectorAll('.jk-pal').forEach(e => e.remove());
-  const c = S.garage[G.V.id]; S.garage[G.V.id] = { color: COLORS[Math.max(0, G.colorIdx)][1], name: COLORS[Math.max(0, G.colorIdx)][0], t: Math.round(G.t) }; S.unlocked = Math.max(S.unlocked, Math.min(VEH.length, G.vi + 2)); if (S.best[G.V.id] == null || G.t < S.best[G.V.id]) S.best[G.V.id] = Math.round(G.t); save();
-  if (music) music.stop(); SFX.win(); setTimeout(() => G && E.say(T(`Wow! The ${G.V.name} is good as new.`, `¡Guau! ${G.V.es} quedó como nuevo.`)), 600);
+  const ci = Math.max(0, G.colorIdx); S.garage[G.V.id] = { color: COLORS[ci][1], name: COLORS[ci][0], colorIdx: ci, accent: G.accent ?? 9, style: G.style || 0, rim: G.rim || 0, t: Math.round(G.t) }; S.unlocked = Math.max(S.unlocked, Math.min(VEH.length, G.vi + 2)); if (S.best[G.V.id] == null || G.t < S.best[G.V.id]) S.best[G.V.id] = Math.round(G.t); save();
+  if (music) music.stop(); SFX.win(); setTimeout(() => G && E.say(G.order ? (orderMatch(G) ? T(`Perfect! ${G.order.who[0]} loves it. Exactly what they asked for!`, `¡Perfecto! A ${G.order.who[0]} le encanta. ¡Justo lo que pidió!`) : T(`${G.order.who[0]} loves it, even with your own twist!`, `¡A ${G.order.who[0]} le encanta, incluso con tu toque!`)) : T(`Wow! The ${G.V.name} is good as new.`, `¡Guau! ${G.V.es} quedó como nuevo.`)), 600);
 }
 function runReveal(dt) {
   G.revealT += dt; const t = G.revealT, T = 5.2; const k = clamp(t / 1.6, 0, 1);
   lampLevel(k * k * (3 - 2 * k));
   G.az = G.az0 + (1 - Math.cos(clamp(t / T, 0, 1) * Math.PI)) / 2 * Math.PI * 2; G.pitchT = .22 + Math.sin(clamp(t / T, 0, 1) * Math.PI) * .12;
-  G.zoom = 1 - Math.sin(clamp(t / T, 0, 1) * Math.PI) * (innerHeight > innerWidth ? -.06 : .12); // phones: the car already fills the width, so ease out a touch instead of pushing in
+  G.zoom = 1 + Math.sin(clamp(t / T, 0, 1) * Math.PI) * .06; // the fit is already tight, so the orbit eases out a touch instead of pushing in
   if (Math.random() < dt * 30) glintAtVoxel(G.ext[Math.floor(Math.random() * G.ext.length)], 0xffffff);
   if (t > .5 && !G.conf) { G.conf = true; for (let i = 0; i < 5; i++) P.burst(new THREE.Vector3(rnd(-2.5, 2.5), 2.5 + rnd(0, 1), rnd(-2.5, 2.5)), { color: [0xffd166, 0xffffff, COLORS[Math.max(0, G.colorIdx)][1], 0x9fe3cf, 0xff7b6b][i], n: 30, speed: 3, up: 5, size: .3, life: 1.6, gravity: 6, additive: false }); }
   if (t > T + .3) { G.phase = 'slider'; G.zoom = 1; showSlider(true); }
@@ -459,8 +617,10 @@ function showSlider(fromReveal) {
 }
 function finish() {
   cleanupUI(); G.split = -1; G.phase = 'done'; const V = G.V, cn = cname(Math.max(0, G.colorIdx));
-  const n = Object.keys(S.garage).length; const xp = 90 + G.vi * 6, coins = 25 + G.vi * 4;
-  const r = E.results({ gameId: 'junk', title: T(`${V.name} restored!`, `¡${V.es} restaurado!`), stats: [[T('Paint', 'Pintura'), cn], [T('Time', 'Tiempo'), fmt(G.t)], [T('Garage', 'Garaje'), `${n}/${VEH.length}`]], xp, coins, best: Math.round(G.t), bestLower: true, bestLabel: T('Fastest restoration (s)', 'Restauración más rápida (s)'), onAgain: () => { const nx = G.vi + 1 < VEH.length && G.vi + 1 < S.unlocked ? G.vi + 1 : G.vi; startVehicle(nx); }, share: `I restored a rusty ${V.name} to ${COLORS[Math.max(0, G.colorIdx)][0]} in Junkyard to Jewel (Inoa Games)! ${location.href.split('#')[0]}` });
+  const n = Object.keys(S.garage).length; let xp = 90 + G.vi * 4, coins = 25 + G.vi * 3;
+  const stats = [[T('Paint', 'Pintura'), G.style ? `${cn} · ${yname(G.style)}` : cn], [T('Time', 'Tiempo'), fmt(G.t)], [T('Garage', 'Garaje'), `${n}/${VEH.length}`]];
+  if (G.order && !S.orders.done.includes(G.order.n) && S.orders.day === todayKey()) { const ok = orderMatch(G); S.orders.done.push(G.order.n); S.ordersDone++; coins += ok ? 25 : 12; xp += ok ? 20 : 10; if (ok) S.stars++; save(); stats.push([`🧾 ${G.order.who[0]}`, ok ? T('⭐ Perfect match', '⭐ Justo lo pedido') : T('😊 Happy', '😊 Contento')]); }
+  const r = E.results({ gameId: 'junk', title: T(`${V.name} restored!`, `¡${V.es} restaurado!`), stats, xp, coins, best: Math.round(G.t), bestLower: true, bestLabel: T('Fastest restoration (s)', 'Restauración más rápida (s)'), onAgain: () => { const nx = G.vi + 1 < VEH.length && G.vi + 1 < S.unlocked ? G.vi + 1 : G.vi; startVehicle(nx); }, share: `I restored a rusty ${V.name} to ${COLORS[Math.max(0, G.colorIdx)][0]} in Junkyard to Jewel (Inoa Games)! ${location.href.split('#')[0]}` });
   const again = r.querySelector('[data-a=again]'); if (G.vi + 1 < VEH.length) again.textContent = T('Next junker →', 'Siguiente chatarra →');
   const gb = document.createElement('button'); gb.className = 'ig-btn ghost'; gb.textContent = T('Garage', 'Garaje'); gb.onclick = () => { r.remove(); gallery(G.vi); }; r.querySelector('.ig-row').prepend(gb);
   if (G.vi + 1 < VEH.length) E.toast(T(`Unlocked: ${VEH[G.vi + 1].name}!`, `¡Desbloqueado: ${VEH[G.vi + 1].es}!`), 2200);
@@ -472,11 +632,40 @@ function gallery(vi) {
   const done = VEH.map((v, i) => i).filter(i => S.garage[VEH[i].id]); if (!done.length) { E.toast(T('Restore a car first — it will park here!', '¡Restaura un coche primero y se aparcará aquí!'), 2200); title(); return; }
   if (!done.includes(vi)) vi = done[0]; startVehicle(vi, 'gallery'); lampLevel(1); hideHud();
   const cta = document.createElement('div'); cta.className = 'jk-cta'; const g = S.garage[VEH[vi].id];
-  cta.innerHTML = `<button class="ig-btn ghost" data-a="prev" aria-label="${T('Previous', 'Anterior')}">◀</button><button class="ig-btn ghost" data-a="menu">${T('Menu', 'Menú')}</button><button class="ig-btn" data-a="cmp">${T('Day 1 vs 30', 'Día 1 vs 30')}</button><button class="ig-btn ghost" data-a="next" aria-label="${T('Next', 'Siguiente')}">▶</button>`;
+  cta.innerHTML = `<button class="ig-btn ghost" data-a="prev" aria-label="${T('Previous', 'Anterior')}">◀</button><button class="ig-btn ghost" data-a="menu">${T('Menu', 'Menú')}</button><button class="ig-btn" data-a="cmp">${T('Day 1 vs 30', 'Día 1 vs 30')}</button><button class="ig-btn sun" data-a="photo">📷 ${T('Photo', 'Foto')}</button><button class="ig-btn ghost" data-a="next" aria-label="${T('Next', 'Siguiente')}">▶</button>`;
   document.body.appendChild(cta); const at = done.indexOf(vi);
   cta.querySelector('[data-a=prev]').onclick = () => gallery(done[(at - 1 + done.length) % done.length]); cta.querySelector('[data-a=next]').onclick = () => gallery(done[(at + 1) % done.length]);
   cta.querySelector('[data-a=menu]').onclick = () => title(); cta.querySelector('[data-a=cmp]').onclick = () => { cta.remove(); G.phase = 'slider'; showSlider(false); };
-  E.toast(`${vn(VEH[vi])} · ${T(g.name, (COLORS.find(c => c[0] === g.name) || [])[2])}`, 2000);
+  cta.querySelector('[data-a=photo]').onclick = () => photoCard();
+  E.toast(`${vn(VEH[vi])} · ${lookText({ colorIdx: g.colorIdx, style: g.style, accent: g.accent, rim: g.rim, rims: G.rims })} · ${at + 1}/${done.length}`, 2200);
+}
+// photo card: the restored vehicle (big) + its Day 1 junk state (inset), name, paint and who restored it; save or share as a PNG
+function snap(before) { const was = U.uSplit.value; if (before) U.uSplit.value = 1e6; reticle.visible = false; R.composer.render(); const url = renderer.domElement.toDataURL('image/png'); U.uSplit.value = was; return url; }
+function photoCard() {
+  if (!G) return; const g = S.garage[G.V.id] || {}; const after = snap(false), before = snap(true); SFX.click(); E.tone(1400, .05, 'square', .04); E.tone(900, .08, 'sine', .05, 0, .06);
+  const W = 1200, H = 800, c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+  const load = src => new Promise(r => { const im = new Image(); im.onload = () => r(im); im.onerror = () => r(null); im.src = src; });
+  Promise.all([load(after), load(before)]).then(([A, B]) => {
+    const gr = x.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#fff8ee'); gr.addColorStop(1, '#f3e2c4'); x.fillStyle = gr; x.fillRect(0, 0, W, H);
+    const cover = (im, dx, dy, dw, dh, r) => { if (!im) return; const s = Math.max(dw / im.width, dh / im.height), sw = dw / s, sh = dh / s; x.save(); x.beginPath(); x.roundRect(dx, dy, dw, dh, r); x.clip(); x.drawImage(im, (im.width - sw) / 2, (im.height - sh) / 2, sw, sh, dx, dy, dw, dh); x.restore(); };
+    cover(A, 40, 40, W - 80, 560, 28);
+    x.save(); x.shadowColor = 'rgba(0,0,0,.35)'; x.shadowBlur = 18; x.fillStyle = '#fff'; x.beginPath(); x.roundRect(W - 344, 404, 286, 178, 18); x.fill(); x.restore(); cover(B, W - 336, 412, 270, 162, 12);
+    x.fillStyle = 'rgba(27,36,48,.75)'; x.beginPath(); x.roundRect(W - 330, 418, 92, 30, 10); x.fill(); x.fillStyle = '#fff'; x.font = '800 18px Manrope, sans-serif'; x.fillText(T('DAY 1', 'DÍA 1'), W - 318, 440);
+    x.fillStyle = '#1b2430'; x.font = '900 46px Unbounded, Manrope, sans-serif'; x.fillText(vn(G.V), 48, 660);
+    const ci = g.colorIdx ?? 0; x.fillStyle = hexOf(COLORS[ci][1]); x.beginPath(); x.arc(64, 712, 16, 0, 7); x.fill(); x.strokeStyle = '#1b2430'; x.lineWidth = 2; x.stroke();
+    x.fillStyle = '#4c5868'; x.font = '700 26px Manrope, sans-serif'; x.fillText(lookText({ colorIdx: ci, style: g.style, accent: g.accent, rim: g.rim, rims: G.rims }), 92, 721);
+    const who = E.hero().name; x.font = '700 22px Manrope, sans-serif'; x.fillText(`${who ? T('Restored by ', 'Restaurado por ') + who + ' · ' : ''}${T('Junkyard to Jewel', 'De Chatarra a Joya')} · Inoa Games`, 48, 768);
+    x.fillStyle = '#e8b52a'; x.font = '900 40px sans-serif'; x.fillText('✨', W - 96, 680);
+    const url = c.toDataURL('image/png'); showCard(url);
+  });
+}
+function showCard(url) {
+  document.querySelectorAll('.jk-photo').forEach(e => e.remove()); const d = document.createElement('div'); d.className = 'ig-screen jk-photo';
+  d.innerHTML = `<div class="ig-card"><div class="ig-kicker">📷 ${T('Photo card', 'Tarjeta con foto')}</div><img alt="${vn(G.V)}" src="${url}"><div class="ig-row"><button class="ig-btn ghost" data-a="close">${T('Close', 'Cerrar')}</button><a class="ig-btn" data-a="save" download="junkyard-${G.V.id}.png" href="${url}">${T('Save', 'Guardar')}</a>${navigator.share ? `<button class="ig-btn sun" data-a="share">${T('Share', 'Compartir')}</button>` : ''}</div></div>`;
+  document.body.appendChild(d); const close = () => d.remove(); setTimeout(() => d.querySelector('[data-a=save]')?.focus(), 50);
+  d.querySelector('[data-a=close]').onclick = close; d.querySelector('[data-a=save]').addEventListener('click', () => E.toast(T('Saved!', '¡Guardada!'), 1200));
+  const sh = d.querySelector('[data-a=share]'); if (sh) sh.onclick = async () => { try { const blob = await (await fetch(url)).blob(); const file = new File([blob], `junkyard-${G.V.id}.png`, { type: 'image/png' }); const data = { title: 'Junkyard to Jewel', text: T(`My restored ${G.V.name}!`, `¡Mi ${G.V.es} restaurado!`) }; if (navigator.canShare && navigator.canShare({ files: [file] })) data.files = [file]; await navigator.share(data); } catch (e) { } };
+  E.say(T('Here is your photo card. Save it or share it!', '¡Aquí está tu tarjeta con foto! Guárdala o compártela.'), { once: true });
 }
 function hideHud() { if (hudEl) { hudEl.pad.hidden = true; document.querySelector('.ig-top').hidden = true; } $('steps').hidden = true; }
 
@@ -485,22 +674,35 @@ function hideHud() { if (hudEl) { hudEl.pad.hidden = true; document.querySelecto
 function freeBand() {
   let top = 64, bot = innerHeight - 24; const q = sel => { const e = document.querySelector(sel); if (!e || e.hidden || e.offsetParent === null && getComputedStyle(e).position !== 'fixed') return null; const r = e.getBoundingClientRect(); return r.height ? r : null; };
   const hudR = q('.ig-top'); if (hudR && G.mode === 'play') top = Math.max(top, hudR.bottom + 6); const stR = q('#steps'); if (stR && innerHeight > innerWidth) top = Math.max(top, stR.bottom + 4);
-  const pad = q('.ig-pad .ig-btns'); if (pad && G.mode === 'play' && innerHeight > innerWidth) bot = Math.min(bot, pad.top - 6); const pal = q('.jk-pal'); if (pal && innerHeight > innerWidth) bot = Math.min(bot, pal.top - 6);
+  const pad = q('.ig-pad .ig-btns'); if (pad && G.mode === 'play' && innerHeight > innerWidth) bot = Math.min(bot, pad.top - 6); const pal = q('.jk-pal'); if (pal) bot = Math.min(bot, pal.top - 6); const cta = q('.jk-cta'); if (cta) bot = Math.min(bot, cta.top - 6);
   if (bot - top < innerHeight * .35) { top = 64; bot = innerHeight - 24; } return { top, bot };
 }
 function fitCam(snap) {
-  const portrait = innerHeight > innerWidth; const vf = THREE.MathUtils.degToRad(camera.fov / 2), hf = Math.atan(Math.tan(vf) * camera.aspect);
-  if (!portrait) { const r = G.radius * .92; G.dist = r / Math.sin(Math.min(vf * .92, hf)) * 1.02; G.lookOff = 0; }
-  else {
-    // phones: frame the spinning car by its footprint (widest = the diagonal) instead of a loose bounding sphere, and centre it in the free band
-    const sz = G.grid.size, rh = Math.hypot(sz.x, sz.z) / 2 - .12, hy = sz.y - .24, tv = Math.tan(vf), th = tv * camera.aspect; const band = freeBand(), bandN = (band.bot - band.top) / innerHeight;
-    const pt = G.pitchT, vext = hy * Math.cos(pt) + 2 * rh * Math.sin(pt);
-    G.dist = Math.max(rh / (th * .97), vext / 2 / (tv * bandN * .9), 4); G.lookOff = 1 - (band.top + band.bot) / innerHeight; // NDC: + moves the car up
-  }
+  // exact perspective fit of the vehicle's 8 box corners at the current turntable angle (± a little, so spinning doesn't pump), in
+  // the screen band the HUD / step chips / palette leave free: a corner at lateral x and depth z (toward the camera) needs
+  // d >= |x| / (tan(half fov) * margin) + z. The camera auto-zooms as the vehicle turns, so a nose-on vehicle is framed as big as a
+  // side-on one (phones were ~45-60% of the width when turned; landscape used a loose bounding sphere, ~27% of the width).
+  const portrait = innerHeight > innerWidth; const vf = THREE.MathUtils.degToRad(camera.fov / 2);
+  const now = performance.now(); if (snap || !G.band || now - (G.bandAt || 0) > 400) { G.band = freeBand(); G.bandAt = now; }
+  const sz = G.grid.size, hx = sz.x / 2 - .08, hz = sz.z / 2 - .08, tv = Math.tan(vf), th = tv * camera.aspect; const band = G.band, bandN = (band.bot - band.top) / innerHeight;
+  const mw = portrait ? .95 : .8, mh = portrait ? .9 : .86;
+  const pt = G.pitchT, az = G.az, sa = Math.sin(az), ca = Math.cos(az), sp = Math.sin(pt), cp = Math.cos(pt);
+  const y0 = -sz.y / 2 + .1, y1 = sz.y / 2 - .14, pts = [];
+  // the reveal orbits the camera a full turn in 5 s: frame for every angle at once so the eased distance never lags behind and clips
+  const offs = G.phase === 'reveal' ? [0, .79, 1.57, 2.36, 3.14, 3.93, 4.71, 5.5] : [-.1, 0, .1];
+  for (const o of offs) { const ps = G.yaw + (G.car.rotation.y || 0) + o, c = Math.cos(ps), sn = Math.sin(ps);
+    for (const lx of [-hx, hx]) for (const lz of [-hz, hz]) for (const ly of [y0, y1]) { const wx = lx * c + lz * sn, wz = -lx * sn + lz * c;
+      pts.push([Math.abs(wx * ca - wz * sa), wx * sa * cp + ly * sp + wz * ca * cp, -wx * sa * sp + ly * cp - wz * ca * sp]); } }
+  // bisect the closest distance where every corner fits sideways and the vertical span fits the band (the span, not each corner, so
+  // the near bottom corners that perspective stretches don't push the camera back); then centre that span in the band
+  const span = d => { let lo = 1e9, hi = -1e9, w = 0; for (const [lat, dep, up] of pts) { const k = 1 / Math.max(.05, d - dep); w = Math.max(w, lat * k); lo = Math.min(lo, up * k); hi = Math.max(hi, up * k); } return [w, lo, hi]; };
+  let a = 2, b = 60; for (let i = 0; i < 22; i++) { const m = (a + b) / 2, [w, lo, hi] = span(m); if (w <= th * mw && (hi - lo) / 2 <= tv * bandN * mh && pts.every(q => m - q[1] > .3)) b = m; else a = m; }
+  const [, lo, hi] = span(b); G.dist = Math.max(b, 3.4);
+  G.lookOff = 1 - (band.top + band.bot) / innerHeight - (hi + lo) / 2 / tv; // NDC: + moves the car up
   if (snap || G.distNow == null) { G.pitch = G.pitchT; G.distNow = G.dist; G.offNow = G.lookOff; }
 }
 function updateCamera(dt) {
-  if (!G) return; G.pitch = damp(G.pitch, G.pitchT, .02, dt);
+  if (!G) return; G.pitch = damp(G.pitch, G.pitchT, .02, dt); fitCam(false);
   if (G.sliderAnim >= 0 && G.phase === 'slider') { G.sliderAnim += dt; const t = G.sliderAnim; if (t < 2.4) G.setSplit(.5 + Math.sin(t / 2.4 * Math.PI * 2) * .35); else { G.setSplit(.5); G.sliderAnim = -1; } }
   const tgt = G.car.localToWorld(G.center.clone()); tgt.y = Math.max(tgt.y * .9, .9);
   G.distNow = damp(G.distNow ?? G.dist, G.dist, .01, dt); G.offNow = damp(G.offNow ?? 0, G.lookOff || 0, .01, dt);
@@ -511,8 +713,8 @@ function updateCamera(dt) {
 }
 addEventListener('resize', () => { if (G) fitCam(false); });
 // re-frame when the language changes (text widths) or bottom UI appears
-addEventListener('inoa:settings', e => { if (!e.detail || e.detail.key !== 'lang') return; hudKey = ''; hud(true); steps(); if (document.querySelector('.ig-title')) title(); });
-function pause() { if (!G || G.paused || G.mode !== 'play' || G.phase !== 'play') return; G.paused = true; G.brush = null; hissSet(false); music && music.stop(); E.pauseMenu({ onResume: () => { G.paused = false; music = E.music(E.SONGS.chill); }, onRestart: () => startVehicle(G.vi), extra: `<p class="ig-sub">${vn(G.V)} · ${T('step', 'paso')} ${G.stage + 1}/4 · ${sname(STAGES[G.stage])}</p>` }); }
+addEventListener('inoa:settings', e => { if (!e.detail || e.detail.key !== 'lang') return; hudKey = ''; hud(true); steps(); if (document.querySelector('.jk-pal')) showPalette(); if (document.querySelector('.ig-title')) title(); });
+function pause() { if (!G || G.paused || G.mode !== 'play' || G.phase !== 'play') return; G.paused = true; G.brush = null; hissSet(false); music && music.stop(); E.pauseMenu({ onResume: () => { G.paused = false; music = E.music(E.SONGS.chill); }, onRestart: () => startVehicle(G.vi, 'play', G.order), extra: `<p class="ig-sub">${vn(G.V)} · ${T('step', 'paso')} ${G.stage + 1}/4 · ${sname(STAGES[G.stage])}</p>` }); }
 document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
 
 /* ---------------- title ---------------- */
@@ -520,22 +722,31 @@ function title() {
   cleanupUI(); document.querySelectorAll('.ig-screen').forEach(e => e.remove()); if (music) music.stop(); music = null;
   startVehicle(Math.min(S.sel, S.unlocked - 1), 'attract'); G.phase = 'gallery'; hideHud(); lampLevel(.3);
   const vs = VEH.map((v, i) => { const g = S.garage[v.id]; const lock = i >= S.unlocked; return `<button data-i="${i}" class="${i === S.sel ? 'on' : ''}" ${lock ? 'disabled' : ''}>${lock ? '🔒 ' : g ? `<i style="background:#${new THREE.Color(g.color).getHexString(THREE.SRGBColorSpace)}"></i>` : ''}${vn(v)}<small>${lock ? T('Restore the one before', 'Restaura el anterior') : g ? T('Restored · ', 'Restaurado · ') + T(g.name, (COLORS.find(c => c[0] === g.name) || [])[2]) : T(v.story, v.storyEs)}</small></button>`; }).join('');
-  const n = Object.keys(S.garage).length;
-  const extra = `<div class="jk-extra"><div><div class="jk-lbl">${T('Pick a junker', 'Elige una chatarra')}</div><div class="pick" id="pV">${vs}</div></div><div class="ig-row"><button class="ig-chipbtn" id="gal" ${n ? '' : 'disabled'}>🏁 ${T('Garage gallery', 'Galería del garaje')} (${n}/${VEH.length})</button></div></div>`;
-  const d = E.titleScreen({ title: 'Junkyard to Jewel', kicker: T('Inoa Games · Restoration 3D', 'Inoa Games · Restauración 3D'), lead: T('Rescue rusty old rides. Wash, sand, paint and polish them back to showroom shine.', 'Rescata coches viejos y oxidados. Lávalos, líjalos, píntalos y púlelos hasta que brillen como nuevos.'), how: [['🚿', T('Drag across the car to wash, sand, paint and polish', 'Arrastra sobre el coche para lavar, lijar, pintar y pulir')], ['🔄', T('Drag the floor or tap ⟲ ⟳ to spin the turntable', 'Arrastra el suelo o toca ⟲ ⟳ para girar la plataforma')], ['⌨️', T('Arrows / stick spin and tilt · hold Space or A to work', 'Flechas / palanca giran e inclinan · mantén Espacio o A para trabajar')]], extra, onPlay: () => startVehicle(S.sel) });
+  const n = Object.keys(S.garage).length; const ords = dailyOrders();
+  const os = ords.map(o => `<button data-o="${o.n}" ${o.done ? 'disabled' : ''}><span class="who">${o.who[1]}</span><span><b>${o.who[0]}</b> · ${vn(VEH[o.vi])}<small>${o.done ? T('Done today ✅', 'Hecho hoy ✅') : `<i style="background:${hexOf(COLORS[o.color][1])}"></i>${orderLook(o)}`}</small></span></button>`).join('');
+  const extra = `<div class="jk-extra"><div><div class="jk-lbl">🧾 ${T('Shop orders today', 'Pedidos de hoy')} · ⭐ ${S.stars}</div><div class="jk-orders" id="pO">${os}</div></div><div><div class="jk-lbl">${T('Pick a junker', 'Elige una chatarra')}</div><div class="pick" id="pV">${vs}</div></div><div class="ig-row"><button class="ig-chipbtn" id="gal" ${n ? '' : 'disabled'}>🏁 ${T('Garage gallery', 'Galería del garaje')} (${n}/${VEH.length})</button></div></div>`;
+  const d = E.titleScreen({ title: 'Junkyard to Jewel', kicker: T('Inoa Games · Restoration 3D', 'Inoa Games · Restauración 3D'), lead: T('Rescue rusty old rides. Wash, sand, paint and polish them back to showroom shine.', 'Rescata coches viejos y oxidados. Lávalos, líjalos, píntalos y púlelos hasta que brillen como nuevos.'), how: [['🚿', T('Drag across the vehicle to wash, sand, paint and polish — the ring shows your brush', 'Arrastra sobre el vehículo para lavar, lijar, pintar y pulir: el aro muestra tu pincel')], ['🔄', T('Drag the floor, use two fingers or tap ⟲ ⟳ to spin the turntable', 'Arrastra el suelo, usa dos dedos o toca ⟲ ⟳ para girar la plataforma')], ['🎨', T('Paint: pick a colour, a design (stripes, stars…) and wheels', 'Pintura: elige color, diseño (rayas, estrellas…) y ruedas')], ['⌨️', T('Arrows / stick spin and tilt · hold Space or A to work · Shift/B next swatch · E/X next tab', 'Flechas / palanca giran e inclinan · mantén Espacio o A para trabajar · Shift/B siguiente muestra · E/X siguiente pestaña')]], extra, onPlay: () => startVehicle(S.sel) });
   d.querySelectorAll('#pV button').forEach(b => b.onclick = () => { S.sel = +b.dataset.i; save(); d.querySelectorAll('#pV button').forEach(x => x.classList.toggle('on', x === b)); startVehicle(S.sel, 'attract'); G.phase = 'gallery'; hideHud(); lampLevel(.3); });
   d.querySelector('#gal').onclick = () => gallery(S.sel);
+  d.querySelectorAll('#pO button').forEach(b => b.onclick = async () => { const o = ords[+b.dataset.o]; if (!o || o.done) return; E.audio(); if (E.platformStart && !(await E.platformStart())) return; d.remove(); startVehicle(o.vi, 'play', o); });
   setTimeout(() => d.querySelector('[data-a=play]')?.focus(), 50);
 }
 
 
 // gamepad A presses the main button of whichever menu card is open; Play gets keyboard focus
-let padPrevA = false;
-function menuPad() { const pads = navigator.getGamepads ? [...navigator.getGamepads()].filter(Boolean) : []; const a = pads.some(p => p.buttons[0] && p.buttons[0].pressed); if (a && !padPrevA) { const b = document.querySelector('.ig-screen [data-a=play], .ig-screen [data-a=again], .ig-screen [data-a=resume], .jk-cta [data-a=go]'); if (b) b.click(); } padPrevA = a; }
+// (the engine's menuNav moves a focus ring over any open card's buttons — orders, junkers, photo card — and A clicks the focused one;
+// with nothing focused, A presses the main button). In the garage: LB/RB browse, Y takes a photo, B goes back.
+const padPrev = {};
+function menuPad() { const pads = navigator.getGamepads ? [...navigator.getGamepads()].filter(Boolean) : []; const btn = i => pads.some(p => p.buttons[i] && p.buttons[i].pressed); const edge = i => { const v = btn(i), was = padPrev[i]; padPrev[i] = v; return v && !was; };
+  const a = edge(0), b = edge(1), y = edge(3), lb = edge(4), rb = edge(5);
+  const ae = document.activeElement, focusedInCard = ae && ae.closest && ae.closest('.ig-screen');
+  if (a && !focusedInCard) { const el = document.querySelector('.ig-screen [data-a=play], .ig-screen [data-a=again], .ig-screen [data-a=resume], .jk-cta [data-a=go], .jk-cta [data-a=back]'); if (el) el.click(); }
+  if (!document.querySelector('.ig-screen') && G && G.mode === 'gallery') { const q = k => document.querySelector(`.jk-cta [data-a=${k}]`); if (lb) q('prev')?.click(); if (rb) q('next')?.click(); if (y) q('photo')?.click(); if (b) (q('menu') || q('back'))?.click(); } }
+E.menuNav && E.menuNav();
 title(); ld.done(); window.__READY = true;
 E.loop((dt) => { menuPad(); update(dt); updateCamera(dt); R.render(dt); });
 window.__GAME = {
-  get G() { return G; }, S, VEH, STAGES, COLORS, update, startVehicle, title, gallery, finish, setColor, progress: ch => progress(ch),
+  get G() { return G; }, S, VEH, STAGES, COLORS, STYLES, RIMS, update, startVehicle, title, gallery, finish, setColor, setLook, cyclePal, cycleTab, dailyOrders, photoCard, loadSave, fitCam, cam: updateCamera, progress: ch => progress(ch),
   // test hook: scrub the current stage over a fraction of exterior voxels (same paint path as the pointer)
   autoScrub(frac = 1) { if (!G || G.phase !== 'play') return 0; if (G.stage === 2 && G.colorIdx < 0) setColor(3); const st = STAGES[G.stage], g = G.grid, w = G.W[G.stage]; const p = new THREE.Vector3(); let n = 0; for (let i = 0; i < G.ext.length; i += 3) { if (!w[i] || Math.random() > frac) continue; const k = G.ext[i]; const x = k % g.nx, y = Math.floor(k / g.nx) % g.ny, z = Math.floor(k / (g.nx * g.ny)); p.set(g.min.x + (x + .5) * g.cell, g.min.y + (y + .5) * g.cell, g.min.z + (z + .5) * g.cell); paintAt(p, G.stage, st.rad * .8, 1); n++; } G.prog[G.stage] = progress(G.stage); return G.prog[G.stage]; },
   carScreen: () => E.toScreen(G.car.localToWorld(G.center.clone()), camera), U,
@@ -543,7 +754,9 @@ window.__GAME = {
   hitScreen: (x, y) => { const h = hitCar(x, y); return h ? E.toScreen(h.point, camera) : null; },
   maskAt: (x, y, ch) => { const h = hitCar(x, y); if (!h) return -1; const g = G.grid, lp = G.car.worldToLocal(h.point.clone()); const vx = Math.floor((lp.x - g.min.x) / g.cell), vy = Math.floor((lp.y - g.min.y) / g.cell), vz = Math.floor((lp.z - g.min.z) / g.cell); let m = 0; for (let dz = -1; dz <= 1; dz++) for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const X = vx + dx, Y = vy + dy, Z = vz + dz; if (X < 0 || Y < 0 || Z < 0 || X >= g.nx || Y >= g.ny || Z >= g.nz) continue; m = Math.max(m, G.mask[(X + Y * g.nx + Z * g.nx * g.ny) * 4 + ch]); } return m; },
   carRectPx: () => { const pts = [], v = new THREE.Vector3(); for (const o of G.meshes) { const pa = o.geometry.attributes.position, st = Math.max(1, Math.floor(pa.count / 400)); for (let i = 0; i < pa.count; i += st) pts.push(E.toScreen(v.fromBufferAttribute(pa, i).applyMatrix4(o.matrixWorld), camera)); } const xs = pts.map(p => p.x), ys = pts.map(p => p.y); return { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys), vw: innerWidth, vh: innerHeight }; },
-  brushing: () => !!(G && G.brush)
+  brushing: () => !!(G && G.brush), reticle: () => reticle.visible, ptrMode: () => ptr && ptr.mode,
+  // test hook: paint the current stage exactly where a screen ray hits (reachability sweeps)
+  paintScreen: (x, y) => { const h = hitCar(x, y); if (!h) return false; paintAt(G.car.worldToLocal(h.point.clone()), G.stage, STAGES[G.stage].rad, 1); return true; }
 };
 </script>
 </body></html>

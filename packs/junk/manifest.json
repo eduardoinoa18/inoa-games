@@ -12,11 +12,19 @@
   "tractor": "models/tractor.glb?h=4ff7a9a1",
   "ice-cream-truck": "models/ice-cream-truck.glb?h=253f340c",
   "barrel": "models/barrel.glb?h=2b75ee0a",
-  "shovel": "models/shovel.glb?h=5ee442b0"
+  "shovel": "models/shovel.glb?h=5ee442b0",
+  "boat-small": "models/boat-small.glb?h=95a1addc",
+  "suv": "models/suv.glb?h=63a9d272",
+  "race-car": "models/race-car.glb?h=42b88dc0",
+  "delivery-truck": "models/delivery-truck.glb?h=77d10630",
+  "ambulance": "models/ambulance.glb?h=65d07053",
+  "firetruck": "models/firetruck.glb?h=4b213acd",
+  "race-futrure": "models/race-futrure.glb?h=e544efa0",
+  "ship-light": "models/ship-light.glb?h=701cb38e"
  },
  "hdri": {
   "studio": "hdri/studio.hdr?h=b583ab9f"
  },
  "lazy": [],
- "bytes": 851706
+ "bytes": 1199158
 }
