@@ -1,13 +1,12 @@
-// Inoa Games networking — party rooms over WebRTC (PeerJS), no backend needed.
+// Inoa Games networking — party rooms: Supabase Realtime (signaling + relay) + WebRTC data channels (engine/rtc.js).
 // One device HOSTS a room (TV/laptop running a game). Phones JOIN as controllers ("pad")
 // or as online players with their own screen ("player"). Room code = 4 letters.
 // The host keeps the same room across page loads (hub -> game -> hub): the code lives in
 // sessionStorage and the host re-claims the same peer id; pads auto-reconnect.
 //
-// Signaling: PeerJS cloud (0.peerjs.com) by default. Override for tests/self-hosting with
-// window.INOA_NET = {host, port, secure, path} or localStorage 'inoa.net'.
-
-const PEERJS = 'https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js';
+// Signaling: the project's Supabase Realtime (URL + public key from /platform.json). Override for tests with
+// window.INOA_NET = {realtimeUrl, apikey, config:{iceServers}} or localStorage 'inoa.net'.
+import { Peer } from './rtc.js';
 const QRJS = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js';
 const PREFIX = 'inoa-v1-';
 const COLORS = ['#ff6b6b', '#5bb8ff', '#ffd166', '#2fbf8a', '#c9b8ff', '#ff9a3c', '#ff8ad8', '#8be0ff'];
@@ -16,6 +15,17 @@ const ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; // no I/O to avoid confusion
 
 const scripts = {};
 function loadScript(src, globalName) { if (window[globalName]) return Promise.resolve(window[globalName]); if (!scripts[src]) scripts[src] = new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.async = true; s.onload = () => res(window[globalName]); s.onerror = () => rej(new Error('Could not load ' + src)); document.head.appendChild(s); }); return scripts[src]; }
+let _plat = null;
+async function platformCfg() {
+  if (_plat) return _plat;
+  try { const r = await fetch(new URL('../platform.json', import.meta.url), { cache: 'no-cache' }); const j = r.ok ? await r.json() : {}; _plat = j; } catch (e) { _plat = {}; }
+  return _plat;
+}
+async function rtcOpts() {
+  const c = cfg(); if (c.realtimeUrl) return c;
+  const p = await platformCfg(); const base = String(p.supabaseUrl || '').replace(/\/$/, '');
+  return Object.assign({}, c, { realtimeUrl: base ? base.replace(/^http/, 'ws') + '/realtime/v1/websocket' : '', apikey: p.realtimeKey || p.supabaseAnonKey || '' });
+}
 function cfg() { let o = window.INOA_NET; if (!o) { try { o = JSON.parse(localStorage.getItem('inoa.net') || 'null'); } catch (e) { } } return Object.assign({ debug: 0, config: { iceServers: [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] },
   // TURN relay (PeerJS's free default servers): needed when the phone and the screen can't reach each other directly —
   // phone on mobile data, Wi-Fi that isolates devices (guest/mesh/school networks), strict NAT. Without it joining fails.
@@ -45,6 +55,8 @@ export const net = {
   on, off,
   get joinUrl() { return this.code ? new URL('pad.html?r=' + this.code, location.href.replace(/games\/[^/]*$/, '').replace(/[^/]*$/, '')).href : ''; },
   pads(kind) { return this.players.filter(p => p.connected && (!kind || p.kind === kind)); },
+  // 'direct' (WebRTC, lowest lag) or 'relay' (through Supabase Realtime) for this phone's link; host: 'direct' if any phone is direct
+  get link() { const cs = this.role === 'client' ? [clientConn] : [...hostConns.values()]; const live = cs.filter(c => c && c.open); if (!live.length) return null; return live.some(c => !c.relayed) ? 'direct' : 'relay'; },
   // Live input of a slot ({x,y,a,b,c,d,pause}); zeroed if the phone went quiet (>1.5 s, it heartbeats every 200 ms).
   pad(slot) { const p = this.players.find(p => p.slot === slot && p.connected); if (!p) return null; if (p.input.at && performance.now() - p.input.at > 1500) return blankInput(); return p.input; },
   // Online-capable page for players with their own screen (e.g. games/drift.html?join=CODE)
@@ -54,7 +66,7 @@ let peer = null, hostConns = new Map(), clientConn = null, retryTimer = 0, sendT
 
 /* ---------------- host ---------------- */
 async function openPeer(id) {
-  const Peer = await loadScript(PEERJS, 'Peer'); const c = cfg();
+  const c = await rtcOpts();
   return new Promise((resolve, reject) => {
     const p = id ? new Peer(id, c) : new Peer(c); let done = false;
     p.on('open', () => { done = true; resolve(p); });
@@ -171,7 +183,8 @@ export function sendInput(state) {
   const st = Object.assign({}, state, { x: q(state.x), y: q(state.y) }), s = JSON.stringify(st), now = performance.now();
   if (s === lastSent && now - sendTimer < 250) return;   // unchanged: only the heartbeat goes out
   const stickOnly = lastIn && ['a', 'b', 'c', 'd', 'pause'].every(k => !!lastIn[k] === !!st[k]);
-  if (stickOnly && now - sendTimer < 25) { clearTimeout(stickTimer); stickTimer = setTimeout(() => sendInput(st), 25 - (now - sendTimer)); return; }
+  const gap = clientConn && clientConn.relayed ? 60 : 25;   // relay (through Supabase): ~16 Hz stick updates keep within the free plan's message rate
+  if (stickOnly && now - sendTimer < gap) { clearTimeout(stickTimer); stickTimer = setTimeout(() => sendInput(st), gap - (now - sendTimer)); return; }
   clearTimeout(stickTimer); lastSent = s; lastIn = st; sendTimer = now;
   if (clientConn && clientConn.open) try { clientConn.send({ t: 'in', s: st }); } catch (e) { }
 }

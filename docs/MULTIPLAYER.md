@@ -1,8 +1,11 @@
 # Multiplayer: phones as controllers + online play
 
-Everything runs on the static site. There is no game server: devices talk to each other directly over
-**WebRTC data channels** using **PeerJS** (loaded from jsDelivr). The free PeerJS cloud signaling server
-(`0.peerjs.com`) only introduces the devices; after that, game data flows device to device.
+Everything runs on the static site plus the project's **Supabase Realtime** (`engine/rtc.js`, since 2026-10-15; before
+that the free PeerJS cloud server, which phones often could not reach). Realtime introduces the devices (room = channel,
+presence = who is in it) and a connection opens over the Realtime **relay** at once; it then upgrades to a direct
+**WebRTC data channel** when the network allows (same Wi-Fi: a few ms; `net.link === 'direct'`, ⚡ on the phone). If a
+direct link never forms (mobile data, isolating Wi-Fi), play continues over the relay (☁, ~50–150 ms, stick input capped
+at ~16 Hz to stay inside the free plan's message rate). Config comes from `platform.json` (`supabaseUrl`, `realtimeKey`).
 
 ## How players use it
 | Who | What they do |
@@ -33,10 +36,10 @@ Everything runs on the static site. There is no game server: devices talk to eac
   - UI: `partyWidget({hint, online})` (floating 📱 chip; `E.shell()` adds it automatically, pass `party:false` to hide), `partyPanel({hint, online})`, `qrSvg(text)`.
 - Phone layouts (`setLayout`): `{type:'gamepad', labels:{A..D}, buttons:['A','B','C','D']}`, `{type:'buzzer', label, question, choices}`, `{type:'choices', question, choices, out, locked}`, `{type:'text', text}`. Phones send `{t:'in', s:{x,y,a,b,c,d,pause}}` (on change + 200 ms heartbeat), `{t:'buzz'}`, `{t:'choice', i}`.
 - Engine input: `E.createInput({pads:'any'|'first'|'separate'})`; `input.pad(slot)` returns `{x,y,a,b,c,d,pause,aPressed…}` once per frame per slot.
-- Self-hosting signaling or adding TURN: set `window.INOA_NET = {host, port, path, secure, config:{iceServers:[…]}}` before the engine loads, or `localStorage['inoa.net']` (same JSON).
+- Override (tests / another project): `window.INOA_NET = {realtimeUrl, apikey, config:{iceServers:[…]}}` before the engine loads, or `localStorage['inoa.net']` (same JSON).
 
 ## Tests
-`npm run test:party` runs `test/party.js` with a local PeerServer (`peer` package) and several browser
+`npm run test:party` runs `test/party.js` with a local Realtime look-alike (`test/party/mock-realtime.js`) and several browser
 pages (host + phones + online guest): `party_pad` (QR join, menu nav, P1 input, pause, room survives
 navigation), `party_drift` (online race to the finish), `party_trivia`, `party_games` (Depths, Tide
 Lines, Draw), `party_pact`.
@@ -50,3 +53,8 @@ Lines, Draw), `party_pact`.
   server-side validation).
 - Host tab must stay in front: browsers slow down hidden tabs, which pauses the host's simulation.
 - All ages: every new phone must be approved on the big screen (Allow/Deny; approved phones rejoin silently when the host changes games; a denied phone stops trying). There is no chat; names are 14 characters max and only shown inside the room.
+
+## Joining
+Phones join by scanning the QR with the camera app, by **📷 Scan QR code** on `pad.html` (in-app scanner: the phone's
+BarcodeDetector, else jsQR), from the hub's Party section (📷 Scan), or by typing the 4 letters. Every new phone needs
+**Allow** on the big screen.

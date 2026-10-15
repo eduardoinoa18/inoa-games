@@ -13,11 +13,11 @@
     "test:api": "node test/api.test.js",
     "test:platform": "ALLOW_4XX=1 node test/run.js account.html test/platform.js",
     "test:admin": "ALLOW_4XX=1 node test/run.js admin.html test/admin.js",
-    "app:www": "node tools/build_app_www.mjs",
-    "app:sync": "node tools/build_app_www.mjs && cd app && npx cap sync",
+    "app:www": "node tools/build_app_www.mjs --site https://inoa-games.vercel.app",
+    "app:sync": "node tools/build_app_www.mjs --site https://inoa-games.vercel.app && cd app && npx cap sync",
     "store:shots": "PORT=8890 node test/run.js index tools/store_shots.js",
     "test:beta": "node test/run.js junk test/beta.js",
-    "test:party": "for s in pad hub drift trivia games pact approve; do node test/party.js test/party_$s.js; done"
+    "test:party": "for s in pad hub drift trivia games pact approve relay; do node test/party.js test/party_$s.js; done"
   },
   "devDependencies": {
     "@gltf-transform/core": "4.1.1",

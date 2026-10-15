@@ -68,5 +68,7 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>The camera scans the party QR code on the big screen so your phone can join as a controller. Nothing is recorded.</string>
 </dict>
 </plist>

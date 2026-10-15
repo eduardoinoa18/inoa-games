@@ -25,7 +25,7 @@ const log = (...a) => console.log('[app:www]', ...a);
 const die = (m) => { console.error('[app:www] ERROR:', m); process.exit(1); };
 
 /* ---------- 1. what to copy ---------- */
-const vercelIgnore = fs.existsSync(path.join(ROOT, '.vercelignore')) ? fs.readFileSync(path.join(ROOT, '.vercelignore'), 'utf8').split(/\r?\n/).map(s => s.trim()).filter(s => s && !s.startsWith('#')) : [];
+const vercelIgnore = fs.existsSync(path.join(ROOT, '.vercelignore')) ? fs.readFileSync(path.join(ROOT, '.vercelignore'), 'utf8').split(/\r?\n/).map(s => s.trim()).filter(s => s && !s.startsWith('#')).map(s => s.replace(/^\//, '').replace(/\/$/, '')) : []; // root-anchored '/x' and dir 'x/' patterns → 'x'
 const EXTRA_EXCLUDE = ['.git', '.gitignore', '.vercelignore', '.vercel', '.claude', '.github', 'app', 'store', 'api', 'node_modules', 'vercel.json',
   'admin.html',        // owner dashboard: web only (server-side refuses non-admins anyway)
   'sw.js'];            // Capacitor serves files from the app bundle; no service worker needed
