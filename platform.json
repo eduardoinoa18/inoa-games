@@ -1,5 +1,5 @@
 {
-  "enabled": false,
+  "enabled": true,
   "mode": "beta",
   "guestPlay": true,
   "billing": false,
@@ -9,5 +9,5 @@
   "supabaseAnonKey": "sb_publishable_MsoR3larxEHPUHlZmaTodg_llPWFJWd",
   "stripeMode": "test",
   "freeDailyStarts": 3,
-  "note": "Public values only. mode 'beta' = everything free while testing (server: ig_app_config.access_mode = 'beta_free'); guests can play without an account; billing UI off (and never shown in the native apps). Shared Supabase project WebDesigns/Presentations — docs/PLATFORM_ARCHITECTURE.md §12–13."
+  "note": "Public values only. Accounts ON (optional sign-in; guests still play everything). mode 'beta' = everything free while testing (server: ig_app_config.access_mode = 'beta_free'); billing UI off (never shown in the native apps). Shared Supabase project WebDesigns/Presentations — docs/PLATFORM_ARCHITECTURE.md §12–13."
 }
