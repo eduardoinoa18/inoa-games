@@ -29,3 +29,14 @@
 - `toScreen()` should call `camera.updateMatrixWorld()`; otherwise it lags one frame behind camera moves made since the last render.
 - Engine UI strings (Play/Hub/Paused/Resume/Play again/ROUND OVER) in ES.
 - An optional "clean texture" step in the pack build for the survivor characters (stains/red skin), instead of fixing them at runtime per game.
+
+---
+
+# Elevation pass (2026-10-15)
+Summary in `docs/AUDIT.md` → "Brew and Bloom elevation pass". Notes for the next agent:
+- **Progression data** lives at the top of `games/brew.html`: `SEEDS`/`RECIPES`/`DECOR` carry `lv` (unlocking café level), `orig` (first-release content, stays open for legacy saves) and `season`. `LEVELS` maps lifetime hearts → level; `unlocksAt(l)` builds the level-up list. Add content by adding rows; the journal, seed sheet, decor shop, chalkboard and brew counter all read these tables.
+- **Requests**: `ensureRequests()` (seeded by the local date string, 3 regulars, distinct teas you can make today), `progressRequests()` in `serve()`, stories in `REGULARS[].story` (EN/ES pairs).
+- **Save v2** fields: `lvl` (last celebrated level), `legacy`, `book {teas, plants}`, `friends {name: chapters}`, `req {day, list, bonus}`. A v1 save with any play gets `legacy = true` and `lvl = level()`.
+- **Camera**: `fitView(key, points, dir, target, margins)` — projection fit + pan, memoised. Margins come from the HUD, touch buttons (`padRects()`), recipe card or decor panel.
+- **Character scale**: `fixCache` measures each rig's skinned bounding box once and scales to 1.6 m. If the engine fixes `instance(fit:'height')`, this becomes a no-op (factor ≈ 1).
+- Test hooks added: `level`, `LEVELS`, `ensureRequests`, `RBY`, `BI` (visible ingredient row), `note`, `openBook/closeBook/book`, `setSeason`, `findSpot(id, r)`, `decorTap`, `fixCache`.

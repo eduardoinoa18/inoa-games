@@ -207,3 +207,38 @@ Island Drift (`games/drift.html`) re-audited and extended by one game agent. Tes
 - Bridge ends are plain slab abutments; no jump/air physics (height simply follows the road).
 - Autopilot is a weak stand-in for a human; difficulty numbers need a real play test with kids and adults.
 - Engine: none changed. `tag()` with an emoji is still drawn at 96 px serif, so on systems without a colour-emoji font the tag shows text only.
+
+## Brew and Bloom elevation pass (2026-10-15)
+Brew and Bloom (`games/brew.html`) re-audited and extended by one game agent. Tested with `test/brew.js` at 1000×560 and 390×844 (both `NO_ERRORS`, every screenshot reviewed), hub `test/index.js` (`NO_ERRORS`), plus Spanish, seasonal and old-save passes inside the brew test.
+
+**Bugs fixed**
+- Camera framing was a width/height guess per mode, so some orbit angles still clipped the diorama (portrait golden/night shots cut the café wall on the left) while landscape wasted space. Every view (café, decor, brew) now projects the diorama's key points and binary-searches the distance, then pans to centre them in the free screen area (HUD, touch buttons, recipe card and decor panel subtracted). No clipping at any angle or aspect; results are cached per angle/size.
+- Labels ran under the touch buttons (bottom-right "Honey Mint" tag behind 🫖 in `brew_morning_close`). Label layout now treats the buttons as obstacles. Labels also got a larger invisible tap area.
+- Guests and barista were ~2.5 m tall (`instance(fit:'height')` measures the unposed mesh). Each rig is now measured once from its skinned bounding box and scaled to 1.6 m (`male`/`skater-*` ×0.61). The barista no longer fills the top of the landscape brew close-up (he steps out of shot; portrait keeps him small at the back).
+- Grown plants were tiny sprigs from the diorama camera: plants now 30% bigger. A plant that finishes while you watch gets a chime, a sparkle and a read-aloud hint (once).
+- Results card: the favourite tea name was cut off (5 stat tiles); the café level moved into the "best" line.
+- Round-table bases rendered as black holes; the generic pbr wood made the floor and furniture look like noisy orange carpet. Soft plank texture for the floor and light wood.
+- Landscape decor shop covered the bottom 45% of the screen, so the café floor was tiny: it is a side panel in landscape (tools on top), bottom sheet in portrait.
+- HUD wrapped to two lines at 390 px once hearts reached two digits: compact chips at ≤430 px.
+- Tall decor placed in front of the counter (e.g. the flower arch) blocked the brew close-up: it is hidden while brewing (found in `brew_es_brew` / `brew_p_es_brew`).
+- Save loading: a non-object save (string/array) is ignored instead of being spread into the state; new fields (book, friends, requests, level) are sanitised like the old ones.
+
+**Added**
+- **Café levels 1–10** from lifetime hearts (3-ingredient teas give 2 hearts). Each level unlocks something: lavender, rose, milk, the season's plant, moon orchid; 9 new teas (16 total: Rose Petal, Rosy Lemonade, Cozy Milk Tea, Blossom Latte, Strawberry Cooler, Pumpkin Cloud, Clementine Glow, Moon Milk, Garden Party); 8 new decor items (fruit crate, pastry case, little piano that plays a tune, garden fountain, café pup that hops when tapped, flower arch, mint and starry wallpapers); golden teapot (level 9) and a gold star on the sign (level 10). Level-up card once per level, read aloud, gamepad A.
+- **Regulars' requests + stories**: 6 regulars (Mila 📚, Theo 🎸, Kenji 🌻, Lucía 🎨, Finn ⚽, Ada 🔬) leave 3 requests a day (same all day, nothing lost if left). Requested regulars visit more often and order their tea. Finishing a request pays coins + 2 hearts and unlocks the next of their 3 story chapters as a non-blocking note (read aloud). All three: +25 coin bouquet.
+- **Café journal** (📖 HUD chip, B key, gamepad LB/Back; Esc/B closes; engine menu focus works): Today (level bar + next unlocks, season special, visitor of the day, requests), Teas, Plants (collection book with counts, locked "???" entries, "back in spring"), Friends (story chapters).
+- **Seasons** (northern-hemisphere months): one special seed + tea per season (cherry blossom, strawberry, pumpkin, clementine), only plantable in its season (harvest keeps). Island trees recolour per season (autumn now). The chalkboard menu lists the teas you can make.
+- Brew counter shows only ingredients you have unlocked or have in stock (up to 12; portrait tray wraps to 2 rows; digits 1–9).
+- Juice: pour stream from the spout, steam over the cup and over guests' cups, colour splash per ingredient, coin chip bump, confetti on level-up, fountain spray, piano notes.
+- Pack: `apple`, `orange`, `pie` (1.35 → 1.37 MB; all files already in `packs/assets`). Hub tile copy (EN/ES) and `thumbs/brew.jpg` refreshed.
+- Save v2 migration: a v1 save that was played keeps everything the first release gave it (lavender, moon orchid, every old tea and decor item) via a `legacy` flag, starts at its current level with no level-up flood. Covered by the test (v1 save with a bogus decor id and junk book/requests).
+
+**Tests** (`test/brew.js`, PORT 8821/8822): existing loop (plant, grow, drag-brew, 5 serves → exactly one `E.results`, decor, offline once, timestamp sanitising, Spanish) plus level acknowledged after the shift, a request finished → story chapter + note, level-up card exactly once with Pumpkin + Milk listed, seasonal planting rules (spring blocks pumpkin, allows blossom; seed sheet shows only the in-season special; moon orchid locked), journal opens with B / 4 tabs / closes with Esc, all 6 new decor items placed, Spanish brew + journal, v1 → v2 migration.
+
+**Still open**
+- Real-device feel/FPS not measured (headless SwiftShader only). New per-frame work is small (cached camera fit, cached button rects, pooled particles).
+- Portrait café view is width-limited (12 m diorama): no clipping, but the diorama uses the middle ~40% of the screen; pinch-zoom works.
+- Seasons follow northern-hemisphere months; no hemisphere setting.
+- Story text is EN/ES only by the agent; a native Spanish read-through is recommended.
+- Landscape title card still scrolls at 560 px (5 how-to rows + time/lang options; engine card layout).
+- Engine: none changed. Engine requests stand: `instance(fit:'height')` should measure skinned meshes (the game now works around it locally).

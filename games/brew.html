@@ -654,6 +654,8 @@ function openBrew(cust) {
   if (G.modal || G.mode === 'brew' || G.pendingRes > 0) return; if (G.mode === 'decor') closeDecor();
   const c = cust && cust.state === 'wait' && !cust.brewing ? cust : waitingCusts()[0];
   if (!c) { E.toast(G.custs.length ? T().settling : T().noOrders, 2000); SFX.tick(); return; }
+  // tall decor standing in front of the counter would block the brew close-up: hide it while brewing
+  for (const [d, g] of decorObjs) if (!DBY[d.id].flat && d.x < -.6 && d.z > .8 && d.z < 3.4) { g.visible = false; g.userData.brewHidden = true; }
   c.brewing = true; G.mode = 'brew'; G.brew = { c, recipe: c.recipe, added: [], done: false }; G.sel = 0; BI = brewIngs(c.recipe.need);
   for (const id of ING) { const o = ingObjs[id], on = BI.includes(id); o.visible = on; o.position.copy(homeOf(id)); const s = BI.length > 9 ? .85 : 1; o.scale.setScalar(s); o.userData.s = s; }
   recipeEl = document.createElement('div'); recipeEl.className = 'bb-recipe'; document.body.appendChild(recipeEl); drawRecipe(); setPad(); SFX.whoosh();
@@ -691,7 +693,7 @@ function finishBrew(instant) {
     () => { teapot.rotation.z = tp; stream.visible = false; for (let k = 0; k < 4; k++) setTimeout(() => P.burst(cupTop, { color: 0xffffff, n: 3, size: .08, speed: .06, up: .45, life: 1.1, gravity: -.15, additive: false }), k * 150); setTimeout(fly, 300); }); }
 }
 function makeCup(col) { const g = new THREE.Group(); const sc = E.instance('cup-saucer', { scale: .15 }); g.add(sc); const cp = E.instance('cup-tea', { scale: .105 }); cp.position.y = .012; cp.traverse(o => { if (o.isMesh && !o.userData.outline && o.material?.name === 'brownDarkest') { o.material = o.material.clone(); o.material.color.set(col); o.material.roughness = .15; } }); g.add(cp); shadowAll(g); return g; }
-function closeBrew(cancel) { const b = G.brew; if (!b) return; if (cancel) { b.c.brewing = false; for (const a of b.added) if (!PANTRY[a]) { S.inv[a]++; b.c.reserve.push(a); } } for (const id of ING) ingObjs[id].visible = false; selRing.visible = false; if (recipeEl) recipeEl.remove(); recipeEl = null; G.brew = null; G.mode = 'cafe'; G.drag = null; setPad(); }
+function closeBrew(cancel) { const b = G.brew; if (!b) return; for (const [, g] of decorObjs) if (g.userData.brewHidden) { g.visible = true; g.userData.brewHidden = false; } if (cancel) { b.c.brewing = false; for (const a of b.added) if (!PANTRY[a]) { S.inv[a]++; b.c.reserve.push(a); } } for (const id of ING) ingObjs[id].visible = false; selRing.visible = false; if (recipeEl) recipeEl.remove(); recipeEl = null; G.brew = null; G.mode = 'cafe'; G.drag = null; setPad(); }
 function serve(c, cup) {
   c.cup = cup; c.brewing = false; c.reserve = null; if (c.tag) { c.tag.remove(); c.tag = null; }
   const r = c.recipe; let coins = r.price, hearts = r.need.length >= 3 ? 2 : 1; const firstTime = !S.book.teas[r.id];
