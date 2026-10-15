@@ -295,3 +295,37 @@ Brew and Bloom (`games/brew.html`) re-audited and extended by one game agent. Te
 - Story text is EN/ES only by the agent; a native Spanish read-through is recommended.
 - Landscape title card still scrolls at 560 px (5 how-to rows + time/lang options; engine card layout).
 - Engine: none changed. Engine requests stand: `instance(fit:'height')` should measure skinned meshes (the game now works around it locally).
+
+## Perfect Fit elevation pass (2026-10-15)
+Perfect Fit (`games/fit.html`) re-audited and extended by one game agent. Tested with `test/fit.js` (now covers all 20 boxes) at 1000×560 and 390×844 (both `ALL CHECKS PASSED` / `NO_ERRORS`, screenshots reviewed), plus a before/after framing measurement against the pre-pass build.
+
+**Bugs fixed**
+- **Phones as controllers did nothing in-game**: the game read `navigator.getGamepads()` directly and never polled the engine input, so a phone joined from the party panel could not choose, pick up or place. `pollPad()` now merges physical pads with `input.pad(slot)` for every phone (stick chooses, A picks/places, B puts back, C/D hint, ⏸ pauses). Test: a fake phone in `E.net.players` places an item and pauses the game.
+- **Pause menu over the title**: hiding the tab (or ⏸) while the menu box was showing opened the pause menu on top of the title card and restarted the music. The menu box is now flagged and never pauses.
+- **Box too small on phones** (open P2 since Phase 1): the layout now tries both quarter turns of the box and 17 placemat shapes and keeps the one with the closest camera (largest on screen). Wide drawers stand tall on phones (desk, cutlery, fridge, café, fruit, veggie, toys turn in portrait); the leftover table under a width-limited mat is filled by deepening the mat. Mean item width on screen, portrait 390×844, before → after: lunch 68→75 px, spice 53→58, desk 70→87, cutlery 116→141, fridge 43→54, café 49→66, fruit 37→49, picnic 42→50, bakery 47→51. An orientation change mid-level rebuilds the turned box and keeps placed items in their slots (test-checked).
+- **Rectangular items could settle 90° off their outline**: the "round item" regex matched `can` inside `candy-bar` and included the cheese wedge, so those snapped by the shortest quarter turn instead of to the slot angle. Replaced by an explicit four-way-symmetric list.
+- **Mess piled up** on boxes with long items (toy cars, cutlery overlapped): scatter now packs rotated footprints instead of circles (first clear spot wins, else the widest gap).
+- **Phone toast covered the box** at the start of every level in portrait ("Spice Drawer · 5 items" over the top row): the toast is landscape-only (the HUD and the voice already name the box).
+- **Results card**: the share code was a cramped 4th stat tile that wrapped in portrait; it moved under the 3 stats with the next-star goal. "Next box" followed the array order (would have jumped from Bakery to the new Veggie box); it follows the room order now. Share text is EN/ES.
+- Silhouette opacity was set by traversing every slot's meshes each frame; one material per slot now.
+- Menu A-button handling duplicated (and fought) the engine's focus ring; the game's own `menuPad()` was removed so pads and phones navigate the room/box grid with the engine ring.
+
+**Added**
+- **20 boxes in 4 themed rooms** (was 9 in one list): 🍳 Kitchen (Lunchbox, Spice Drawer, *Veggie Crisper*, Cutlery Drawer, Fridge Shelf, Bakery Box), 🧺 Picnic & Treats (Fruit Crate, *Breakfast Tray*, Café Tray, *Sweet Shop Box*, *Sushi Bento*, Picnic Basket), 🎨 Study & Play (Desk Organizer, *Pencil Case*, *Toy Garage*, *Art Caddy*, *Bookshelf*), 🧳 Workshop & Travel (*Toolbox*, *Sewing Basket*, *Suitcase*). Item counts climb gently inside each room (4 → 10). Title shows room tabs (★ per room) and the boxes of the selected room with the 3-star goal and best time.
+- **Original procedural items** (no new assets needed): crayons, pencils, eraser, ruler, glue stick, scissors, paint jars, brushes, paint tubes, palette, 8 books, hammer, screwdrivers, wrench, tape measure, spirit level, thread spools, pincushion, thimble, buttons, shirts, socks, toothbrush, sunglasses, cap, notebook, rice ball, chopsticks — built from primitives at load, registered as models so silhouettes, picking and snapping are unchanged.
+- **Colour matching** in later boxes: colour-coded items (crayons, paint, spools, books, screwdrivers, buttons, shirts, socks) have outlines tinted in their colour plus a matching shape sticker on the item and in the slot (colour-blind aid); a same-shape wrong colour says "other colour". Announced on the start toast and read aloud.
+- **Star goals per box** (par per box, higher for colour boxes), shown on the title and on the results card; still no fail state (1 star for finishing).
+- **ASMR pass**: each item has a material (wood, plastic, metal, glass, fabric, paper, food) with its own lift sound and landing "thock"; the box style answers (hollow wood knock, basket rustle, padded fabric, metal tick); a soft pentatonic chime climbs while you keep placing things quickly. Light haptics on touch only (lift 6 ms, snap 12 ms, wrong 18-40-18, finish pattern), never for mouse/keyboard.
+- **Tidy-up celebration**: every item hops in slot order on a rising scale before the before/after wipe (smaller with reduced motion); completing a whole room shows "Kitchen: all tidy!" on the results card, reads it aloud and pays +10 XP / +15 coins once.
+- **Generous picking**: a touch within 46 px (mouse 30 px) of an item's middle picks it even off its box.
+- Pack: 17 more CC0 Kenney models (veggies, breakfast, sweets, sushi, soy) + 7 toy vehicles loaded lazily (`E.ensureModels` when a Toy Garage starts; "Unpacking…" toast). Manifest 1.71 MB (all files in `packs/assets`, 7 new `.glb`). Save v2 migration keeps every box a v1 player had open and all stars (old saves only knew a linear unlock count); junk saves start fresh.
+- Hub tile copy (EN/ES) and `thumbs/fit.jpg` refreshed.
+
+**Tests** (`test/fit.js`, PORT 8851/8852): previous checks (mouse/touch precision incl. edges, flick, pointercancel, resize, wrong drop, keyboard, gamepad, Spanish, read-aloud, results once) plus: title rooms/unlocks on a fresh save, no pause over the title, haptics on touch only, generous pick, phone controller placing + pausing, tidy wave, room-complete bonus + voice, share code under 3 stat tiles, next room opens, every box auto-solves, six sound materials in use, box turning on orientation change with placed items kept, v1 save migration and a junk save.
+
+**Still open**
+- Real-phone drag feel and haptics are verified only with synthetic touch events; frame rate unmeasured on a 2021 phone (procedural items are a few dozen small meshes per box; geometry is built per item instance, not shared).
+- Keyboard/pad slot choice cycles through free slots in screen order; on 10-item boxes that is a lot of presses (no 2-D cursor yet).
+- Colour-blind aid is a shape sticker per colour (● ▲ ★ ■ ◆ ✚ ♥ ⬢) on the item and in its slot; not yet checked with colour-blind players.
+- Spanish item names are agent-written; a native read-through is recommended.
+- Engine: none changed.

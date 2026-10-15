@@ -39,6 +39,16 @@ html,body{background:#efe6d8}
 .pf-replay{position:fixed;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:21;display:flex;gap:8px}
 .ig-big.pf-big{font-size:clamp(34px,8vw,72px);color:#fff8ee;text-shadow:0 5px 0 rgba(15,92,72,.55),0 0 30px rgba(0,0,0,.18)}
 @media (max-width:640px){.pf-keyhint{display:none}}
+.pf-rooms{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px}
+.pf-room{display:grid;justify-items:center;gap:1px;min-height:58px;padding:5px 4px;border-radius:14px;border:2px solid var(--line);background:#fff;cursor:pointer;color:var(--ink);font:inherit;line-height:1.1}
+.pf-room span{font-size:18px}.pf-room b{font-size:12px}.pf-room small{font-size:10px;font-weight:800;color:#b8891c}
+.pf-room.on{border-color:var(--mint-ink);background:#dff4ea}.pf-room:disabled{opacity:.45;cursor:not-allowed}
+.pf-goal{margin-top:8px;font-size:13px;line-height:1.35;color:#3c4656;background:#fff8ea;border:2px dashed #ecd9b0;border-radius:12px;padding:6px 10px}
+.pf-goal small{color:#6a5a36;font-weight:700}
+.pf-info{margin:6px 0 2px;font-size:13px;line-height:1.45}.pf-code-b{letter-spacing:.03em;white-space:nowrap}
+.pf-roomdone{margin:4px 0 8px;padding:8px 12px;border-radius:14px;background:linear-gradient(90deg,#fff3c9,#dff4ea);font-size:15px;text-align:center}
+.pf-roomdone small{display:block;font-weight:800;color:#6a5a36}
+@media (max-width:520px){.pf-rooms{grid-template-columns:repeat(2,1fr)}.pf-room{grid-template-columns:auto 1fr;justify-items:start;align-items:center;column-gap:6px;min-height:46px;padding:4px 8px}.pf-room span{grid-row:span 2}}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
 </head><body>
@@ -51,13 +61,25 @@ const { THREE, clamp, lerp, rnd, pick, hash, damp, SFX, $ } = E;
 
 /* ---------------- content ---------------- */
 // Target size (largest dimension, 1 unit ≈ 10 cm). Kenney food keeps consistent real-world ratios.
-const SIZE = { sandwich: 1.8, apple: .85, cookie: .95, 'carton-small': 1.55, strawberry: .62, 'utensil-fork': 2.1, 'utensil-spoon': 2.0, 'utensil-knife': 2.35, whisk: 2.7, 'rolling-pin': 3.2, 'pepper-mill': 2.1, 'shaker-salt': .95, 'shaker-pepper': .95, honey: 1.3, 'peanut-butter': 1.25, bottle: 1.8, carton: 2.3, 'soda-can': 1.35, can: 1.25, cheese: 1.55, egg: .72, 'cup-tea': 1.3, croissant: 1.75, 'donut-sprinkles': 1.15, 'donut-chocolate': 1.15, muffin: 1.15, glass: 1.15, orange: .8, lemon: .9, pear: 1.05, banana: 2.2, cherries: .8, grapes: 1.5, cupcake: 1.35, headphones: 2.0, 'mechanical-keyboard': 4.4, 'nes-controller': 2.1, tomato: .8 };
-const LABEL = { sandwich: 'sandwich', apple: 'apple', cookie: 'cookie', 'carton-small': 'juice box', strawberry: 'strawberry', 'utensil-fork': 'fork', 'utensil-spoon': 'spoon', 'utensil-knife': 'knife', whisk: 'whisk', 'rolling-pin': 'rolling pin', 'pepper-mill': 'pepper mill', 'shaker-salt': 'salt', 'shaker-pepper': 'pepper', honey: 'honey', 'peanut-butter': 'nut butter', bottle: 'oil bottle', carton: 'milk', 'soda-can': 'soda', can: 'tin can', cheese: 'cheese', egg: 'egg', 'cup-tea': 'teacup', croissant: 'croissant', 'donut-sprinkles': 'sprinkle donut', 'donut-chocolate': 'choc donut', muffin: 'muffin', glass: 'glass', orange: 'orange', lemon: 'lemon', pear: 'pear', banana: 'banana', cherries: 'cherries', grapes: 'grapes', cupcake: 'cupcake', headphones: 'headphones', 'mechanical-keyboard': 'keyboard', 'nes-controller': 'game pad', tomato: 'tomato' };
-const LABEL_ES = { sandwich: 'sándwich', apple: 'manzana', cookie: 'galleta', 'carton-small': 'jugo', strawberry: 'fresa', 'utensil-fork': 'tenedor', 'utensil-spoon': 'cuchara', 'utensil-knife': 'cuchillo', whisk: 'batidor', 'rolling-pin': 'rodillo', 'pepper-mill': 'molinillo', 'shaker-salt': 'sal', 'shaker-pepper': 'pimienta', honey: 'miel', 'peanut-butter': 'crema de nueces', bottle: 'botella de aceite', carton: 'leche', 'soda-can': 'refresco', can: 'lata', cheese: 'queso', egg: 'huevo', 'cup-tea': 'taza', croissant: 'cruasán', 'donut-sprinkles': 'dona de chispas', 'donut-chocolate': 'dona de chocolate', muffin: 'magdalena', glass: 'vaso', orange: 'naranja', lemon: 'limón', pear: 'pera', banana: 'plátano', cherries: 'cerezas', grapes: 'uvas', cupcake: 'pastelito', headphones: 'audífonos', 'mechanical-keyboard': 'teclado', 'nes-controller': 'control', tomato: 'tomate' };
-const T = E.L, nm = L => T(L.name, L.es), lbl = n => T(LABEL[n], LABEL_ES[n]);
-const FLAT = { headphones: [-Math.PI / 2, 0, 0] }; // models that should lie down in a tray
+// Procedural items (PROC, built from primitives below) keep their built size unless listed here.
+const SIZE = { sandwich: 1.8, apple: .85, cookie: .95, 'carton-small': 1.55, strawberry: .62, 'utensil-fork': 2.1, 'utensil-spoon': 2.0, 'utensil-knife': 2.35, whisk: 2.7, 'rolling-pin': 3.2, 'pepper-mill': 2.1, 'shaker-salt': .95, 'shaker-pepper': .95, honey: 1.3, 'peanut-butter': 1.25, bottle: 1.8, carton: 2.3, 'soda-can': 1.35, can: 1.25, cheese: 1.55, egg: .72, 'cup-tea': 1.3, croissant: 1.75, 'donut-sprinkles': 1.15, 'donut-chocolate': 1.15, muffin: 1.15, glass: 1.15, orange: .8, lemon: .9, pear: 1.05, banana: 2.2, cherries: .8, grapes: 1.5, cupcake: 1.35, headphones: 2.0, 'mechanical-keyboard': 4.4, 'nes-controller': 2.1, tomato: .8,
+  avocado: .9, eggplant: 1.7, onion: .85, broccoli: 1.15, carrot: 1.8, corn: 1.9, mushroom: .75, pancakes: 1.5, 'cup-saucer': 1.35, waffle: 1.45, 'candy-bar': 1.45, chocolate: 1.5, lollypop: 1.5, popsicle: 1.4, 'ice-cream-cone': 1.45, 'sushi-salmon': .95, soy: .95,
+  'race-car': 2.0, taxi: 1.9, 'police-car': 1.9, ambulance: 2.1, truck: 2.2, tractor: 1.9, 'boat-small': 2.1 };
+const LABEL = { sandwich: 'sandwich', apple: 'apple', cookie: 'cookie', 'carton-small': 'juice box', strawberry: 'strawberry', 'utensil-fork': 'fork', 'utensil-spoon': 'spoon', 'utensil-knife': 'knife', whisk: 'whisk', 'rolling-pin': 'rolling pin', 'pepper-mill': 'pepper mill', 'shaker-salt': 'salt', 'shaker-pepper': 'pepper', honey: 'honey', 'peanut-butter': 'nut butter', bottle: 'bottle', carton: 'milk', 'soda-can': 'soda', can: 'tin can', cheese: 'cheese', egg: 'egg', 'cup-tea': 'teacup', croissant: 'croissant', 'donut-sprinkles': 'sprinkle donut', 'donut-chocolate': 'choc donut', muffin: 'muffin', glass: 'glass', orange: 'orange', lemon: 'lemon', pear: 'pear', banana: 'banana', cherries: 'cherries', grapes: 'grapes', cupcake: 'cupcake', headphones: 'headphones', 'mechanical-keyboard': 'keyboard', 'nes-controller': 'game pad', tomato: 'tomato',
+  avocado: 'avocado', eggplant: 'eggplant', onion: 'onion', broccoli: 'broccoli', carrot: 'carrot', corn: 'corn', mushroom: 'mushroom', pancakes: 'pancakes', 'cup-saucer': 'coffee cup', waffle: 'waffle', 'candy-bar': 'candy bar', chocolate: 'chocolate', lollypop: 'lollipop', popsicle: 'ice pop', 'ice-cream-cone': 'ice cream', 'sushi-salmon': 'sushi', soy: 'soy sauce',
+  'race-car': 'race car', taxi: 'taxi', 'police-car': 'police car', ambulance: 'ambulance', truck: 'truck', tractor: 'tractor', 'boat-small': 'boat' };
+const LABEL_ES = { sandwich: 'sándwich', apple: 'manzana', cookie: 'galleta', 'carton-small': 'jugo', strawberry: 'fresa', 'utensil-fork': 'tenedor', 'utensil-spoon': 'cuchara', 'utensil-knife': 'cuchillo', whisk: 'batidor', 'rolling-pin': 'rodillo', 'pepper-mill': 'molinillo', 'shaker-salt': 'sal', 'shaker-pepper': 'pimienta', honey: 'miel', 'peanut-butter': 'crema de nueces', bottle: 'botella', carton: 'leche', 'soda-can': 'refresco', can: 'lata', cheese: 'queso', egg: 'huevo', 'cup-tea': 'taza', croissant: 'cruasán', 'donut-sprinkles': 'dona de chispas', 'donut-chocolate': 'dona de chocolate', muffin: 'magdalena', glass: 'vaso', orange: 'naranja', lemon: 'limón', pear: 'pera', banana: 'plátano', cherries: 'cerezas', grapes: 'uvas', cupcake: 'pastelito', headphones: 'audífonos', 'mechanical-keyboard': 'teclado', 'nes-controller': 'control', tomato: 'tomate',
+  avocado: 'aguacate', eggplant: 'berenjena', onion: 'cebolla', broccoli: 'brócoli', carrot: 'zanahoria', corn: 'maíz', mushroom: 'champiñón', pancakes: 'panqueques', 'cup-saucer': 'taza de café', waffle: 'gofre', 'candy-bar': 'barra de dulce', chocolate: 'chocolate', lollypop: 'paleta', popsicle: 'polo', 'ice-cream-cone': 'helado', 'sushi-salmon': 'sushi', soy: 'salsa de soya',
+  'race-car': 'carro de carreras', taxi: 'taxi', 'police-car': 'patrulla', ambulance: 'ambulancia', truck: 'camión', tractor: 'tractor', 'boat-small': 'barquito' };
+const T = E.L, nm = L => T(L.name, L.es);
+const FLAT = { headphones: [-Math.PI / 2, 0, 0], lollypop: [0, 0, Math.PI / 2], popsicle: [0, 0, Math.PI / 2], 'ice-cream-cone': [0, 0, Math.PI / 2] }; // models that should lie down in a tray
 const PAL = { mint: 0xbfe6d3, butter: 0xf6e3a1, pink: 0xf5c6c8, lav: 0xd6cdf0, cream: 0xf6efe3, peach: 0xf7d2b6, sky: 0xc9e2f0, sage: 0xc9d8c0 };
-// rows of slots; "name@90" rotates the item a quarter turn in its slot
+// colours for colour-coded procedural items (crayons, spools, books…): their slot outline is tinted, so the colour matters
+const HUE = { red: 0xe8716c, blue: 0x6f9fe6, yellow: 0xf2cd4c, green: 0x6cc48c, purple: 0xa98be0, orange: 0xf29a55, pink: 0xf2a0be, teal: 0x5fc2bd };
+// [English, Spanish masculine, feminine, masculine plural]
+const HUE_N = { red: ['red', 'rojo', 'roja', 'rojos'], blue: ['blue', 'azul', 'azul', 'azules'], yellow: ['yellow', 'amarillo', 'amarilla', 'amarillos'], green: ['green', 'verde', 'verde', 'verdes'], purple: ['purple', 'morado', 'morada', 'morados'], orange: ['orange', 'naranja', 'naranja', 'naranja'], pink: ['pink', 'rosa', 'rosa', 'rosa'], teal: ['teal', 'turquesa', 'turquesa', 'turquesa'] };
+// rows of slots; "name@90" rotates the item a quarter turn in its slot.
+// LEVELS keeps a stable index per box (share codes store it), so new boxes are appended; ROOMS sets the play order.
 const LEVELS = [
   { id: 'lunch', es: 'Lonchera', name: 'Lunchbox', e: '🍱', style: 'plastic', col: PAL.mint, lid: true, rows: [['sandwich', 'apple'], ['cookie', 'carton-small']] },
   { id: 'spice', es: 'Cajón de especias', name: 'Spice Drawer', e: '🧂', style: 'wood', col: 0xf2e0c2, rows: [['pepper-mill@90', 'shaker-salt', 'shaker-pepper'], ['honey', 'peanut-butter']] },
@@ -67,9 +89,30 @@ const LEVELS = [
   { id: 'cafe', es: 'Bandeja de café', name: 'Café Tray', e: '☕', style: 'plastic', col: PAL.butter, rows: [['cup-tea', 'croissant', 'glass'], ['donut-sprinkles', 'donut-chocolate', 'muffin', 'cookie']] },
   { id: 'fruit', es: 'Caja de fruta', name: 'Fruit Crate', e: '🍋', style: 'wood', col: 0xf0dbb8, rows: [['apple', 'apple', 'orange', 'orange'], ['lemon', 'pear', 'banana', 'cherries']] },
   { id: 'picnic', es: 'Cesta de pícnic', name: 'Picnic Basket', e: '🧺', style: 'wicker', col: 0xdcb98a, lid: true, rows: [['sandwich', 'grapes', 'bottle'], ['apple', 'cheese', 'strawberry'], ['cupcake', 'banana', 'pear']] },
-  { id: 'bakery', es: 'Caja de panadería', name: 'Bakery Box', e: '🍩', style: 'card', col: PAL.pink, lid: true, rows: [['donut-sprinkles', 'donut-chocolate', 'donut-sprinkles', 'donut-chocolate'], ['cupcake', 'muffin', 'cupcake', 'muffin'], ['croissant', 'croissant']] }
+  { id: 'bakery', es: 'Caja de panadería', name: 'Bakery Box', e: '🍩', style: 'card', col: PAL.pink, lid: true, rows: [['donut-sprinkles', 'donut-chocolate', 'donut-sprinkles', 'donut-chocolate'], ['cupcake', 'muffin', 'cupcake', 'muffin'], ['croissant', 'croissant']] },
+  // ---- elevation pass: 11 new boxes ----
+  { id: 'veggie', es: 'Cajón de verduras', name: 'Veggie Crisper', e: '🥕', style: 'plastic', col: PAL.sage, rows: [['carrot@90', 'corn@90', 'eggplant@90'], ['broccoli', 'onion', 'mushroom', 'avocado']] },
+  { id: 'breakfast', es: 'Bandeja de desayuno', name: 'Breakfast Tray', e: '🥞', style: 'wood', col: 0xf3e3c8, rows: [['pancakes', 'cup-saucer', 'glass'], ['waffle', 'egg', 'croissant']] },
+  { id: 'sweets', es: 'Caja de dulces', name: 'Sweet Shop Box', e: '🍭', style: 'card', col: PAL.lav, lid: true, rows: [['lollypop', 'popsicle', 'ice-cream-cone'], ['candy-bar', 'chocolate'], ['cupcake', 'cookie', 'donut-sprinkles']] },
+  { id: 'bento', es: 'Bento de sushi', name: 'Sushi Bento', e: '🍣', style: 'plastic', col: PAL.peach, lid: true, rows: [['chopsticks'], ['onigiri', 'sushi-salmon', 'sushi-salmon'], ['egg', 'avocado', 'soy']] },
+  { id: 'pencil', es: 'Estuche', name: 'Pencil Case', e: '✏️', style: 'fabric', col: PAL.sky, lid: true, par: 5.2, rows: [['ruler'], ['pencil@90', 'pencil@90', 'crayon-red@90', 'crayon-blue@90', 'crayon-green@90'], ['eraser', 'glue', 'scissors']] },
+  { id: 'toys', es: 'Garaje de juguetes', name: 'Toy Garage', e: '🚗', style: 'wood', col: 0xe9d6b6, rows: [['race-car', 'taxi', 'police-car', 'boat-small'], ['ambulance', 'truck', 'tractor']] },
+  { id: 'art', es: 'Caja de arte', name: 'Art Caddy', e: '🎨', style: 'plastic', col: PAL.butter, par: 5.4, rows: [['palette', 'brush-big@90', 'brush-small@90'], ['jar-red', 'jar-yellow', 'tube-pink'], ['jar-blue', 'jar-green', 'tube-purple']] },
+  { id: 'books', es: 'Estantería', name: 'Bookshelf', e: '📚', style: 'wood', col: 0xe6cfa8, par: 5.6, rows: [['book-red', 'book-blue', 'book-green', 'book-yellow'], ['book-purple', 'book-teal', 'book-orange', 'book-pink']] },
+  { id: 'tools', es: 'Caja de herramientas', name: 'Toolbox', e: '🔧', style: 'metal', col: 0xf2b2a8, lid: true, par: 5, rows: [['hammer', 'wrench'], ['level'], ['screwdriver-red@90', 'screwdriver-blue@90', 'pencil@90', 'tape']] },
+  { id: 'sewing', es: 'Costurero', name: 'Sewing Basket', e: '🧵', style: 'wicker', col: 0xe8c9a0, lid: true, par: 5.4, rows: [['spool-red', 'spool-blue', 'spool-yellow', 'spool-green'], ['pincushion', 'scissors', 'thimble'], ['button-pink', 'button-teal']] },
+  { id: 'suitcase', es: 'Maleta', name: 'Suitcase', e: '🧳', style: 'fabric', col: 0xbfd8e8, lid: true, par: 5.4, rows: [['shirt-blue', 'shirt-pink', 'shirt-green'], ['socks-yellow@90', 'socks-purple@90', 'cap', 'sunglasses'], ['toothbrush', 'bottle', 'notebook']] }
 ];
-
+// themed rooms (play order). A box opens when the one before it in this order has a star.
+const ROOMS = [
+  { id: 'kitchen', e: '🍳', name: 'Kitchen', es: 'Cocina', levels: ['lunch', 'spice', 'veggie', 'cutlery', 'fridge', 'bakery'] },
+  { id: 'treats', e: '🧺', name: 'Picnic & Treats', es: 'Pícnic y dulces', levels: ['fruit', 'breakfast', 'cafe', 'sweets', 'bento', 'picnic'] },
+  { id: 'study', e: '🎨', name: 'Study & Play', es: 'Estudio y juego', levels: ['desk', 'pencil', 'toys', 'art', 'books'] },
+  { id: 'travel', e: '🧳', name: 'Workshop & Travel', es: 'Taller y viajes', levels: ['tools', 'sewing', 'suitcase'] }
+];
+const LIDX = Object.fromEntries(LEVELS.map((L, i) => [L.id, i]));
+const ORDER = ROOMS.flatMap(r => r.levels.map(id => LIDX[id]));
+const roomOf = li => ROOMS.findIndex(r => r.levels.includes(LEVELS[li].id));
 /* ---------------- engine ---------------- */
 const ld = E.loading('Perfect Fit', 'Folding the napkins…');
 const R = E.createRenderer($('gl'), { fov: 38, portraitFov: 52, shadowSize: 16 });
@@ -81,7 +124,17 @@ sun.shadow.radius = 6; sun.shadow.bias = -.0004; sun.shadow.normalBias = .015; s
 R.vignette.uniforms.uAmt.value = .18;
 const input = E.createInput({ surface: $('gl') });
 const P = new E.Particles(scene);
-const S = Object.assign({ unlocked: 1, stars: {}, best: {}, zen: false, oneWrong: false, sel: 0 }, E.store.get('inoa.fit', {}));
+// save v2: v1 kept a linear "unlocked" count over the first 9 boxes; it becomes S.legacy so every box a player had open stays open
+const S = (() => {
+  let raw = E.store.get('inoa.fit', {}); if (!raw || typeof raw !== 'object' || Array.isArray(raw)) raw = {};
+  const obj = v => v && typeof v === 'object' && !Array.isArray(v) ? v : {};
+  const s = { v: 2, stars: {}, best: {}, zen: !!raw.zen, oneWrong: !!raw.oneWrong, sel: 0, legacy: 1 };
+  for (const [k, v] of Object.entries(obj(raw.stars))) if (LIDX[k] != null && v > 0) s.stars[k] = clamp(Math.round(v), 1, 3);
+  for (const [k, v] of Object.entries(obj(raw.best))) if (LIDX[k] != null && isFinite(v) && v > 0) s.best[k] = +v;
+  s.legacy = raw.v >= 2 ? clamp(raw.legacy | 0, 1, 9) : clamp((raw.unlocked | 0) || 1, 1, 9);
+  s.sel = clamp(raw.sel | 0, 0, LEVELS.length - 1); s.rooms = obj(raw.rooms);
+  return s;
+})();
 const save = () => E.store.set('inoa.fit', S);
 let G = null, music = null, hudEl = null;
 
@@ -117,14 +170,92 @@ function linenMat() {
 }
 
 // basket weave for the picnic basket
-let _wicker = null;
+
 function wickerMat(col) {
-  if (_wicker) return _wicker; const base = new THREE.Color(col);
+  const base = new THREE.Color(col);
   const draw = (g, w, h, bump) => { const n = 8, cs = w / n; g.fillStyle = bump ? '#555' : '#' + base.clone().multiplyScalar(.7).getHexString(); g.fillRect(0, 0, w, h);
     for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) { const hor = (x + y) % 2 === 0; for (let k = 0; k < 3; k++) { const gx = x * cs, gy = y * cs; const r = hor ? [gx + 2, gy + k * cs / 3 + 2, cs - 4, cs / 3 - 4] : [gx + k * cs / 3 + 2, gy + 2, cs / 3 - 4, cs - 4]; const gr = hor ? g.createLinearGradient(0, r[1], 0, r[1] + r[3]) : g.createLinearGradient(r[0], 0, r[0] + r[2], 0); const c1 = bump ? '#bbb' : '#' + base.clone().multiplyScalar(.92 + hash(x * 7 + k, y) * .14).getHexString(); gr.addColorStop(0, bump ? '#777' : '#' + base.clone().multiplyScalar(.78).getHexString()); gr.addColorStop(.5, bump ? '#fff' : c1); gr.addColorStop(1, bump ? '#777' : '#' + base.clone().multiplyScalar(.78).getHexString()); g.fillStyle = gr; g.beginPath(); g.roundRect(...r, 4); g.fill(); } } };
   const map = canvasTex(256, 256, (g, w, h) => draw(g, w, h, false), true, [3, 3]), bump = canvasTex(256, 256, (g, w, h) => draw(g, w, h, true), false, [3, 3]);
-  return (_wicker = new THREE.MeshStandardMaterial({ map, bumpMap: bump, bumpScale: 2, roughness: .85, envMapIntensity: .5 }));
+  return new THREE.MeshStandardMaterial({ map, bumpMap: bump, bumpScale: 2, roughness: .85, envMapIntensity: .5 });
 }
+
+/* ---------------- procedural items (original, built from primitives) ---------------- */
+// Art, study, workshop, sewing and travel things the CC0 packs don't have. Built at 1 unit ≈ 10 cm, lying the way they sit in a tray
+// (long axis along x), then shown 1.5× (toy-like, thumb-sized; books and shirts are big enough). They are registered as models, so silhouettes, footprints, picking and snapping treat them like packed models.
+const PROC = {}, TINT = {}, PLABEL = {};
+const pm = (c, r = .6, m = 0) => new THREE.MeshStandardMaterial({ color: c, roughness: r, metalness: m, envMapIntensity: .8 });
+const lt = (c, k) => new THREE.Color(c).lerp(new THREE.Color(0xffffff), k), dk = (c, k) => new THREE.Color(c).multiplyScalar(1 - k);
+const cyl = (rt, rb, h, seg = 18) => new THREE.CylinderGeometry(rt, rb, h, seg);
+const XAX = [0, 0, -Math.PI / 2]; // cylinder/cone axis (+y) → +x
+function part(g, geo, m, p = [0, 0, 0], r = [0, 0, 0], s) { const o = new THREE.Mesh(geo, m); o.position.set(...p); o.rotation.set(...r); if (s) o.scale.set(...s); g.add(o); return o; }
+const METAL = () => pm(0xd3d7de, .3, .8), WOODM = () => pm(0xe2b47c, .72), CREAMM = () => pm(0xf7f0e2, .85), INK = () => pm(0x3d4350, .5);
+let _rulerMat = null;
+function rulerMat() { if (_rulerMat) return _rulerMat; const map = canvasTex(512, 64, (g, w, h) => { g.fillStyle = '#f3dfb4'; g.fillRect(0, 0, w, h); g.fillStyle = 'rgba(120,80,40,.75)'; for (let i = 0; i <= 40; i++) { const x = 8 + i * (w - 16) / 40, l = i % 10 === 0 ? 30 : i % 5 === 0 ? 20 : 12; g.fillRect(x - 1, 0, 2, l); } }, true, [1, 1]); return (_rulerMat = new THREE.MeshStandardMaterial({ map, roughness: .7 })); }
+const B = {
+  crayon(c) { const g = new THREE.Group(); part(g, cyl(.1, .1, .74, 16), pm(c, .75), [-.06, .1, 0], XAX); part(g, cyl(.104, .104, .46, 16), pm(lt(c, .6), .9), [-.1, .1, 0], XAX); part(g, new THREE.ConeGeometry(.1, .22, 16), pm(c, .7), [.42, .1, 0], XAX); return g; },
+  pencil() { const g = new THREE.Group(); part(g, cyl(.09, .09, 1.0, 6), pm(0xf2cd4c, .55), [0, .09, 0], XAX); part(g, cyl(.093, .093, .1, 12), METAL(), [-.55, .09, 0], XAX); part(g, cyl(.09, .09, .14, 12), pm(0xf2a0be, .85), [-.67, .09, 0], XAX); part(g, new THREE.ConeGeometry(.09, .24, 6), pm(0xeccb9c, .8), [.62, .09, 0], XAX); part(g, new THREE.ConeGeometry(.028, .07, 8), INK(), [.705, .09, 0], XAX); return g; },
+  eraser() { const g = new THREE.Group(); part(g, rr(.56, .17, .3, .05), pm(0xf5b4c4, .9), [0, .085, 0]); part(g, rr(.3, .18, .31, .02), pm(0x7fb2e6, .6), [.12, .09, 0]); return g; },
+  ruler() { const g = new THREE.Group(); part(g, new THREE.BoxGeometry(2.3, .05, .36), rulerMat(), [0, .025, 0]); return g; },
+  scissors(c = 0xf2a0be) { const g = new THREE.Group(), h = pm(c, .5), m = METAL(); for (const s of [-1, 1]) { part(g, new THREE.TorusGeometry(.14, .045, 8, 20), h, [-.46, .05, s * .14], [Math.PI / 2, 0, 0]); part(g, new THREE.BoxGeometry(.3, .05, .07), h, [-.24, .05, s * .07], [0, s * .35, 0]); part(g, new THREE.BoxGeometry(.78, .03, .075), m, [.27, .05 + s * .012, s * .015], [0, -s * .06, 0]); } part(g, cyl(.04, .04, .1, 12), m, [-.1, .05, 0]); return g; },
+  glue() { const g = new THREE.Group(); part(g, cyl(.15, .15, .55, 18), pm(0xf7f4ee, .5), [-.05, .15, 0], XAX); part(g, cyl(.16, .16, .2, 18), pm(0x8fcf9f, .5), [.32, .16, 0], XAX); part(g, cyl(.155, .155, .06, 18), pm(0x8fcf9f, .5), [-.33, .155, 0], XAX); return g; },
+  jar(c) { const g = new THREE.Group(); part(g, cyl(.29, .29, .34, 22), pm(0xf4f1ea, .3), [0, .17, 0]); part(g, cyl(.295, .295, .13, 22), pm(lt(c, .25), .7), [0, .17, 0]); part(g, cyl(.31, .31, .1, 22), pm(c, .45), [0, .39, 0]); return g; },
+  brush(L, c) { const g = new THREE.Group(), r = L > 1.3 ? .075 : .055; part(g, cyl(r * .7, r, L * .6, 12), pm(c, .55), [-L * .18, r, 0], XAX); part(g, cyl(r * 1.05, r * 1.05, L * .13, 12), METAL(), [L * .185, r, 0], XAX); part(g, cyl(r * .5, r * 1.05, L * .2, 12), pm(0xf0dcc0, .95), [L * .35, r, 0], XAX); part(g, new THREE.ConeGeometry(r * .5, L * .06, 12), pm(dk(c, .1), .8), [L * .48, r, 0], XAX); return g; },
+  tube(c) { const g = new THREE.Group(); part(g, cyl(.15, .12, .74, 18), pm(0xf7f4ee, .45), [0, .15, 0], XAX, [1, 1, .72]); part(g, cyl(.153, .143, .3, 18), pm(c, .55), [-.05, .15, 0], XAX, [1, 1, .74]); part(g, new THREE.BoxGeometry(.08, .05, .3), pm(0xf7f4ee, .45), [-.4, .15, 0]); part(g, cyl(.08, .08, .16, 14), pm(c, .45), [.44, .15, 0], XAX); return g; },
+  palette() { const g = new THREE.Group(); part(g, cyl(.72, .72, .06, 28), WOODM(), [0, .03, 0], [0, 0, 0], [1, 1, .72]); part(g, cyl(.11, .11, .062, 16), pm(0xc99a64, .9), [-.42, .032, .16]); [[HUE.red, .38, -.2], [HUE.yellow, .12, -.36], [HUE.blue, -.16, -.32], [HUE.green, .44, .14], [0xffffff, .14, .3]].forEach(([c, x, z]) => part(g, new THREE.SphereGeometry(.13, 14, 8), pm(c, .35), [x, .06, z], [0, 0, 0], [1, .35, 1])); return g; },
+  book(c, t, h, d) { const g = new THREE.Group(), m = pm(c, .7); for (const s of [-1, 1]) part(g, new THREE.BoxGeometry(t * .12, h, d), m, [s * (t / 2 - t * .06), h / 2, 0]); part(g, new THREE.BoxGeometry(t, h, t * .14), m, [0, h / 2, d / 2 - t * .07]); part(g, new THREE.BoxGeometry(t * .78, h * .96, d * .94), CREAMM(), [0, h * .48 + .001, -d * .02]); part(g, new THREE.BoxGeometry(t * 1.01, h * .03, t * .15), pm(0xf2d27a, .4, .3), [0, h * .82, d / 2 - t * .07]); part(g, new THREE.BoxGeometry(t * 1.01, h * .03, t * .15), pm(0xf2d27a, .4, .3), [0, h * .14, d / 2 - t * .07]); return g; },
+  hammer() { const g = new THREE.Group(); part(g, cyl(.065, .07, 1.25, 12), WOODM(), [-.1, .11, 0], XAX); part(g, cyl(.085, .085, .48, 12), pm(0xe8716c, .8), [-.5, .11, 0], XAX); part(g, new THREE.BoxGeometry(.22, .22, .5), METAL(), [.6, .11, .05]); part(g, cyl(.1, .1, .14, 14), METAL(), [.6, .11, .34], [Math.PI / 2, 0, 0]); part(g, new THREE.BoxGeometry(.16, .14, .32), METAL(), [.6, .1, -.3], [.0, 0, 0]); return g; },
+  screwdriver(c) { const g = new THREE.Group(); part(g, cyl(.12, .12, .55, 8), pm(c, .5), [-.4, .12, 0], XAX); part(g, cyl(.075, .11, .1, 12), pm(dk(c, .25), .5), [-.08, .12, 0], XAX); part(g, cyl(.03, .03, .72, 10), METAL(), [.33, .12, 0], XAX); part(g, new THREE.BoxGeometry(.1, .018, .06), METAL(), [.72, .12, 0]); return g; },
+  wrench() { const g = new THREE.Group(), m = METAL(); part(g, new THREE.BoxGeometry(1.15, .06, .17), m, [0, .05, 0]); part(g, new THREE.TorusGeometry(.17, .065, 8, 22, Math.PI * 1.45), m, [.72, .05, 0], [Math.PI / 2, 0, Math.PI * .275]); part(g, new THREE.TorusGeometry(.13, .055, 8, 22), m, [-.7, .05, 0], [Math.PI / 2, 0, 0]); return g; },
+  tape() { const g = new THREE.Group(); part(g, rr(.58, .25, .58, .13), pm(0xf2cd4c, .45), [0, .125, 0]); part(g, cyl(.18, .18, .02, 20), INK(), [0, .255, 0]); part(g, new THREE.BoxGeometry(.1, .07, .22), METAL(), [.31, .05, 0]); return g; },
+  level() { const g = new THREE.Group(); part(g, rr(1.8, .2, .28, .04), pm(0x5fc2bd, .45), [0, .1, 0]); part(g, rr(.34, .03, .16, .01), pm(0xd9f5c4, .2), [0, .2, 0]); part(g, new THREE.SphereGeometry(.035, 10, 6), pm(0xffffff, .3), [.03, .215, 0]); for (const s of [-1, 1]) part(g, rr(.14, .204, .286, .03), INK(), [s * .83, .1, 0]); return g; },
+  spool(c) { const g = new THREE.Group(), w = WOODM(); part(g, cyl(.22, .22, .05, 22), w, [0, .025, 0]); part(g, cyl(.22, .22, .05, 22), w, [0, .395, 0]); part(g, cyl(.175, .175, .32, 22), pm(c, .9), [0, .21, 0]); part(g, cyl(.05, .05, .012, 12), pm(0x8a6a48, .9), [0, .425, 0]); return g; },
+  pincushion() { const g = new THREE.Group(); part(g, cyl(.27, .29, .07, 22), WOODM(), [0, .035, 0]); part(g, new THREE.SphereGeometry(.3, 20, 12), pm(0xe8716c, .95), [0, .2, 0], [0, 0, 0], [1, .62, 1]); [[.12, .04, 0xf2cd4c], [-.1, .1, 0x6f9fe6], [.02, -.13, 0x6cc48c], [-.14, -.06, 0xffffff], [.15, -.1, 0xa98be0]].forEach(([x, z, c]) => { part(g, cyl(.01, .01, .16, 6), METAL(), [x, .36, z], [z * 2, 0, -x * 2]); part(g, new THREE.SphereGeometry(.035, 10, 6), pm(c, .35), [x * 1.25, .44, z * 1.25]); }); return g; },
+  thimble() { const g = new THREE.Group(), m = METAL(); part(g, cyl(.11, .13, .24, 18), m, [0, .12, 0]); part(g, new THREE.SphereGeometry(.11, 18, 8, 0, Math.PI * 2, 0, Math.PI / 2), m, [0, .24, 0], [0, 0, 0], [1, .5, 1]); return g; },
+  button(c) { const g = new THREE.Group(), m = pm(c, .4); part(g, cyl(.22, .22, .07, 26), m, [0, .035, 0]); part(g, new THREE.TorusGeometry(.18, .022, 6, 26), pm(dk(c, .12), .4), [0, .07, 0], [Math.PI / 2, 0, 0]); for (const [x, z] of [[-.05, -.05], [.05, -.05], [-.05, .05], [.05, .05]]) part(g, cyl(.024, .024, .074, 8), pm(dk(c, .45), .6), [x, .036, z]); return g; },
+  shirt(c) { const g = new THREE.Group(), m = pm(c, .95); part(g, rr(1.4, .2, 1.15, .07), m, [0, .1, 0]); part(g, new THREE.TorusGeometry(.2, .055, 6, 16, Math.PI), pm(lt(c, .35), .95), [0, .2, -.48], [Math.PI / 2, 0, 0]); part(g, new THREE.BoxGeometry(.09, .012, .85), pm(lt(c, .35), .9), [0, .205, .1]); [-.2, .1, .4].forEach(z => part(g, cyl(.025, .025, .02, 8), pm(0xffffff, .4), [0, .215, z])); part(g, new THREE.BoxGeometry(.26, .012, .22), pm(dk(c, .08), .95), [.36, .205, -.12]); return g; },
+  socks(c) { const g = new THREE.Group(); part(g, new THREE.CapsuleGeometry(.16, .42, 6, 14), pm(c, .95), [0, .16, 0], XAX); part(g, cyl(.165, .165, .12, 14), pm(0xffffff, .95), [-.22, .16, 0], XAX); part(g, cyl(.165, .165, .05, 14), pm(dk(c, .2), .95), [.08, .16, 0], XAX); return g; },
+  toothbrush() { const g = new THREE.Group(); part(g, rr(1.05, .07, .14, .03), pm(0x6cc48c, .4), [0, .05, 0]); part(g, rr(.3, .08, .16, .03), pm(0xf7f4ee, .4), [.6, .05, 0]); part(g, new THREE.BoxGeometry(.26, .1, .12), pm(0xbfe2f5, .7), [.6, .13, 0]); return g; },
+  sunglasses() { const g = new THREE.Group(), f = pm(0xa98be0, .4), l = pm(0x37465c, .15, .2); for (const s of [-1, 1]) { part(g, cyl(.18, .18, .03, 22), l, [s * .23, .05, .08]); part(g, new THREE.TorusGeometry(.18, .028, 6, 22), f, [s * .23, .05, .08], [Math.PI / 2, 0, 0]); part(g, new THREE.BoxGeometry(.06, .035, .5), f, [s * .4, .05, -.18], [0, s * .12, 0]); } part(g, new THREE.BoxGeometry(.14, .03, .04), f, [0, .05, .08]); return g; },
+  cap(c = 0xe8716c) { const g = new THREE.Group(), m = pm(c, .9); part(g, new THREE.SphereGeometry(.42, 22, 10, 0, Math.PI * 2, 0, Math.PI / 2), m, [0, 0, -.1], [0, 0, 0], [1, .78, 1]); part(g, cyl(.34, .34, .035, 22), pm(dk(c, .08), .9), [0, .02, .38], [0, 0, 0], [1, 1, 1.15]); part(g, new THREE.SphereGeometry(.045, 10, 6), pm(lt(c, .4), .8), [0, .33, -.1]); return g; },
+  notebook() { const g = new THREE.Group(); part(g, rr(1.0, .13, 1.35, .03), pm(0x5fc2bd, .7), [0, .065, 0]); part(g, new THREE.BoxGeometry(.96, .09, 1.3), CREAMM(), [.03, .065, 0]); part(g, new THREE.BoxGeometry(.05, .14, 1.36), pm(0xe8716c, .8), [.32, .066, 0]); return g; },
+  onigiri() { const g = new THREE.Group(); part(g, cyl(.42, .42, .3, 3), pm(0xfbf8f0, .95), [0, .15, 0]); part(g, new THREE.BoxGeometry(.34, .31, .14), pm(0x2f4a3a, .7), [0, .155, -.18]); return g; },
+  chopsticks() { const g = new THREE.Group(); for (const s of [-1, 1]) { part(g, cyl(.022, .036, 1.45, 8), WOODM(), [0, .036, s * .06], XAX); part(g, cyl(.037, .037, .22, 8), pm(0xe8716c, .6), [-.6, .037, s * .06], XAX); } return g; }
+};
+// chunky picture books (thickness, height, depth): thick enough to grab, short enough not to hide their neighbours
+const BOOKS = { red: [.56, 1.7, 1.2], blue: [.44, 1.5, 1.1], green: [.7, 1.85, 1.3], yellow: [.4, 1.35, 1.0], purple: [.62, 1.6, 1.15], teal: [.48, 1.8, 1.25], orange: [.76, 1.45, 1.05], pink: [.36, 1.3, .95] };
+function defProc(name, build, en, es, tint) { PROC[name] = build; PLABEL[name] = [en, es]; if (tint != null) TINT[name] = tint; }
+for (const h of ['red', 'blue', 'green']) defProc('crayon-' + h, () => B.crayon(HUE[h]), `${HUE_N[h][0]} crayon`, `crayón ${HUE_N[h][1]}`, HUE[h]);
+for (const h of ['red', 'yellow', 'blue', 'green']) defProc('jar-' + h, () => B.jar(HUE[h]), `${HUE_N[h][0]} paint`, `pintura ${HUE_N[h][2]}`, HUE[h]);
+for (const h of ['pink', 'purple']) defProc('tube-' + h, () => B.tube(HUE[h]), `${HUE_N[h][0]} paint tube`, `tubo de pintura ${HUE_N[h][1]}`, HUE[h]);
+for (const h in BOOKS) defProc('book-' + h, () => B.book(HUE[h], ...BOOKS[h]), `${HUE_N[h][0]} book`, `libro ${HUE_N[h][1]}`, HUE[h]);
+for (const h of ['red', 'blue']) defProc('screwdriver-' + h, () => B.screwdriver(HUE[h]), `${HUE_N[h][0]} screwdriver`, `destornillador ${HUE_N[h][1]}`, HUE[h]);
+for (const h of ['red', 'blue', 'yellow', 'green']) defProc('spool-' + h, () => B.spool(HUE[h]), `${HUE_N[h][0]} thread`, `hilo ${HUE_N[h][1]}`, HUE[h]);
+for (const h of ['pink', 'teal']) defProc('button-' + h, () => B.button(HUE[h]), `${HUE_N[h][0]} button`, `botón ${HUE_N[h][1]}`, HUE[h]);
+for (const h of ['blue', 'pink', 'green']) defProc('shirt-' + h, () => B.shirt(HUE[h]), `${HUE_N[h][0]} shirt`, `camisa ${HUE_N[h][2]}`, HUE[h]);
+for (const h of ['yellow', 'purple']) defProc('socks-' + h, () => B.socks(HUE[h]), `${HUE_N[h][0]} socks`, `calcetines ${HUE_N[h][3]}`, HUE[h]);
+defProc('pencil', B.pencil, 'pencil', 'lápiz'); defProc('eraser', B.eraser, 'eraser', 'borrador'); defProc('ruler', B.ruler, 'ruler', 'regla'); defProc('scissors', () => B.scissors(), 'scissors', 'tijeras'); defProc('glue', B.glue, 'glue stick', 'barra de pegamento');
+defProc('brush-big', () => B.brush(1.6, 0xf29a55), 'big brush', 'pincel grande'); defProc('brush-small', () => B.brush(1.15, 0x6f9fe6), 'small brush', 'pincel pequeño'); defProc('palette', B.palette, 'paint palette', 'paleta de pintor');
+defProc('hammer', B.hammer, 'hammer', 'martillo'); defProc('wrench', B.wrench, 'wrench', 'llave'); defProc('tape', B.tape, 'tape measure', 'cinta métrica'); defProc('level', B.level, 'spirit level', 'nivel');
+defProc('pincushion', B.pincushion, 'pincushion', 'alfiletero'); defProc('thimble', B.thimble, 'thimble', 'dedal');
+defProc('toothbrush', B.toothbrush, 'toothbrush', 'cepillo de dientes'); defProc('sunglasses', B.sunglasses, 'sunglasses', 'gafas de sol'); defProc('cap', () => B.cap(), 'cap', 'gorra'); defProc('notebook', B.notebook, 'notebook', 'cuaderno');
+defProc('onigiri', B.onigiri, 'rice ball', 'bola de arroz'); defProc('chopsticks', B.chopsticks, 'chopsticks', 'palillos');
+function registerProc() { for (const n in PROC) { if (E.ASSETS.models[n]) continue; const g = PROC[n](); g.userData.proc = true; E.ASSETS.models[n] = g; if (!SIZE[n]) { const s = new THREE.Box3().setFromObject(g).getSize(new THREE.Vector3()); SIZE[n] = Math.max(s.x, s.y, s.z) * (/^(book|shirt)/.test(n) ? 1 : 1.5); } } }
+// colour-blind aid: every colour also has a shape sticker, on the item and in its slot
+const GLYPH = { red: 'circle', blue: 'triangle', yellow: 'star', green: 'square', purple: 'diamond', orange: 'plus', pink: 'heart', teal: 'hex' };
+const _glyph = {};
+function glyphMat(name) {
+  const h = (name.match(/-(red|blue|yellow|green|purple|orange|pink|teal)$/) || [])[1]; if (!h) return null; if (_glyph[h]) return _glyph[h];
+  const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); g.translate(32, 32); g.beginPath();
+  const poly = (n, r, rot = -Math.PI / 2, r2) => { for (let i = 0; i < n * (r2 ? 2 : 1); i++) { const a = rot + i * Math.PI * 2 / (n * (r2 ? 2 : 1)), rr = r2 && i % 2 ? r2 : r; i ? g.lineTo(Math.cos(a) * rr, Math.sin(a) * rr) : g.moveTo(Math.cos(a) * rr, Math.sin(a) * rr); } g.closePath(); };
+  const k = GLYPH[h]; if (k === 'circle') g.arc(0, 0, 17, 0, 6.3); else if (k === 'triangle') poly(3, 21); else if (k === 'star') poly(5, 22, -Math.PI / 2, 10); else if (k === 'square') g.rect(-15, -15, 30, 30); else if (k === 'diamond') poly(4, 21); else if (k === 'plus') { g.rect(-6, -19, 12, 38); g.rect(-19, -6, 38, 12); } else if (k === 'heart') { g.moveTo(0, 18); g.bezierCurveTo(-26, 0, -14, -22, 0, -9); g.bezierCurveTo(14, -22, 26, 0, 0, 18); } else poly(6, 19, 0);
+  g.fillStyle = '#fff'; g.strokeStyle = 'rgba(30,40,55,.75)'; g.lineWidth = 5; g.lineJoin = 'round'; g.stroke(); g.fill();
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return (_glyph[h] = new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false, toneMapped: false }));
+}
+const _gq = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
+function sticker(name, size) { const m = glyphMat(name); if (!m) return null; const o = new THREE.Mesh(_gq, m); o.scale.setScalar(size); o.renderOrder = 3; return o; }
+const label = n => PLABEL[n] ? T(...PLABEL[n]) : T(LABEL[n] || n, LABEL_ES[n] || n);
+// what an item is made of → how it sounds when it lands (thock) and lifts
+const MATERIAL = n => /utensil|whisk|hammer|screwdriver|wrench|thimble|scissors|^can$|soda-can|level/.test(n) ? 'metal' : /glass|honey|peanut|bottle|^jar|cup|soy|shaker|sunglasses/.test(n) ? 'glass' : /shirt|socks|^cap$|pincushion|headphones|eraser/.test(n) ? 'fabric' : /book|notebook|carton|candy-bar|chocolate|ruler/.test(n) ? 'paper' : /rolling-pin|pepper-mill|pencil|crayon|brush|palette|spool|chopsticks/.test(n) ? 'wood' : /keyboard|controller|toothbrush|glue|button|tube|race-car|taxi|police|ambulance|truck|tractor|boat|tape/.test(n) ? 'plastic' : 'food';
 
 /* ---------------- room ---------------- */
 const room = new THREE.Group(); scene.add(room);
@@ -147,8 +278,8 @@ function recolor(name, m) {
 }
 // Clone a packed model, pastelise it, optionally lay it flat, recentre: feet on y=0, centred in x/z.
 function makeModel(name, shadow = true) {
-  const inst = E.instance(name, { scale: SIZE[name] || 1, outline: false, shadow });
-  inst.traverse(o => { if (o.isMesh) { o.material = o.material.clone(); recolor(name, o.material); } });
+  const inst = E.instance(name, { scale: SIZE[name] || 1, outline: false, shadow }), proc = !!PROC[name];
+  inst.traverse(o => { if (o.isMesh) { o.material = o.material.clone(); if (!proc) recolor(name, o.material); } });
   const w = new THREE.Group(); w.add(inst);
   if (FLAT[name]) inst.rotation.set(...FLAT[name]);
   w.updateMatrixWorld(true); const b = new THREE.Box3().setFromObject(inst); const c = b.getCenter(new THREE.Vector3());
@@ -159,37 +290,52 @@ const footprint = (name, yaw) => { const s = sizeOf(name); return Math.abs(Math.
 const SIZES = {}; function sizeOf(name) { if (!SIZES[name]) SIZES[name] = makeModel(name, false).userData.size; return SIZES[name]; }
 function rr(w, h, d, r = .06, seg = 3) { return new RoundedBoxGeometry(w, h, d, seg, Math.min(r, w / 2 - .001, h / 2 - .001, d / 2 - .001)); }
 function glowTex(w, d) { const k = 128, cw = Math.max(32, Math.round(k * w / Math.max(w, d))), ch = Math.max(32, Math.round(k * d / Math.max(w, d))); const c = document.createElement('canvas'); c.width = cw + 24; c.height = ch + 24; const g = c.getContext('2d'); g.shadowColor = '#fff'; g.shadowBlur = 10; g.strokeStyle = '#fff'; g.lineWidth = 6; g.fillStyle = 'rgba(255,255,255,.28)'; g.beginPath(); g.roundRect(12, 12, cw, ch, 14); g.fill(); g.stroke(); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; }
+const _cmat = {};
 function containerMat(L) {
-  if (L.style === 'wood') { const m = E.pbr('wood', L.col, [1, 1], { bump: .8 }).clone(); m.envMapIntensity = .6; return m; }
-  if (L.style === 'wicker') return wickerMat(L.col);
-  const m = E.pbr(L.style === 'card' ? 'paint' : 'plastic', L.col, [2, 2], { bump: .4 }).clone(); m.roughnessMap = null; m.roughness = L.style === 'card' ? .85 : .5; return m;
+  const k = L.style + L.col; if (_cmat[k]) return _cmat[k]; let m;
+  if (L.style === 'wood') { m = E.pbr('wood', L.col, [1, 1], { bump: .8 }).clone(); m.envMapIntensity = .6; }
+  else if (L.style === 'wicker') m = wickerMat(L.col);
+  else if (L.style === 'fabric') { m = E.pbr('fabric', L.col, [3, 3], { bump: .7 }).clone(); m.envMapIntensity = .45; }
+  else if (L.style === 'metal') { m = E.pbr('plastic', L.col, [2, 2], { bump: .25 }).clone(); m.roughnessMap = null; m.roughness = .38; m.metalness = .35; }
+  else { m = E.pbr(L.style === 'card' ? 'paint' : 'plastic', L.col, [2, 2], { bump: .4 }).clone(); m.roughnessMap = null; m.roughness = L.style === 'card' ? .85 : .5; }
+  return (_cmat[k] = m);
 }
-const easeOutBack = t => { const c = 1.9; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); };
 const easeInOut = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 const easeOut = t => 1 - Math.pow(1 - t, 3);
 
 /* ---------------- container ---------------- */
-function buildContainer(L) {
-  const g = new THREE.Group(); const PAD = .2, DIV = .1, WALL = .2, H = .6, FLOOR = .14;
+const PAD = .2, DIV = .1, WALL = .2;
+// slot plan in the box's own frame (rows along x); cached per level
+function plan(L) {
+  if (L._plan) return L._plan;
   const rows = L.rows.map(r => r.map(s => { const [name, rot] = s.split('@'); const yaw = rot ? Math.PI / 2 : 0; const f = footprint(name, yaw); return { name, yaw, w: f.w + PAD * 2, d: f.d + PAD * 2, h: f.h }; }));
   const rowW = rows.map(r => r.reduce((a, s) => a + s.w, 0) + DIV * (r.length - 1)), W = Math.max(...rowW);
   const rowD = rows.map(r => Math.max(...r.map(s => s.d))), D = rowD.reduce((a, b) => a + b, 0) + DIV * (rows.length - 1);
+  return (L._plan = { rows, rowW, rowD, W, D });
+}
+function buildContainer(L, turn = false) {
+  const g = new THREE.Group(), inner = new THREE.Group(); g.add(inner); if (turn) inner.rotation.y = Math.PI / 2;
+  const H = .6, FLOOR = .14; const { rows, rowW, rowD, W, D } = plan(L);
   const m = containerMat(L), liner = E.mat(new THREE.Color(L.col).multiplyScalar(.9).getHex(), { roughness: .9 });
-  const add = (geo, x, y, z, mm = m) => { const o = new THREE.Mesh(geo, mm); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; g.add(o); return o; };
-  const OW = W + WALL * 2, OD = D + WALL * 2;
-  add(rr(OW, FLOOR, OD, .08), 0, FLOOR / 2, 0);
-  for (const s of [-1, 1]) { add(rr(OW, H, WALL, .07), 0, H / 2, s * (OD / 2 - WALL / 2)); add(rr(WALL, H, OD, .07), s * (OW / 2 - WALL / 2), H / 2, 0); }
+  const add = (geo, x, y, z, mm = m, par = inner) => { const o = new THREE.Mesh(geo, mm); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; par.add(o); return o; };
+  const lw = W + WALL * 2, ld = D + WALL * 2, OW = turn ? ld : lw, OD = turn ? lw : ld;
+  add(rr(lw, FLOOR, ld, .08), 0, FLOOR / 2, 0);
+  for (const s of [-1, 1]) { add(rr(lw, H, WALL, .07), 0, H / 2, s * (ld / 2 - WALL / 2)); add(rr(WALL, H, ld, .07), s * (lw / 2 - WALL / 2), H / 2, 0); }
   const slots = []; let z = -D / 2;
   rows.forEach((r, ri) => {
     const extra = (W - rowW[ri]) / r.length; let x = -W / 2;
     r.forEach((s, si) => {
       const w = s.w + extra, d = rowD[ri], cx = x + w / 2, cz = z + d / 2;
       add(rr(w - .04, .02, d - .04, .01, 1), cx, FLOOR + .01, cz, liner).castShadow = false;
-      const sil = makeModel(s.name, false); sil.traverse(o => { if (o.isMesh) { o.material = new THREE.MeshBasicMaterial({ color: new THREE.Color(L.col).multiplyScalar(.42), transparent: true, opacity: .4, depthWrite: false }); o.castShadow = o.receiveShadow = false; } });
-      sil.scale.y = .002; sil.position.set(cx, FLOOR + .024, cz); sil.rotation.y = s.yaw; sil.renderOrder = 1; g.add(sil);
+      // the outline is the item's own shape pressed flat; colour-coded items get an outline in their colour
+      const tint = TINT[s.name], silCol = tint != null ? new THREE.Color(tint).multiplyScalar(.85) : new THREE.Color(L.col).multiplyScalar(.42);
+      const sil = makeModel(s.name, false), silM = new THREE.MeshBasicMaterial({ color: silCol, transparent: true, opacity: .4, depthWrite: false }); sil.traverse(o => { if (o.isMesh) { o.material = silM; o.castShadow = o.receiveShadow = false; } });
+      let stick = null; { const st = sticker(s.name, .3); if (st) { st.position.set(cx, FLOOR + .03, cz); st.material = st.material.clone(); st.material.opacity = .8; inner.add(st); stick = st; } }
+      sil.scale.y = .002; sil.position.set(cx, FLOOR + .024, cz); sil.rotation.y = s.yaw; sil.renderOrder = 1; inner.add(sil);
       const glow = new THREE.Mesh(new THREE.PlaneGeometry(w - .02, d - .02), new THREE.MeshBasicMaterial({ map: glowTex(w, d), color: 0x3fcf9a, transparent: true, opacity: 0, depthWrite: false, toneMapped: false }));
-      glow.rotation.x = -Math.PI / 2; glow.position.set(cx, FLOOR + .03, cz); glow.renderOrder = 2; g.add(glow);
-      slots.push({ i: slots.length, name: s.name, yaw: s.yaw, x: cx, z: cz, w, d, floor: FLOOR + .02, item: null, sil, glow, glowT: 0, glowC: 0x3fcf9a, pulse: 0 });
+      glow.rotation.x = -Math.PI / 2; glow.position.set(cx, FLOOR + .03, cz); glow.renderOrder = 2; inner.add(glow);
+      // slot record in the box's world-aligned frame (after the optional quarter turn: (x, z) → (z, −x))
+      slots.push({ i: slots.length, name: s.name, yaw: s.yaw + (turn ? Math.PI / 2 : 0), x: turn ? cz : cx, z: turn ? -cx : cz, w: turn ? d : w, d: turn ? w : d, floor: FLOOR + .02, item: null, sil, silM, stick, glow, glowT: 0, pulse: 0, silBase: tint != null ? .62 : .4 });
       if (si < r.length - 1) add(rr(DIV, H * .82, d, .04), x + w + DIV / 2, H * .41, cz);
       x += w + DIV;
     });
@@ -197,97 +343,168 @@ function buildContainer(L) {
     z += rowD[ri] + DIV;
   });
   let lidH = 0;
-  if (L.lid) { const LD = Math.min(OD * .92, 3.2); const lid = add(rr(OW, .12, LD, .06), 0, 0, 0); const piv = new THREE.Group(); piv.position.set(0, H, -OD / 2); piv.add(lid); lid.position.set(0, .06, -LD / 2); piv.rotation.x = 1.25; g.add(piv); lidH = H + LD * Math.sin(1.25); g.userData.lid = { piv, LD }; }
+  if (L.lid) { const LD = Math.min(OD * .92, 3.2); const lid = add(rr(OW, .12, LD, .06), 0, 0, 0, m, g); const piv = new THREE.Group(); piv.position.set(0, H, -OD / 2); piv.add(lid); lid.position.set(0, .06, -LD / 2); piv.rotation.x = 1.25; g.add(piv); lidH = H + LD * Math.sin(1.25); g.userData.lid = { piv, LD }; }
   if (L.style === 'wicker') for (const s of [-1, 1]) { const hdl = new THREE.Mesh(new THREE.TorusGeometry(.42, .07, 8, 20, Math.PI), m); hdl.position.set(s * (OW / 2 + .02), H * .55, 0); hdl.rotation.set(0, Math.PI / 2, -Math.PI / 2 * s); hdl.castShadow = true; g.add(hdl); }
-  return { g, slots, W: OW, D: OD, H, lidH, lidBack: 0 };
+  return { g, slots, W: OW, D: OD, H, lidH, lidBack: 0, turn };
+}
+// swap in a turned/unturned box mid-level (orientation change): placed items follow their slot, nothing is lost
+function rebuildContainer(turn) {
+  const old = G.cont; scene.remove(old.g); const c = buildContainer(G.L, turn); scene.add(c.g); G.cont = c;
+  const dy = turn ? Math.PI / 2 : -Math.PI / 2;
+  for (const it of G.items) if (it.slot) { const s = c.slots[it.slot.i]; it.slot = s; s.item = it; it.g.rotation.y += dy; it.toYaw += dy; }
 }
 
 /* ---------------- items ---------------- */
 function makeItem(name, idx) {
   const g = new THREE.Group(), tilt = new THREE.Group(), model = makeModel(name); const s = model.userData.size;
   tilt.position.y = s.y / 2; model.position.y = -s.y / 2; tilt.add(model); g.add(tilt); scene.add(g);
+  const st = sticker(name, Math.min(.3, Math.max(s.x, s.z) * .5)); if (st) { st.position.y = s.y / 2 + .012; tilt.add(st); }
   const proxy = new THREE.Mesh(new THREE.BoxGeometry(Math.max(.9, s.x * 1.25), Math.max(.6, s.y * 1.15), Math.max(.9, s.z * 1.25)), new THREE.MeshBasicMaterial({ visible: false })); proxy.position.y = s.y / 2; g.add(proxy);
   const it = { idx, name, g, tilt, model, proxy, size: s, state: 'loose', home: new THREE.Vector3(), homeYaw: 0, vel: new THREE.Vector3(), slot: null, t: 0, from: new THREE.Vector3(), fromYaw: 0, to: new THREE.Vector3(), toYaw: 0, sway: new THREE.Vector2(), lift: 0, sc: 1 };
   proxy.userData.item = it; return it;
 }
+const matFoot = (name, s) => ({ x: s.x, z: s.z });
 
 /* ---------------- layout + camera fit ---------------- */
 const portrait = () => innerHeight > innerWidth * 1.05;
+const GAPOF = port => port ? 1 : 1.3;
+// outer size of a box for a given quarter turn (lid stands nearly upright on phones so it doesn't eat the screen height)
+function boxDims(L, turn, port) {
+  const p = plan(L), lw = p.W + WALL * 2, ld = p.D + WALL * 2, W = turn ? ld : lw, D = turn ? lw : ld; let lidH = 0, lidBack = 0;
+  if (L.lid) { const LD = Math.min(D * .92, 3.2), th = port ? 1.5 : 1.25; lidH = .6 + LD * Math.sin(th); lidBack = LD * Math.cos(th); }
+  return { W, D, H: .6, lidH, lidBack };
+}
+const matArea = L => L.rows.flat().reduce((a, s) => { const n = s.split('@')[0], f = matFoot(n, sizeOf(n)); return a + (f.x + .4) * (f.z + .4); }, 0) * 1.35 + 2;
+// box + placemat placement for a mat of RW × RD (portrait: mat below the box; landscape: mat to the right)
+function frameGeo(C, RW, RD, port) {
+  const GAP = GAPOF(port); let cx, cz, rx, rz;
+  if (port) { cx = 0; cz = -(C.D / 2) - GAP / 2; rx = 0; rz = RD / 2 + GAP / 2; } else { cx = -(C.W / 2) - GAP / 2; cz = 0; rx = RW / 2 + GAP / 2; rz = 0; }
+  const region = { x0: rx - RW / 2, x1: rx + RW / 2, z0: rz - RD / 2, z1: rz + RD / 2 };
+  const bx = new THREE.Box3(); bx.expandByPoint(new THREE.Vector3(cx - C.W / 2, 0, cz - C.D / 2)); bx.expandByPoint(new THREE.Vector3(cx + C.W / 2, C.H + (port ? .6 : 1.2), cz + C.D / 2));
+  bx.expandByPoint(new THREE.Vector3(region.x0 - .4, 0, region.z0 - .4)); bx.expandByPoint(new THREE.Vector3(region.x1 + .4, port ? .8 : 1.4, region.z1 + .4));
+  // lid corners are framed separately: they may tuck up under the HUD's second row, the slots never do
+  const lid = C.lidH ? [-1, 1].map(sx => new THREE.Vector3(cx + sx * C.W / 2, C.lidH, cz - C.D / 2 - C.lidBack)) : [];
+  return { cx, cz, rx, rz, region, bx, lid };
+}
+// Pick the box turn + placemat shape that shows everything biggest (smallest camera distance) on this screen: e.g. a wide drawer
+// stands tall on a phone instead of shrinking to fit the narrow width. Tried for both quarter turns and 17 mat shapes.
+function chooseLayout(L, port) {
+  const area = matArea(L), sq = Math.sqrt(area); let best = null;
+  for (const turn of [false, true]) {
+    const C = boxDims(L, turn, port);
+    for (let k = 0; k <= 16; k++) {
+      let RW, RD;
+      if (port) { RW = lerp(Math.max(3, sq * .6), Math.max(C.W, sq) * 2, k / 16); RD = Math.max(3, area / RW); }
+      else { RD = lerp(Math.max(3, sq * .6), Math.max(C.D, sq) * 2, k / 16); RW = Math.max(3, area / RD); }
+      const f = frameGeo(C, RW, RD, port), cam = camFit(f.bx, f.lid, port, 2);
+      const score = cam.d * (turn ? 1.04 : 1); // keep the familiar orientation unless turning really helps
+      if (!best || score < best.score) best = { score, turn, RW, RD, C };
+    }
+  }
+  return best;
+}
 function layout(reshuffle = true) {
-  const C = G.cont, port = portrait(); G.port = port; const GAP = port ? 1 : 1.3;
-  // lid: stands nearly upright on phones so it doesn't eat the screen height above the box
-  const lid = C.g.userData.lid; if (lid) { const th = port ? 1.5 : 1.25; lid.piv.rotation.x = th; C.lidH = C.H + lid.LD * Math.sin(th); C.lidBack = lid.LD * Math.cos(th); }
-  const loose = G.items.filter(i => i.state !== 'placed');
-  const area = G.items.reduce((a, i) => a + (i.size.x + .4) * (i.size.z + .4), 0) * 1.3 + 2;
-  let RW, RD;
-  if (port) {
-    // (widest first: on ties the wider, shallower mat wins, so items spread across the phone)
-    // pick the placemat shape so box + mat together match the tall phone screen (fills the width instead of leaving side bands)
-    const avail = Math.max(1, (innerHeight - 180) / (innerWidth * .95)), lidD = C.lidH ? (C.lidH - C.H) * .5 : 0, sq = Math.sqrt(area); let best = 1e9;
-    for (let w = Math.max(C.W, sq) * 2.2; w >= Math.max(3, sq * .7); w -= .05) { const d = Math.max(3, area / w), sc = Math.max(Math.max(C.W, w) + .8, (C.D + GAP + d + lidD + .8) * .92 / avail); if (sc < best - 1e-6) { best = sc; RW = w; RD = d; } }
-  } else { RD = Math.max(C.D, Math.sqrt(area * .8)); RW = Math.max(3, area / RD); }
-  let cx, cz, rx, rz; if (port) { cx = 0; cz = -(C.D / 2) - GAP / 2; rx = 0; rz = RD / 2 + GAP / 2; } else { cx = -(C.W / 2) - GAP / 2; cz = 0; rx = RW / 2 + GAP / 2; rz = 0; }
-  C.g.position.set(cx, 0, cz); C.g.updateMatrixWorld(true);
-  G.region = { x0: rx - RW / 2, x1: rx + RW / 2, z0: rz - RD / 2, z1: rz + RD / 2 };
+  const port = portrait(); G.port = port;
+  const ch = chooseLayout(G.L, port); if (G.cont.turn !== ch.turn) rebuildContainer(ch.turn);
+  const C = G.cont, lid = C.g.userData.lid;
+  if (lid) { const th = port ? 1.5 : 1.25; lid.piv.rotation.x = th; C.lidH = C.H + lid.LD * Math.sin(th); C.lidBack = lid.LD * Math.cos(th); }
+  let { RW, RD } = ch, f;
+  const frame = () => { f = frameGeo(C, RW, RD, port); C.g.position.set(f.cx, 0, f.cz); C.g.updateMatrixWorld(true); G.region = f.region; G.fitBox = f.bx; G.fitLid = f.lid; fitCamera(); };
+  frame();
+  // a width-limited phone layout leaves empty table under the mat: deepen the mat into it (more room to spread the mess out)
+  for (let k = 0; port && k < 4 && G.fitSlack > .05; k++) { RD *= 1 + G.fitSlack * .75; frame(); }
   // placemat
   while (matGroup.children.length) matGroup.remove(matGroup.children[0]);
-  const pm = new THREE.Mesh(rr(RW + 1, .04, RD + 1, .12, 2), linenMat()); pm.rotation.y = port ? 0 : Math.PI / 2; if (!port) pm.geometry = rr(RD + 1, .04, RW + 1, .12, 2); pm.position.set(rx, .02, rz); pm.receiveShadow = true; matGroup.add(pm);
-  if (reshuffle) scatter(loose);
-  for (const it of G.items) if (it.state === 'placed') { const p = slotPos(it.slot); it.g.position.copy(p); }
-  const bx = new THREE.Box3(); bx.expandByPoint(new THREE.Vector3(cx - C.W / 2, 0, cz - C.D / 2)); bx.expandByPoint(new THREE.Vector3(cx + C.W / 2, C.H + (port ? .6 : 1.2), cz + C.D / 2));
-  bx.expandByPoint(new THREE.Vector3(G.region.x0 - .4, 0, G.region.z0 - .4)); bx.expandByPoint(new THREE.Vector3(G.region.x1 + .4, port ? .8 : 1.4, G.region.z1 + .4));
-  // lid corners are framed separately: they may tuck up under the HUD's second row, the slots never do
-  G.fitLid = C.lidH ? [-1, 1].map(sx => new THREE.Vector3(cx + sx * C.W / 2, C.lidH, cz - C.D / 2 - C.lidBack)) : [];
-  G.fitBox = bx; fitCamera();
-  sun.position.set(bx.getCenter(new THREE.Vector3()).x - 7, 16, 7); sun.target.position.copy(bx.getCenter(new THREE.Vector3())); sun.target.updateMatrixWorld();
+  const pmat = new THREE.Mesh(port ? rr(RW + 1, .04, RD + 1, .12, 2) : rr(RD + 1, .04, RW + 1, .12, 2), linenMat()); pmat.rotation.y = port ? 0 : Math.PI / 2; pmat.position.set(f.rx, .02, f.rz); pmat.receiveShadow = true; matGroup.add(pmat);
+  if (reshuffle) scatter(G.items.filter(i => i.state !== 'placed'));
+  for (const it of G.items) if (it.slot) { const p = slotPos(it.slot); if (it.state === 'placed') it.g.position.copy(p); else if (it.state === 'snap') it.to.copy(p); }
+  const bc = G.fitBox.getCenter(new THREE.Vector3()); sun.position.set(bc.x - 7, 16, 7); sun.target.position.copy(bc); sun.target.updateMatrixWorld();
 }
+// A believable mess that never piles up: each item gets a random angle and a spot whose (rotated) footprint doesn't touch the others.
+// Biggest first; the first clear spot wins, else the spot with the widest gap.
 function scatter(list) {
-  const reg = G.region; const pts = [];
+  const reg = G.region, boxes = [], M = .08;
   const order = [...list].sort((a, b) => b.size.x * b.size.z - a.size.x * a.size.z);
   for (const it of order) {
-    const r = Math.hypot(it.size.x, it.size.z) / 2 * .78 + .08; let best = null, bestScore = -1;
-    for (let k = 0; k < 220; k++) { const x = rnd(reg.x0 + r * .7, reg.x1 - r * .7), z = rnd(reg.z0 + r * .7, reg.z1 - r * .7); let md = 1e9; for (const p of pts) md = Math.min(md, Math.hypot(p.x - x, p.z - z) - p.r - r); if (md > 0) { best = { x, z }; break; } if (md > bestScore) { bestScore = md; best = { x, z }; } }
-    pts.push({ x: best.x, z: best.z, r }); it.home.set(best.x, .04, best.z); it.homeYaw = rnd(-Math.PI, Math.PI);
+    const f = matFoot(it.name, it.size); let best = null, bestGap = -1e9;
+    for (let k = 0; k < 320; k++) {
+      const yaw = rnd(-Math.PI, Math.PI), c = Math.abs(Math.cos(yaw)), s = Math.abs(Math.sin(yaw)), hx = c * f.x / 2 + s * f.z / 2, hz = s * f.x / 2 + c * f.z / 2;
+      if (hx * 2 > reg.x1 - reg.x0 || hz * 2 > reg.z1 - reg.z0) continue;
+      const x = rnd(reg.x0 + hx, reg.x1 - hx), z = rnd(reg.z0 + hz, reg.z1 - hz);
+      let gap = 1e9; for (const b of boxes) gap = Math.min(gap, Math.max(Math.abs(b.x - x) - b.hx - hx, Math.abs(b.z - z) - b.hz - hz));
+      if (gap > M) { best = { x, z, yaw, hx, hz }; break; } if (gap > bestGap) { bestGap = gap; best = { x, z, yaw, hx, hz }; }
+    }
+    if (!best) best = { x: (reg.x0 + reg.x1) / 2, z: (reg.z0 + reg.z1) / 2, yaw: 0, hx: f.x / 2, hz: f.z / 2 };
+    boxes.push(best); it.home.set(best.x, .04, best.z); it.homeYaw = best.yaw;
     if (it.state === 'loose') { it.g.position.copy(it.home); it.g.rotation.y = it.homeYaw; }
   }
 }
-function fitCamera() {
-  const bx = G.fitBox, ctr = bx.getCenter(new THREE.Vector3()); const port = G.port; const el = port ? 1.04 : .98, yaw = port ? 0 : -.1;
-  camera.fov = port ? 52 : 38; camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
-  const dir = new THREE.Vector3(Math.sin(yaw) * Math.cos(el), Math.sin(el), Math.cos(yaw) * Math.cos(el));
-  // screen margins from the real HUD: below the (possibly two-row) chip bar, above the hint button on phones
+// screen margins from the real HUD: below the (possibly two-row) chip bar, above the hint button on phones
+function margins(port) {
   let hudB = 56, padT = innerHeight - 76; try { const r = hudEl && hudEl.hud.getBoundingClientRect(); if (r && r.height) hudB = r.bottom; const b = $('bHint')?.getBoundingClientRect(); if (b && b.height) padT = b.top; } catch (e) { }
   const topPx = port ? hudB + 10 : 70, lidPx = port ? Math.min(hudB, 64) : 56, botPx = port ? Math.max(40, innerHeight - padT + 6) : 26;
-  const top = 1 - 2 * topPx / innerHeight, topLid = 1 - 2 * lidPx / innerHeight, bot = -1 + 2 * botPx / innerHeight, side = port ? .96 : .94;
+  return { top: 1 - 2 * topPx / innerHeight, topLid: 1 - 2 * lidPx / innerHeight, bot: -1 + 2 * botPx / innerHeight, side: port ? .96 : .94 };
+}
+// Binary-search the camera distance so the box (+ lid) and the mat fit between the HUD margins, then centre them. Pure: returns the fit.
+function camFit(bx, lidPts, port, passes = 4) {
+  const ctr = bx.getCenter(new THREE.Vector3()); const el = port ? 1.04 : .98, yaw = port ? 0 : -.1;
+  camera.fov = port ? 52 : 38; camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  const dir = new THREE.Vector3(Math.sin(yaw) * Math.cos(el), Math.sin(el), Math.cos(yaw) * Math.cos(el));
+  const { top, topLid, bot, side } = margins(port);
   const corners = []; for (const x of [bx.min.x, bx.max.x]) for (const y of [bx.min.y, bx.max.y]) for (const z of [bx.min.z, bx.max.z]) corners.push(new THREE.Vector3(x, y, z));
-  for (const v of G.fitLid || []) { v.lid = true; corners.push(v); }
-  const ey = (c, p) => c.lid ? p.y - (topLid - top) : p.y;
+  for (const v of lidPts || []) { const c = v.clone(); c.lid = true; corners.push(c); }
+  const ey = (c, p) => c.lid ? p.y - (topLid - top) : p.y, pv = new THREE.Vector3();
+  const span = () => { let mnx = 9, mxx = -9, mny = 9, mxy = -9; for (const c of corners) { const p = pv.copy(c).project(camera), y = ey(c, p); mnx = Math.min(mnx, p.x); mxx = Math.max(mxx, p.x); mny = Math.min(mny, y); mxy = Math.max(mxy, y); } return { mnx, mxx, mny, mxy }; };
+  const place = (look, d) => { camera.position.copy(look).addScaledVector(dir, d); camera.lookAt(look); camera.updateMatrixWorld(); };
   let look = ctr.clone(), d = 20;
-  for (let pass = 0; pass < 4; pass++) {
-    let lo = 3, hi = 120; for (let k = 0; k < 30; k++) { d = (lo + hi) / 2; camera.position.copy(look).addScaledVector(dir, d); camera.lookAt(look); camera.updateMatrixWorld(); let ok = true, mnx = 9, mxx = -9, mny = 9, mxy = -9; for (const c of corners) { const p = c.clone().project(camera), y = ey(c, p); mnx = Math.min(mnx, p.x); mxx = Math.max(mxx, p.x); mny = Math.min(mny, y); mxy = Math.max(mxy, y); } if (mxx - mnx > side * 2 || mxy - mny > top - bot) ok = false; if (ok) hi = d; else lo = d; }
-    d = hi; camera.position.copy(look).addScaledVector(dir, d); camera.lookAt(look); camera.updateMatrixWorld();
-    let mnx = 9, mxx = -9, mny = 9, mxy = -9; for (const c of corners) { const p = c.clone().project(camera), y = ey(c, p); mnx = Math.min(mnx, p.x); mxx = Math.max(mxx, p.x); mny = Math.min(mny, y); mxy = Math.max(mxy, y); }
-    const ox = (mnx + mxx) / 2, oy = (mny + mxy) / 2 - (top + bot) / 2; const right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0), up = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 1);
+  for (let pass = 0; pass < passes; pass++) {
+    let lo = 3, hi = 120; for (let k = 0; k < 26; k++) { d = (lo + hi) / 2; place(look, d); const s = span(); if (s.mxx - s.mnx > side * 2 || s.mxy - s.mny > top - bot) lo = d; else hi = d; }
+    d = hi; place(look, d); const s = span();
+    const ox = (s.mnx + s.mxx) / 2, oy = (s.mny + s.mxy) / 2 - (top + bot) / 2; const right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0), up = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 1);
     const k = d * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)); look.addScaledVector(right, ox * k * camera.aspect).addScaledVector(up, oy * k);
   }
-  G.cam = { pos: camera.position.clone(), look: look.clone(), dir, d };
-  G.camNow = { pos: camera.position.clone(), look: look.clone() }; G.camTo = null;
+  place(look, d); const s = span();
+  return { pos: camera.position.clone(), look, dir, d, slack: (top - bot) - (s.mxy - s.mny) }; // slack = unused screen height (NDC)
+}
+function fitCamera() {
+  const c = camFit(G.fitBox, G.fitLid, G.port); G.fitSlack = c.slack;
+  G.cam = { pos: c.pos, look: c.look.clone(), dir: c.dir, d: c.d };
+  G.camNow = { pos: c.pos.clone(), look: c.look.clone() }; G.camTo = null;
 }
 const slotPos = s => new THREE.Vector3(s.x, s.floor, s.z).add(G.cont.g.position);
 
 /* ---------------- level flow ---------------- */
 function clearLevel() { if (!G) return; for (const it of G.items) scene.remove(it.g); scene.remove(G.cont.g); document.querySelectorAll('.pf-wipe,.pf-stars,.pf-replay').forEach(e => e.remove()); }
+// progress: a box is open when it is first in the play order, already has stars, the box before it has stars,
+// or the old (pre-rooms) save had unlocked it (S.legacy = old "unlocked" count over the original 9 boxes)
+const isOpen = li => { const k = ORDER.indexOf(li); return k <= 0 || !!S.stars[LEVELS[li].id] || !!S.stars[LEVELS[ORDER[k - 1]].id] || li < S.legacy; };
+const nextIn = li => { const k = ORDER.indexOf(li); return k >= 0 && k + 1 < ORDER.length ? ORDER[k + 1] : -1; };
+const parOf = L => L.rows.reduce((a, r) => a + r.length, 0) * (L.par || 4.5) + 4;
+const lazyNeed = L => [...new Set(L.rows.flat().map(s => s.split('@')[0]))].filter(n => !PROC[n] && !E.ASSETS.models[n]);
+let startTok = 0;
+// Starting a box may first fetch its models (the toy cars load on demand). Returns a promise when it has to wait.
 function startLevel(li, opts = {}) {
-  clearLevel(); li = clamp(li, 0, LEVELS.length - 1); const L = LEVELS[li]; S.sel = li; save();
-  const cont = buildContainer(L); scene.add(cont.g);
+  li = clamp(li | 0, 0, LEVELS.length - 1); const L = LEVELS[li]; const tok = ++startTok; const need = lazyNeed(L);
+  if (need.length) { let ready = false; if (!opts.quiet) setTimeout(() => { if (!ready) E.toast(`${L.e} ${T('Unpacking…', 'Desempacando…')}`, 1200); }, 250); return E.ensureModels(need).catch(() => { }).then(() => { ready = true; if (tok === startTok) startNow(li, opts); }); }
+  startNow(li, opts);
+}
+function startNow(li, opts) {
+  clearLevel(); const L = LEVELS[li]; S.sel = li; save();
+  const cont = buildContainer(L, chooseLayout(L, portrait()).turn); scene.add(cont.g);
   const items = cont.slots.map((s, i) => makeItem(s.name, i));
-  G = { li, L, cont, items, t: 0, wrong: 0, placed: 0, drag: null, paused: false, done: false, playing: true, replay: opts.replay || null, focus: 0, kbSlot: -1, kb: false, hintT: 0, seq: null, order: [], crook: -1, ax: 0, ay: 0 };
+  G = { li, L, cont, items, t: 0, wrong: 0, placed: 0, drag: null, paused: false, done: false, playing: true, replay: opts.replay || null, focus: 0, kbSlot: -1, kb: false, hintT: 0, seq: null, order: [], crook: -1, ax: 0, ay: 0, streak: 0, lastSnap: -9, touchUsed: false };
   ensureHud(); hudKey = ''; hud(); layout(true);
   $('keyHint').hidden = true; if (music) music.stop(); music = null;
   if (opts.quiet) return;
   music = E.music(E.SONGS.chill);
-  if (opts.replay) { G.playing = false; G.auto = { list: opts.replay.order.slice(), t: .9, speed: 1 }; G.crookWanted = opts.replay.crook; E.toast(`${T('Replay', 'Repetición')} · ${nm(L)}`, 1800); }
-  else { G.crookWanted = S.oneWrong ? -2 : -1; const msg = li === 0 && !(S.stars[L.id]) ? `${nm(L)}. ${T('Drag each thing into the spot shaped just like it.', 'Arrastra cada cosa al hueco que tiene su misma forma.')}` : `${nm(L)}. ${T(`${items.length} things to tidy.`, `${items.length} cosas para ordenar.`)}`; E.toast(`${L.e} ${nm(L)} · ${items.length} ${T('items', 'cosas')}`, 2200); E.say(msg); }
+  if (opts.replay) { G.playing = false; G.auto = { list: opts.replay.order.slice(), t: .9, speed: 1 }; G.crookWanted = opts.replay.crook; E.toast(`${T('Replay', 'Repetición')} · ${nm(L)}`, 1800); return; }
+  G.crookWanted = S.oneWrong ? -2 : -1;
+  const first = !Object.keys(S.stars).length, colour = L.rows.flat().some(s => TINT[s]);
+  const msg = first ? `${nm(L)}. ${T('Drag each thing into the spot shaped just like it.', 'Arrastra cada cosa al hueco que tiene su misma forma.')}`
+    : `${nm(L)}. ${T(`${items.length} things to tidy.`, `${items.length} cosas para ordenar.`)}${colour ? ' ' + T('Match the colours too!', '¡Fíjate también en los colores!') : ''}`;
+  // the HUD already names the box; on phones the toast would sit on top of the box, so it is landscape only
+  if (!G.port) E.toast(`${L.e} ${nm(L)} · ${items.length} ${T('items', 'cosas')}${colour ? ' · 🎨 ' + T('colours count', 'cuentan los colores') : ''}`, 2200);
+  E.say(msg);
 }
 function ensureHud() {
   if (hudEl) return; hudEl = E.shell({ title: 'Perfect Fit', onPause: pause, buttons: [{ id: 'bHint', icon: '💡', label: T('Hint', 'Pista') }] });
@@ -299,21 +516,33 @@ function hud() {
   if (!G || !hudEl) return; const k = `${G.li}|${G.placed}|${Math.floor(G.t)}|${G.wrong}|${S.zen}|${E.lang()}`; if (k === hudKey) return; hudKey = k;
   hudEl.hud.innerHTML = `<span class="ig-chip">${G.L.e} <b>${nm(G.L)}</b></span><span class="ig-chip">✔ <b>${G.placed}/${G.items.length}</b></span>${S.zen || G.replay ? `<span class="ig-chip">🍃 ${T('Zen', 'Zen')}</span>` : `<span class="ig-chip">⏱ <b>${fmt(G.t)}</b></span>`}${G.wrong ? `<span class="ig-chip">↩ <b>${G.wrong}</b></span>` : ''}`;
 }
-function starsFor() { const par = G.items.length * 4.5 + 4; if (G.wrong === 0 && (S.zen || G.t <= par)) return 3; if (G.wrong <= 2 && (S.zen || G.t <= par * 1.8)) return 2; return 1; }
+// stars never fail you: 1 for finishing, 2 for ≤2 wrong drops within 1.8× par, 3 for no wrong drops within par (Zen: wrong drops only)
+function starsFor() { const par = parOf(G.L); if (G.wrong === 0 && (S.zen || G.t <= par)) return 3; if (G.wrong <= 2 && (S.zen || G.t <= par * 1.8)) return 2; return 1; }
+const goalText = L => T(`⭐⭐⭐ under ${fmt(parOf(L))} with no wrong drops`, `⭐⭐⭐ en menos de ${fmt(parOf(L))} sin fallos`);
 
 /* ---------------- picking & dragging ---------------- */
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), hitP = new THREE.Vector3();
 function setRay(x, y) { const r = cv.getBoundingClientRect(); ndc.set((x - r.left) / (r.width || innerWidth) * 2 - 1, -((y - r.top) / (r.height || innerHeight)) * 2 + 1); ray.setFromCamera(ndc, camera); }
-function pickAt(x, y) { setRay(x, y); const hits = ray.intersectObjects(G.items.filter(i => i.state === 'loose' || i.state === 'ret').map(i => i.proxy), false); return hits.length ? hits[0].object.userData.item : null; }
+const pickable = i => i.state === 'loose' || i.state === 'ret';
+// generous pick: the item's (enlarged) box under the pointer first, else the nearest loose item whose middle is within reach on screen
+function pickAt(x, y, touch) {
+  for (const it of G.items) it.g.updateMatrixWorld(true); // (items may have moved since the last rendered frame)
+  setRay(x, y); const hits = ray.intersectObjects(G.items.filter(pickable).map(i => i.proxy), false); if (hits.length) return hits[0].object.userData.item;
+  const reach = touch ? 46 : 30; let best = null, bd = reach;
+  for (const it of G.items) { if (!pickable(it)) continue; const s = E.toScreen(it.g.position.clone().setY(it.size.y * .5), camera), d = Math.hypot(s.x - x, s.y - y); if (d < bd) { bd = d; best = it; } }
+  return best;
+}
 const dropH = () => G.cont.slots[0].floor; // height of the slot floors: the drop point is where the pointer ray meets it
 function liftH(it) { return 1.35 + it.size.y * .35; }
 function planeAt(x, y, h) { setRay(x, y); plane.constant = -h; return ray.ray.intersectPlane(plane, hitP) ? hitP.clone() : null; }
+// light haptics on phones: only after a touch gesture (browsers require one) and never with a mouse/keyboard
+function buzz(p) { if (!G || !G.touchUsed) return; try { navigator.vibrate && navigator.vibrate(p); } catch (e) { } }
 function grab(it, x, y, touch) {
   if (!G.playing || G.done) return; G.drag = { it, touch, x, y, off: new THREE.Vector3(), target: it.g.position.clone(), kb: x == null, fp: null };
   // the item starts where it was grabbed and eases onto the pointer; the drop spot is always the table point under the pointer (d.fp)
   if (x != null) { const p = planeAt(x, y, liftH(it)); if (p) G.drag.off.set(it.g.position.x - p.x, 0, it.g.position.z - p.z); G.drag.fp = planeAt(x, y, dropH()); }
   it.state = 'drag'; it.vel.set(0, 0, 0); G.focus = G.items.indexOf(it);
-  SFX.pop(); E.tone(rnd(700, 820), .05, 'sine', .05); E.noise(.04, .04, 5200, 2);
+  liftSound(it); buzz(6);
 }
 function nearSlot(it, pos) {
   if (!pos) return null; let best = null, bd = 1e9;
@@ -329,19 +558,48 @@ function release() {
   // forgiving: a near miss next to an identical free slot still counts
   if (!target && ns && !ns.match && !d.kb && fp) { const alt = G.cont.slots.find(s => !s.item && s.name === it.name && Math.hypot(slotPos(s).x - fp.x, slotPos(s).z - fp.z) < Math.max(s.w, s.d) * .5 + .15); if (alt) target = alt; }
   if (target) snapTo(it, target);
-  else { if (ns && !ns.match) { G.wrong++; E.tone(300, .2, 'sine', .1, -110); E.tone(240, .22, 'sine', .06, -60, .06); E.floatText(T('not quite', 'casi'), ...Object.values(E.toScreen(it.g.position.clone().setY(1), camera)), 'bad'); } else E.tone(420, .1, 'sine', .05, -80); goHome(it); }
+  else {
+    if (ns && !ns.match) { G.wrong++; G.streak = 0; E.tone(300, .2, 'sine', .1, -110); E.tone(240, .22, 'sine', .06, -60, .06); buzz([18, 40, 18]); const sp = E.toScreen(it.g.position.clone().setY(1), camera); E.floatText(TINT[it.name] && TINT[ns.s.name] && sameShape(it.name, ns.s.name) ? T('other colour', 'otro color') : T('not quite', 'casi'), sp.x, sp.y, 'bad'); }
+    else E.tone(420, .1, 'sine', .05, -80);
+    goHome(it);
+  }
   G.kbSlot = -1; hud();
 }
+const sameShape = (a, b) => a.replace(/-[a-z]+$/, '') === b.replace(/-[a-z]+$/, '');
+// four-way symmetric things settle by the shortest quarter turn instead of spinning round to the slot's angle
+const ROUND4 = /^(donut|apple|orange|tomato|cookie|can$|soda-can|glass|egg|honey|cupcake|muffin|shaker|pepper-mill|carton|bottle|strawberry|lemon|pear|onion|mushroom|spool|jar|button|thimble|pincushion|soy|tape|peanut)/;
 function snapTo(it, s, quick) {
   it.state = 'snap'; it.slot = s; s.item = it; it.t = 0; it.dur = quick ? .3 : .36; it.from.copy(it.g.position); it.fromYaw = it.g.rotation.y; it.to.copy(slotPos(s)); it.toYaw = s.yaw;
-  let dy = it.toYaw - it.fromYaw; dy = ((dy + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI; if (/donut|apple|orange|tomato|plate|cookie|can|glass|egg|honey|cupcake|muffin|shaker|mill|carton|bottle|cheese|strawberry|lemon|pear/.test(it.name)) { dy = ((dy + Math.PI / 4) % (Math.PI / 2) + Math.PI / 2) % (Math.PI / 2) - Math.PI / 4; } it.toYaw = it.fromYaw + dy; it.landed = false;
+  let dy = it.toYaw - it.fromYaw; dy = ((dy + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI; if (ROUND4.test(it.name)) { dy = ((dy + Math.PI / 4) % (Math.PI / 2) + Math.PI / 2) % (Math.PI / 2) - Math.PI / 4; } it.toYaw = it.fromYaw + dy; it.landed = false;
   G.placed++; G.order.push(s.i); s.glowT = 0;
+  // a quick run of correct placements climbs a gentle scale (resets after a pause or a wrong drop)
+  G.streak = G.t - G.lastSnap < 5 ? G.streak + 1 : 0; G.lastSnap = G.t;
 }
 function goHome(it) { it.state = 'ret'; it.t = 0; it.dur = .65; it.from.copy(it.g.position); it.fromYaw = it.g.rotation.y; it.to.copy(it.home); it.toYaw = it.homeYaw; }
+/* ---- ASMR sound: every material lands differently, the box adds its own body ---- */
+const PENTA = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21];
+function liftSound(it) {
+  const m = MATERIAL(it.name), p = rnd(.95, 1.05);
+  if (m === 'fabric') { E.noise(.12, .05, 900, .7, 0, 'lowpass'); return; }
+  if (m === 'metal') { E.tone(2400 * p, .12, 'sine', .025); E.noise(.03, .03, 6000, 3); return; }
+  if (m === 'glass') { E.tone(1900 * p, .1, 'sine', .03); return; }
+  if (m === 'paper') { E.noise(.08, .05, 2400, .9); return; }
+  E.tone(rnd(700, 820), .05, 'sine', .05); E.noise(.04, .04, 5200, 2);
+}
 function thock(it) {
-  const p = rnd(.9, 1.1), big = clamp(it.size.x * it.size.z, .3, 4); SFX.snap();
-  E.tone(130 * p / Math.sqrt(big * .6 + .5), .16, 'sine', .3, -50 * p); E.tone(240 * p, .05, 'triangle', .07, -60); E.noise(.03, .07, 2600 * p, 1.6); E.noise(.09, .04, 700 * p, .8, .02); E.tone(1500 * p * rnd(.95, 1.05), .07, 'sine', .025, 0, .03);
-  try { navigator.vibrate && navigator.vibrate(12); } catch (e) { }
+  const p = rnd(.93, 1.07), big = clamp(it.size.x * it.size.z, .3, 4), body = 1 / Math.sqrt(big * .6 + .5), m = MATERIAL(it.name), box = G.L.style;
+  if (m === 'metal') { E.tone(140 * p * body, .12, 'sine', .22, -40); E.tone(2350 * p, .5, 'sine', .035); E.tone(3520 * p, .32, 'sine', .02, 0, .005); E.noise(.025, .06, 5200 * p, 2.5); }
+  else if (m === 'glass') { E.tone(150 * p * body, .12, 'sine', .22, -40); E.tone(2900 * p, .28, 'sine', .04); E.tone(4350 * p, .18, 'sine', .022, 0, .01); E.noise(.02, .05, 7000, 3); }
+  else if (m === 'fabric') { E.noise(.16, .1, 520 * p, .7, 0, 'lowpass'); E.tone(85 * p * body, .14, 'sine', .22, -25); }
+  else if (m === 'paper') { E.tone(150 * p * body, .1, 'sine', .25, -50); E.noise(.07, .08, 1700 * p, .9); E.noise(.05, .04, 3800, 1.2, .02); }
+  else if (m === 'wood') { E.tone(190 * p * body, .1, 'triangle', .16, -60); E.tone(420 * p, .06, 'sine', .08, -120); E.noise(.035, .08, 1300 * p, 3); }
+  else if (m === 'plastic') { E.tone(160 * p * body, .1, 'sine', .25, -50); E.tone(880 * p, .035, 'triangle', .06, -200); E.noise(.025, .07, 3600 * p, 2); }
+  else { SFX.snap(); E.tone(130 * p * body, .16, 'sine', .3, -50 * p); E.tone(240 * p, .05, 'triangle', .07, -60); E.noise(.03, .07, 2600 * p, 1.6); E.noise(.09, .04, 700 * p, .8, .02); }
+  // the container answers: hollow wood knock, soft basket rustle, padded fabric, crisp plastic/metal tick
+  if (box === 'wood') E.tone(105 * p, .14, 'sine', .12, -20, .01); else if (box === 'wicker') E.noise(.09, .04, 1500, .8, .01); else if (box === 'fabric') E.noise(.06, .03, 400, .7, .01, 'lowpass'); else if (box === 'metal') E.tone(1250 * p, .18, 'sine', .015, 0, .01); else E.noise(.02, .03, 4200, 2, .01);
+  // the streak chime (soft, pentatonic, climbs while you keep going)
+  const k = Math.min(G.streak || 0, PENTA.length - 1); E.tone(784 * Math.pow(2, PENTA[k] / 12), .22, 'sine', .028, 0, .04);
+  buzz(12);
   const pos = it.g.position.clone(); pos.y += .1; P.burst(pos, { color: 0xffffff, n: 10, speed: 1.4, up: 1.6, size: .22, life: .5, gravity: 4, additive: false });
   G.cont.slots[it.slot.i].pulse = 1;
 }
@@ -349,7 +607,8 @@ function thock(it) {
 /* pointer */
 const cv = $('gl'); let ptr = null;
 cv.addEventListener('pointerdown', e => {
-  E.audio(); if (!G || G.paused || G.done || !G.playing || G.drag) return; const it = pickAt(e.clientX, e.clientY); if (!it) return;
+  E.audio(); if (!G || G.paused || G.done || !G.playing || G.drag) return; const touch = e.pointerType !== 'mouse'; const it = pickAt(e.clientX, e.clientY, touch); if (!it) return;
+  if (e.pointerType === 'touch') G.touchUsed = true;
   ptr = { id: e.pointerId, x: e.clientX, y: e.clientY }; try { cv.setPointerCapture(e.pointerId); } catch (er) { } G.kb = false; $('keyHint').hidden = true; grab(it, e.clientX, e.clientY, e.pointerType === 'touch');
 });
 cv.addEventListener('pointermove', e => { if (ptr && e.pointerId === ptr.id) { ptr.x = e.clientX; ptr.y = e.clientY; if (G.drag) { G.drag.x = e.clientX; G.drag.y = e.clientY; } } else if (G && !G.drag && !G.done && e.pointerType === 'mouse') { cv.style.cursor = pickAt(e.clientX, e.clientY) ? 'grab' : 'default'; } });
@@ -381,16 +640,20 @@ addEventListener('keydown', e => {
   else if (e.code === 'KeyH') hint();
 });
 let padUsed = false;
+// physical gamepads + phones joined as controllers (engine/net.js): stick/d-pad chooses, A picks up & places, B puts back,
+// Y / phone C asks for a hint, Start / phone ⏸ pauses
 function pollPad() {
-  const pads = navigator.getGamepads ? [...navigator.getGamepads()].filter(Boolean) : []; if (!pads.length) return; const p = pads[0]; if (p.buttons.some(b => b && b.pressed)) padUsed = true;
-  const ax = p.axes[0] || 0, ay = p.axes[1] || 0; const h = p.buttons[15]?.pressed ? 1 : p.buttons[14]?.pressed ? -1 : Math.abs(ax) > .55 ? Math.sign(ax) : 0; const v = p.buttons[13]?.pressed ? 1 : p.buttons[12]?.pressed ? -1 : Math.abs(ay) > .55 ? Math.sign(ay) : 0;
+  let h = 0, v = 0, a = false, b = false, st = false, y = false, any = false;
+  const pads = navigator.getGamepads ? [...navigator.getGamepads()].filter(Boolean) : [];
+  for (const p of pads) { any = true; if (p.buttons.some(x => x && x.pressed)) padUsed = true; const ax = p.axes[0] || 0, ay = p.axes[1] || 0; h = h || (p.buttons[15]?.pressed ? 1 : p.buttons[14]?.pressed ? -1 : Math.abs(ax) > .55 ? Math.sign(ax) : 0); v = v || (p.buttons[13]?.pressed ? 1 : p.buttons[12]?.pressed ? -1 : Math.abs(ay) > .55 ? Math.sign(ay) : 0); a = a || !!p.buttons[0]?.pressed; b = b || !!p.buttons[1]?.pressed; st = st || !!p.buttons[9]?.pressed; y = y || !!p.buttons[3]?.pressed; }
+  try { for (const slot of input.pads()) { const n = input.pad(slot); if (!n) continue; any = true; if (n.a || n.b || n.c || Math.abs(n.x) > .5 || Math.abs(n.y) > .5) padUsed = true; h = h || (Math.abs(n.x) > .55 ? Math.sign(n.x) : 0); v = v || (Math.abs(n.y) > .55 ? Math.sign(n.y) : 0); a = a || n.a; b = b || n.b; y = y || n.c || n.d; st = st || n.pause; } } catch (e) { }
+  if (!any) return;
   const dir = h || v; if (dir && !G.ax) kbAct('move', dir); G.ax = dir;
-  const a = p.buttons[0]?.pressed, b = p.buttons[1]?.pressed, st = p.buttons[9]?.pressed, y = p.buttons[3]?.pressed;
   if (a && !G.pa) kbAct('a'); if (b && !G.pb) kbAct('b'); if (st && !G.ps) pause(); if (y && !G.py) hint(); G.pa = a; G.pb = b; G.ps = st; G.py = y;
 }
 function hint() {
   if (!G || G.done || !G.playing) return; const it = G.drag ? G.drag.it : (G.items[G.focus] && G.items[G.focus].state === 'loose' ? G.items[G.focus] : G.items.find(i => i.state === 'loose')); if (!it) return;
-  const s = G.cont.slots.find(s => !s.item && s.name === it.name); if (!s) return; s.hintT = 2; G.focus = G.items.indexOf(it); E.say(T(`The ${LABEL[it.name]} goes here.`, `Aquí va: ${LABEL_ES[it.name]}.`)); E.tone(1320, .12, 'sine', .06); E.tone(1760, .16, 'sine', .05, 0, .08);
+  const s = G.cont.slots.find(s => !s.item && s.name === it.name); if (!s) return; s.hintT = 2; G.focus = G.items.indexOf(it); const n = label(it.name); E.say(T(`The ${n} goes here.`, `Aquí va: ${n}.`)); E.tone(1320, .12, 'sine', .06); E.tone(1760, .16, 'sine', .05, 0, .08);
 }
 
 /* focus ring for keyboard play */
@@ -443,6 +706,7 @@ function update(dt) {
       if (t >= 1) { it.state = 'loose'; it.g.position.copy(it.to); it.tilt.rotation.set(0, 0, 0); E.tone(520, .05, 'sine', .04); }
     }
     if (!d || d.it !== it) it.sc = damp(it.sc, 1, .001, dt);
+    if (it.hop > 0) { it.hop = Math.max(0, it.hop - dt * 3.2); const k = Math.sin((1 - it.hop) * Math.PI); it.tilt.position.y = it.size.y / 2 + k * (E.reducedMotion() ? .08 : .32); if (!it.hop) it.squash = 1; }
     let sq = 1; if (it.squash > 0) { it.squash = Math.max(0, it.squash - dt * 5); sq = 1 - Math.sin(it.squash * Math.PI) * .1; }
     it.tilt.scale.set(it.sc * (2 - sq), it.sc * sq, it.sc * (2 - sq));
   }
@@ -453,7 +717,7 @@ function update(dt) {
     if (s.pulse > 0) { s.pulse = Math.max(0, s.pulse - dt * 2.4); want = Math.max(want, s.pulse); col = 0xffffff; }
     if (want > s.glowT + .01 && want >= .9 && s.glowT < .5 && d && !d.kb) E.tone(1240 * rnd(.97, 1.03), .07, 'sine', .035);
     s.glowT = damp(s.glowT, want, .0008, dt); s.glow.material.opacity = s.glowT * .9; s.glow.material.color.set(col);
-    s.sil.traverse(o => { if (o.isMesh) o.material.opacity = s.item && s.item.state === 'placed' ? 0 : .4 + s.glowT * .3; });
+    s.silM.opacity = s.item && s.item.state === 'placed' ? 0 : s.silBase + s.glowT * .3; if (s.stick) s.stick.visible = !(s.item && s.item.state === 'placed');
   }
   // keyboard focus ring
   const fi = G.items[G.focus]; ring.visible = G.kb && !G.done && G.playing && !!fi && (fi.state === 'loose' || (d && d.kb && G.kbSlot >= 0));
@@ -482,23 +746,34 @@ function crookOne() {
   it.g.rotation.y += .38 * sg; it.tilt.rotation.z = .3 * sg; it.tilt.rotation.x = .12; it.g.position.x += sg * Math.min(.3, sl.w * .18); it.g.position.y += .1 + it.size.y * .12;
 }
 function captureBefore() {
-  const save = G.items.map(it => ({ p: it.g.position.clone(), r: it.g.rotation.y, tr: it.tilt.rotation.clone(), tp: it.tilt.position.clone() })); const sil = G.cont.slots.map(s => s.glow.material.opacity);
+  const save = G.items.map(it => ({ p: it.g.position.clone(), r: it.g.rotation.y, tr: it.tilt.rotation.clone(), tp: it.tilt.position.clone(), })); const sil = G.cont.slots.map(s => s.glow.material.opacity);
   G.items.forEach(it => { it.g.position.copy(it.home); it.g.rotation.y = it.homeYaw; it.tilt.rotation.set(0, 0, 0); it.tilt.position.set(0, it.size.y / 2, 0); });
-  G.cont.slots.forEach(s => { s.glow.material.opacity = 0; s.sil.traverse(o => { if (o.isMesh) o.material.opacity = .4; }); });
+  G.cont.slots.forEach(s => { s.glow.material.opacity = 0; s.silM.opacity = s.silBase; });
   ring.visible = false; camera.position.copy(G.cam.pos); camera.lookAt(G.cam.look); let url = null; try { R.composer.render(); url = renderer.domElement.toDataURL('image/jpeg', .82); } catch (e) { }
-  G.items.forEach((it, i) => { it.g.position.copy(save[i].p); it.g.rotation.y = save[i].r; it.tilt.rotation.copy(save[i].tr); it.tilt.position.copy(save[i].tp); }); G.cont.slots.forEach((s, i) => { s.glow.material.opacity = sil[i]; s.sil.traverse(o => { if (o.isMesh) o.material.opacity = 0; }); });
+  G.items.forEach((it, i) => { it.g.position.copy(save[i].p); it.g.rotation.y = save[i].r; it.tilt.rotation.copy(save[i].tr); it.tilt.position.copy(save[i].tp); }); G.cont.slots.forEach((s, i) => { s.glow.material.opacity = sil[i]; s.silM.opacity = 0; });
   R.composer.render(); return url;
 }
 function finale() {
   if (G.crookWanted !== -1) crookOne();
   const stars = G.replay ? G.replay.stars : starsFor(); G.stars = stars; const L = G.L;
-  if (!G.replay) { S.stars[L.id] = Math.max(S.stars[L.id] || 0, stars); if (!S.zen && (S.best[L.id] == null || G.t < S.best[L.id])) S.best[L.id] = +G.t.toFixed(1); S.unlocked = Math.max(S.unlocked, Math.min(LEVELS.length, G.li + 2)); save(); }
+  if (!G.replay) {
+    const ri = roomOf(G.li), room = ROOMS[ri]; const wasDone = room.levels.every(id => S.stars[id]);
+    G.prevStars = S.stars[L.id] || 0; S.stars[L.id] = Math.max(S.stars[L.id] || 0, stars); if (!S.zen && (S.best[L.id] == null || G.t < S.best[L.id])) S.best[L.id] = +G.t.toFixed(1);
+    if (!wasDone && room.levels.every(id => S.stars[id]) && !S.rooms[room.id]) { S.rooms[room.id] = 1; G.roomDone = ri; }
+    save();
+  }
   G.beforeURL = captureBefore();
-  G.seq = { t: 0, phase: 0 };
+  // tidy-up wave: every item gives a little hop in slot order, climbing a soft scale, then the before/after wipe
+  const wave = G.items.slice().sort((a, b) => a.slot.i - b.slot.i);
+  G.seq = { t: 0, phase: 0, wave, next: 0, dur: .3 + wave.length * .07 + .35 };
+  buzz([14, 50, 14, 50, 30]);
 }
 function runSeq(dt) {
   const q = G.seq; q.t += dt;
-  if (q.phase === 0 && q.t > .45) { q.phase = 1; q.t = 0; wipeStart(); }
+  if (q.phase === 0) {
+    while (q.next < q.wave.length && q.t > .15 + q.next * .07) { const it = q.wave[q.next]; it.hop = 1; E.tone(659 * Math.pow(2, PENTA[q.next % PENTA.length] / 12), .16, 'sine', .035); q.next++; }
+    if (q.t > q.dur) { q.phase = 1; q.t = 0; wipeStart(); }
+  }
   if (q.phase === 1) { const p = clamp(q.t / 1.5, 0, 1), e = easeInOut(p); wipeSet(e); if (p >= 1) { q.phase = 2; q.t = 0; wipeEnd(); pushIn(); } }
   if (q.phase === 2) { const p = clamp(q.t / 1.4, 0, 1), e = easeInOut(p); G.camNow.pos.lerpVectors(G.cam.pos, G.camTo.pos, e); G.camNow.look.lerpVectors(G.cam.look, G.camTo.look, e); if (q.t > .55 && !q.conf) { q.conf = true; confetti(); } if (p >= 1 && q.t > 2.1) { q.phase = 3; q.t = 0; showStars(); } }
   if (q.phase === 3 && q.t > 1.5) { q.phase = 4; G.seq = null; endCard(); }
@@ -534,10 +809,17 @@ const buildContainerCount = li => LEVELS[li].rows.reduce((a, r) => a + r.length,
 function endCard() {
   document.querySelectorAll('.pf-stars').forEach(e => e.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, fill: 'forwards' }));
   if (G.replay) { const d = document.createElement('div'); d.className = 'pf-replay'; d.innerHTML = `<button class="ig-btn ghost">${T('Menu', 'Menú')}</button><button class="ig-btn">${T('Play this box', 'Jugar esta caja')}</button>`; document.body.appendChild(d); const [a, b] = d.querySelectorAll('button'); a.onclick = () => title(); b.onclick = () => startLevel(G.li); return; }
-  if (music) music.stop(); const code = shareCode(); const L = G.L; const lvlBonus = Math.round(G.li * 2.5);
-  const xp = clamp(40 + (G.stars - 1) * 10 + lvlBonus, 40, 80), coins = 6 + G.stars * 4 + G.li;
-  const r = E.results({ gameId: 'fit', title: G.crook >= 0 ? `${nm(L)}: ${T('almost perfect', 'casi perfecto')} 😉` : `${nm(L)}: ${T('perfect fit!', '¡encaja perfecto!')}`, stats: [[T('Stars', 'Estrellas'), '⭐'.repeat(G.stars)], [T('Time', 'Tiempo'), S.zen ? 'Zen' : fmt(G.t)], [T('Wrong drops', 'Fallos'), G.wrong], [T('Share code', 'Código'), `<span style="font-size:13px;letter-spacing:.02em">${code}</span>`]], xp, coins, best: S.zen ? null : +G.t.toFixed(1), bestLower: true, bestLabel: T('Fastest tidy ever (s)', 'Orden más rápido (s)'), onAgain: () => startLevel(G.li + 1 < LEVELS.length ? G.li + 1 : G.li), share: `I tidied the ${L.name} in Perfect Fit ${'⭐'.repeat(G.stars)}${G.crook >= 0 ? ' — one thing is crooked, can you spot it? 👀' : ''} Code ${code} (Inoa Games) ${location.href.split('#')[0]}` });
-  const again = r.querySelector('[data-a=again]'); if (G.li + 1 < LEVELS.length) again.textContent = T('Next box →', 'Siguiente caja →');
+  if (music) music.stop(); const code = shareCode(), L = G.L, k = Math.max(0, ORDER.indexOf(G.li)), room = G.roomDone != null ? ROOMS[G.roomDone] : null;
+  const xp = clamp(40 + (G.stars - 1) * 10 + Math.round(k * 1.5), 40, 80) + (room ? 10 : 0), coins = 6 + G.stars * 4 + Math.floor(k / 2) + (room ? 15 : 0);
+  const nx = nextIn(G.li), li = G.li;
+  const r = E.results({ gameId: 'fit', title: G.crook >= 0 ? `${nm(L)}: ${T('almost perfect', 'casi perfecto')} 😉` : `${nm(L)}: ${T('perfect fit!', '¡encaja perfecto!')}`, stats: [[T('Stars', 'Estrellas'), '⭐'.repeat(G.stars)], [T('Time', 'Tiempo'), S.zen ? 'Zen' : fmt(G.t)], [T('Wrong drops', 'Fallos'), G.wrong]], xp, coins, best: S.zen ? null : +G.t.toFixed(1), bestLower: true, bestLabel: T('Fastest tidy ever (s)', 'Orden más rápido (s)'), won: true, onAgain: () => startLevel(nx >= 0 ? nx : li), share: T(`I tidied the ${L.name} in Perfect Fit ${'⭐'.repeat(G.stars)}${G.crook >= 0 ? ' — one thing is crooked, can you spot it? 👀' : ''} Code ${code} (Inoa Games) ${location.href.split('#')[0]}`, `Ordené: ${L.es} en Perfect Fit ${'⭐'.repeat(G.stars)}${G.crook >= 0 ? ' — una cosa quedó torcida, ¿la encuentras? 👀' : ''} Código ${code} (Inoa Games) ${location.href.split('#')[0]}`) });
+  // share code + what the next star needs (friendly, never a fail)
+  const info = document.createElement('p'); info.className = 'ig-sub pf-info';
+  const need = G.stars < 3 ? (S.zen ? T('Next star: no wrong drops.', 'Siguiente estrella: sin fallos.') : goalText(L)) : '';
+  info.innerHTML = `${need ? need + '<br>' : ''}${T('Share code', 'Código para compartir')}: <b class="pf-code-b">${code}</b>`;
+  r.querySelector('.ig-stats').after(info);
+  if (room) { const rb = document.createElement('div'); rb.className = 'pf-roomdone'; rb.innerHTML = `${room.e} <b>${T(`${room.name}: all tidy!`, `${room.es}: ¡todo en orden!`)}</b> <small>+10 XP · +15 🪙</small>`; r.querySelector('.ig-stats').before(rb); setTimeout(() => { E.say(T(`The whole ${room.name} is tidy! Well done.`, `¡${room.es} está en orden! Muy bien.`)); SFX.level(); }, 600); }
+  const again = r.querySelector('[data-a=again]'); if (nx >= 0) again.textContent = T('Next box →', 'Siguiente caja →');
   const menu = document.createElement('button'); menu.className = 'ig-btn ghost'; menu.textContent = T('Boxes', 'Cajas'); menu.onclick = () => { r.remove(); title(); }; r.querySelector('.ig-row').prepend(menu);
 }
 
@@ -545,23 +827,35 @@ function endCard() {
 function updateCamera(dt) {
   if (!G) { camera.position.set(Math.sin(performance.now() / 9000) * 3, 16, 14); camera.lookAt(0, 0, 0); return; }
   if (G.camTo && G.seq && G.seq.phase >= 2) { } else if (G.cam && !G.done) { G.camNow.pos.lerp(G.cam.pos, 1 - Math.pow(.01, dt)); G.camNow.look.lerp(G.cam.look, 1 - Math.pow(.01, dt)); }
-  camera.position.copy(G.camNow.pos); if (G.done && G.seq == null && G.camTo) { const t = performance.now() / 1000; camera.position.x += Math.sin(t * .4) * .25; } camera.lookAt(G.camNow.look);
+  camera.position.copy(G.camNow.pos); if (G.done && G.seq == null && G.camTo && !E.reducedMotion()) { const t = performance.now() / 1000; camera.position.x += Math.sin(t * .4) * .25; } camera.lookAt(G.camNow.look);
 }
 let lastPort = portrait();
 addEventListener('resize', () => { if (!G) return; const p = portrait(); if (G.done) { fitCamera(); if (G.camTo) { pushIn(); G.camNow.pos.copy(G.camTo.pos); G.camNow.look.copy(G.camTo.look); } return; } if (p !== lastPort) { lastPort = p; if (G.drag) { const it = G.drag.it; G.drag = null; goHome(it); } layout(true); } else fitCamera(); G.camNow.pos.copy(G.cam.pos); G.camNow.look.copy(G.cam.look); });
-function pause() { if (!G || G.paused || G.done) return; G.paused = true; if (G.drag) { const it = G.drag.it; G.drag = null; goHome(it); } music && music.stop(); E.pauseMenu({ onResume: () => { G.paused = false; music = E.music(E.SONGS.chill); }, onRestart: () => startLevel(G.li), extra: `<p class="ig-sub">${G.L.e} ${nm(G.L)} · ${G.placed}/${G.items.length} ${T('placed', 'colocadas')}</p>` }); }
+// (the menu box behind the title card is not a game: a hidden tab or ⏸ there must not open the pause menu)
+function pause() { if (!G || G.paused || G.done || G.attract) return; G.paused = true; if (G.drag) { const it = G.drag.it; G.drag = null; goHome(it); } music && music.stop(); E.pauseMenu({ onResume: () => { G.paused = false; music = E.music(E.SONGS.chill); }, onRestart: () => startLevel(G.li), extra: `<p class="ig-sub">${G.L.e} ${nm(G.L)} · ${G.placed}/${G.items.length} ${T('placed', 'colocadas')}</p>` }); }
 document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
 
-/* ---------------- title ---------------- */
+/* ---------------- title: themed rooms + boxes ---------------- */
+function tidyAll() { if (!G) return; G.playing = false; G.attract = true; for (const it of G.items) { const s = G.cont.slots[it.idx]; it.state = 'placed'; it.slot = s; s.item = it; it.g.position.copy(slotPos(s)); it.g.rotation.y = s.yaw; it.toYaw = s.yaw; } G.placed = G.items.length; hudKey = ''; }
+function preview(li) { return Promise.resolve(startLevel(li, { quiet: true })).then(() => { if (document.querySelector('.ig-title')) tidyAll(); }); }
+const roomStars = r => r.levels.reduce((a, id) => a + (S.stars[id] || 0), 0);
 function title() {
   document.querySelectorAll('.ig-screen,.pf-replay,.pf-stars').forEach(e => e.remove()); $('keyHint').hidden = true;
+  if (!isOpen(S.sel)) S.sel = ORDER[0];
+  let roomSel = Math.max(0, roomOf(S.sel));
   // a calm, tidy box on the table behind the menu
-  startLevel(Math.min(S.sel, S.unlocked - 1), { quiet: true }); G.playing = false; G.attract = true;
-  for (const it of G.items) { const s = G.cont.slots[it.idx]; it.state = 'placed'; it.slot = s; s.item = it; it.g.position.copy(slotPos(s)); it.g.rotation.y = s.yaw; } G.placed = G.items.length;
-  const lv = LEVELS.map((L, i) => `<button data-i="${i}" class="${i === S.sel ? 'on' : ''}" ${i >= S.unlocked ? 'disabled' : ''}><span class="e">${i >= S.unlocked ? '🔒' : L.e}</span>${nm(L)}<span class="st">${'★'.repeat(S.stars[L.id] || 0)}${'☆'.repeat(3 - (S.stars[L.id] || 0))}</span></button>`).join('');
-  const extra = `<div class="pf-extra"><div><div class="pf-lbl">${T('Choose a box', 'Elige una caja')}</div><div class="pf-lv" id="pLv">${lv}</div></div><div><div class="pf-lbl">${T('Options', 'Opciones')}</div><div class="pf-opts"><button class="ig-chipbtn ${S.zen ? 'on' : ''}" id="oZen">🍃 ${T('Zen mode', 'Modo zen')}<small>${T('No timer, just vibes', 'Sin reloj, con calma')}</small></button><button class="ig-chipbtn ${S.oneWrong ? 'on' : ''}" id="oWrong">😬 ${T('One wrong', 'Uno torcido')}<small>${T('Leaves one thing crooked for the clip', 'Deja una cosa torcida para el video')}</small></button></div></div><div><div class="pf-lbl">${T("Watch a friend's layout", 'Mira el orden de un amigo')}</div><div class="pf-code"><input id="code" placeholder="PF-…" maxlength="24" aria-label="${T('Share code', 'Código')}"><button class="ig-chipbtn" id="codeGo">▶ ${T('Replay', 'Ver')}</button></div></div></div>`;
-  const d = E.titleScreen({ title: 'Perfect Fit', kicker: T('Inoa Games · Cozy 3D', 'Inoa Games · 3D relajante'), lead: T('Everything has its place. Drag each thing into the spot shaped just like it — no rush, no fails, just that click.', 'Todo tiene su lugar. Arrastra cada cosa al hueco con su misma forma: sin prisa, sin perder, solo ese clic.'), how: [['👆', T('Drag an item with your finger or mouse', 'Arrastra una cosa con el dedo o el ratón')], ['🧩', T('Drop it on its matching outline', 'Suéltala sobre su silueta')], ['⌨️', T('Tab / arrows to choose, Space to pick up and place · Pad: D-pad + A', 'Tab / flechas para elegir, Espacio para tomar y colocar · Mando: cruceta + A')]], extra, onPlay: () => { G && (G.attract = false); startLevel(S.sel); } });
-  d.querySelectorAll('#pLv button').forEach(b => b.onclick = () => { S.sel = +b.dataset.i; save(); d.querySelectorAll('#pLv button').forEach(x => x.classList.toggle('on', x === b)); startLevel(S.sel, { quiet: true }); G.playing = false; for (const it of G.items) { const s = G.cont.slots[it.idx]; it.state = 'placed'; it.slot = s; s.item = it; it.g.position.copy(slotPos(s)); it.g.rotation.y = s.yaw; } G.placed = G.items.length; hudKey = ''; });
+  preview(S.sel); if (G) G.attract = true;
+  const extra = `<div class="pf-extra"><div><div class="pf-lbl">${T('Choose a room', 'Elige un cuarto')}</div><div class="pf-rooms" id="pRooms"></div><div class="pf-lv" id="pLv"></div><div class="pf-goal" id="pGoal"></div></div><div><div class="pf-lbl">${T('Options', 'Opciones')}</div><div class="pf-opts"><button class="ig-chipbtn ${S.zen ? 'on' : ''}" id="oZen">🍃 ${T('Zen mode', 'Modo zen')}<small>${T('No timer, just vibes', 'Sin reloj, con calma')}</small></button><button class="ig-chipbtn ${S.oneWrong ? 'on' : ''}" id="oWrong">😬 ${T('One wrong', 'Uno torcido')}<small>${T('Leaves one thing crooked for the clip', 'Deja una cosa torcida para el video')}</small></button></div></div><div><div class="pf-lbl">${T("Watch a friend's layout", 'Mira el orden de un amigo')}</div><div class="pf-code"><input id="code" placeholder="PF-…" maxlength="24" aria-label="${T('Share code', 'Código')}"><button class="ig-chipbtn" id="codeGo">▶ ${T('Replay', 'Ver')}</button></div></div></div>`;
+  const d = E.titleScreen({ title: 'Perfect Fit', kicker: T(`Inoa Games · Cozy 3D · ${LEVELS.length} boxes`, `Inoa Games · 3D relajante · ${LEVELS.length} cajas`), lead: T('Everything has its place. Drag each thing into the spot shaped just like it — no rush, no fails, just that click.', 'Todo tiene su lugar. Arrastra cada cosa al hueco con su misma forma: sin prisa, sin perder, solo ese clic.'), how: [['👆', T('Drag an item with your finger or mouse', 'Arrastra una cosa con el dedo o el ratón')], ['🧩', T('Drop it on its matching outline — later boxes match colours too', 'Suéltala sobre su silueta; en las últimas cajas también cuenta el color')], ['⌨️', T('Tab / arrows to choose, Space to pick up and place · Pad or phone: D-pad + A', 'Tab / flechas para elegir, Espacio para tomar y colocar · Mando o teléfono: cruceta + A')]], extra, onPlay: () => { G && (G.attract = false); startLevel(S.sel); } });
+  const goal = () => { const L = LEVELS[S.sel], n = buildContainerCount(S.sel), b = S.best[L.id]; d.querySelector('#pGoal').innerHTML = `${L.e} <b>${nm(L)}</b> · ${n} ${T('things', 'cosas')}${b != null ? ` · ${T('best', 'récord')} ${fmt(b)}` : ''}<br><small>${goalText(L)}</small>`; };
+  const render = () => {
+    d.querySelector('#pRooms').innerHTML = ROOMS.map((r, i) => { const open = isOpen(LIDX[r.levels[0]]); return `<button class="pf-room ${i === roomSel ? 'on' : ''}" data-r="${i}" ${open ? '' : 'disabled'}><span>${open ? r.e : '🔒'}</span><b>${T(r.name, r.es)}</b><small>★ ${roomStars(r)}/${r.levels.length * 3}</small></button>`; }).join('');
+    d.querySelector('#pLv').innerHTML = ROOMS[roomSel].levels.map(id => { const i = LIDX[id], L = LEVELS[i], o = isOpen(i), st = S.stars[id] || 0; return `<button data-i="${i}" class="${i === S.sel ? 'on' : ''}" ${o ? '' : 'disabled'} aria-label="${nm(L)}${o ? '' : ' 🔒'}"><span class="e">${o ? L.e : '🔒'}</span>${nm(L)}<span class="st">${'★'.repeat(st)}${'☆'.repeat(3 - st)}</span></button>`; }).join('');
+    d.querySelectorAll('#pRooms button').forEach(b => b.onclick = () => { roomSel = +b.dataset.r; const R0 = ROOMS[roomSel]; const firstOpen = R0.levels.map(id => LIDX[id]).filter(isOpen); const pickI = firstOpen.find(i => !S.stars[LEVELS[i].id]) ?? firstOpen[0]; if (pickI != null && roomOf(S.sel) !== roomSel) { S.sel = pickI; save(); preview(S.sel); } E.tone(880, .04, 'sine', .04); render(); });
+    d.querySelectorAll('#pLv button').forEach(b => b.onclick = () => { S.sel = +b.dataset.i; save(); preview(S.sel); E.tone(1000, .04, 'sine', .04); render(); });
+    goal();
+  };
+  render();
   d.querySelector('#oZen').onclick = e => { S.zen = !S.zen; save(); e.currentTarget.classList.toggle('on', S.zen); };
   d.querySelector('#oWrong').onclick = e => { S.oneWrong = !S.oneWrong; save(); e.currentTarget.classList.toggle('on', S.oneWrong); };
   setTimeout(() => d.querySelector('[data-a=play]')?.focus(), 50);
@@ -569,22 +863,23 @@ function title() {
   return d;
 }
 
-
-// gamepad A presses the main button of whichever menu card is open; Play gets keyboard focus
-let padPrevA = false;
-function menuPad() { const pads = navigator.getGamepads ? [...navigator.getGamepads()].filter(Boolean) : []; const a = pads.some(p => p.buttons[0] && p.buttons[0].pressed); if (a && !padPrevA) { const b = document.querySelector('.ig-screen [data-a=play], .ig-screen [data-a=again], .ig-screen [data-a=resume], .jk-cta [data-a=go]'); if (b) b.click(); } padPrevA = a; }
+// menus (title, pause, results) are driven by the engine's built-in focus ring for gamepads and phones
 // language switch from the shared settings panel: rebuild the menu text / HUD in place
 addEventListener('inoa:settings', e => { if (!e.detail || e.detail.key !== 'lang') return; hudKey = ''; hud(); if (document.querySelector('.ig-title')) title(); });
+registerProc();
 title(); ld.done(); window.__READY = true;
-E.loop((dt) => { menuPad(); update(dt); updateCamera(dt); R.render(dt); });
+E.loop((dt) => { update(dt); updateCamera(dt); R.render(dt); });
 window.__GAME = {
-  get G() { return G; }, S, LEVELS, update, startLevel, title, autoSolve, shareCode: () => shareCode(), parseCode,
+  get G() { return G; }, S, LEVELS, ROOMS, ORDER, update, startLevel, title, autoSolve, shareCode: () => shareCode(), parseCode, isOpen, MATERIAL, label, parOf: li => parOf(LEVELS[li]), pause, turns: () => LEVELS.map(L => chooseLayout(L, portrait()).turn),
+  pickAt: (x, y, touch) => { const it = pickAt(x, y, touch); return it ? it.idx : -1; }, rayHit: (x, y) => { for (const it of G.items) it.g.updateMatrixWorld(true); setRay(x, y); return ray.intersectObjects(G.items.filter(pickable).map(i => i.proxy), false).length > 0; },
+  // smallest slot on screen (px) — thumb-friendliness check per box
+  minSlotPx: () => Math.min(...G.cont.slots.map((s, i) => { const r = window.__GAME.slotRectPx(i); return Math.min(r.w, r.h); })),
   itemScreen: i => { const it = G.items[i]; const p = it.g.position.clone(); p.y += it.size.y * .5; return E.toScreen(p, camera); },
   slotScreen: i => E.toScreen(slotPos(G.cont.slots[i]), camera),
   slotFor: i => G.cont.slots.findIndex(s => !s.item && s.name === G.items[i].name),
   wrongSlotFor: i => G.cont.slots.findIndex(s => !s.item && s.name !== G.items[i].name),
   dragInfo: () => G.drag ? { fp: G.drag.fp ? E.toScreen(G.drag.fp, camera) : null, item: E.toScreen(G.drag.it.g.position, camera), near: G.drag.near ? G.drag.near.s.i : -1, touch: !!G.drag.touch, idx: G.drag.it.idx } : null,
-  slotRectPx: i => { const s = G.cont.slots[i], p = slotPos(s); const a = E.toScreen(p.clone().add(new THREE.Vector3(-s.w / 2, 0, -s.d / 2)), camera), b = E.toScreen(p.clone().add(new THREE.Vector3(s.w / 2, 0, s.d / 2)), camera); return { w: Math.abs(b.x - a.x), h: Math.abs(b.y - a.y) }; },
+  slotRectPx: i => { const s = G.cont.slots[i], p = slotPos(s), V = (x, z) => E.toScreen(p.clone().add(new THREE.Vector3(x, 0, z)), camera); const a = V(-s.w / 2, 0), b = V(s.w / 2, 0), c = V(0, -s.d / 2), e = V(0, s.d / 2); return { w: Math.hypot(b.x - a.x, b.y - a.y), h: Math.hypot(e.x - c.x, e.y - c.y) }; },
   itemPx: i => { const it = G.items[i]; const a = E.toScreen(it.g.position.clone().add(new THREE.Vector3(-it.size.x / 2, 0, 0)), camera), b = E.toScreen(it.g.position.clone().add(new THREE.Vector3(it.size.x / 2, 0, 0)), camera); return Math.abs(b.x - a.x); }
 };
 </script>
