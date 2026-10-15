@@ -137,7 +137,9 @@ async function loadManifest(man, manUrl, eng, onProgress) {
   return ASSETS;
 }
 const _modelLoads = {};
-function loadModelFile(name, href) { return _modelLoads[name] ||= gltfLoader.loadAsync(href).then(g => { ASSETS.models[name] = g.scene; g.scene.userData.animations = g.animations; }, e => { console.warn('model', name, e); }); }
+// meshopt/quantized GLBs store attributes as normalized ints; games that edit or merge geometry expect Float32, so expand them on load.
+function dequantize(root) { root.traverse(o => { const g = o.geometry; if (!g) return; for (const k in g.attributes) { const at = g.attributes[k]; if (at.isInterleavedBufferAttribute || !(at.array instanceof Float32Array) || at.normalized) { const n = at.count, sz = at.itemSize, f = new Float32Array(n * sz); for (let i = 0; i < n; i++) for (let c = 0; c < sz; c++) f[i * sz + c] = at.getComponent(i, c); g.setAttribute(k, new THREE.BufferAttribute(f, sz, false)); } } }); }
+function loadModelFile(name, href) { return _modelLoads[name] ||= gltfLoader.loadAsync(href).then(g => { dequantize(g.scene); ASSETS.models[name] = g.scene; g.scene.userData.animations = g.animations; }, e => { console.warn('model', name, e); }); }
 // Load models listed as lazy in the manifest (or any manifest model) after the game has started. Resolves when all are in ASSETS.models.
 export async function ensureModels(names) { const m = ASSETS.manifest; if (!m) return ASSETS; await Promise.all(names.filter(n => !ASSETS.models[n] && m.man.models[n]).map(n => loadModelFile(n, new URL(m.man.models[n], m.base).href))); return ASSETS; }
 export async function loadPack(url, eng, onProgress = () => { }, opts = {}) {
