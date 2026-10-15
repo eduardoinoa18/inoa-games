@@ -1,0 +1,1 @@
+module.exports = async (p, shot) => { await p.waitForTimeout(800); await shot('top'); await p.evaluate(() => document.getElementById('shelf').scrollIntoView()); await p.waitForTimeout(800); await shot('shelf'); };

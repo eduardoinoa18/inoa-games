@@ -3,7 +3,7 @@ const fs = require('fs'), path = require('path'), http = require('http');
 // usage (from repo root): node test/run.js <game> [test/<game>.js]  (serves the repo on :8766, routes three.js CDN imports to node_modules)
 // script.js exports async (page, shot) => {...}; shot(name) saves <game>_<name>.png into test/out/
 const { chromium } = require('playwright');
-const ROOT = path.join(__dirname, '..'), NM = path.join(path.dirname(require.resolve('three/package.json')), '/');
+const ROOT = path.join(__dirname, '..'), NM = path.join(__dirname, '..', 'node_modules', 'three', '/');
 const game = process.argv[2], scriptPath = process.argv[3];
 const types = { '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png' };
 const PORT = Number(process.env.PORT || 8766);

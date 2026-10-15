@@ -53,6 +53,7 @@ head = head.replace('</style>', '''.heropanel{padding-block:18px 0;background:va
 .hp-row{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;font-weight:800;color:var(--mist);letter-spacing:.04em;text-transform:uppercase}
 .game img.thumb{width:100%;height:150px;object-fit:cover;display:block;background:#0b2a3a}
 .game.flag img.thumb{height:180px}
+.game.flag{grid-template-rows:180px auto}
 .game .st.live{background:var(--lagoon);color:var(--coral-ink)}
 </style>''', 1)
 head = head.replace('href="https://claude.ai/artifact/R39Es5YCcbYnxRhuoDboVg" target="_blank" rel="noopener"', 'href="games/pixelpact.html"')

@@ -36,11 +36,11 @@ It is a **static site**: `index.html` (hub) + `games/*.html` (one page per game)
 | `games/tidelines.html` | **Tide Lines** — 4v4 paint-territory arena vs bots, live % bar, 2:30 matches | Passing tests |
 | `games/fit.html` | **Perfect Fit** — ASMR organizing: drag real 3D items into shaped slots, snap "thock", 8+ levels, Zen mode, "one wrong" clip mode | Verify drag feel on real phones |
 | `games/junk.html` | **Junkyard to Jewel** — wash, sand, paint, polish rusty vehicles with your finger (shader mask), turntable reveal, gallery | Verify brush on low-UV models |
-| `games/brew.html` | **Brew and Bloom** — cozy idle café + greenhouse, real-time plant growth, customers, brewing, decor | Builder was cut off during final polish: re-check visuals |
-| `games/builders.html` | **Driftwood Builders** — island sandbox: gather, grid build with ghost preview, day/night, quests, share-island code, photo mode | Builder was cut off during a polish pass (camera occlusion, tree offsets, palette layout, boat placement): finish those |
+| `games/brew.html` | **Brew and Bloom** — cozy idle café + greenhouse, real-time plant growth, customers, brewing, decor | Tests pass (verified 2026-10-14). Builder was cut off during final polish: do a visual/UX polish pass |
+| `games/builders.html` | **Driftwood Builders** — island sandbox: gather, grid build with ghost preview, day/night, quests, share-island code, photo mode | Tests pass. Builder was cut off mid-polish: finish camera occlusion, tree base offsets/tints, phone palette layout, boat placement |
 | `games/tray.html` | **Fail Tray** — wobbly stack physics obstacle courses, slow-mo fail replay, hot-seat 2–4 players | Passing tests |
 | `games/trivia.html` | **Pact Trivia** — 3D game-show studio, 2–4 local buzzers or solo vs bots, 160+ EN/ES questions read aloud | Passing tests; fact-check the question bank |
-| `games/draw.html` | **Draw the Pact** — pass-and-play draw & guess, Speed Sketch gallery, Telephone mode, bilingual word list | Final test was running when the builder stopped: re-run |
+| `games/draw.html` | **Draw the Pact** — pass-and-play draw & guess, Speed Sketch gallery, Telephone mode, bilingual word list | Tests pass (all 3 modes). Polish pass + verify stylus pressure on a real device |
 
 ## How to work
 ```bash
@@ -63,7 +63,7 @@ python3 tools/build_hub.py       # after changing hub-src/ or adding a game/thum
 7. Don't break `engine/inoa3d.js` API used by 10+ games; extend it additively and re-run `npm run test:all`.
 
 ## Audit + enhancement backlog (do these, in order)
-1. **Re-verify everything**: run `npm run test:all`, look at every screenshot (landscape + portrait), fix any console error, clipping, floating, backwards-facing characters, unreadable text, overexposure. Finish Brew and Bloom, Driftwood Builders and Draw the Pact polish (builders were interrupted).
+1. **Re-verify everything** (all 13 passed headless tests with no console errors on 2026-10-14): run `npm run test:all`, look at every screenshot (landscape + portrait), fix any console error, clipping, floating, backwards-facing characters, unreadable text, overexposure. Finish Brew and Bloom, Driftwood Builders and Draw the Pact polish (builders were interrupted).
 2. **Load speed**: on Vercel, switch packs from base64 JSON to real files: write `packs/<game>/` folders of `.glb` + `.hdr` and teach `loadPack()` to accept a manifest (keep JSON fallback). Add Draco/meshopt compression (`tools/`), lazy-load secondary models, and a service worker (PWA: manifest, offline cache, install prompt after first win).
 3. **Engine upgrades** builders asked for: limb aiming + weapon-to-hand attach helper, pooled particles, render-on-demand for tests, distance-scaled fog. Migrate `games/safari.html` onto the shared engine.
 4. **Hub**: real per-game best scores and play counts on tiles (profile data exists), "continue" row, daily challenge rotation, hero card share image, EN/ES toggle for all UI, settings (sound, read-aloud, reduced motion) shared by all games.
