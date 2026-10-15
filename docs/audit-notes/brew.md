@@ -2,7 +2,7 @@
 
 ## What changed (by feature)
 - **Portrait brew panel**: the panel was never actually drawn twice — the audit was reading a 2-up contact sheet. The real portrait problems were fixed instead: the 3D ingredients now sit in one row, the overlapping 3D labels are hidden in portrait, and the recipe card has a 6-button ingredient tray (big tap targets that show counts and highlight what the recipe still needs) with Back on the same row. The portrait test now finishes the shift and screenshots the real results card (`brew_p_results`).
-- **Barista**: the pack's `survivor-female` texture has red skin and dirt/blood stains. The barista now uses the `male` model (white shirt + green waistcoat, reads as café staff). It is scaled to 0.78, because the chunky-head rig is about 2.5 m to the top of the head, and stands back-left of the teapot. The brew camera is framed and steeper in both orientations, and leaves room for the recipe card in portrait.
+- **Barista**: the pack's `survivor-female` texture has red skin and dirt/blood stains. The barista now uses the `male` model (white shirt + green waistcoat, reads as café staff). It is scaled to 0.78, because the chunky-head rig is about 2.5 m to the top of the head, and stands at the left end of the counter facing the teapot. The brew camera is framed and steeper in both orientations, and leaves room for the recipe card in portrait.
 - **Guest textures**: at load, `cleanCharTex()` removes the grey-brown stains from the `survivor-male/female` textures and recolours the red skin to a warm brown. No assets were added.
 - **Greenhouse view (portrait)**: the camera fits the diorama's projected width for the current orbit angle, and starts at a front-on angle in portrait. No more side clipping.
 - **Labels**: pot and order tags are laid out in screen space (kept inside the safe area, overlaps pushed apart). Portrait uses compact labels and staggers alternate pot labels. The test checks for 0 off-screen labels.
@@ -17,6 +17,8 @@
 - New assertions: drag adds an ingredient; the brew completes; results appear with `resultsCount === 1` (and still 1 after 4 more seconds); a floor tap in decor mode doesn't open brew; decor exits; the offline payout happens once (tips > 0 and ≤ 60), then two more reloads pay nothing; future/invalid timestamps are sanitised (no NaN coins, future pot clamped, bogus pot dropped); the Spanish UI loads.
 
 ## Remaining known issues
+- Landscape brew view (560 px tall): the barista's head touches the HUD row, and the bottoms of the 3D ingredient labels touch the top of the recipe card.
+- The pack loaded fine through the new manifest/meshopt + Float32 dequantize engine path; no broken models seen.
 - Every humanoid guest uses the same oversized chunky-head rig (about 2.5 m tall). Seated guests look a little large next to the chairs. A global fix belongs in `instance(fit:'height')` (the bounding box ignores the bone pose).
 - The decor `shelf` placement at (-1, .5) is rejected (blocked path). That is expected; the test just logs it.
 - The engine title/pause buttons and the "Play again" / "Hub" labels are English-only (engine strings).
