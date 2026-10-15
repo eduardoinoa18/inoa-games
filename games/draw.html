@@ -48,17 +48,17 @@
 .dw-cursor{position:absolute;left:50%;top:50%;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;border:3px solid #1b2430;box-shadow:0 0 0 2px #fff;pointer-events:none;display:none;z-index:2;box-sizing:border-box}
 .dw-cursor.down{background:rgba(27,36,48,.3)}
 .gp-focus{outline:4px solid #ffb703!important;outline-offset:3px}
-.dw-gp{font-size:11px;font-weight:700;color:#4c5868;max-width:132px;line-height:1.35}
+.dw-gp{flex-basis:100%;text-align:center;font-size:11px;font-weight:800;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7);line-height:1.3}
 .tt-wide .ig-row:last-child{position:sticky;bottom:-26px;background:var(--paper);padding:10px 0 14px;margin-bottom:-14px;z-index:2}
 @media (min-width:760px) and (orientation:landscape){.tt-wide{width:min(940px,100%);grid-template-columns:1fr 1.1fr;column-gap:22px}}
-@media (orientation:portrait){.dw{grid-template-columns:1fr;grid-template-rows:auto auto auto;align-content:start;padding:60px 10px 10px}.dw-tools{flex-direction:row;flex-wrap:wrap;justify-content:center;align-self:start}.dw-pal{grid-template-columns:repeat(6,34px)}.dw-pal button{width:34px;height:34px}.dw-act{grid-template-columns:repeat(auto-fit,minmax(110px,1fr));width:100%}.dw-paper{width:100%;height:auto}.dw-gp{max-width:100%;flex-basis:100%;text-align:center}}
+@media (orientation:portrait){.dw{grid-template-columns:1fr;grid-template-rows:auto auto auto;align-content:start;padding:60px 10px 10px}.dw-tools{flex-direction:row;flex-wrap:wrap;justify-content:center;align-self:start}.dw-pal{grid-template-columns:repeat(6,34px)}.dw-pal button{width:34px;height:34px}.dw-act{grid-template-columns:repeat(auto-fit,minmax(110px,1fr));width:100%}.dw-paper{width:100%;height:auto}}
 @media (orientation:landscape) and (max-height:500px){.dw{padding-top:56px}.dw-pal{grid-template-columns:repeat(4,30px)}.dw-pal button{width:30px;height:30px}.dw-row button{height:36px}.dw-act button{min-height:40px}}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
 </head><body>
 <canvas class="ig-gl" id="gl"></canvas>
 <div class="dw" id="dw" hidden>
-  <div class="dw-top"><div class="dw-time" id="dwTime"><svg viewBox="0 0 54 54"><circle cx="27" cy="27" r="22" fill="rgba(13,27,38,.55)" stroke="rgba(255,255,255,.25)" stroke-width="6"/><circle id="dwRing" cx="27" cy="27" r="22" fill="none" stroke="#ffd166" stroke-width="6" stroke-linecap="round" stroke-dasharray="138.2" stroke-dashoffset="0"/></svg><span id="dwSec">60</span></div><div class="dw-prompt" id="dwPrompt"></div></div>
+  <div class="dw-top"><div class="dw-time" id="dwTime"><svg viewBox="0 0 54 54"><circle cx="27" cy="27" r="22" fill="rgba(13,27,38,.55)" stroke="rgba(255,255,255,.25)" stroke-width="6"/><circle id="dwRing" cx="27" cy="27" r="22" fill="none" stroke="#ffd166" stroke-width="6" stroke-linecap="round" stroke-dasharray="138.2" stroke-dashoffset="0"/></svg><span id="dwSec">60</span></div><div class="dw-prompt" id="dwPrompt"></div><div class="dw-gp" id="dwGp" hidden></div></div>
   <div class="dw-stage" id="dwStage"><div class="dw-paper" id="dwPaper"><canvas id="pad" width="1024" height="768"></canvas></div></div>
   <div class="dw-tools" id="dwTools"></div>
 </div>
@@ -457,6 +457,7 @@ R.setLook({ background: 0x3a2b24, fog: 0x3a2b24, fogNear: 30, fogFar: 60, sun: 2
 R.setEnv(E.ASSETS.hdri.interior);
 sun.position.set(-12, 7, -1); sun.target.position.set(0, 0, -1); sun.target.updateMatrixWorld(); sun.shadow.camera.far = 40;
 const S = Object.assign({ lang: L0, mode: 'party', players: 4, rounds: 1, diff: 0, sketchSec: 30, names: ['Ana', 'Leo', 'Mia', 'Rafa', 'Luz', 'Teo', 'Sol', 'Gabi'] }, E.store.get('inoa.draw', {}));
+if (E.lang) S.lang = E.lang() === 'es' ? 'es' : 'en'; // shared settings (hub / settings panel) own the language
 const save = () => E.store.set('inoa.draw', S);
 const T = () => STR[S.lang];
 let G = null, music = null, hudEl = null;
@@ -564,7 +565,7 @@ function tools(actions) {
   el.innerHTML = `<div class="dw-pal">${PAL.map((c, i) => `<button data-c="${c}" style="background:${c}" class="${!D.eraser && D.color === c ? 'on' : ''}" aria-label="${T().color(i + 1)}"></button>`).join('')}</div>
   <div class="dw-row dw-size">${SIZES.map((s, i) => `<button data-s="${i}" class="${D.size === i ? 'on' : ''}" aria-label="${T().brush(i + 1)}"><i style="width:${6 + i * 7}px;height:${6 + i * 7}px"></i></button>`).join('')}</div>
   <div class="dw-row"><button data-t="eraser" class="${D.eraser ? 'on' : ''}" title="${T().eraser}" aria-label="${T().eraser}">🧽</button><button data-t="undo" title="${T().undo}" aria-label="${T().undo}">↶</button><button data-t="clear" title="${T().clear}" aria-label="${T().clear}">🗑</button></div>
-  <div class="dw-act">${actions.map(a => `<button data-a="${a.id}" class="${a.cls || ''}">${a.label}</button>`).join('')}</div>${NAV.padSeen ? `<div class="dw-gp">${T().gp}</div>` : ''}`;
+  <div class="dw-act">${actions.map(a => `<button data-a="${a.id}" class="${a.cls || ''}">${a.label}</button>`).join('')}</div>`; $('dwGp').textContent = T().gp; $('dwGp').hidden = !NAV.padSeen;
   curActions = actions;
   el.querySelectorAll('.dw-pal button').forEach(b => b.onclick = () => { D.color = b.dataset.c; D.eraser = false; tools(actions); SFX.click(); });
   el.querySelectorAll('.dw-size button').forEach(b => b.onclick = () => { D.size = +b.dataset.s; tools(actions); SFX.click(); });
@@ -640,7 +641,7 @@ function partyReveal(guesser, gp) {
 function board() { const rows = [...G.players].sort((a, b) => b.score - a.score); return `<div class="dw-board">${rows.map((p, k) => `<div><b>${k + 1}</b><span style="border-left:6px solid ${PCOL[p.i]};padding-left:8px">${esc(p.name)}</span><b>${p.score}</b></div>`).join('')}</div>`; }
 function partyEnd() {
   if (G.ended) return; G.phase = 'end'; camView('room'); music && music.stop(); const rows = [...G.players].sort((a, b) => b.score - a.score); const tie = rows.length > 1 && rows[0].score === rows[1].score; SFX.win(); confettiBurst();
-  finish({ gameId: 'draw', title: tie ? (S.lang === 'es' ? '¡Empate!' : 'It’s a tie!') : (S.lang === 'es' ? `¡Gana ${rows[0].name}!` : `${rows[0].name} wins!`), stats: rows.map((p, k) => [`${k + 1}. ${p.name}`, p.score]), xp: 40 + G.turns * 8, coins: 10 + G.turns * 2, onAgain: () => title(), share: S.lang === 'es' ? `¡${rows[0].name} ganó nuestra fiesta de Draw the Pact con ${rows[0].score} puntos! (Inoa Games) ${location.href}` : `${rows[0].name} won our Draw the Pact party with ${rows[0].score} points! (Inoa Games) ${location.href}` });
+  finish({ gameId: 'draw', title: tie ? (S.lang === 'es' ? '¡Empate!' : 'It’s a tie!') : (S.lang === 'es' ? `¡Gana ${rows[0].name}!` : `${rows[0].name} wins!`), stats: rows.map((p, k) => [`${k + 1}. ${p.name}`, p.score]), xp: 40 + G.turns * 8, coins: 10 + G.turns * 2, bestLabel: T().bestSketch, won: true, onAgain: () => title(), share: S.lang === 'es' ? `¡${rows[0].name} ganó nuestra fiesta de Draw the Pact con ${rows[0].score} puntos! (Inoa Games) ${location.href}` : `${rows[0].name} won our Draw the Pact party with ${rows[0].score} points! (Inoa Games) ${location.href}` });
 }
 
 // Every mode ends here: E.results exactly once per round (G.ended guard), engine card localised.
@@ -659,7 +660,7 @@ function sketchSave() {
 }
 function sketchEnd() {
   if (G.ended) return; G.phase = 'end'; camView('gallery'); music && music.stop(); SFX.win(); const n = G.done.filter(d => d.strokes > 0).length;
-  finish({ gameId: 'draw', title: S.lang === 'es' ? '¡Galería actualizada!' : 'Gallery updated!', stats: [[S.lang === 'es' ? 'Bocetos' : 'Sketches', `${n}/${G.n}`], [S.lang === 'es' ? 'Tinta' : 'Ink used', Math.round(G.inkTotal * 100) + ' cm'], [S.lang === 'es' ? 'Tiempo' : 'Timer', S.sketchSec + 's']], xp: 25 + n * 10, coins: 5 + n * 3, best: n, bestLabel: T().bestSketch, onAgain: () => title(), share: S.lang === 'es' ? `¡Hice ${n} bocetos en Boceto rápido de Draw the Pact! (Inoa Games) ${location.href}` : `I sketched ${n} drawings in Draw the Pact Speed Sketch! (Inoa Games) ${location.href}` });
+  finish({ gameId: 'draw', title: S.lang === 'es' ? '¡Galería actualizada!' : 'Gallery updated!', stats: [[S.lang === 'es' ? 'Bocetos' : 'Sketches', `${n}/${G.n}`], [S.lang === 'es' ? 'Tinta' : 'Ink used', Math.round(G.inkTotal * 100) + ' cm'], [S.lang === 'es' ? 'Tiempo' : 'Timer', S.sketchSec + 's']], xp: 25 + n * 10, coins: 5 + n * 3, best: n, bestLabel: T().bestSketch, won: n > 0, onAgain: () => title(), share: S.lang === 'es' ? `¡Hice ${n} bocetos en Boceto rápido de Draw the Pact! (Inoa Games) ${location.href}` : `I sketched ${n} drawings in Draw the Pact Speed Sketch! (Inoa Games) ${location.href}` });
 }
 
 /* ---------- (c) telephone ---------- */
@@ -701,7 +702,7 @@ function slideNext() {
   d.addEventListener('pointerdown', advanceSlide); G.slideT = 4.2;
 }
 function advanceSlide() { if (!G || G.phase !== 'show') return; G.slideT = 4.2; G.slide++; slideNext(); }
-function phoneEnd() { if (G.ended) return; G.phase = 'end'; document.querySelectorAll('.dw-slide').forEach(d => d.remove()); music && music.stop(); const draws = G.chain.filter(c => c.kind === 'draw').length; finish({ gameId: 'draw', title: S.lang === 'es' ? '¡Qué teléfono descompuesto!' : 'What a telephone!', stats: [[S.lang === 'es' ? 'Empezó' : 'Started', G.chain[0].text], [S.lang === 'es' ? 'Dibujos' : 'Drawings', draws], [S.lang === 'es' ? 'Jugadores' : 'Players', G.players.length]], xp: 30 + G.players.length * 8, coins: 8 + G.players.length * 2, onAgain: () => title(), share: S.lang === 'es' ? `Nuestro teléfono de Draw the Pact empezó como "${G.chain[0].text}" y terminó como "${(G.chain.filter(c => c.kind === 'text').pop() || {}).text || '…'}" 😂 (Inoa Games) ${location.href}` : `Our Draw the Pact telephone started as "${G.chain[0].text}" and ended as "${(G.chain.filter(c => c.kind === 'text').pop() || {}).text || '…'}" 😂 (Inoa Games) ${location.href}` }); }
+function phoneEnd() { if (G.ended) return; G.phase = 'end'; document.querySelectorAll('.dw-slide').forEach(d => d.remove()); music && music.stop(); const draws = G.chain.filter(c => c.kind === 'draw').length; finish({ gameId: 'draw', title: S.lang === 'es' ? '¡Qué teléfono descompuesto!' : 'What a telephone!', stats: [[S.lang === 'es' ? 'Empezó' : 'Started', G.chain[0].text], [S.lang === 'es' ? 'Dibujos' : 'Drawings', draws], [S.lang === 'es' ? 'Jugadores' : 'Players', G.players.length]], xp: 30 + G.players.length * 8, coins: 8 + G.players.length * 2, bestLabel: T().bestSketch, won: true, onAgain: () => title(), share: S.lang === 'es' ? `Nuestro teléfono de Draw the Pact empezó como "${G.chain[0].text}" y terminó como "${(G.chain.filter(c => c.kind === 'text').pop() || {}).text || '…'}" 😂 (Inoa Games) ${location.href}` : `Our Draw the Pact telephone started as "${G.chain[0].text}" and ended as "${(G.chain.filter(c => c.kind === 'text').pop() || {}).text || '…'}" 😂 (Inoa Games) ${location.href}` }); }
 
 /* ======================= HUD / fx ======================= */
 function ensureHud() { if (hudEl) { document.querySelector('.ig-top').hidden = false; return; } hudEl = E.shell({ title: 'Draw the Pact', onPause: pause, buttons: [] }); }
@@ -741,7 +742,7 @@ function pause() { if (!G || G.paused || G.phase === 'end') return; G.paused = t
 const ES_UI = { 'Hub': 'Inicio', 'Play': 'Jugar', 'Paused': 'Pausa', 'Restart': 'Reiniciar', 'Resume': 'Seguir', 'Play again': 'Jugar otra vez', 'ROUND OVER': 'FIN DE LA RONDA', 'NEW BEST': '¡NUEVO RÉCORD!', '📣 Share': '📣 Compartir' };
 // The engine builds title/pause/results cards in English; translate them in place so the chosen language is used everywhere.
 function locScreen(d) {
-  if (!d) return d; const es = S.lang === 'es';
+  if (!d || typeof E.t === 'function') return d; // newer engines localise their own cards from the profile language const es = S.lang === 'es';
   if (es) { d.querySelectorAll('button, a, h2, .ig-kicker').forEach(el => { if (el.children.length) return; const t = el.textContent.trim(); if (ES_UI[t]) el.textContent = ES_UI[t]; }); d.querySelectorAll('.ig-reward span').forEach(sp => { sp.textContent = sp.textContent.replace(/^Hero lv/, 'Héroe nv'); }); }
   const snd = d.querySelector('[data-a=sound]'), vo = d.querySelector('[data-a=voice]');
   const lab = () => { const p = E.profile(); if (snd) snd.textContent = `🔊 ${es ? 'Sonido' : 'Sound'} ${p.sound ? (es ? 'sí' : 'on') : (es ? 'no' : 'off')}`; if (vo) vo.textContent = `🗣️ ${es ? 'Leer en voz alta' : 'Read aloud'} ${p.voice ? (es ? 'sí' : 'on') : (es ? 'no' : 'off')}`; };
@@ -750,6 +751,7 @@ function locScreen(d) {
   return d;
 }
 function applyLang() {
+  if (E.setSetting && E.lang && E.lang() !== S.lang) E.setSetting('lang', S.lang); // keep engine cards (title/pause/results/settings) in the same language
   document.documentElement.lang = S.lang;
   if (gallerySign) { const m = E.tagMaterial('🖼️', S.lang === 'es' ? 'GALERÍA' : 'GALLERY', '#ffd166', undefined, true); gallerySign.material = m; if (m.userData && m.userData.aspect) gallerySign.scale.x = gallerySign.scale.y * m.userData.aspect; }
   const home = document.querySelector('.ig-home'); if (home) home.setAttribute('aria-label', S.lang === 'es' ? 'Volver a Inoa Games' : 'Back to Inoa Games');
@@ -837,6 +839,8 @@ addEventListener('keydown', e => {
 });
 addEventListener('keyup', e => { if ((e.code === 'KeyQ' || e.code === 'Space') && D.enabled && !activeScreen()) { e.preventDefault(); peekHold(false); } });
 addEventListener('pointerdown', () => { if (navFocus) setFocus(null); }, true);
+// language changed from the shared settings panel: follow it everywhere
+addEventListener('inoa:settings', e => { const v = e.detail && e.detail.settings && e.detail.settings.lang; if (!v || v === S.lang) return; S.lang = v === 'es' ? 'es' : 'en'; save(); applyLang(); const tt = document.querySelector('.ig-title'); if (tt && !G) { tt.remove(); title(); } else { refreshTools(); hud(); } });
 document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
 
 /* ======================= title ======================= */

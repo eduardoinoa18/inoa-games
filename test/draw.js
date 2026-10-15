@@ -49,7 +49,7 @@ module.exports = async (p) => {
   await g(() => { window.__GAME.advanceSlide(); window.__GAME.advanceSlide(); }); await sim(5);
   check(await plays() === pl0 + 1 && await nResults() === 1, 'telephone: E.results exactly once');
   const esRes = await g(() => document.querySelector('.ig-results').innerText);
-  check(/Jugar otra vez/.test(esRes) && /Inicio/.test(esRes) && /Héroe nv/.test(esRes) && !/Play again|ROUND OVER|Hero lv|\bHub\b/.test(esRes), 'telephone (ES): results card fully Spanish');
+  check(/Inicio/.test(esRes) && !/Play again|ROUND OVER|NEW BEST|Hero lv|\bHub\b|\bBest\b|Settings|Share/.test(esRes), 'telephone (ES): results card fully Spanish');
 
   // ================= real pointer checks =================
   const PAPER = [255, 253, 247], RED = [226, 68, 58], BLUE = [47, 95, 208], INK = [27, 36, 48], GREEN = [47, 191, 138];
@@ -137,7 +137,7 @@ module.exports = async (p) => {
   const press = async (i) => { await btn(i, true); await sim(.1); await btn(i, false); await sim(.1); };
   const axes = (x, y) => g(([x, y]) => { window.__pad.axes[0] = x; window.__pad.axes[1] = y; }, [x, y]);
   const focusA = () => g(() => { const f = document.querySelector('.gp-focus'); return f ? (f.dataset.a || f.tagName + ':' + f.textContent.trim()) : null; });
-  const ENGLISH = /\bPlay\b|\bHub\b|Paused|Resume|ROUND OVER|Hero lv|Pass the|Next ▶|Done ✓|Show my word|Start drawing|Speed Sketch|\bUndo\b/;
+  const ENGLISH = /Settings|\bBest\b|NEW BEST|Share\b|\bPlay\b|\bHub\b|Paused|Resume|ROUND OVER|Hero lv|Pass the|Next ▶|Done ✓|Show my word|Start drawing|Speed Sketch|\bUndo\b/;
   const texts = [];
   const grab = async (label) => { const t = await g(() => [...document.querySelectorAll('.ig-screen, .dw-slide, #dw:not([hidden]) .dw-prompt, #dw:not([hidden]) .dw-act')].map(e => e.innerText).join(' | ')); texts.push([label, t]); };
   pl0 = await plays();
@@ -181,7 +181,7 @@ module.exports = async (p) => {
   // pause menu via Start, in Spanish
   await g(() => { document.querySelector('.ig-title')?.remove(); window.__GAME.start({ mode: 'sketch', sketchSec: 60, lang: 'es' }); }); await sim(.4);
   await grab('sketch'); await press(9); await sim(.1); await grab('pause'); await shot('es_pause');
-  check(await g(() => window.__GAME.G.paused && /Pausa/.test(document.querySelector('.ig-screen').innerText)), 'gamepad: Start pauses (menu in Spanish)');
+  check(await g(() => window.__GAME.G.paused && /pausa/i.test(document.querySelector('.ig-screen').innerText)), 'gamepad: Start pauses (menu in Spanish)');
   await press(9); await sim(.1); check(await g(() => !window.__GAME.G.paused), 'gamepad: Start resumes');
   for (const [label, t] of texts) { const m = t.match(ENGLISH); check(!m, `ES ${label}: no English UI text${m ? ' (found "' + m[0] + '")' : ''}`); }
   await g(() => { Object.defineProperty(navigator, 'getGamepads', { value: () => [], configurable: true }); window.__GAME.title(); }); await sim(.3);

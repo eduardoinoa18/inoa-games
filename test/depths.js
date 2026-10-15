@@ -10,7 +10,8 @@ module.exports = async (p, shot0) => {
   await shot0('title');
   if (MODE === 'quick') { await p.evaluate(() => { window.__GAME.S.gold = 260; document.querySelector('.ig-title [data-a=camp]').click(); }); await shot0('camp'); await p.evaluate(() => { document.querySelector('[data-a=back]').click(); }); }
   await p.evaluate(() => { const g = window.__GAME; g.S.allies = 2; g.S.diff = 'story'; g.S.cls = 'knight'; document.querySelector('.ig-title [data-a=play]').click(); window.__HOLD = true; });
-  const sim = (sec, until) => p.evaluate(async ({ sec, until }) => { const g = window.__GAME; g.autopilot = true; for (let i = 0; i < sec * 60; i++) { g.update(1 / 60); if (until && eval(until)) break; if (i % 600 === 599) await new Promise(r => setTimeout(r, 0)); } return g.state(); }, { sec, until });
+  // while simulating, sample how many big banners are visible at once (must stay <= 1) and how many damage numbers exist
+  const sim = (sec, until) => p.evaluate(async ({ sec, until }) => { const g = window.__GAME; g.autopilot = true; const M = window.__M || (window.__M = { big: 0, flt: 0 }); for (let i = 0; i < sec * 60; i++) { g.update(1 / 60); if (i % 20 === 0) { M.big = Math.max(M.big, [...document.querySelectorAll('.ig-big')].filter(e => +getComputedStyle(e).opacity > .05).length); M.flt = Math.max(M.flt, document.querySelectorAll('.ig-float').length); } if (until && eval(until)) break; if (i % 600 === 599) await new Promise(r => setTimeout(r, 0)); } return g.state(); }, { sec, until });
   let s = await sim(2.2); log('room1', JSON.stringify(s)); await shot('room1');
   s = await sim(1.5); await p.evaluate(() => { window.__GAME.zoom = 8; for (let i = 0; i < 45; i++) window.__GAME.update(1 / 60); }); await shot('close'); await p.evaluate(() => { window.__GAME.zoom = null; });
   if (MODE === 'quick') {
@@ -37,4 +38,9 @@ module.exports = async (p, shot0) => {
   log('end', JSON.stringify(s));
   s = await sim(8, 'window.__GAME.G && window.__GAME.G.ended'); log('final', JSON.stringify(s));
   await p.waitForTimeout(600); await shot('results');
+  const chk = await p.evaluate(() => ({ M: window.__M, results: document.querySelectorAll('.ig-results').length, stats: [...document.querySelectorAll('.ig-results .ig-stats div')].map(d => d.innerText.replace(/\s+/g, ' ')).join(' | '), best: document.querySelector('.ig-results p.ig-sub')?.innerText }));
+  log('checks', JSON.stringify(chk));
+  if (chk.M.big > 1) console.error('banner overlap: ' + chk.M.big + ' visible at once');
+  if (chk.results !== 1) console.error('results shown ' + chk.results + ' times');
+  if (/\/9/.test(chk.stats)) console.error('dishonest rooms stat: ' + chk.stats);
 };

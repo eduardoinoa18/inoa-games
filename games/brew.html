@@ -592,7 +592,7 @@ function closeDecor() { const D = G.decor; if (D?.ghost) world.remove(D.ghost); 
 /* ================= barista ================= */
 // barista stands behind the counter, off to the left of the teapot so the brewing area stays clear (waistcoat outfit = café staff)
 // note: the chunky-head character rig stands ~2.5 m tall to the top of the head, so the barista is scaled down to read as a person behind a 1 m counter
-const barista = makeChar({ model: 'male' }); barista.pivot.scale.setScalar(.78); barista.pivot.position.set(COUNTER.x - 1.05, 0, -.55); barista.pivot.rotation.y = .3; let baristaCheer = 0;
+const barista = makeChar({ model: 'male' }); barista.pivot.scale.setScalar(.78); barista.pivot.position.set(COUNTER.x - 1.4, 0, -.5); barista.pivot.rotation.y = .55; let baristaCheer = 0;
 
 /* ================= time of day ================= */
 const NIGHT = { top: 0x0b1230, hor: 0x252e58, glow: 0x6a78c0, sun: .24, sc: 0x9fb2ff, hemi: .26, hc: 0x46528c, exp: .95, lamp: 1, sd: [-.25, .75, .6] };
@@ -627,9 +627,9 @@ function camWant() {
   const portrait = PORTRAIT();
   if (G.mode === 'brew') {
     // steeper look-down so the counter top, teapot and ingredient row read clearly; barista stays a small figure at the back-left
-    const c = V3(COUNTER.x - .1, COUNTER.top + .05, .45);
-    if (portrait) { const ui = recipeEl ? recipeEl.getBoundingClientRect().height + 24 : 260; const free = innerHeight - ui - 64; const fy = (64 + free / 2) / innerHeight; const d = fitDist(3.0, 1.5 * innerHeight / Math.max(120, free)); return framed(c, V3(0, 1.9, 1), d, fy); }
-    return framed(c, V3(0, 1.75, 1), fitDist(3.6, 2.4), .52);
+    const c = V3(COUNTER.x - .25, COUNTER.top + .05, .45);
+    if (portrait) { const ui = recipeEl ? recipeEl.getBoundingClientRect().height + 24 : 260; const free = innerHeight - ui - 64; const fy = (64 + free / 2) / innerHeight; const d = fitDist(3.3, 1.5 * innerHeight / Math.max(120, free)); return framed(c, V3(0, 1.9, 1), d, fy); }
+    return framed(c, V3(0, 1.75, 1), fitDist(4.1, 2.6), .56);
   }
   if (G.mode === 'title') { const a = G.t * .05 + .3; const tgt = V3(0, .6, -.3); const d = fitDist(15, 10.5); return { pos: tgt.clone().add(V3(Math.sin(a) * Math.cos(.55), Math.sin(.55), Math.cos(a) * Math.cos(.55)).multiplyScalar(d)), tgt }; }
   const decor = G.mode === 'decor';
