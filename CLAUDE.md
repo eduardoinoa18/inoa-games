@@ -36,7 +36,7 @@ It is a **static site**: `index.html` (hub) + `games/*.html` (one page per game)
 | --- | --- | --- |
 | `games/pixelpact.html` | **Pixel Pact** (2D canvas): co-op Adventure (3 levels, boss) + Match brawler, 1–4 local players | Test hooks + `test/pixelpact.js`. Not on the engine; Phase 5 rebuilds it in 3D and keeps this as "Classic" |
 | `games/depths.html` | **Pixel Pact: Depths** — 3D co-op roguelite, 4 classes, AI allies + P2 drop-in, 8 rooms + boss | Phase 1 done (portrait camera, banner queue, human-like Story allies). Class/boon text EN only |
-| `games/drift.html` | **Island Drift** — kart racer, drift turbos, items, 5 AI, 2 tracks, time trial | Reference game. Drift camera fixed; uses hub hero. Phase 5: 2 tracks, ghost, cup |
+| `games/drift.html` | **Island Drift** — kart racer, drift turbos, items, 5 AI with personalities, 4 tracks (incl. a figure-eight bridge), time trial with ghost, Island Cup, Easy/Normal/Hard | Reference game. Elevation pass done 2026-10-15 (docs/AUDIT.md). Open: real-phone feel/FPS, ghost/cup offline only |
 | `games/safari.html` | **Snack Squad Safari** — allergy-safety game, buddy pet, labels read aloud EN/ES, 3D rescue cutscene, 5 levels | **On the shared engine now**, gamepad added. **Allergist review required** (`docs/audit-notes/safari.md`); rescue steps lack Spanish |
 | `games/runner.html` | **Tide Runner** — boardwalk runner, daily seed, ghost | Passing; uses hub hero |
 | `games/tidelines.html` | **Tide Lines** — 4v4 paint-turf vs bots | Phase 1 done (camera distance, prop fade, EN/ES); uses hub hero. One map |
@@ -86,7 +86,7 @@ Hub **Party** section and every title screen open a room (QR + 4-letter code). P
 6. **Pixel Pact 3D** (Phase 5): rebuild adventure + Match on the engine, 10 levels in World 1, keep 2D as Classic.
 7. **Multiplayer (built 2026-10-14, see `docs/MULTIPLAYER.md`)**: phones as controllers in every engine game + Pixel Pact 2D, per-player phones in Trivia/Depths/Tide Lines/Draw, Island Drift online races on separate screens. Next: TURN relay for strict networks, self-hosted signaling or Cloudflare Durable Object rooms, online modes for Tide Lines/Depths (host-authoritative like Drift), Safari phone support, spectator view, real-device latency tuning.
 8. **Store readiness — in progress (free beta)**: Capacitor iOS/Android wrappers in `app/`, vendored three.js, store listing + screenshots in `store/`, full path in `docs/APP_STORES.md`. No payments in the apps during the beta.
-9. **Content (Phase 5)**: 2 Drift tracks + ghost + cup; Depths rooms/enemies/2nd boss; Runner/Tide Lines zones + maps; Fit/Tray +8 levels each; Trivia fact-check + 300 EN/ES; Draw 500+ words.
+9. **Content (Phase 5)**: ~~Drift tracks + ghost + cup~~ (done); Depths rooms/enemies/2nd boss; Runner/Tide Lines zones + maps; Fit/Tray +8 levels each; Trivia fact-check + 300 EN/ES; Draw 500+ words.
 10. **Ship-readiness (Phase 6)**: accessibility pass, SEO/Open Graph per page, privacy page (404 done), docs/LAUNCH.md.
 
 ## Deploy
