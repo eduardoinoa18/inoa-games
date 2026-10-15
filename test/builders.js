@@ -127,6 +127,9 @@ module.exports = async (p, _shot) => {
   const granted = await ev(() => { const g = window.__GAME; const fm = g.FOLKM[0]; const f = fm.s; const W = f.wish; g.give({ shell: 5, fish: 5, crystal: 2, food: 10, wood: 10 }); g.teleport(fm.pos.x + 1, fm.pos.z); g.interact(); return { W, wishes: g.S.wishes, hearts: f.hearts, q: g.S.q }; });
   if (!granted.wishes) { const res = await ev(() => { const g = window.__GAME; const tgt = { 0: 'flowers', 2: 'bench', 4: 'lamp', 6: 'sapling', 8: 'path' }[g.S.folk[0].wish]; const out = []; for (let k = 0; k < 3 && !g.S.wishes; k++) { const ff = g.findFlat(1); out.push(g.build(tgt, ff[0], ff[1])); g.update(1 / 60); } return { tgt, out, wishes: g.S.wishes, q: g.S.q }; }); console.log('build wish', JSON.stringify(res)); }
   console.log('wish', JSON.stringify(wish), JSON.stringify(granted));
+  // a 'bring me' wish is granted by talking with ✋ while carrying the items
+  const give = await ev(() => { const g = window.__GAME; const fm = g.FOLKM[0]; fm.s.wish = 1; g.give({ fish: 3 }); const w0 = g.S.wishes, f0 = g.S.inv.fish; g.teleport(fm.pos.x + 1.2, fm.pos.z); g.interact(); return { granted: g.S.wishes === w0 + 1, fishPaid: f0 - g.S.inv.fish, hearts: fm.s.hearts, next: fm.s.wish }; });
+  console.log('give wish', JSON.stringify(give), give.granted && give.fishPaid === 2 ? 'ok' : 'FAIL');
   // quest 18: four bridge pieces out from the dock
   const bridge = await ev(() => { const g = window.__GAME; const docks = g.PLIST.filter(p => p.t === 'dock'); const end = docks[docks.length - 1], prev = docks[docks.length - 2]; const di = end.i - prev.i, dj = end.j - prev.j; const out = []; let cur = [end.i, end.j]; for (let k = 0; k < 8 && g.countOf('bridge') < 4; k++) { const ni = cur[0] + di, nj = cur[1] + dj; const r = g.build('bridge', ni, nj); out.push(r); cur = [ni, nj]; } const c = g.cellC(cur[0], cur[1]); const e = g.cellC(end.i, end.j); g.teleport(e.x, e.z); g.cam.dist = 11; g.cam.pitch = .55; g.cam.yaw = Math.atan2(-di, -dj) + .9; return { out, n: g.countOf('bridge'), q: g.S.q, walk: g.walkable(c.x, c.z), y: +g.groundAt(c.x, c.z).toFixed(2) }; });
   await sim(.6); await shot(tag + 'bridge');
@@ -143,6 +146,9 @@ module.exports = async (p, _shot) => {
   const three = await ev(() => { const g = window.__GAME; const sp = g.isleSpot('home', 6); g.teleport(sp[0], sp[1]); const f = g.findFlat(1); const r = g.build('cottage', f[0], f[1]); g.setDayT(.3); return { r, folk: g.S.folk.length, q: g.S.q, total: 21, stamps: g.stampTotal() }; });
   console.log('lighthouse', JSON.stringify(lh), 'three islanders', JSON.stringify(three));
   await sim(.5); await layout('ch2');
+  // tile art: the home village at golden hour (house, cottage, islanders, garden)
+  await ev(() => { const g = window.__GAME; const c = g.PLIST.find(p => p.t === 'cottage'); const cc = g.cellC(c.i, c.j); g.teleport(cc.x + 1.5, cc.z + 2.5, 0); g.cam.yaw = Math.atan2(cc.x, cc.z) + .35; g.cam.dist = 11; g.setDayT(.5); g.photo(true); g.cam.pitch = .55; });
+  await sim(2.2); await shot(tag + 'tile'); await ev(() => window.__GAME.photo(false));
   await ev(() => window.__GAME.openPostcards()); await sim(.2); await shot(tag + 'postcards');
   console.log('postcards', JSON.stringify(await ev(() => { const g = window.__GAME; const r = g.ISLES.map(I => I.id + ':' + g.stampsDone(I.id)); document.querySelector('.db-multi [data-a=close]').click(); return r; })));
   // wrap up = results without waiting for night (XP reaches the profile)

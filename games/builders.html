@@ -30,7 +30,7 @@
 .db-trades{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:8px 0}.db-trades button{min-height:46px;font-size:15px;justify-content:center}.db-trades button[disabled]{opacity:.42}.db-inv{font-weight:800}
 .db-cards{width:min(820px,100%)}.db-pcs{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:8px 0}.db-pcard{border:2px dashed var(--line);border-radius:16px;padding:10px 12px;display:grid;gap:5px;background:#fffdf7}.db-pcard b{font-family:var(--f-d,system-ui);font-size:15px}.db-pcard small{font-weight:800;color:#4c5868}.db-pcard.done{border-style:solid;border-color:var(--mint-ink);background:#effaf3}.db-pcard .st{display:flex;gap:6px;align-items:center;font-size:13px;font-weight:700;color:#4c5868}.db-pcard .st.ok{color:var(--ink)}.db-pcard .st span{width:22px;text-align:center}
 .db-prog{font-weight:800;background:#fff3d6;border-radius:12px;padding:6px 10px;margin:0}
-.db-photo .inoa-party{display:none!important}
+.db-photo .inoa-party,.db-photo .ig-toast,.db-photo .ig-float{display:none!important}
 @media (max-width:640px){.ig-hud.db-many .ig-chip{padding:4px 6px!important;font-size:11px!important;min-height:30px!important;gap:2px!important}}
 .ig-title .ig-card>.ig-row{position:sticky;bottom:-16px;background:var(--paper);padding:8px 0 4px;z-index:2}
 @media (orientation:landscape) and (max-height:620px) and (min-width:760px){.ig-title .ig-card{width:min(940px,100%);display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);column-gap:22px;row-gap:8px;align-items:start;padding:16px 22px}.ig-title .ig-card>*{grid-column:1}.ig-title .ig-card>.ig-how{grid-column:2;grid-row:1/span 8}.ig-title .ig-card h1{font-size:36px}.ig-title .ig-card>.ig-sub{font-size:13px}.ig-title .ig-card>.ig-row{position:static;padding:0}}
@@ -595,7 +595,7 @@ function visitCode(code) { const c = parseCode(code); if (!c || G.boat) return f
 function goHome() { G.visit = false; if (visitEl) visitEl.remove(); visitEl = null; loadIsland(S.seed, S.pieces); if (S.pos) { player.pos.set(S.pos[0], 0, S.pos[1]); player.y = groundAt(S.pos[0], S.pos[1]); } PLIST.forEach(p => syncCrop(p)); updateButtons(); hud(); drawQuest(); }
 
 /* ================= photo mode ================= */
-function photo(on = !G.photo) { G.photo = on; document.body.classList.toggle('db-photo', on); if (ghost) ghost.visible = !on; if (on) { toast(tr('Photo mode — drag to orbit, scroll/pinch to zoom', 'Modo foto — arrastra para girar, rueda o pellizca para acercar'), 1800); cam.pitch = .3; } }
+function photo(on = !G.photo) { G.photo = on; document.body.classList.toggle('db-photo', on); if (ghost) ghost.visible = !on; if (on) { document.querySelector('.ig-toast')?.classList.remove('show'); photoX.title = tr('Photo mode — drag to orbit, scroll/pinch to zoom', 'Modo foto — arrastra para girar, rueda o pellizca para acercar'); E.say(photoX.title, { once: true }); cam.pitch = .3; } } // clean frame: no HUD, no toasts (the hint is read aloud once instead)
 const photoX = document.createElement('div'); photoX.className = 'db-photox'; photoX.innerHTML = `<button class="ig-chip">✕ ${tr('Exit photo', 'Salir de foto')}</button>`; document.body.appendChild(photoX); photoX.onclick = () => photo(false);
 
 /* ================= pointer (camera + tap) ================= */
@@ -649,11 +649,11 @@ function updateFolk(dt) { if (G.visit) return; const night = G.night > .6;
     if (f.wish < 0 && S.clock >= f.next) { f.wish = nextWish(f); const w = WISHES[f.wish]; if (w.t === 'build') f.base = countOf(w.p); }
     const bk = night ? 'z' : f.wish >= 0 ? 'w' + f.wish : ''; if (bk !== fm.bubKey) { fm.bubKey = bk; fm.bub.visible = !!bk; if (bk) { const w = WISHES[f.wish]; fm.bub.material = bk === 'z' ? E.tagMaterial('💤', 'Zzz', '#e8ecff', '#1b2430', true) : E.tagMaterial('💭', w.t === 'give' ? `${w.n} ${RES[w.r]}` : `${PIECES[w.p].e} ×${w.n}`, '#fff8e6', '#1b2430', true); const h = .42; fm.bub.scale.set(h * fm.bub.material.userData.aspect, h, 1); } }
     const d2 = (fm.pos.x - player.pos.x) ** 2 + (fm.pos.z - player.pos.z) ** 2; if (d2 > 70 * 70) continue; // far away: frozen (cheap)
-    const hs = homeSpot(f); let moving = false;
+    let moving = false;
     if (fm.cheer > 0) { fm.cheer -= dt; E.pose(fm.rig, E.POSES.cheer(fm.t)); }
     else {
       if (fm.wait > 0) { fm.wait -= dt; if (d2 < 9) fm.yaw = angDamp(fm.yaw, Math.atan2(player.pos.x - fm.pos.x, player.pos.z - fm.pos.z), dt, .01); }
-      else if (!fm.tgt) { if (night) fm.tgt = hs.door.clone(); else for (let k = 0; k < 6; k++) { const a = rnd(0, 6.28), r = rnd(1.5, 5); const x = hs.x + Math.cos(a) * r, z = hs.z + Math.sin(a) * r; if (H(x, z) > .25 && walkable(x, z)) { fm.tgt = V3(x, 0, z); break; } } if (!fm.tgt) fm.wait = 1; fm.stuck = 0; }
+      else if (!fm.tgt) { const hs = homeSpot(f); if (night) fm.tgt = hs.door.clone(); else for (let k = 0; k < 6; k++) { const a = rnd(0, 6.28), r = rnd(1.5, 5); const x = hs.x + Math.cos(a) * r, z = hs.z + Math.sin(a) * r; if (H(x, z) > .25 && walkable(x, z)) { fm.tgt = V3(x, 0, z); break; } } if (!fm.tgt) fm.wait = 1; fm.stuck = 0; }
       else { const dx = fm.tgt.x - fm.pos.x, dz = fm.tgt.z - fm.pos.z, d = Math.hypot(dx, dz); if (d < .35) { fm.tgt = null; fm.wait = night ? 4 : rnd(2, 6); } else { moving = true; fm.yaw = angDamp(fm.yaw, Math.atan2(dx, dz), dt, .001); const sp = 1.25 * dt; _fp.copy(fm.pos); fm.pos.x += Math.sin(fm.yaw) * sp; fm.pos.z += Math.cos(fm.yaw) * sp; collide(fm.pos, .3); if (!walkable(fm.pos.x, fm.pos.z) || H(fm.pos.x, fm.pos.z) < .1 && !isDeck(OCC.get(`g:${cellOf(fm.pos.x, fm.pos.z).join(':')}`)?.t)) fm.pos.copy(_fp); if (_fp.distanceToSquared(fm.pos) < (sp * .3) ** 2) { fm.stuck += dt; if (fm.stuck > 2.5) { fm.tgt = null; fm.wait = 1; } } } }
       E.pose(fm.rig, moving ? E.POSES.walk(fm.t, .45) : E.POSES.idle(fm.t)); }
     fm.root.position.set(fm.pos.x, damp(fm.root.position.y, groundAt(fm.pos.x, fm.pos.z), .0001, dt), fm.pos.z); fm.root.rotation.y = fm.yaw; } }
