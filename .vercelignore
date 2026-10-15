@@ -9,3 +9,7 @@ node_modules
 package.json
 package-lock.json
 supabase
+
+# native app wrappers + store material (not part of the web deploy)
+app/
+store/

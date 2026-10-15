@@ -57,6 +57,8 @@ head = head.replace('</style>', '''.heropanel{padding-block:18px 0;background:va
 </style>''', 1)
 head = head.replace('href="https://claude.ai/artifact/R39Es5YCcbYnxRhuoDboVg" target="_blank" rel="noopener"', 'href="games/pixelpact.html"')
 head = head.replace('<!--', '<!--')
+# beta strip + optional account + feedback (ES module: engine/platform.js, engine/feedback.js; no three.js)
+js = js + '\n<script type="module">\n' + open(f'{HUB}/account.js').read() + '</script>'
 out = '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n' + head.replace('<nav>', '</head><body>\n<nav>', 1) + js + '\n</body></html>\n'
 open(f'{HERE}/index.html', 'w').write(out)
 print('index.html', len(out), 'bytes;', ', '.join(f"{k}:{'LIVE' if v['live'] else 'soon'}{'+thumb' if v['thumb'] else ''}" for k, v in live.items()))
