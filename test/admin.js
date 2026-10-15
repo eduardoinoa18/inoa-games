@@ -37,6 +37,7 @@ module.exports = async (p, shot) => {
       return out; });
     ok(denied.every(d => d !== 'allowed'), 'database refuses admin RPCs and the owner bootstrap for a normal player: ' + denied.map(d => d.slice(0, 30)).join(' | '));
     // ---- owner (bootstrap runs as the database owner, like the Supabase SQL editor) ----
+    await api('/rest/v1/rpc/ig_submit_feedback', { method: 'POST', body: JSON.stringify({ p_rating: 2, p_body: 'Tray course 3 is too hard', p_game: 'tray', p_kind: 'bug', p_context: { platform: 'web', version: '0.9.0-beta' } }) });
     await sql("select public.ig_grant_owner_by_email('owner@example.test')");
     await signIn('owner@example.test'); await openAdmin();
     ok(await p.isVisible('#app') && !(await p.isVisible('#gate')), 'owner → dashboard');
@@ -47,6 +48,10 @@ module.exports = async (p, shot) => {
     ok(emails.length === 3 && !emails.includes('listing@example.test'), 'user list excludes other apps sharing auth');
     ok(await p.$$eval('#games tbody tr', r => r.length) === 13, 'per-game table lists all 13 games');
     ok(/\$0\.00/.test(await p.textContent('#revenue')), 'revenue tiles render (test data: $0.00)');
+    await until(() => /too hard/.test(document.getElementById('feedback').textContent));
+    ok(/guest/.test(await p.textContent('#feedback')) && /1 new/.test(await p.textContent('#fSum')), 'owner sees guest feedback in the inbox');
+    await p.selectOption('#feedback select', 'done'); await until(() => /No feedback here yet/.test(document.getElementById('feedback').textContent));
+    ok(true, 'marking feedback done removes it from the New filter');
     await shot('dashboard');
     // ---- search + user detail + suspend (audited) ----
     await p.fill('#q', 'ben'); await until(() => document.querySelectorAll('#users tbody tr').length === 1);

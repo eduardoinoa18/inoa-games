@@ -342,10 +342,11 @@ export function results({ gameId, title, stats = [], xp = 0, coins = 0, best = n
   const r = reward(gameId, { xp, coins, best, bestLower }); const lv = heroLevel(profile().xp);
   _pf.then(P => P && P.enabled && P.finishRound(gameId, { score: best, bestLower, xp, coins })).then(sr => { if (!sr || !sr.ok || sr.duplicate) return; const rw = d.querySelector('.ig-reward'); if (rw) { const sp = rw.querySelectorAll('span'); if (sp[0]) sp[0].textContent = `+${sr.xp} XP`; if (sp[1]) sp[1].textContent = `+${sr.coins} 🪙`; if (sp[2]) sp[2].textContent = `${t('heroLv')} ${sr.level}`; } (sr.achievements || []).forEach((a, i) => setTimeout(() => toast('🏅 ' + a.replace(/_/g, ' '), 2400), 600 + i * 2500)); }).catch(() => { });
   const d = document.createElement('div'); d.className = 'ig-screen ig-results';
-  d.innerHTML = `<div class="ig-card"><div class="ig-kicker">${r.newBest ? t('newBest') : t('roundOver')}</div><h2>${title}</h2><div class="ig-stats">${stats.map(s => `<div><b>${s[1]}</b><small>${s[0]}</small></div>`).join('')}</div>${r.best != null && best != null ? `<p class="ig-sub">${bestLabel}: <b>${r.best}</b></p>` : ''}<div class="ig-reward"><span>+${r.xp} XP</span><span>+${r.coins} 🪙</span><span>${t('heroLv')} ${lv.lv}${r.levelUp ? ' ⬆' : ''}</span></div><div class="ig-xpbar"><i style="width:${Math.round(lv.into / lv.need * 100)}%"></i></div><div class="ig-row"><button class="ig-btn ghost" data-a="hub">${t('hub')}</button><button class="ig-btn" data-a="again">${t('again')}</button></div>${share ? `<button class="ig-btn sun" data-a="share">📣 ${t('share')}</button>` : ''}${(won ?? r.newBest) && installAvailable() ? `<button class="ig-btn ghost" data-a="install">📲 ${t('install')}</button>` : ''}</div>`;
+  d.innerHTML = `<div class="ig-card"><div class="ig-kicker">${r.newBest ? t('newBest') : t('roundOver')}</div><h2>${title}</h2><div class="ig-stats">${stats.map(s => `<div><b>${s[1]}</b><small>${s[0]}</small></div>`).join('')}</div>${r.best != null && best != null ? `<p class="ig-sub">${bestLabel}: <b>${r.best}</b></p>` : ''}<div class="ig-reward"><span>+${r.xp} XP</span><span>+${r.coins} 🪙</span><span>${t('heroLv')} ${lv.lv}${r.levelUp ? ' ⬆' : ''}</span></div><div class="ig-xpbar"><i style="width:${Math.round(lv.into / lv.need * 100)}%"></i></div><div class="ig-row"><button class="ig-btn ghost" data-a="hub">${t('hub')}</button><button class="ig-btn" data-a="again">${t('again')}</button></div>${share ? `<button class="ig-btn sun" data-a="share">📣 ${t('share')}</button>` : ''}${(won ?? r.newBest) && installAvailable() ? `<button class="ig-btn ghost" data-a="install">📲 ${t('install')}</button>` : ''}${_fbOK ? `<button class="ig-chipbtn ig-fbchip" data-a="feedback">💬 ${t('fbOpen')}</button>` : ''}</div>`;
   document.body.appendChild(d); if (r.levelUp) SFX.level();
   d.querySelector('[data-a=again]').onclick = async () => { if (!(await platformStart(gameId))) return; d.remove(); onAgain && onAgain(); }; d.querySelector('[data-a=hub]').onclick = () => onHub();
   const ib = d.querySelector('[data-a=install]'); if (ib) ib.onclick = async () => { ib.remove(); await promptInstall(); };
+  const fbb = d.querySelector('[data-a=feedback]'); if (fbb) fbb.onclick = () => feedbackForm({ game: gameId });
   const sh = d.querySelector('[data-a=share]'); if (sh) sh.onclick = async () => { try { if (navigator.share) await navigator.share({ text: share }); else { await navigator.clipboard.writeText(share); toast(t('copied')); } } catch (e) { } };
   return d;
 }
@@ -369,9 +370,9 @@ export function settingsPanel({ onClose } = {}) {
     <div class="ig-set"><span>🌎 ${t('language')}</span>${seg('lang', [['en', 'English'], ['es', 'Español']])}</div>
     <div class="ig-set"><span>🌀 ${t('motion')}</span>${seg('motion', [['auto', t('auto')], ['reduced', t('on')], ['full', t('off')]])}</div>
     <div class="ig-set"><span>✨ ${t('quality')}</span>${seg('quality', [['auto', t('auto')], ['high', t('high')], ['low', t('low')]])}</div>
-    <button class="ig-btn" data-a="done">${t('done')}</button></div>`;
+    <div class="ig-row">${_fbOK ? `<button class="ig-btn ghost" data-a="feedback">💬 ${t('fbOpen')}</button>` : ''}<button class="ig-btn" data-a="done">${t('done')}</button></div></div>`;
     const S = settings(); d.querySelectorAll('.ig-seg').forEach(g => { const k = g.dataset.k; g.querySelectorAll('button').forEach(b => { const v = typeof S[k] === 'boolean' ? (S[k] ? '1' : '0') : String(S[k]); const on = b.dataset.v === v; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); b.onclick = () => { const raw = b.dataset.v; setSetting(k, typeof S[k] === 'boolean' ? raw === '1' : raw); SFX.click(); draw(); }; }); });
-    d.querySelector('[data-a=done]').onclick = () => { d.remove(); onClose && onClose(); }; setTimeout(() => d.querySelector('[data-a=done]')?.focus({ preventScroll: true }), 30); };
+    d.querySelector('[data-a=done]').onclick = () => { d.remove(); onClose && onClose(); }; const fb = d.querySelector('[data-a=feedback]'); if (fb) fb.onclick = () => feedbackForm(); setTimeout(() => d.querySelector('[data-a=done]')?.focus({ preventScroll: true }), 30); };
   draw(); document.body.appendChild(d); return d;
 }
 export function titleScreen({ title, kicker, lead, how = [], onPlay, extra = '' }) { const d = document.createElement('div'); d.className = 'ig-screen ig-title'; d.innerHTML = `<div class="ig-card"><div class="ig-kicker">${kicker}</div><h1>${title}</h1><p class="ig-sub">${lead}</p>${how.length ? `<div class="ig-how">${how.map(h => `<div><span>${h[0]}</span>${h[1]}</div>`).join('')}</div>` : ''}${extra}<div class="ig-row"><a class="ig-btn ghost" href="../index.html">${t('hub')}</a><button class="ig-btn" data-a="play">${t('play')}</button></div><button class="ig-chipbtn ig-setbtn" data-a="settings">⚙️ ${t('settings')}</button></div>`; document.body.appendChild(d); d.querySelector('[data-a=play]').onclick = async e => { audio(); const b = e.currentTarget; b.disabled = true; const ok = await platformStart(); b.disabled = false; if (!ok) return; d.remove(); onPlay(); }; d.querySelector('[data-a=settings]').onclick = () => settingsPanel(); return d; }
@@ -416,6 +417,14 @@ applySettings();
 /* ---------------- platform (accounts, free-start gate, server rewards) ---------------- */
 // Off unless /platform.json enables it; then the server decides starts and rewards (engine/platform.js, docs/PLATFORM_ARCHITECTURE.md).
 const _pf = import('./platform.js').then(m => m.default.init().then(() => m.default)).catch(() => null);
+let _fbOK = false, _billing = false; _pf.then(P => { if (P) { _fbOK = P.feedbackAvailable; _billing = P.billing; } });
+
+/* ---------------- beta feedback (rating + note; guest or signed in) — form lives in feedback.js (shared with the hub) ---------------- */
+export async function feedbackForm({ game = gameIdFromUrl(), onClose } = {}) {
+  const { openFeedback } = await import('./feedback.js');
+  return openFeedback({ lang: lang() === 'es' ? 'es' : 'en', game, onClose, click: () => SFX.click(), done: txt => { toast('💬 ' + txt, 2200); say(txt, { once: true }); } });
+}
+addStrings({ en: { fbOpen: 'Send feedback' }, es: { fbOpen: 'Enviar opinión' } });
 export const platform = () => _pf;
 const gameIdFromUrl = () => (location.pathname.match(/games\/([a-z]+)\.html/) || [])[1] || null;
 addStrings({
@@ -426,6 +435,7 @@ function gateCard(r, retry) {
   const at = r.resets_at ? new Date(r.resets_at).toLocaleTimeString(lang() === 'es' ? 'es' : 'en', { hour: 'numeric', minute: '2-digit' }) : '';
   const M = { signin: ['gSignin', 'gSigninP', 'signin'], not_authenticated: ['gSignin', 'gSigninP', 'signin'], unverified: ['gVerify', 'gVerifyP', 'verify'], limit: ['gLimit', 'gLimitP', 'premium'], offline_limit: ['gLimit', 'gLimitP', 'premium'], premium_only: ['gPremium', 'gPremiumP', 'premium'], suspended: ['gSusp', 'gSuspP', null], offline: ['gOffline', 'gOfflineP', 'retry'] }[r.reason] || ['gError', 'gErrorP', 'retry'];
   const back = encodeURIComponent(location.pathname.split('/').slice(-2).join('/'));
+  if (M[2] === 'premium' && !_billing) M[2] = null;
   const btn = M[2] === 'signin' ? `<a class="ig-btn" href="../account.html?next=${back}">${t('gBtnSignin')}</a>` : M[2] === 'premium' ? `<a class="ig-btn sun" href="../pricing.html?next=${back}">${t('gBtnPremium')}</a>` : M[2] === 'verify' ? `<a class="ig-btn" href="../account.html?next=${back}">${t('gResend')}</a>` : M[2] === 'retry' ? `<button class="ig-btn" data-a="retry">${t('gBtnRetry')}</button>` : '';
   const d = document.createElement('div'); d.className = 'ig-screen ig-gate'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true');
   d.innerHTML = `<div class="ig-card"><div class="ig-kicker">INOA GAMES</div><h2>${t(M[0])}</h2><p class="ig-sub">${t(M[1]).replace('{t}', at)}</p><div class="ig-row"><a class="ig-btn ghost" href="../index.html">${t('hub')}</a>${btn}</div></div>`;

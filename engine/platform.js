@@ -58,6 +58,12 @@ const api = {
   PlatformError,
   async init() { await loadConfig(); S.auth = ls.get(AUTH_KEY, null); if (S.auth) ls.set('inoa.activeProfile', 'inoa.profile.u.' + S.auth.user.id); else ls.set('inoa.activeProfile', null); return api.state(); },
   get enabled() { return !!(S.cfg && S.cfg.enabled); },
+  // beta = everything free (server: ig_app_config.access_mode); billing UI only when the config allows it and never inside the native apps
+  get native() { return !!(globalThis.Capacitor && globalThis.Capacitor.isNativePlatform && globalThis.Capacitor.isNativePlatform()); },
+  get mode() { return (S.cfg && S.cfg.mode) || 'commercial'; },
+  get billing() { return !!(S.cfg && S.cfg.billing) && !api.native; },
+  get guestPlay() { return !S.cfg || S.cfg.guestPlay !== false && api.mode === 'beta'; },
+  get feedbackAvailable() { return !!(S.cfg && S.cfg.supabaseUrl && S.cfg.supabaseAnonKey && S.cfg.feedback !== false); },
   get config() { return S.cfg; },
   state() { return { enabled: api.enabled, signedIn: !!S.auth, user: S.auth && S.auth.user, status: S.status }; },
   onChange(f) { S.listeners.add(f); return () => S.listeners.delete(f); },
@@ -103,6 +109,13 @@ const api = {
     await http('/rest/v1/ig_profiles', { method: 'PATCH', token: t, query: '?id=eq.' + S.auth.user.id, body }); return api.refreshStatus();
   },
   achievements() { return rpc('ig_my_achievements'); },
+  // beta feedback (guest or signed in). context: only platform/version/lang/screen/page/mode are kept by the server.
+  async sendFeedback({ rating = null, body = '', game = null, kind = 'general' } = {}) {
+    await loadConfig(); if (!api.feedbackAvailable) throw new PlatformError('unavailable', 'Feedback is not set up');
+    const t = await token().catch(() => null);
+    const context = { platform: api.native ? (globalThis.Capacitor.getPlatform ? globalThis.Capacitor.getPlatform() : 'native') : 'web', version: S.cfg.version || '', lang: (document.documentElement.lang || '').slice(0, 5), screen: `${innerWidth}x${innerHeight}`, page: location.pathname.split('/').slice(-2).join('/'), mode: api.mode };
+    return http('/rest/v1/rpc/ig_submit_feedback', { body: { p_rating: rating, p_body: String(body || '').slice(0, 1000), p_game: game, p_kind: kind, p_context: context }, token: t });
+  },
   async importLocal() {
     const p = ls.get('inoa.profile', null); if (!p || (!p.xp && !p.coins)) return { ok: false, reason: 'nothing' };
     const games = {}; for (const [k, v] of Object.entries(p.games || {})) games[k] = { plays: v.plays | 0, best: typeof v.best === 'number' ? v.best : null };
@@ -112,7 +125,7 @@ const api = {
   // ---- the gate: one qualifying start per play session (server decides; see start_game) ----
   async startGame(gameId) {
     if (!api.enabled) return { allowed: true, local: true };
-    if (!S.auth) return { allowed: false, reason: 'signin' };
+    if (!S.auth) return api.guestPlay ? { allowed: true, local: true, guest: true } : { allowed: false, reason: 'signin' };
     const sk = 'inoa.sess.' + gameId; let ck = null; try { ck = sessionStorage.getItem(sk); } catch (e) { }
     if (!ck) { ck = rid(); try { sessionStorage.setItem(sk, ck); } catch (e) { } }
     try {
@@ -129,7 +142,7 @@ const api = {
       return { allowed: true, offline: true, access: st.plan };
     }
   },
-  sessionValid(gameId) { return !api.enabled || (S.session && S.session.gameId === gameId && S.session.expires > Date.now()); },
+  sessionValid(gameId) { return !api.enabled || (!S.auth && api.guestPlay) || (S.session && S.session.gameId === gameId && S.session.expires > Date.now()); },
 
   // ---- round results: the server clamps and de-duplicates; the returned totals are authoritative ----
   async finishRound(gameId, { score = null, bestLower = false, xp = 0, coins = 0 } = {}) {

@@ -3,7 +3,7 @@
 // usage: node test/api.test.js   (needs the local Postgres from test/db/README.md)   → API_TESTS_PASSED
 const { execSync } = require('child_process'), crypto = require('crypto'), path = require('path');
 const MP = 54340, DB = 'inoa_api';
-Object.assign(process.env, { SUPABASE_URL: `http://localhost:${MP}`, SUPABASE_ANON_KEY: 'test-anon-key', SUPABASE_SERVICE_ROLE_KEY: 'test-service-key', STRIPE_SECRET_KEY: 'sk_test_x', STRIPE_WEBHOOK_SECRET: 'whsec_test', STRIPE_PRICE_ID: 'price_premium_499', SITE_URL: 'https://inoa.example' });
+Object.assign(process.env, { SUPABASE_URL: `http://localhost:${MP}`, SUPABASE_ANON_KEY: 'test-anon-key', SUPABASE_SERVICE_ROLE_KEY: 'test-service-key', STRIPE_SECRET_KEY: 'sk_test_x', STRIPE_WEBHOOK_SECRET: 'whsec_test', STRIPE_PRICE_ID: 'price_premium_499', SITE_URL: 'https://inoa.example', BILLING_ENABLED: 'yes' });
 const L = require('../api/_lib');
 const H = { checkout: require('../api/checkout'), portal: require('../api/portal'), webhook: require('../api/stripe-webhook'), del: require('../api/account-delete') };
 let fails = 0; const ok = (c, m) => { if (c) console.log('ok -', m); else { fails++; console.log('FAIL -', m); } };
@@ -40,6 +40,7 @@ const event = (id, type, obj, created = Math.floor(Date.now() / 1000)) => JSON.s
     const kim = await signup('kim@example.test');
     const auth = t => ({ authorization: 'Bearer ' + t });
     // ---- checkout ----
+    process.env.BILLING_ENABLED = ''; ok((await call(H.checkout, { headers: auth(kim.token) })).status === 503, 'free beta: checkout refused unless BILLING_ENABLED=yes'); process.env.BILLING_ENABLED = 'yes';
     ok((await call(H.checkout, {})).status === 401, 'checkout without a token → 401');
     ok((await call(H.checkout, { method: 'GET' })).status === 405, 'GET → 405');
     ok((await call(H.checkout, { headers: auth('forged.jwt.token') })).status === 401, 'checkout with a forged token → 401');

@@ -42,6 +42,8 @@ dialog{background:var(--panel);color:var(--ink);border:1px solid var(--line);bor
   <section aria-labelledby="uTitle"><div class="row" style="justify-content:space-between"><h2 id="uTitle">Users</h2><input type="search" id="q" placeholder="Search email or name" aria-label="Search users"></div>
     <div class="wrapx"><table id="users"><thead><tr><th scope="col">Name</th><th scope="col">Email</th><th scope="col">Joined</th><th scope="col">Plan</th><th scope="col" class="num">Level</th><th scope="col">Last played</th><th scope="col"><span class="note">Open</span></th></tr></thead><tbody></tbody></table></div>
     <div class="row"><button class="btn" id="prev">← Prev</button><span class="note" id="pageInfo"></span><button class="btn" id="next">Next →</button></div></section>
+  <section aria-labelledby="fTitle"><div class="row" style="justify-content:space-between"><h2 id="fTitle">Player feedback</h2><div class="row" id="fFilter" role="group" aria-label="Feedback filter"><button class="btn" data-s="new" aria-pressed="true">New</button><button class="btn" data-s="" aria-pressed="false">All</button></div></div>
+    <p class="note" id="fSum"></p><div class="wrapx"><table id="feedback"><thead><tr><th scope="col">When</th><th scope="col">Rating</th><th scope="col">Kind</th><th scope="col">Game</th><th scope="col">Note</th><th scope="col">From</th><th scope="col">Device</th><th scope="col"><span class="note">Status</span></th></tr></thead><tbody></tbody></table></div></section>
   <section aria-labelledby="aTitle"><h2 id="aTitle">Admin audit log</h2><div class="wrapx"><table id="audit"><thead><tr><th>When</th><th>Action</th><th>Target</th><th>Details</th></tr></thead><tbody></tbody></table></div></section>
   <p class="note">Payment operations (refunds, disputes, payouts) are done in the Stripe dashboard. This page never shows card details or passwords.</p>
 </main>
@@ -72,6 +74,13 @@ async function loadUsers() {
   $('pageInfo').textContent = r.total ? `${page * PER + 1}–${Math.min(r.total, (page + 1) * PER)} of ${num(r.total)}` : '0';
   $('prev').disabled = page === 0; $('next').disabled = (page + 1) * PER >= r.total;
 }
+let fStatus = 'new';
+const FACE = ['', '😞', '😕', '🙂', '😀', '🤩'];
+async function loadFeedback() {
+  const f = await P.rpc('ig_admin_feedback', { p_limit: 100, p_offset: 0, p_status: fStatus || null });
+  $('fSum').textContent = `${num(f.new)} new · ${num(f.total)} shown in this filter · average rating (30 d): ${f.avg_rating_30d ?? '—'} / 5`;
+  $('feedback').tBodies[0].innerHTML = f.items.map(x => `<tr><td>${new Date(x.created_at).toLocaleString()}</td><td>${x.rating ? FACE[x.rating] + ' ' + x.rating : '—'}</td><td>${esc(x.kind)}</td><td>${esc(x.game_id || 'hub')}</td><td>${esc(x.body || '')}</td><td>${x.email ? esc(x.display_name || '') + '<br><span class="note">' + esc(x.email) + '</span>' : '<span class="note">guest</span>'}</td><td class="note">${esc([x.context.platform, x.context.version, x.context.lang, x.context.screen].filter(Boolean).join(' · '))}</td><td><select data-f="${x.id}" aria-label="Status">${['new', 'read', 'done'].map(v => `<option${v === x.status ? ' selected' : ''}>${v}</option>`).join('')}</select></td></tr>`).join('') || '<tr><td colspan="8" class="note">No feedback here yet.</td></tr>';
+}
 async function loadAudit() { const a = await P.rpc('ig_admin_recent_audit', { p_limit: 30 }); $('audit').tBodies[0].innerHTML = a.map(x => `<tr><td>${new Date(x.created_at).toLocaleString()}</td><td>${esc(x.action)}</td><td>${esc(x.target_type)} ${esc(String(x.target_id || '').slice(0, 8))}</td><td class="note">${esc(JSON.stringify(x.metadata))}</td></tr>`).join('') || '<tr><td colspan="4" class="note">No admin actions yet.</td></tr>'; }
 async function openUser(id) {
   const d = await P.rpc('ig_admin_user_detail', { p_user: id }); const u = d.user || {}, p = d.profile || {}, st = d.status || {};
@@ -95,6 +104,8 @@ $('range').onclick = e => { const b = e.target.closest('button'); if (!b) return
 $('q').oninput = () => { clearTimeout(timer); timer = setTimeout(() => { q = $('q').value.trim(); page = 0; loadUsers().catch(fail); }, 300); };
 $('prev').onclick = () => { page = Math.max(0, page - 1); loadUsers().catch(fail); }; $('next').onclick = () => { page++; loadUsers().catch(fail); };
 $('users').onclick = e => { const b = e.target.closest('[data-u]'); if (b) openUser(b.dataset.u).catch(fail); };
+$('fFilter').onclick = e => { const b = e.target.closest('button'); if (!b) return; fStatus = b.dataset.s; $('fFilter').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); loadFeedback().catch(fail); };
+$('feedback').onchange = e => { const sel = e.target.closest('[data-f]'); if (sel) P.rpc('ig_admin_feedback_set_status', { p_id: +sel.dataset.f, p_status: sel.value }).then(loadFeedback).catch(fail); };
 $('dClose').onclick = () => $('dlg').close();
 $('bOut').onclick = async () => { await P.signOut(); location.href = 'index.html'; };
 function fail(e) { console.warn(e); $('asof').textContent = 'Could not load: ' + (e.code === 'offline' ? 'offline' : e.message); }
@@ -105,7 +116,8 @@ function fail(e) { console.warn(e); $('asof').textContent = 'Could not load: ' +
   if (!P.state().signedIn) return deny('Owner access only', 'Sign in with the owner account.');
   const st = await P.refreshStatus().catch(() => null);
   if (!st || !st.is_admin) return deny('Owner access only', 'This account is not an owner account. (Access is checked by the database on every request; this page cannot grant it.)');
-  $('app').hidden = false; await Promise.all([loadKpis(), loadUsers(), loadAudit()]);
+  $('app').hidden = false; if (st.access_mode === 'beta_free') $('asof').insertAdjacentHTML('beforebegin', '<p class="note" id="betaNote"><b>Free beta mode:</b> every player has full access and nobody is charged (switch with <code>ig_app_config.access_mode</code>; see docs §13).</p>');
+  await Promise.all([loadKpis(), loadUsers(), loadAudit(), loadFeedback()]);
 } catch (e) { fail(e); } finally { window.__READY = true; } })();
 </script>
 </body></html>

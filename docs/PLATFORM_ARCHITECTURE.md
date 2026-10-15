@@ -111,3 +111,34 @@ For now Inoa Games runs in the owner's existing **WebDesigns / Presentations** S
 - `auth.users` is shared: the sign-up trigger creates an Inoa profile only when the sign-up metadata has `app = 'inoa'` (sent by `engine/platform.js`). Someone who already has a Listing Studio login and signs in to Inoa gets a profile lazily (`ig_ensure_profile`, called by `ig_my_status` / `ig_start_game`).
 - Admin KPIs and the user list count **Inoa accounts only** (joined to `ig_profiles`), not every login in the project.
 - Consequences the owner should know: the same email/password works in both apps; Auth email templates, Site URL, redirect allow-list, SMTP and rate limits are shared (add `<inoa site>/account.html` to the redirect URLs; generic email wording); `ig_user_roles` admin is separate from Listing Studio roles. Moving to a dedicated project later = run the same migrations there and switch `platform.json` (accounts would need to re-register or be exported).
+
+## 13. Free beta now, paid later (owner decision 2026-10-15)
+"Put everything into a free tier for now to test, get feedback, try with some people; when ready to scale commercially, migrate to paid."
+
+**What "free beta" means in the code (shipped default)**
+| Switch | Beta (now) | Commercial (later) |
+| --- | --- | --- |
+| `ig_app_config.access_mode` (server, authoritative) | `beta_free` → every signed-in player is plan `beta`: all games, no daily counter | `commercial` → free tier (3 starts / UTC day) + Premium |
+| `platform.json` `mode` / `guestPlay` | `beta` / `true` → guests play without an account (progress on the device) | `commercial` / `false` → Play asks for a free account |
+| `platform.json` `billing` | `false` → no upgrade buttons, pricing page says "free during the beta", gate never links to pricing | `true` (web only — never inside the native apps) |
+| Vercel env `BILLING_ENABLED` | unset → `/api/checkout` refuses (503) | `yes` + Stripe keys (test first, live only with owner approval + `STRIPE_LIVE_ENABLED=yes`) |
+| Feedback (`ig_feedback`, 💬 in every game's settings + results card + hub strip) | on — guests and players; owner reads it in `admin.html` | keep on |
+
+All commercial code paths (limit, Stripe checkout/webhooks/portal, entitlement) stay in place and tested (`npm run test:db`, `test:api`, `test:platform` run in commercial mode; `test:beta` runs the beta default).
+
+**Free-tier stack and its limits (re-check before relying on them)**
+| Service | Plan now | Cost | Limits that matter for a beta |
+| --- | --- | --- | --- |
+| Vercel | Hobby | $0 | non-commercial use only (fine while nothing is sold); generous bandwidth for a small beta |
+| Supabase | Free, shared WebDesigns/Presentations project | $0 | 500 MB database, 50k monthly active users, built-in email sender heavily rate-limited (add SMTP — e.g. a free tier of Resend/Brevo — before inviting many testers), paused after 7 days without activity |
+| Stripe | not used | $0 | — |
+| Apple Developer Program | needed for TestFlight / App Store | $99 / year | TestFlight: up to 10,000 external testers (first build needs a light review) |
+| Google Play Console | needed for Play testing | $25 once | new personal accounts: closed test with ≥ 12 opted-in testers for 14 days before production |
+
+**Migration checklist when going commercial**
+1. Dedicated Supabase project on Pro (no pausing, backups, custom SMTP): run the same `supabase/migrations/*` there; move accounts (Supabase supports user export/import; or ask beta testers to re-register — decide then).
+2. Hosting: Vercel Pro (commercial use) — or Cloudflare Pages (commercial use allowed on free).
+3. Payments: web → Stripe (already built). Native apps → in-app purchase (Apple/Google take 15–30%; a service like RevenueCat can unify entitlements) or the store's external-purchase rules where allowed — see docs/APP_STORES.md. Map store purchases into `ig_subscriptions` (provider column already exists).
+4. Flip the switches in the table above; announce to beta testers (e.g. founders' perk via `ig_admin_grant_premium`).
+5. Legal: counsel review of privacy policy, terms, COPPA / Google Families before targeting children.
+

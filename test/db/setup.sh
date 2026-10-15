@@ -7,4 +7,6 @@ DB=${1:-${DB:-inoa_test}}
 $PSQL -d postgres -c "drop database if exists $DB with (force)" -c "create database $DB" >/dev/null
 $PSQL -d $DB -f test/db/supabase_shim.sql >/dev/null
 for f in supabase/migrations/*.sql; do $PSQL -d $DB -f "$f" >/dev/null; done
+# Commercial rules by default (free tier + Premium) so the limit/billing tests run; MODE=beta_free keeps the shipped beta default.
+$PSQL -d $DB -c "update public.ig_app_config set value = to_jsonb('${MODE:-commercial}'::text) where key = 'access_mode'" >/dev/null
 echo "db $DB ready"

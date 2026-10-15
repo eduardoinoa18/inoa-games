@@ -10,7 +10,7 @@ module.exports = async (p, shot) => {
   const mock = await require('./platform/mock-supabase.js')({ port: MP, db: DB });
   const api = (pth, init) => fetch(`http://localhost:${MP}${pth}`, Object.assign({ headers: { apikey: 'test-anon-key', 'content-type': 'application/json' } }, init)).then(r => r.json());
   const sql = (q, params) => api('/__test/sql', { method: 'POST', body: JSON.stringify({ sql: q, params }) });
-  await p.route('**/platform.json', r => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ enabled: true, supabaseUrl: `http://localhost:${MP}`, supabaseAnonKey: 'test-anon-key', stripeMode: 'test' }) }));
+  await p.route('**/platform.json', r => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ enabled: true, mode: 'commercial', billing: true, supabaseUrl: `http://localhost:${MP}`, supabaseAnonKey: 'test-anon-key', stripeMode: 'test' }) }));
   const base = p.url().replace(/account\.html.*$/, '');
   const until = (fn, ms = 20000) => p.waitForFunction(fn, null, { timeout: ms });
   const openLink = async (u) => { await p.goto('about:blank'); await p.goto(u); }; // an email link is a fresh page load, never an in-page #hash change

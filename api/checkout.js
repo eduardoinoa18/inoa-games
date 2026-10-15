@@ -2,6 +2,8 @@
 // The browser never chooses the price, the customer or the user id: all come from the server and the verified token.
 const L = require('./_lib');
 module.exports = L.handle(async (req, res) => {
+  // Free beta: billing stays off until the owner approves paid plans (set BILLING_ENABLED=yes in Vercel). See docs/PLATFORM_ARCHITECTURE.md §13.
+  if (process.env.BILLING_ENABLED !== 'yes') return L.send(res, 503, { error: 'Billing is not enabled (free beta)' });
   const user = await L.userFromRequest(req);
   if (!user.verified) return L.send(res, 403, { error: 'Verify your email first' });
   const [sub] = await L.supa('/rest/v1/ig_subscriptions?select=status,current_period_end&user_id=eq.' + user.id + '&status=in.(active,trialing,past_due)&current_period_end=gt.' + new Date().toISOString(), { method: 'GET' });

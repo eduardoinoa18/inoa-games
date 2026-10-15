@@ -58,3 +58,5 @@ p{margin:0;line-height:1.5}
 .ig-chip:focus-visible,.ig-tbtn:focus-visible{outline:3px solid var(--berry);outline-offset:2px}
 html.ig-reduced *{animation-duration:.001s!important;animation-iteration-count:1!important;transition-duration:.001s!important;scroll-behavior:auto!important}
 @media (prefers-reduced-motion:reduce){.ig-float{animation-duration:.001s}}
+
+.ig-fbchip{justify-self:center;margin-top:4px}

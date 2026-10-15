@@ -1,8 +1,13 @@
 {
   "enabled": false,
+  "mode": "beta",
+  "guestPlay": true,
+  "billing": false,
+  "feedback": true,
+  "version": "0.9.0-beta",
   "supabaseUrl": "https://bqmmgtylygxwyjyyyxim.supabase.co",
   "supabaseAnonKey": "sb_publishable_MsoR3larxEHPUHlZmaTodg_llPWFJWd",
   "stripeMode": "test",
   "freeDailyStarts": 3,
-  "note": "Public values only (the publishable key is designed to be public; RLS + RPC checks protect data). Shared Supabase project WebDesigns/Presentations \u2014 see docs/PLATFORM_ARCHITECTURE.md \u00a712. enabled stays false until the owner finishes \u00a711 (auth URLs/SMTP, Stripe test keys, Vercel env) and switches it on."
+  "note": "Public values only. mode 'beta' = everything free while testing (server: ig_app_config.access_mode = 'beta_free'); guests can play without an account; billing UI off (and never shown in the native apps). Shared Supabase project WebDesigns/Presentations — docs/PLATFORM_ARCHITECTURE.md §12–13."
 }

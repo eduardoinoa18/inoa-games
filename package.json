@@ -12,7 +12,11 @@
     "test:db": "bash test/db/run.sh",
     "test:api": "node test/api.test.js",
     "test:platform": "ALLOW_4XX=1 node test/run.js account.html test/platform.js",
-    "test:admin": "ALLOW_4XX=1 node test/run.js admin.html test/admin.js"
+    "test:admin": "ALLOW_4XX=1 node test/run.js admin.html test/admin.js",
+    "app:www": "node tools/build_app_www.mjs",
+    "app:sync": "node tools/build_app_www.mjs && cd app && npx cap sync",
+    "store:shots": "PORT=8890 node test/run.js index tools/store_shots.js",
+    "test:beta": "node test/run.js junk test/beta.js"
   },
   "devDependencies": {
     "@gltf-transform/core": "4.1.1",

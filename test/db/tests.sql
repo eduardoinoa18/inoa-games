@@ -174,4 +174,42 @@ select t.ok((public.ig_start_game('trivia', 'ekey-00002') ->> 'reason') = 'premi
 select t.ok((public.ig_my_status() ->> 'starts_left')::int = 1, 'refused premium start consumed nothing');
 reset role;
 update public.ig_game_catalog set access_tier = 'free' where game_id = 'trivia';
+-- free beta mode (the shipped default): everyone gets 'beta' — all games, no daily counter; paid/admin still win
+update public.ig_app_config set value = '"beta_free"' where key = 'access_mode';
+update public.ig_game_catalog set access_tier = 'premium' where game_id = 'trivia';
+set role authenticated; select t.as_user('00000000-0000-0000-0000-0000000000ee');
+select t.ok((public.ig_my_status() ->> 'plan') = 'beta' and (public.ig_my_status() ->> 'access_mode') = 'beta_free' and (public.ig_my_status() -> 'starts_left') = 'null'::jsonb, 'beta mode: plan beta, no starts counter');
+select t.ok((public.ig_start_game('trivia', 'bkey-00001') ->> 'access') = 'beta', 'beta mode: premium-tier games open to everyone');
+select t.ok((public.ig_start_game('drift', 'bkey-00002') ->> 'allowed')::boolean and (public.ig_start_game('fit', 'bkey-00003') ->> 'allowed')::boolean and (public.ig_start_game('tray', 'bkey-00004') ->> 'allowed')::boolean, 'beta mode: no daily limit (player was at 2 of 3 used)');
+reset role;
+select t.ok(public.ig_entitlement('00000000-0000-0000-0000-0000000000ff') = 'admin', 'beta mode: owner stays admin');
+update public.ig_account_status set suspended = true where user_id = '00000000-0000-0000-0000-0000000000ee';
+set role authenticated; select t.as_user('00000000-0000-0000-0000-0000000000ee');
+select t.ok((public.ig_start_game('drift', 'bkey-00005') ->> 'reason') = 'suspended', 'beta mode: suspension still applies');
+reset role;
+update public.ig_account_status set suspended = false where user_id = '00000000-0000-0000-0000-0000000000ee';
+update public.ig_game_catalog set access_tier = 'free' where game_id = 'trivia';
+update public.ig_app_config set value = '"commercial"' where key = 'access_mode';
+-- feedback: guests and players can send it; only the owner can read it
+set role anon; select t.as_user(null);
+select t.ok((public.ig_submit_feedback(5, 'Love <b>it</b>', 'drift', 'praise', '{"platform":"web","secret":"x"}') ->> 'ok')::boolean, 'guest can send feedback');
+select t.ok((public.ig_submit_feedback(null, '   ', null) ->> 'reason') = 'empty', 'empty feedback refused');
+select t.ok((public.ig_submit_feedback(9, 'x') ->> 'reason') = 'bad_request', 'rating outside 1..5 refused');
+reset role;
+select t.ok((select body = 'Love bit/b' from public.ig_feedback order by id desc limit 1), 'feedback text stripped of < >');
+select t.ok((select not (context ? 'secret') and context ->> 'platform' = 'web' from public.ig_feedback order by id desc limit 1), 'only whitelisted context fields kept');
+set role authenticated; select t.as_user('00000000-0000-0000-0000-00000000000b');
+select t.ok((public.ig_submit_feedback(3, 'Laggy on my phone', 'tray', 'bug') ->> 'ok')::boolean, 'player can send feedback');
+select t.fails($$select public.ig_admin_feedback()$$, 'non-owner cannot read feedback');
+select t.fails($$select * from public.ig_feedback$$, 'feedback table not readable by clients');
+select t.as_user('00000000-0000-0000-0000-0000000000ff');
+select t.ok((public.ig_admin_feedback() ->> 'total')::int = 2 and (public.ig_admin_feedback() -> 'items' -> 0 ->> 'email') = 'b@example.test', 'owner reads feedback with the player''s account');
+select t.ok((public.ig_admin_feedback_set_status((public.ig_admin_feedback() -> 'items' -> 0 ->> 'id')::bigint, 'done') ->> 'ok')::boolean, 'owner marks feedback done');
+select t.ok((public.ig_admin_feedback() ->> 'new')::int = 1, 'new-feedback count drops');
+reset role;
+update public.ig_app_config set value = '1' where key = 'feedback_per_user_day';
+set role authenticated; select t.as_user('00000000-0000-0000-0000-00000000000b');
+select t.ok((public.ig_submit_feedback(4, 'again') ->> 'reason') = 'rate_limited', 'feedback is rate limited per player');
+reset role;
+update public.ig_app_config set value = '20' where key = 'feedback_per_user_day';
 \echo SQL_TESTS_DONE
