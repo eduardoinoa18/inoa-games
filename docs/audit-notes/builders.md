@@ -26,3 +26,6 @@ Added: an occlusion sweep (4 angles × 2 zooms), an inside-house shot, a palette
 - A shared occluder-fade helper (it's implemented locally here).
 - Gamepad navigation for engine cards (title, results, pause), and a `pausePressed` that is gamepad-only (Esc already arrives as a key event).
 - A toast "lane/offset" option, so games can keep toasts clear of their HUD cards.
+
+# Elevation pass (2026-10-15)
+See the "Builders elevation pass" section in `docs/AUDIT.md`. Key code landmarks in `games/builders.html`: `ISLES` / `homeH` / `isleH` / `isleAt` (islands), `loadSave` (v1→v2 migration), `FOLK` / `WISHES` / `updateFolk` (islanders), `TRADES` / `openTrade`, `STAMPS` / `openPostcards`, `wrapUp`, `updateAmbient`. PKEYS order is stored in saves and share codes: only append new pieces; palette order lives in `PAL`. Test shots worth reviewing: builders_[p_]shell_sail, fish, trade, folk, wish, bridge, moss, lighthouse, postcards, wrap, tile.

@@ -260,3 +260,31 @@ Tide Lines (`games/tidelines.html`) re-audited and extended by one game agent. T
 - The held blaster still follows the aim heading, not the forearm (visible in close-ups only).
 - Phones: 8-player mapping is unchanged (phone 1 = you, 2–4 your team, 5–8 the other team); the party test drives 2 phones. Online (separate-screen) Tide Lines is still not built.
 - Engine: none changed. `tag()` draws its emoji slot in the pill colour for plain text glyphs (● ▲ vanish), so shapes are put in the text instead.
+
+## Builders elevation pass (2026-10-15)
+Driftwood Builders (`games/builders.html`) re-audited and extended by one game agent. Tested with `test/builders.js` (now plays the full 21-quest chain: chapter 1 house/crops/dock/boat/sleep, then chapter 2 islands, islanders, trades, bridge, crystals, lighthouse, postcards, wrap-up, save/share robustness, Spanish) at 1000×560 and 390×844 (both `NO_ERRORS`, screenshots reviewed) and hub `test/index.js` (`NO_ERRORS`).
+
+**Bugs fixed**
+- Boat lost from the save if the page closed mid-sail (boarding removed its `S.pieces` entry; disembarking then rewrote the *first* boat entry, wrong with two boats). The boat keeps its own entry while sailing and hopping off moves that entry. A save made at sea (or a corrupt `pos`) used to leave the player stuck in water on reload: `start()` now puts you back on the beach.
+- Visiting twice stacked two visit banners; resetting the island while visiting left the banner up; resetting while sailing left the player parented to a deleted boat; opening Share/Visit while sailing broke the boat. All fixed (test: `banners 1`, `bannersHome 0`).
+- Share codes: pasted codes broken over lines by chat apps were rejected; garbage like `hello world!` was half-parsed. Whitespace is ignored, codes are validated (seed digits, piece index, rotation `& 3`, cells within ±80), unknown future pieces are dropped (test `wrappedOK`, `garbage`, `odd`).
+- Saves: `loadSave()` migrates v1 (4 resources, 10 quests) to v2 and sanitises every field (bad numbers, junk pieces, wrapped `dayT`); old depletion indexes stay valid because new nodes are appended after the home island's.
+- Touch building: taps went through walls/objects to the ground behind them. Taps now hit what you see; on a wall/object the point is nudged toward the camera (through the wall when placing a roof). Test: tap → `side 2` edge, second tap places the wall, roof tap on that wall targets the cell behind it.
+- Photo mode showed the Phones widget under "Exit photo" and kept toasts; both hidden (hint read aloud once). Pause/reset/share sheets and the photo button were English only; language now switches live (`inoa:settings`).
+- Known Phase 1 items re-checked in screenshots: quest/toast/visit overlaps clean in both orientations (`layout … clean`), trees grounded, no ghost under the boat.
+
+**Added**
+- **Chapter 2 quest chain** (10 → 21 quests, EN/ES, next quest read aloud) unlocking build sets: Flowers + Tree (garden), Market stall, Cottage, Bridge, Glow lamp, Lighthouse. Palette shows unlocked pieces in set order with NEW badges; 1–9 pick from it.
+- **Two new islands** reachable by boat or a long bridge: **Shell Cay** (sandy, shells 🐚, palms) and **Glowmoss Isle** (teal moss, glow crystals 💎 that light up at dusk, mushrooms). Own terrain patches/biomes, water shading per island, floating island signs and a light beacon on the island the current quest points to. Arrival celebration + read aloud.
+- **Fishing** 🐟: bubbling rings off every shore; ✋ from the beach, a dock or the boat; the fish arcs into your hands.
+- **Islanders**: each cottage invites one of six original islanders (Nori, Pip, Bo, Tavi, Wren, Luma) who wander near home, go to their door with 💤 at night, and ask small wishes (bring 2 🐟, plant 2 flowers…). Build wishes complete themselves, bring wishes on ✋; hearts, coins and a gift.
+- **Market stall** trade sheet (6 swaps, gamepad focus ring), **Postcards** (4 stamps per island, +20 🪙 when complete, 📮 button), **Wrap up** in the pause menu (results + XP without waiting for night; the day results show Islanders and Stamps).
+- Feel: place = drop + squash + dust ring + a chime that climbs for quick runs; remove/undo shrink away with refund float text. Ambient: gulls circling each island, hopping bunnies that flee, surf hush near the shore, chimney smoke, rotating lighthouse beam at night.
+- Pack adds `male`, `cyborg-female`, `bunny`, `fish`, `mussel` (all already in `packs/assets`; manifest 33 models, 2.07 MB). New tile art `thumbs/builders.jpg`, hub copy EN/ES.
+
+**Still open**
+- Real-device feel/FPS (headless only). New cost: two 46×46 terrain patches, ~40 nodes, up to 6 skinned islanders (frozen beyond 70 m), 7 gulls, 5 bunnies.
+- Islanders walk without pathfinding (they slide along walls and re-pick a target when stuck); they never leave if their cottage is removed (cozy by design).
+- Headless Chromium has no colour-emoji font, so some emoji (🐚, 🌷) render blank in screenshots only.
+- Visiting shows a friend's pieces but not their islanders/postcards (codes carry pieces only).
+- Engine: none changed.
