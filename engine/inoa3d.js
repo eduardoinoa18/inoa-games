@@ -303,7 +303,8 @@ export function say(text, { lang, interrupt = true, once = false } = {}) { const
 export function createInput(opts = {}) {
   const keys = {}; const state = { x: 0, y: 0, a: false, b: false, c: false, pause: false, aPressed: false, bPressed: false, cPressed: false, pausePressed: false, swipe: null, pointer: null };
   const prev = { a: false, b: false, c: false, pause: false };
-  addEventListener('keydown', e => { keys[e.code] = true; if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault(); audio(); });
+  const typing = e => { const t = e.target; return t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable); };
+  addEventListener('keydown', e => { if (typing(e)) return; keys[e.code] = true; if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault(); audio(); });
   addEventListener('keyup', e => { keys[e.code] = false; });
   const touch = { x: 0, y: 0, a: false, b: false, c: false };
   let sw = null;
@@ -330,7 +331,7 @@ export function createInput(opts = {}) {
 export function loading(title, sub = t('loading')) { const d = document.createElement('div'); d.className = 'ig-loading'; d.innerHTML = `<div><div class="ig-brand">INOA<span>GAMES</span></div><h1>${title}</h1><div class="ig-bar"><i></i></div><p>${sub}</p></div>`; document.body.appendChild(d); return { set(p, txt) { d.querySelector('i').style.width = Math.round(p * 100) + '%'; if (txt) d.querySelector('p').textContent = txt; }, done() { d.classList.add('out'); setTimeout(() => d.remove(), 500); } }; }
 let toastTO = 0;
 export function toast(text, ms = 1800, speak = false) { let t = document.querySelector('.ig-toast'); if (!t) { t = document.createElement('div'); t.className = 'ig-toast'; document.body.appendChild(t); } t.textContent = text; t.classList.add('show'); clearTimeout(toastTO); toastTO = setTimeout(() => t.classList.remove('show'), ms); if (speak) say(text); }
-export function floatText(text, x, y, cls = '') { const d = document.createElement('div'); d.className = 'ig-float ' + cls; d.textContent = text; d.style.left = x + 'px'; d.style.top = y + 'px'; document.body.appendChild(d); setTimeout(() => d.remove(), 1000); }
+export function floatText(text, x, y, cls = '') { const d = document.createElement('div'); d.className = 'ig-float ' + cls; d.textContent = text; d.style.left = x + 'px'; d.style.top = y + 'px'; document.body.appendChild(d); setTimeout(() => d.remove(), 1000); return d; }
 // Results card shared by every game: grants XP/coins to the shared profile and shows hero level.
 export function results({ gameId, title, stats = [], xp = 0, coins = 0, best = null, bestLower = false, bestLabel = t('best'), onAgain, onHub = () => location.href = '../index.html', share, won }) {
   const r = reward(gameId, { xp, coins, best, bestLower }); const lv = heroLevel(profile().xp);
@@ -372,7 +373,7 @@ export function titleScreen({ title, kicker, lead, how = [], onPlay, extra = '' 
 /* ---------------- loop ---------------- */
 export function loop(fn) { let last = performance.now(); const f = now => { requestAnimationFrame(f); const dt = Math.min(.05, (now - last) / 1000); last = now; fn(dt, now / 1000); }; requestAnimationFrame(f); }
 // Screen position of a 3D point (for floating text)
-export function toScreen(v, camera) { const p = v.clone().project(camera); return { x: (p.x * .5 + .5) * innerWidth, y: (-p.y * .5 + .5) * innerHeight }; }
+export function toScreen(v, camera) { camera.updateMatrixWorld(); const p = v.clone().project(camera); return { x: (p.x * .5 + .5) * innerWidth, y: (-p.y * .5 + .5) * innerHeight }; }
 
 /* ---------------- procedural PBR surfaces (no texture files) ---------------- */
 // Generates albedo + normal + roughness maps on canvas. kinds: asphalt, sand, grass, wood, metal, rust, tile, fabric, stone, snow, paint, plastic
@@ -421,3 +422,44 @@ export async function promptInstall() { if (!_installEvt) return false; const e 
     if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register(new URL('sw.js', ROOT_URL).href, { scope: ROOT_URL.pathname }).catch(() => { }));
   } catch (e) { }
 })();
+
+/* ---------------- menu navigation (gamepad d-pad/stick + arrow keys) ---------------- */
+// Opt-in: E.menuNav() moves a focus ring over the buttons of the top-most .ig-screen card (or opts.root()), A/Enter clicks,
+// B/Escape clicks the element marked [data-back] (or the card's "Hub"/"Back" button). Returns {stop()}. Skips while typing.
+export function menuNav(opts = {}) {
+  let stopped = false, prev = {}; const sel = opts.selector || 'button:not([disabled]), a.ig-btn, [role=button], input[type=range]';
+  const root = () => opts.root ? opts.root() : [...document.querySelectorAll('.ig-screen')].pop();
+  const items = r => [...r.querySelectorAll(sel)].filter(el => el.offsetParent !== null);
+  function move(dir) { const r = root(); if (!r) return; const L = items(r); if (!L.length) return; const a = document.activeElement; let i = L.indexOf(a);
+    if (i < 0) { L[0].focus({ preventScroll: false }); return; }
+    // spatial pick: nearest item in the pressed direction
+    const ra = a.getBoundingClientRect(), cx = ra.left + ra.width / 2, cy = ra.top + ra.height / 2; let best = null, bd = 1e9;
+    for (const el of L) { if (el === a) continue; const rb = el.getBoundingClientRect(), dx = rb.left + rb.width / 2 - cx, dy = rb.top + rb.height / 2 - cy;
+      const ok = dir === 'l' ? dx < -4 : dir === 'r' ? dx > 4 : dir === 'u' ? dy < -4 : dy > 4; if (!ok) continue; const d = (dir === 'l' || dir === 'r') ? Math.abs(dx) + Math.abs(dy) * 2.5 : Math.abs(dy) + Math.abs(dx) * 2.5; if (d < bd) { bd = d; best = el; } }
+    (best || L[(i + ((dir === 'r' || dir === 'd') ? 1 : -1) + L.length) % L.length]).focus(); SFX.click(); }
+  function back() { const r = root(); if (!r) return; const b = r.querySelector('[data-back]') || [...items(r)].find(el => /^(hub|back|inicio|volver|resume|seguir)$/i.test((el.dataset.a || el.textContent || '').trim().replace(/^[^\w]+/, ''))); if (b) b.click(); }
+  const key = e => { if (stopped || !root() || (e.target && /INPUT|TEXTAREA/.test(e.target.tagName))) return; const m = { ArrowLeft: 'l', ArrowRight: 'r', ArrowUp: 'u', ArrowDown: 'd' }[e.code]; if (m) { e.preventDefault(); move(m); } else if (e.code === 'Escape' && opts.escBack) back(); };
+  addEventListener('keydown', key);
+  (function poll() { if (stopped) return; requestAnimationFrame(poll); const pads = navigator.getGamepads ? navigator.getGamepads() : []; const st = {};
+    for (const p of pads) { if (!p) continue; const ax = p.axes[0] || 0, ay = p.axes[1] || 0; st.l ||= ax < -.5 || p.buttons[14]?.pressed; st.r ||= ax > .5 || p.buttons[15]?.pressed; st.u ||= ay < -.5 || p.buttons[12]?.pressed; st.d ||= ay > .5 || p.buttons[13]?.pressed; st.a ||= p.buttons[0]?.pressed; st.b ||= p.buttons[1]?.pressed; }
+    if (root()) { for (const k of ['l', 'r', 'u', 'd']) if (st[k] && !prev[k]) move(k); if (st.a && !prev.a) { const a = document.activeElement; if (a && root().contains(a)) a.click(); else move('d'); } if (st.b && !prev.b) back(); }
+    prev = st; })();
+  return { stop() { stopped = true; removeEventListener('keydown', key); } };
+}
+
+/* ---------------- occluder fading (camera → target) ---------------- */
+// E.occluders(list) registers props (Object3D) that may hide the player; each frame call occ.update(camera, targetVec3[, radius]).
+// Props whose bounding box the camera→target segment passes through (or that contain the camera) fade to `alpha`, then fade back.
+// Materials are cloned once per prop so shared materials stay untouched. Shadows are kept.
+export function occluders(list = [], { alpha = .22, speed = 8 } = {}) {
+  const items = []; const box = new THREE.Box3(), ray = new THREE.Ray(), hit = new THREE.Vector3(), dir = new THREE.Vector3();
+  const add = o => { if (!o || o.userData._occ) return; const mats = []; o.traverse(m => { if (m.isMesh && !m.userData.outline) { m.material = Array.isArray(m.material) ? m.material.map(x => x.clone()) : m.material.clone(); (Array.isArray(m.material) ? m.material : [m.material]).forEach(x => { x.userData.baseOpacity = x.opacity; mats.push(x); }); } }); const outl = []; o.traverse(m => { if (m.userData.outline) outl.push(m); }); const it = { o, mats, outl, k: 1, box: new THREE.Box3() }; o.userData._occ = it; items.push(it); };
+  list.forEach(add);
+  return { add, items,
+    update(camera, target, dt = 1 / 60, radius = .4) {
+      dir.subVectors(target, camera.position); const len = dir.length(); if (len < 1e-4) return; dir.divideScalar(len); ray.set(camera.position, dir);
+      for (const it of items) { if (!it.o.visible) continue; it.box.setFromObject(it.o).expandByScalar(radius); const inside = it.box.containsPoint(camera.position); const p = !inside && ray.intersectBox(it.box, hit); const block = inside || (p && hit.distanceTo(camera.position) < len - radius * 2);
+        const want = block ? alpha : 1; if (Math.abs(it.k - want) < .001) continue; it.k = damp(it.k, want, Math.pow(.5, speed), dt); if (Math.abs(it.k - want) < .02) it.k = want;
+        for (const m of it.mats) { m.transparent = it.k < .999 || m.userData.baseOpacity < 1; m.opacity = m.userData.baseOpacity * it.k; m.depthWrite = it.k > .9; } for (const ol of it.outl) ol.visible = it.k > .9; }
+    } };
+}

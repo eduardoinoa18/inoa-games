@@ -11,6 +11,10 @@ module.exports = async (p, shot) => {
     E.setSetting('lang', 'es'); out.es = [E.t('paused'), E.L('Hi', 'Hola'), E.L({ en: 'A', es: 'B' }), document.documentElement.lang];
     out.helpers = ['aimLimbs', 'attach', 'weaponPivot', 'orientTo', 'settingsPanel', 'ensureModels', 'reducedMotion'].filter(k => typeof E[k] !== 'function');
     const P = new E.Particles(new E.THREE.Scene()); for (let i = 0; i < 400; i++) P.burst(new E.THREE.Vector3(), { n: 20 }); P.update(.1); out.particles = { pools: Object.keys(P.pools).length, list: P.list.length, cap: P.cap };
+    { const T = E.THREE, cam = new T.PerspectiveCamera(); cam.position.set(0, 2, 10); const wall = new T.Mesh(new T.BoxGeometry(4, 4, 1), new T.MeshStandardMaterial()); wall.position.set(0, 2, 5); const side = new T.Mesh(new T.BoxGeometry(1, 1, 1), new T.MeshStandardMaterial()); side.position.set(8, 0, 0); const sc = new T.Scene(); sc.add(wall, side); sc.updateMatrixWorld(true);
+      const occ = E.occluders([wall, side]); for (let i = 0; i < 120; i++) occ.update(cam, new T.Vector3(0, 1, 0), 1 / 60); out.occluders = { wall: +wall.material.opacity.toFixed(2), side: side.material.opacity }; }
+    { const d = document.createElement('div'); d.className = 'ig-screen'; d.innerHTML = '<div class="ig-card"><button id="b1">A</button><button id="b2">B</button></div>'; document.body.appendChild(d); const nav = E.menuNav(); dispatchEvent(new KeyboardEvent('keydown', { code: 'ArrowDown' })); const f1 = document.activeElement.id; dispatchEvent(new KeyboardEvent('keydown', { code: 'ArrowDown' })); out.menuNav = [f1, document.activeElement.id]; nav.stop(); d.remove(); }
+    out.floatTextReturns = !!E.floatText('x', 10, 10);
     return out;
   });
   console.log('engine', JSON.stringify(r));
