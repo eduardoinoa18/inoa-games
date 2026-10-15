@@ -176,3 +176,34 @@ Measured with `node test/run.js <game> test/perf.js` in a 4-core container with 
 | pixelpact (2D) | — | — | 1 | 511 | 13.8 |
 
 Not included: three.js (~700 KB of modules from jsDelivr, cached by the service worker after the first game) and fonts. Models are shared between games, so the second game a player opens downloads far less. Vercel will also gzip/brotli the `.hdr`/`.json`.
+
+## Drift elevation pass (2026-10-15)
+Island Drift (`games/drift.html`) re-audited and extended by one game agent. Tested with `test/drift.js` at 1000×560 and 390×844 (both `NO_ERRORS`, screenshots reviewed), `test/party_drift.js` (online race to guest results, `NO_ERRORS`), hub `test/index.js` (`NO_ERRORS`), plus a Spanish-language pass.
+
+**Bugs fixed**
+- AI karts parked at sharp corners: the corner speed cap `skill × band × (1 − corner × 1.6)` went negative on hairpins, so karts reversed and stalled (baseline race ended with AI laps `[2,0,0,1,0]`). Cap is now clamped to ≥ 0.5; every AI now finishes 2+ laps when the player wins (`laps [3,2,2,2,2,2]`, `stuck 0`).
+- Road sank under the grass just after the start line (spline overshoot: −0.20 m on Sunset Coast, −0.52 m on Lantern Harbor), so karts looked like they drove on grass (visible in the old tile art). Heights are clamped to ≥ 0.
+- Raised road floated in the air: embankments now slope from the road edge to the ground; lamps and tire walls stand on the slope; karts off the road follow the slope height.
+- Reversing over the finish line took a lap back but never re-armed the half-way flag, so the next real crossing was not counted (a whole lap lost).
+- Drift camera: it chased the kart's heading while the kart travels along heading + slip, so drifts slid the kart to the frame edge. The camera now follows the travel direction; the kart stays centred (projected x −0.10 landscape / −0.25 portrait mid-drift, NDC; was near the edge) and portrait pulls back a little.
+- Title card overflowed 560 px landscape: two-column layout on short landscape screens (card 44–516 px of 560, no scroll); portrait keeps Hub/Play in a sticky bar.
+- Empty item slot showed a lone "·" → faded 🎁 slot; AI name tags carry a personality emoji on a tinted pill.
+- No rescue for a stuck player (only AI recovered): player/phone karts are put back on the road after 2.5 s stuck or a few seconds off-road (3.5 s on Easy). "Wrong way!" banner + read-aloud.
+- Lap 1 time now starts at the line (it included the grid run-up), so the time-trial ghost lines up.
+- Particles froze during the finish sequence (updated only while racing).
+
+**Added**
+- 2 new tracks (4 total): **Harvest Hills** (rolling farm hills, pumpkins, tractors, hay bales) and **Frosty Peaks** (figure-eight with a snowy bridge over the lower road: pillars, rails, karts on different levels never collide; instanced pines + snowmen, falling snow). New models in the pack: `low-poly-tree`, `tractor`, `pumpkin`, `formation-stone` (pack 1.87 → 2.10 MB; all already in `packs/assets`).
+- **Time-trial ghost**: best lap per track recorded at 12 Hz, stored on the device (`inoa.drift.ghost.<track>`), replayed as a translucent kart with a 👻 tag and on the minimap; lap toast shows ± vs the ghost.
+- **Island Cup**: the 4 tracks back to back, points 10/8/6/5/4/3, standings card after each race (EN/ES, read aloud, gamepad focus), `E.results` at the end (XP scaled to races run; quitting early still pays).
+- **AI personalities**: Bold (🔥 faster, chases the kart ahead, drifts and fires items quickly), Careful (🌿 clean centre line, slows for corners, saves shields/boosts), Item lover (🎁 uses items at once), All-rounder (⭐).
+- **Difficulty**: Easy (default; front row, rivals wait for you, gentle off-road/coconut penalties), Normal (mid-pack), Hard (back of the grid, faster rivals). Autopilot check: Easy wins by most of a lap, Normal close, Hard 2nd–6th.
+- Juice: mini-turbo bursts, boost exhaust, coconut/shield/bump/wall sparks, confetti + fireworks at the finish, orbit camera after the finish (off with reduced motion). Full EN/ES for every string; read-aloud for start, final lap, finish, wrong way, cup standings.
+- Hub tile copy (EN/ES) and `thumbs/drift.jpg` refreshed.
+
+**Still open**
+- Real-device feel/FPS (headless only). Snow (700 points) and the new instanced scenery should be cheap, but unmeasured on a 2021 phone.
+- Ghost/cup are offline only; online races stay single Grand Prix (guests get no ghost).
+- Bridge ends are plain slab abutments; no jump/air physics (height simply follows the road).
+- Autopilot is a weak stand-in for a human; difficulty numbers need a real play test with kids and adults.
+- Engine: none changed. `tag()` with an emoji is still drawn at 96 px serif, so on systems without a colour-emoji font the tag shows text only.
