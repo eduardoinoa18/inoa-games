@@ -44,6 +44,21 @@ module.exports = async (p, shot) => {
     await p.fill('#iEmail', 'tester@example.test'); await p.fill('#iPass', 'password-123'); await p.click('#bAuth'); await until(() => !document.getElementById('vMe').hidden && document.getElementById('planName').textContent);
     ok((await p.textContent('#planName')) === 'Free beta' && /free while we test/.test(await p.textContent('#planInfo')) && await p.isHidden('#bUpgrade'), 'account page: "Free beta", everything unlocked, no upgrade button');
     await shot('account');
+    // ---- invite: Tess shares her link, a friend signs up through it and confirms → Tess gets $1 credit ----
+    await until(() => /ref=[A-Z2-9]{6}/.test(document.getElementById('invUrl').value));
+    const invite = await p.inputValue('#invUrl'); ok(/index\.html\?ref=[A-Z2-9]{6}$/.test(invite) && /0 of 5/.test(await p.textContent('#invInfo')), 'account shows an invite link and 0 of 5 this month');
+    await p.evaluate(async () => (await import('./engine/platform.js')).default.signOut());
+    await p.goto(invite); await until(() => document.getElementById('betaBar'));
+    await p.goto(base + 'account.html'); await until(() => window.__READY === true);
+    await p.click('#tUp'); await p.fill('#iName', 'Ray'); await p.fill('#iEmail', 'ray@example.test'); await p.fill('#iPass', 'password-123'); await p.check('#iAge'); await p.click('#bAuth'); await until(() => !document.getElementById('vCheck').hidden);
+    const pend = (await sql("select r.status from public.ig_referrals r join auth.users u on u.id = r.referred_id where u.email = 'ray@example.test'"))[0];
+    ok(pend && pend.status === 'pending', 'friend who signed up from the invite link is attributed (pending until email confirmed)');
+    await api('/__test/confirm?email=ray@example.test');
+    await p.evaluate(async () => (await import('./engine/platform.js')).default.signOut().catch(() => { }));
+    await p.goto(base + 'account.html'); await until(() => window.__READY === true);
+    await p.fill('#iEmail', 'tester@example.test'); await p.fill('#iPass', 'password-123'); await p.click('#bAuth'); await until(() => /1 of 5/.test(document.getElementById('invInfo')?.textContent || ''));
+    ok(/1\.00/.test(await p.textContent('#invInfo')) && /Ray/.test(await p.textContent('#invList')), 'inviter sees 1 of 5 and $1.00 credit, friend listed by name');
+    await shot('invite');
     const starts = await p.evaluate(async () => { const P = (await import('./engine/platform.js')).default; await P.init(); const out = []; for (const g of ['drift', 'fit', 'tray', 'brew', 'trivia']) { sessionStorage.clear(); const r = await P.startGame(g); out.push(r.allowed && r.access); } return out; });
     ok(starts.every(a => a === 'beta'), 'five game starts in one day all allowed (beta, no counter): ' + starts.join(','));
     await p.goto(base + 'index.html'); await until(() => /Tess/.test(document.getElementById('betaBar')?.textContent || ''));

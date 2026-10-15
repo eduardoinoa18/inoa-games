@@ -212,4 +212,34 @@ set role authenticated; select t.as_user('00000000-0000-0000-0000-00000000000b')
 select t.ok((public.ig_submit_feedback(4, 'again') ->> 'reason') = 'rate_limited', 'feedback is rate limited per player');
 reset role;
 update public.ig_app_config set value = '20' where key = 'feedback_per_user_day';
+-- referrals: attributed at sign-up, credited only on email verification, monthly cap, no client access to the tables
+set role authenticated; select t.as_user('00000000-0000-0000-0000-00000000000a');
+select (public.ig_my_referrals() ->> 'code') as acode \gset
+select t.ok(:'acode' ~ '^[A-Z2-9]{6}$' and (public.ig_my_referrals() ->> 'code') = :'acode', 'player gets a stable 6-character invite code');
+select t.fails($$select * from public.ig_referrals$$, 'referrals table not readable by clients');
+select t.fails($$select * from public.ig_credit_ledger$$, 'credit ledger not readable by clients');
+reset role;
+insert into auth.users (id, email, email_confirmed_at, raw_user_meta_data) values ('00000000-0000-0000-0000-0000000000f1', 'f1@example.test', null, jsonb_build_object('app', 'inoa', 'display_name', 'Fia', 'ref', lower(:'acode')));
+select t.ok((select status from public.ig_referrals where referred_id = '00000000-0000-0000-0000-0000000000f1') = 'pending', 'sign-up with an invite code is attributed (pending until verified)');
+select t.ok((select coalesce(sum(amount_cents), 0) from public.ig_credit_ledger where user_id = '00000000-0000-0000-0000-00000000000a') = 0, 'no credit before the friend verifies');
+update auth.users set email_confirmed_at = now() where id = '00000000-0000-0000-0000-0000000000f1';
+select t.ok((select status from public.ig_referrals where referred_id = '00000000-0000-0000-0000-0000000000f1') = 'credited', 'friend verified → referral credited');
+set role authenticated; select t.as_user('00000000-0000-0000-0000-00000000000a');
+select t.ok((public.ig_my_referrals() ->> 'balance_cents')::int = 100 and (public.ig_my_referrals() ->> 'credited_this_month')::int = 1 and (public.ig_my_referrals() -> 'recent' -> 0 ->> 'name') = 'Fia', 'inviter sees $1.00 credit, 1 of 5 this month, friend''s display name');
+select t.ok(not (public.ig_my_referrals()::text ~ 'f1@example'), 'inviter never sees the friend''s email');
+reset role;
+update auth.users set email_confirmed_at = now() where id = '00000000-0000-0000-0000-0000000000f1';
+select t.ok((select count(*) from public.ig_credit_ledger where user_id = '00000000-0000-0000-0000-00000000000a') = 1, 're-verifying does not pay twice');
+update public.ig_app_config set value = '1' where key = 'referral_monthly_cap';
+insert into auth.users (id, email, email_confirmed_at, raw_user_meta_data) values ('00000000-0000-0000-0000-0000000000f2', 'f2@example.test', now(), jsonb_build_object('app', 'inoa', 'ref', :'acode'));
+select t.ok((select status from public.ig_referrals where referred_id = '00000000-0000-0000-0000-0000000000f2') = 'capped' and (select sum(amount_cents) from public.ig_credit_ledger where user_id = '00000000-0000-0000-0000-00000000000a') = 100, 'monthly cap: extra referrals are recorded but not paid');
+update public.ig_app_config set value = '5' where key = 'referral_monthly_cap';
+insert into auth.users (id, email, email_confirmed_at, raw_user_meta_data) values ('00000000-0000-0000-0000-0000000000f3', 'f3@example.test', now(), '{"app":"inoa","ref":"ZZZZZZ"}'), ('00000000-0000-0000-0000-0000000000f4', 'f4@example.test', now(), '{"app":"inoa","ref":"<script>"}');
+select t.ok(not exists (select 1 from public.ig_referrals where referred_id in ('00000000-0000-0000-0000-0000000000f3', '00000000-0000-0000-0000-0000000000f4')), 'unknown or malformed codes are ignored (sign-up still works)');
+select t.ok(exists (select 1 from public.ig_profiles where id = '00000000-0000-0000-0000-0000000000f4'), 'sign-up with a bad code still creates the account');
+set role authenticated; select t.as_user('00000000-0000-0000-0000-0000000000ff');
+select t.ok((public.ig_admin_referrals(30) ->> 'credited')::int = 1 and (public.ig_admin_referrals(30) ->> 'capped')::int = 1, 'owner sees referral totals');
+select t.as_user('00000000-0000-0000-0000-00000000000b');
+select t.fails($$select public.ig_admin_referrals(30)$$, 'non-owner cannot read referral totals');
+reset role;
 \echo SQL_TESTS_DONE

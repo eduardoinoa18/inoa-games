@@ -10,5 +10,6 @@
   "stripeMode": "test",
   "freeDailyStarts": 3,
   "note": "Public values only. Accounts ON (optional sign-in; guests still play everything). mode 'beta' = everything free while testing (server: ig_app_config.access_mode = 'beta_free'); billing UI off (never shown in the native apps). Shared Supabase project WebDesigns/Presentations — docs/PLATFORM_ARCHITECTURE.md §12–13.",
-  "realtimeKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxbW1ndHlseWd4d3lqeXl5eGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA3NDUxOTUsImV4cCI6MjEwNjMyMTE5NX0.d4BAilstyivcWUgLx5qgX7RGvtjquv7WDdfC_HFKkXM"
+  "realtimeKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxbW1ndHlseWd4d3lqeXl5eGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA3NDUxOTUsImV4cCI6MjEwNjMyMTE5NX0.d4BAilstyivcWUgLx5qgX7RGvtjquv7WDdfC_HFKkXM",
+  "siteUrl": "https://inoa-games.vercel.app"
 }

@@ -142,3 +142,9 @@ All commercial code paths (limit, Stripe checkout/webhooks/portal, entitlement) 
 4. Flip the switches in the table above; announce to beta testers (e.g. founders' perk via `ig_admin_grant_premium`).
 5. Legal: counsel review of privacy policy, terms, COPPA / Google Families before targeting children.
 
+
+## 14. Sharing and referrals (owner decision 2026-10-15)
+- **Share** (📣 on the hub strip and the account page): native share sheet, else copy. Signed-in players share their invite link `…/index.html?ref=CODE`; guests share the plain link.
+- **Referral credit**: a visitor who arrives via `?ref=CODE` (remembered 30 days in `localStorage['inoa.ref']`) and then signs up is attributed to the inviter (`ig_referrals`, pending). When the new account **confirms its email**, the inviter gets **$1** (`referral_credit_cents`) in `ig_credit_ledger`, up to **5 per UTC month** (`referral_monthly_cap`; extra ones are recorded as `capped`, unpaid). One referral per new account; self-referral impossible; codes are 6 characters without look-alikes.
+- Credits are a **promise toward Premium**, not cash. During the free beta they accumulate; when paid plans launch they are applied as a Stripe customer-balance credit (web) or an equivalent store mechanism (apps) and recorded as `applied_to_subscription` ledger rows. Terms must state: no cash value, can't be transferred, may be revoked for abuse (fake/disposable accounts). **[OWNER TO CONFIRM in terms.html]**
+- Owner view: referral tiles on `admin.html` (sign-ups, credited, over cap, waiting for email, credit outstanding).

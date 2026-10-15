@@ -56,7 +56,10 @@ function mirrorProfile(st) {
 /* ---------- public API ---------- */
 const api = {
   PlatformError,
-  async init() { await loadConfig(); S.auth = ls.get(AUTH_KEY, null); if (S.auth) ls.set('inoa.activeProfile', 'inoa.profile.u.' + S.auth.user.id); else ls.set('inoa.activeProfile', null); return api.state(); },
+  async init() {
+    // invite links (…/?ref=CODE): remember the code for 30 days so it counts when this visitor signs up later
+    try { const r = new URLSearchParams(location.search).get('ref'); if (r && /^[A-Za-z2-9]{6}$/.test(r)) ls.set('inoa.ref', { c: r.toUpperCase(), at: Date.now() }); } catch (e) { }
+    await loadConfig(); S.auth = ls.get(AUTH_KEY, null); if (S.auth) ls.set('inoa.activeProfile', 'inoa.profile.u.' + S.auth.user.id); else ls.set('inoa.activeProfile', null); return api.state(); },
   get enabled() { return !!(S.cfg && S.cfg.enabled); },
   // beta = everything free (server: ig_app_config.access_mode); billing UI only when the config allows it and never inside the native apps
   get native() { return !!(globalThis.Capacitor && globalThis.Capacitor.isNativePlatform && globalThis.Capacitor.isNativePlatform()); },
@@ -71,7 +74,7 @@ const api = {
   async signUp(email, password, displayName, redirectTo) {
     const name = String(displayName || '').replace(/[<>]/g, '').trim().slice(0, 24);
     if (String(password || '').length < 8) throw new PlatformError('weak_password', 'Use at least 8 characters');
-    const d = await http('/auth/v1/signup', { query: redirectTo ? '?redirect_to=' + encodeURIComponent(redirectTo) : '', body: { email, password, data: { display_name: name, app: 'inoa' } } });
+    const d = await http('/auth/v1/signup', { query: redirectTo ? '?redirect_to=' + encodeURIComponent(redirectTo) : '', body: { email, password, data: Object.assign({ display_name: name, app: 'inoa' }, api.pendingRef ? { ref: api.pendingRef } : {}) } });
     if (d && d.access_token) { saveAuth(d); emit(); } // only when the project does not require confirmation
     return { needsVerify: !(d && d.access_token) };
   },
@@ -109,6 +112,16 @@ const api = {
     await http('/rest/v1/ig_profiles', { method: 'PATCH', token: t, query: '?id=eq.' + S.auth.user.id, body }); return api.refreshStatus();
   },
   achievements() { return rpc('ig_my_achievements'); },
+  // referrals: my invite code + progress (code is created on first call)
+  get pendingRef() { const r = ls.get('inoa.ref', null); return r && Date.now() - r.at < 30 * 864e5 ? r.c : null; },
+  referrals() { return rpc('ig_my_referrals'); },
+  inviteUrl(code) { const u = new URL('index.html', api.native && S.cfg && S.cfg.siteUrl ? S.cfg.siteUrl.replace(/\/?$/, '/') : ROOT); if (code) u.searchParams.set('ref', code); return u.href; },
+  // Share the site (native share sheet, else copy). Signed-in players share their invite link.
+  async share({ text, code } = {}) {
+    const url = api.inviteUrl(code); const data = { title: 'Inoa Games', text: text || 'Free games for the whole family: play on any phone, laptop or TV. Join me!', url };
+    try { if (navigator.share) { await navigator.share(data); return 'shared'; } } catch (e) { if (e && e.name === 'AbortError') return 'cancelled'; }
+    try { await navigator.clipboard.writeText(data.text + ' ' + url); return 'copied'; } catch (e) { return url; }
+  },
   // beta feedback (guest or signed in). context: only platform/version/lang/screen/page/mode are kept by the server.
   async sendFeedback({ rating = null, body = '', game = null, kind = 'general' } = {}) {
     await loadConfig(); if (!api.feedbackAvailable) throw new PlatformError('unavailable', 'Feedback is not set up');
