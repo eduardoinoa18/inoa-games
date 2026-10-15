@@ -15,6 +15,8 @@ It is a **static site**: `index.html` (hub) + `games/*.html` (one page per game)
 | `games/*.html` | The games (see table below). Each is self-contained except for the engine + its pack |
 | `engine/inoa3d.js` | Shared 3D engine: renderer + post (bloom/SMAA/vignette), sky dome, HDRI, pack loader, `instance()`, toon outlines, procedural PBR (`pbr()`), rig posing, particles, synth SFX + music, speech (`say`), input (keys/touch/gamepad/swipe), UI (title, pause, results, toast), shared profile |
 | `engine/ui.css` | Shared UI kit (cards, buttons, HUD chips, touch pad) |
+| `engine/net.js` | Multiplayer: party rooms over WebRTC (PeerJS), phone controllers, online play, QR + party panel. See `docs/MULTIPLAYER.md` |
+| `pad.html` | The phone controller page (gamepad / buzzer / choices / text layouts) |
 | `packs/<game>.json` | Per-game asset bundle: base64 GLB models + HDRIs (artifact hosting only served web types; on Vercel these could become real `.glb` files — see backlog) |
 | `assets/models/*.glb`, `assets/hdri/*.hdr` | Source assets (170 CC0 models from pmndrs/market-assets, mostly Kenney; 6 Poly Haven HDRIs). Not deployed (`.vercelignore`) |
 | `tools/build_pack.py` | `python3 tools/build_pack.py <game> --models a b c --hdri dawn sunset` → `packs/<game>.json` |
@@ -22,7 +24,7 @@ It is a **static site**: `index.html` (hub) + `games/*.html` (one page per game)
 | `tools/make_thumb.py` | `python3 tools/make_thumb.py <game> <screenshot.png> [x y w h]` → 640×360 tile image |
 | `tools/convert.mjs`, `tools/slim.mjs` | GLTF→GLB conversion (Draco decode, unlit→lit) and meshoptimizer simplification |
 | `test/run.js` + `test/<game>.js` | Headless Playwright harness: serves the repo, routes three.js to `node_modules`, drives each game via `window.__GAME` hooks, saves screenshots to `test/out/` |
-| `docs/` | `ENGINE.md` (builder guide, API, quality bar), `models.txt` (model names), `graphics-toolkit.md` |
+| `docs/` | `MULTIPLAYER.md` (phones + online), `ENGINE.md` (builder guide, API, quality bar), `models.txt` (model names), `graphics-toolkit.md` |
 | `legacy/` | Sources of the first builds: 2D Pixel Pact parts (`pixelpact-src`, concatenated into `games/pixelpact.html`), Snack Squad Safari sources (`safari-src`), old landing pages |
 
 ## The games (all playable now)
@@ -48,10 +50,14 @@ npm install                      # three (for tests), playwright, gltf-transform
 npm start                        # serve locally at http://localhost:5173
 node test/run.js drift test/drift.js      # headless test of one game (screenshots in test/out/)
 npm run test:all                 # every game
+npm run test:party               # multiplayer: local PeerServer + host/phone/guest pages
 python3 tools/build_hub.py       # after changing hub-src/ or adding a game/thumb
 ```
 - Software rendering in headless Chromium is slow: tests call `window.__GAME.update(1/60)` in loops instead of waiting in real time. Keep `window.__READY` and `window.__GAME` hooks working in every game.
 - **Look at screenshots** after every visual change (and at 390×844 portrait: `W=390 H=844 node test/run.js ...`).
+
+## Multiplayer
+Hub **Party** section and every title screen open a room (QR + 4-letter code). Phones join at `pad.html`. Online friends use the link in the party panel. Read `docs/MULTIPLAYER.md` before touching `engine/net.js`; keep `npm run test:party` green.
 
 ## Non-negotiable rules
 1. Static + client-side only (no server needed). Scripts only from jsDelivr (import map); fonts from Google Fonts.
@@ -69,7 +75,7 @@ python3 tools/build_hub.py       # after changing hub-src/ or adding a game/thum
 4. **Hub**: real per-game best scores and play counts on tiles (profile data exists), "continue" row, daily challenge rotation, hero card share image, EN/ES toggle for all UI, settings (sound, read-aloud, reduced motion) shared by all games.
 5. **Hero everywhere**: let the hub hero creator pick a rigged model + colours, store it in the profile, and have 3D games use it as the player character.
 6. **Pixel Pact 3D**: rebuild the original co-op adventure + Match brawler on the engine (Depths shows the way), 10 levels in World 1.
-7. **Online play (later)**: Cloudflare Worker + Durable Object room per party, QR phone-as-controller. See the plan doc. Not possible inside static hosting alone.
+7. **Multiplayer (built 2026-10-14, see `docs/MULTIPLAYER.md`)**: phones as controllers in every engine game + Pixel Pact 2D, per-player phones in Trivia/Depths/Tide Lines/Draw, Island Drift online races on separate screens. Next: TURN relay for strict networks, self-hosted signaling or Cloudflare Durable Object rooms, online modes for Tide Lines/Depths (host-authoritative like Drift), Safari phone support, spectator view, real-device latency tuning.
 8. **Store readiness (later)**: Capacitor wrappers for iOS/Android once the PWA is solid (offline play, push invites, native billing).
 9. **Content**: more tracks (Drift), rooms/bosses (Depths), levels (Fit, Tray), questions (Trivia), words (Draw); seasonal events.
 

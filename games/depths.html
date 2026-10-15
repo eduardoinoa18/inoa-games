@@ -523,9 +523,27 @@ function readHuman(slot) {
     c.a = !!(K.Numpad1 || K.Enter || K.NumpadEnter); c.b = !!(K.Numpad2 || K.ShiftRight); c.c = !!(K.Numpad3 || K.ControlRight); c.u = !!(K.Numpad0 || K.Slash);
   }
   const p = readPad(slot); if (p) { const ax = p.axes[0] || 0, ay = p.axes[1] || 0; if (Math.abs(ax) > .2) c.x = ax; if (Math.abs(ay) > .2) c.z = ay; if (p.buttons[14]?.pressed) c.x = -1; if (p.buttons[15]?.pressed) c.x = 1; if (p.buttons[12]?.pressed) c.z = -1; if (p.buttons[13]?.pressed) c.z = 1; c.a ||= !!p.buttons[0]?.pressed; c.b ||= !!(p.buttons[1]?.pressed || p.buttons[7]?.pressed || p.buttons[5]?.pressed); c.c ||= !!(p.buttons[2]?.pressed || p.buttons[4]?.pressed); c.u ||= !!(p.buttons[3]?.pressed || p.buttons[6]?.pressed); c.pause = !!p.buttons[9]?.pressed; }
+  if (slot === 0 && E.net.role === 'host') { const ph = E.net.pads('pad')[0]; const n = ph && E.net.pad(ph.slot); if (n) { if (Math.abs(n.x) > .15 || Math.abs(n.y) > .15) { c.x = n.x; c.z = n.y; } c.a ||= n.a; c.b ||= n.b; c.c ||= n.c; c.u ||= n.d; } }
   const m = Math.hypot(c.x, c.z); if (m > 1) { c.x /= m; c.z /= m; }
   return c;
 }
+/* ---- phone controllers (engine/net.js): phone 1 = P1, phones 2-4 take over AI allies as P2-P4 ---- */
+function readNet(h) { const n = E.net.pad(h.netSlot); const c = { x: 0, z: 0, a: false, b: false, c: false, u: false }; if (n) { c.x = n.x; c.z = n.y; c.a = n.a; c.b = n.b; c.c = n.c; c.u = n.d; } const m = Math.hypot(c.x, c.z); if (m > 1) { c.x /= m; c.z /= m; } return c; }
+const PAD_LAYOUT = { type: 'gamepad', labels: { A: '⚔️', B: '💨', C: '✨', D: '🔥' }, buttons: ['A', 'B', 'C', 'D'] };
+let layoutSent = false;
+function syncPhones() {
+  if (E.net.role !== 'host' || !G) return; if (!layoutSent) { layoutSent = true; E.NET.setLayout(PAD_LAYOUT); }
+  const phones = E.net.pads('pad').slice(1, 4);
+  for (const h of G.heroes) if (h.ctrl === 'net' && !phones.some(p => p.slot === h.netSlot)) { h.ctrl = 'bot'; if (h.ptag) { h.g.remove(h.ptag); h.ptag = null; } E.toast(`${h.netName} left: an AI ally takes over`, 1600); }
+  phones.forEach((p, k) => {
+    if (G.heroes.some(h => h.ctrl === 'net' && h.netSlot === p.slot)) return;
+    let h = G.heroes.find(o => o.ctrl === 'bot');
+    if (!h) { const used = G.heroes.map(o => o.cls); const cls = CLS_ORDER.find(c => !used.includes(c)) || 'knight'; const p1 = G.heroes[0]; h = makeHero(cls, 'bot', G.heroes.length, used.includes(cls) ? CLASSES[cls].alt : null); h.x = p1.x + 1.5; h.z = p1.z + 1; h.maxHp = heroMaxHp(h); h.hp = h.maxHp; G.heroes.push(h); }
+    h.ctrl = 'net'; h.netSlot = p.slot; h.netName = p.name; if (h.ptag) h.g.remove(h.ptag); const t = E.tag('', `P${k + 2}`, { width: 1.1, bg: p.color }); t.position.y = 2.25; h.g.add(t); h.ptag = t;
+    hudBuild(); E.toast(`📱 ${p.name} joined as P${k + 2}!`, 1800); SFX.good(); E.NET.rumble(p.slot, 120);
+  });
+}
+E.net.on('join', () => { layoutSent = false; });
 function edges(e, c) { const p = e.ctlPrev; c.aP = c.a && !p.a; c.bP = c.b && !p.b; c.cP = c.c && !p.c; c.uP = c.u && !p.u; e.ctlPrev = { a: c.a, b: c.b, c: c.c, u: c.u }; return c; }
 function p2JoinPressed() { if (p2Active) return false; const kb = K.Numpad1 || K.Numpad0 || K.Enter || K.NumpadEnter; const p = readPad(1); return !!(kb || (p && (p.buttons[0]?.pressed || p.buttons[9]?.pressed))); }
 
@@ -1037,11 +1055,11 @@ function cardsInput(dt) {
 let hudRefs = [];
 function hudBuild() {
   if (!shellUI) {
-    shellUI = E.shell({ title: 'Depths', onPause: pause, stick: true, buttons: [{ id: 'bU', icon: '🔥<i class="cd" id="bUcd"></i>', label: 'Ultimate' }, { id: 'bC', icon: '✨<i class="cd" id="bCcd"></i>', label: 'Special' }, { id: 'bB', icon: '💨', label: 'Dodge' }, { id: 'bA', icon: '⚔️', label: 'Attack', cls: 'big' }] });
+    shellUI = E.shell({ title: 'Depths', onPause: pause, stick: true, party: { hint: 'Phone 1 plays P1. Phones 2 to 4 jump in as P2 to P4 (they take over the AI allies).' }, buttons: [{ id: 'bU', icon: '🔥<i class="cd" id="bUcd"></i>', label: 'Ultimate' }, { id: 'bC', icon: '✨<i class="cd" id="bCcd"></i>', label: 'Special' }, { id: 'bB', icon: '💨', label: 'Dodge' }, { id: 'bA', icon: '⚔️', label: 'Attack', cls: 'big' }] });
     input.bindStick($('igStick'), $('igKnob')); input.bindButton($('bA'), 'a'); input.bindButton($('bB'), 'b'); input.bindButton($('bC'), 'c'); input.bindButton($('bU'), 'u');
   }
   shellUI.pad.style.visibility = ''; const party = $('party'); party.hidden = false;
-  party.innerHTML = G.heroes.map(h => `<div class="dp-hero" style="--c:${h.C.color}"><div class="dp-ico"><span>${h.C.icon}</span></div><div class="dp-info"><div class="dp-name"><span>${h.C.name}</span><em>${h.ctrl === 'bot' ? 'ALLY' : h.ctrl.toUpperCase()}</em></div><div class="dp-bar"><i></i></div><div class="dp-ult"><i></i></div></div></div>`).join('');
+  party.innerHTML = G.heroes.map(h => `<div class="dp-hero" style="--c:${h.C.color}"><div class="dp-ico"><span>${h.C.icon}</span></div><div class="dp-info"><div class="dp-name"><span>${h.C.name}</span><em>${h.ctrl === 'bot' ? 'ALLY' : h.ctrl === 'net' ? '📱 ' + (h.netName || 'PHONE') : h.ctrl.toUpperCase()}</em></div><div class="dp-bar"><i></i></div><div class="dp-ult"><i></i></div></div></div>`).join('');
   hudRefs = [...party.children].map((el, i) => ({ el, ico: el.querySelector('.dp-ico'), hp: el.querySelector('.dp-bar'), hpi: el.querySelector('.dp-bar i'), ult: el.querySelector('.dp-ult'), ulti: el.querySelector('.dp-ult i'), last: '' }));
   G.hudKey = '';
 }
@@ -1089,10 +1107,11 @@ function update(dt) {
   for (let i = timers.length - 1; i >= 0; i--) { timers[i].t -= dt; if (timers[i].t <= 0) { const f = timers[i].fn; timers.splice(i, 1); f(); } }
   // p2 drop-in
   if (p2JoinPressed() && !G.over) joinP2();
+  syncPhones();
   if (G.cine) cineUpdate(dt);
   // heroes
   for (const h of G.heroes) {
-    let c; if (h.ctrl === 'bot' || (h.ctrl === 'p1' && window.__GAME.autopilot)) c = botControl(h, dt); else c = readHuman(h.slot === 0 || h.ctrl === 'p1' ? 0 : 1);
+    let c; if (h.ctrl === 'bot' || (h.ctrl === 'p1' && window.__GAME.autopilot)) c = botControl(h, dt); else if (h.ctrl === 'net') c = readNet(h); else c = readHuman(h.slot === 0 || h.ctrl === 'p1' ? 0 : 1);
     if (G.cine || G.over) c = { x: 0, z: 0, a: false, b: false, c: false, u: false };
     if (G.won && h.ctrl === 'bot') c = { x: 0, z: 0 };
     edges(h, c); heroUpdate(h, c, dt);
@@ -1179,7 +1198,7 @@ function showTitle() {
   <div><p class="ig-sub" style="margin-bottom:6px">Party</p><div class="pick" id="pA">${[0, 1, 2, 3].map(n => `<button data-n="${n}" class="${S.allies === n ? 'on' : ''}">${n ? '+' + n + ' all' + (n > 1 ? 'ies' : 'y') : 'Solo'}<small>${n ? 'AI allies fight and revive you' : 'Just you'}</small></button>`).join('')}</div><p class="ig-sub" style="font-size:12.5px;margin-top:6px">👥 Player 2 can drop in anytime: press Enter / Numpad 1 or A on a second gamepad.</p></div>
   <div><p class="ig-sub" style="margin-bottom:6px">Difficulty</p><div class="pick" id="pD">${Object.entries(DIFF).map(([k, d]) => `<button data-d="${k}" class="${S.diff === k ? 'on' : ''}">${d.e} ${d.name}<small>${d.desc}</small></button>`).join('')}</div></div>
   <div class="ig-row"><button class="ig-btn sun" data-a="camp">⛺ Camp · 🪙 ${S.gold}</button></div>${S.runs ? `<p class="ig-sub" style="text-align:center;font-size:13px">Deepest room ${S.best}/9 · Victories ${S.wins}</p>` : ''}</div>`;
-  titleEl = E.titleScreen({ title: 'Pixel Pact: Depths', kicker: 'Inoa Games · Signature 3D', lead: 'Dive beneath the islands with your party. Clear 8 rooms, choose boons, and defeat the drowned captain.', how: [['🕹️', 'Move: WASD / arrows / stick'], ['⚔️', 'Attack: J or Space (pad A), tap in rhythm for combos'], ['💨', 'Dodge roll: K or Shift (pad B), untouchable mid-roll'], ['✨', 'Special: L or E (pad X) · 🔥 Ultimate: I or Q (pad Y)'], ['🟥', 'Red zones on the floor = incoming attack. Roll out!']], extra, onPlay: () => { save(); titleEl = null; newRun(); } });
+  titleEl = E.titleScreen({ party: { label: 'Phones as controllers (up to 4 players)', hint: 'Phone 1 plays P1. Phones 2 to 4 jump in as P2 to P4 (they take over the AI allies).' }, title: 'Pixel Pact: Depths', kicker: 'Inoa Games · Signature 3D', lead: 'Dive beneath the islands with your party. Clear 8 rooms, choose boons, and defeat the drowned captain.', how: [['🕹️', 'Move: WASD / arrows / stick'], ['⚔️', 'Attack: J or Space (pad A), tap in rhythm for combos'], ['💨', 'Dodge roll: K or Shift (pad B), untouchable mid-roll'], ['✨', 'Special: L or E (pad X) · 🔥 Ultimate: I or Q (pad Y)'], ['🟥', 'Red zones on the floor = incoming attack. Roll out!']], extra, onPlay: () => { save(); titleEl = null; newRun(); } });
   const d = titleEl;
   d.querySelectorAll('#pC button').forEach(b => b.onclick = () => { S.cls = b.dataset.c; d.querySelectorAll('#pC button').forEach(x => x.classList.toggle('on', x === b)); E.say(CLASSES[S.cls].name + '. ' + CLASSES[S.cls].desc.replace('·', 'and')); });
   d.querySelectorAll('#pA button').forEach(b => b.onclick = () => { S.allies = +b.dataset.n; d.querySelectorAll('#pA button').forEach(x => x.classList.toggle('on', x === b)); });

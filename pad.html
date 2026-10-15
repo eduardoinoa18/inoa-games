@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#0d1b26">
+<title>Inoa Pad</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;800&family=Unbounded:wght@700;900&display=swap">
+<style>
+:root{--ink:#1b2430;--paper:#fff8ee;--me:#ffd166;--f-d:"Unbounded","Manrope",system-ui,sans-serif;--f-b:"Manrope",system-ui,-apple-system,sans-serif}
+html,body{margin:0;height:100%;overflow:hidden;background:#0d1b26;color:#fff;font-family:var(--f-b);-webkit-user-select:none;user-select:none;touch-action:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+[hidden]{display:none!important}
+button{font:inherit;-webkit-tap-highlight-color:transparent}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom));box-sizing:border-box;gap:14px;text-align:center}
+.brand{font-family:var(--f-d);font-weight:900;font-size:13px;letter-spacing:.14em;opacity:.8}.brand span{color:#ffd166}
+h1{font-family:var(--f-d);margin:0;font-size:clamp(26px,7vw,40px);letter-spacing:-.02em}
+p{margin:0;opacity:.75;font-weight:600;line-height:1.45;max-width:30em}
+input{font:inherit;font-weight:900;text-align:center;border:0;border-radius:18px;padding:14px;background:#fff;color:var(--ink);width:min(320px,86vw);box-sizing:border-box}
+#code{font-family:var(--f-d);font-size:38px;letter-spacing:.3em;text-transform:uppercase}
+#name{font-size:18px}
+.btn{min-height:58px;min-width:min(320px,86vw);border:0;border-radius:18px;background:#ffd166;color:var(--ink);font-family:var(--f-d);font-weight:900;font-size:17px;box-shadow:0 6px 0 #c99a2a;cursor:pointer}
+.btn:active{transform:translateY(4px);box-shadow:0 2px 0 #c99a2a}
+.err{color:#ffb3a8;font-weight:800;min-height:1.4em}
+/* top bar during play */
+.bar{position:fixed;left:0;right:0;top:0;display:flex;align-items:center;gap:10px;padding:max(8px,env(safe-area-inset-top)) 14px 8px;z-index:5;background:linear-gradient(#0d1b26,rgba(13,27,38,0))}
+.badge{display:flex;align-items:center;gap:8px;font-weight:900;font-family:var(--f-d);font-size:14px}
+.badge i{width:22px;height:22px;border-radius:50%;background:var(--me);display:block;border:3px solid #fff}
+.game{font-size:12px;opacity:.7;font-weight:800;flex:1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{border:0;border-radius:14px;padding:8px 12px;background:rgba(255,255,255,.12);color:#fff;font-weight:900}
+.conn{width:10px;height:10px;border-radius:50%;background:#2fbf8a;box-shadow:0 0 10px #2fbf8a}.conn.bad{background:#ff6b6b;box-shadow:0 0 10px #ff6b6b}
+/* gamepad layout */
+#pad{position:fixed;inset:0;display:grid;grid-template-columns:1fr 1fr;align-items:center;padding:60px max(18px,env(safe-area-inset-right)) max(18px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));box-sizing:border-box}
+#stickZone{position:relative;height:100%;min-height:220px;touch-action:none}
+#stickBase{position:absolute;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.08);border:3px solid rgba(255,255,255,.22);transform:translate(-50%,-50%);left:30%;top:55%}
+#stickKnob{position:absolute;width:70px;height:70px;border-radius:50%;background:var(--me);transform:translate(-50%,-50%);left:30%;top:55%;box-shadow:0 6px 18px rgba(0,0,0,.4)}
+.stickHint{position:absolute;left:30%;top:calc(55% + 92px);transform:translateX(-50%);font-size:12px;opacity:.45;font-weight:800;white-space:nowrap}
+#btns{position:relative;height:100%;min-height:220px}
+.b{position:absolute;border:0;border-radius:50%;font-family:var(--f-d);font-weight:900;color:var(--ink);box-shadow:0 7px 0 rgba(0,0,0,.35);touch-action:none}
+.b.on{transform:translateY(5px);box-shadow:0 2px 0 rgba(0,0,0,.35);filter:brightness(1.15)}
+#bA{width:118px;height:118px;right:8%;top:50%;background:#ffd166;font-size:30px}
+#bB{width:84px;height:84px;right:calc(8% + 128px);top:62%;background:#ff7b6b;font-size:22px}
+#bC{width:84px;height:84px;right:calc(8% + 30px);top:calc(50% - 98px);background:#8be0ff;font-size:22px}
+#bD{width:66px;height:66px;right:calc(8% + 140px);top:calc(50% - 60px);background:#c9b8ff;font-size:18px}
+@media (orientation:portrait){#pad{grid-template-columns:1fr;grid-template-rows:1fr 1fr}#stickBase,#stickKnob{left:50%;top:50%}.stickHint{left:50%;top:calc(50% + 92px)}#bA{right:12%;top:30%}#bB{right:calc(12% + 128px);top:48%}#bC{right:calc(12% + 20px);top:calc(30% - 90px)}#bD{right:calc(12% + 150px);top:calc(30% - 40px)}}
+/* buzzer / choices / text layouts */
+#bq{position:fixed;left:14px;right:14px;top:58px;text-align:center;font-family:var(--f-d);font-size:clamp(15px,4.2vw,21px);line-height:1.25}#bq small{display:block;font-family:var(--f-b);font-weight:800;opacity:.7;font-size:13px;margin-top:6px}
+#buzz.q{top:calc(70px + var(--bqh,0px))}
+#buzz{position:fixed;inset:70px 18px max(18px,env(safe-area-inset-bottom));border:0;border-radius:40px;background:var(--me);color:var(--ink);font-family:var(--f-d);font-weight:900;font-size:clamp(48px,16vw,110px);box-shadow:0 12px 0 rgba(0,0,0,.35);touch-action:none}
+#buzz.on{transform:translateY(8px);box-shadow:0 4px 0 rgba(0,0,0,.35)}
+#choices{position:fixed;inset:64px 14px max(14px,env(safe-area-inset-bottom));display:grid;grid-template-rows:auto 1fr;gap:12px}
+#choices .q{font-family:var(--f-d);font-size:clamp(17px,4.6vw,24px);line-height:1.25;text-align:center;padding:4px 6px}
+#choices .opts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#choices .opts button{border:0;border-radius:24px;font-weight:900;font-size:clamp(16px,4.4vw,22px);color:var(--ink);padding:12px;box-shadow:0 7px 0 rgba(0,0,0,.35);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+#choices .opts button b{font-family:var(--f-d);font-size:28px}
+#choices .opts button.on{transform:translateY(5px);box-shadow:0 2px 0 rgba(0,0,0,.35)}
+#choices .opts button.picked{outline:6px solid #fff}
+#choices .opts button:disabled{opacity:.45}
+@media (orientation:landscape){#choices .opts{grid-template-columns:1fr 1fr 1fr 1fr}}
+#onl{position:fixed;left:50%;bottom:max(12px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:6;border:0;border-radius:16px;padding:12px 18px;background:#fff;color:var(--ink);font-family:var(--f-d);font-weight:900;font-size:14px;box-shadow:0 6px 18px rgba(0,0,0,.4);white-space:nowrap}
+#msg{font-family:var(--f-d);font-size:clamp(22px,6vw,34px);line-height:1.2;padding:0 10px}
+</style>
+</head><body>
+<div class="screen" id="sJoin">
+  <div class="brand">INOA<span>GAMES</span> · PAD</div>
+  <h1>Join the party</h1>
+  <p>Type the 4 letters shown on the big screen.</p>
+  <input id="code" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABCD" inputmode="text">
+  <input id="name" maxlength="14" autocomplete="nickname" placeholder="Your name">
+  <button class="btn" id="go">Join</button>
+  <div class="err" id="err"></div>
+  <p style="font-size:12px">Your phone becomes a controller. Keep this page open; it reconnects by itself when the game changes.</p>
+</div>
+<div class="screen" id="sWait" hidden><div class="brand">INOA<span>GAMES</span></div><h1 id="waitT">Connecting…</h1><p id="waitP">Looking for the room.</p></div>
+
+<div id="sPlay" hidden>
+  <div class="bar"><div class="badge"><i id="meDot"></i><span id="meName">P1</span></div><div class="game" id="gameName">Inoa Games</div><span class="conn" id="conn"></span><button class="pill" id="bPause" aria-label="Pause">⏸</button></div>
+  <div id="pad">
+    <div id="stickZone"><div id="stickBase"></div><div id="stickKnob"></div><div class="stickHint">drag anywhere on this side</div></div>
+    <div id="btns"><button class="b" id="bA">A</button><button class="b" id="bB">B</button><button class="b" id="bC">C</button><button class="b" id="bD">D</button></div>
+  </div>
+  <div id="bq" hidden></div><button id="buzz" hidden>BUZZ</button>
+  <div id="choices" hidden><div class="q" id="cq"></div><div class="opts" id="copts"></div></div>
+  <div class="screen" id="textL" hidden><div id="msg"></div></div>
+  <button id="onl" hidden></button>
+</div>
+<script type="module">
+import { net, join, sendInput, sendMsg } from './engine/net.js';
+const $ = id => document.getElementById(id);
+const params = new URLSearchParams(location.search);
+let saved = {}; try { saved = JSON.parse(localStorage.getItem('inoa.pad') || '{}'); } catch (e) { }
+$('code').value = (params.get('r') || params.get('join') || saved.code || '').toUpperCase(); $('name').value = saved.name || '';
+const state = { x: 0, y: 0, a: false, b: false, c: false, d: false, pause: false };
+const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) { } };
+let wake = null; const keepAwake = async () => { try { wake = await navigator.wakeLock?.request('screen'); } catch (e) { } };
+document.addEventListener('visibilitychange', () => { if (!document.hidden) keepAwake(); });
+function show(id) { for (const s of ['sJoin', 'sWait', 'sPlay']) $(s).hidden = s !== id; }
+async function go() {
+  const code = $('code').value.trim().toUpperCase(), name = $('name').value.trim();
+  try { localStorage.setItem('inoa.pad', JSON.stringify({ code, name })); } catch (e) { }
+  $('err').textContent = ''; show('sWait'); $('waitT').textContent = 'Connecting…'; $('waitP').textContent = 'Room ' + code;
+  try { document.documentElement.requestFullscreen?.().catch(() => { }); } catch (e) { }
+  keepAwake();
+  try { await join(code, { kind: params.get('as') === 'player' ? 'player' : 'pad', name }); show('sPlay'); buzz(30); }
+  catch (e) { show('sJoin'); $('err').textContent = e.message === 'Room not found' ? 'No room with that code. Check the big screen.' : e.message; }
+}
+$('go').onclick = go; $('code').addEventListener('keydown', e => { if (e.key === 'Enter') $('name').focus(); }); $('name').addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+if ((params.get('r') || params.get('join')) && params.get('auto') !== '0') setTimeout(go, 150);
+
+net.on('welcome', m => { document.documentElement.style.setProperty('--me', m.color); $('meDot').style.background = m.color; $('meName').textContent = `P${m.slot} · ${m.name}`; $('gameName').textContent = (m.game || 'Inoa Games').replace(/ — .*/, ''); });
+net.on('status', s => { $('conn').classList.toggle('bad', s !== 'ready'); if (s === 'reconnecting') { $('gameName').textContent = 'Switching game…'; } if (s === 'ended') { show('sWait'); $('waitT').textContent = 'Party ended'; $('waitP').textContent = 'Thanks for playing! Scan a new code to join again.'; } if (s === 'error' && net.error === 'Room is full') { show('sJoin'); $('err').textContent = 'That room is full (8 players).'; } });
+net.on('layout', L => applyLayout(L));
+// Host advertises an own-screen online mode (e.g. Island Drift): offer to switch this device to it.
+net.on('online', o => { const b = $('onl'); b.hidden = !o; if (o) { b.textContent = o.label || '🏁 Play on this screen'; b.onclick = () => { location.href = o.page + (o.page.includes('?') ? '&' : '?') + 'join=' + net.code; }; } });
+net.on('msg', m => { if (m.t === 'text') { applyLayout({ type: 'text', text: m.text }); } });
+
+/* ---- gamepad ---- */
+const zone = $('stickZone'), base = $('stickBase'), knob = $('stickKnob'); let sid = null, cx = 0, cy = 0;
+zone.addEventListener('pointerdown', e => { e.preventDefault(); sid = e.pointerId; try { zone.setPointerCapture(sid); } catch (x) { } const r = zone.getBoundingClientRect(); cx = e.clientX; cy = e.clientY; for (const el of [base, knob]) { el.style.left = (cx - r.left) + 'px'; el.style.top = (cy - r.top) + 'px'; } knob.style.transform = 'translate(-50%,-50%)'; buzz(8); });
+zone.addEventListener('pointermove', e => { if (e.pointerId !== sid) return; let dx = e.clientX - cx, dy = e.clientY - cy; const m = 55, l = Math.hypot(dx, dy); if (l > m) { dx *= m / l; dy *= m / l; } state.x = +(dx / m).toFixed(2); state.y = +(dy / m).toFixed(2); knob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`; push(); });
+const endStick = e => { if (e.pointerId !== sid) return; sid = null; state.x = state.y = 0; knob.style.transform = 'translate(-50%,-50%)'; push(); };
+zone.addEventListener('pointerup', endStick); zone.addEventListener('pointercancel', endStick);
+for (const [id, key] of [['bA', 'a'], ['bB', 'b'], ['bC', 'c'], ['bD', 'd'], ['bPause', 'pause']]) { const b = $(id); const down = e => { e.preventDefault(); state[key] = true; b.classList.add('on'); buzz(key === 'a' ? 18 : 12); push(); }; const up = () => { if (!state[key]) return; state[key] = false; b.classList.remove('on'); push(); }; b.addEventListener('pointerdown', down); b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up); b.addEventListener('pointerleave', up); }
+function push() { sendInput({ ...state }); }
+setInterval(push, 200); // heartbeat so the host never misses a release
+/* ---- buzzer ---- */
+const bz = $('buzz'); bz.addEventListener('pointerdown', e => { e.preventDefault(); state.a = true; bz.classList.add('on'); buzz(40); push(); sendMsg({ t: 'buzz', at: Date.now() }); }); const bzUp = () => { state.a = false; bz.classList.remove('on'); push(); }; bz.addEventListener('pointerup', bzUp); bz.addEventListener('pointercancel', bzUp);
+/* ---- layouts ---- */
+const CHOICE_COLORS = ['#ff6b6b', '#5bb8ff', '#ffd166', '#2fbf8a'];
+function applyLayout(L) {
+  L = L || { type: 'gamepad' }; $('pad').hidden = L.type !== 'gamepad'; bz.hidden = L.type !== 'buzzer'; $('choices').hidden = L.type !== 'choices'; $('textL').hidden = L.type !== 'text';
+  if (L.type === 'gamepad') { const labels = L.labels || {}; for (const k of ['A', 'B', 'C', 'D']) { const b = $('b' + k); b.textContent = labels[k] ?? k; b.hidden = L.buttons ? !L.buttons.includes(k) : (k === 'D'); } }
+  $('bq').hidden = !(L.type === 'buzzer' && L.question);
+  if (L.type === 'buzzer') { bz.textContent = L.label || 'BUZZ'; const esc = t => String(t).replace(/[<>&]/g, ''); if (L.question) { $('bq').innerHTML = esc(L.question) + (L.choices ? `<small>${L.choices.map((c, i) => 'ABCD'[i] + ': ' + esc(c)).join(' · ')}</small>` : ''); requestAnimationFrame(() => document.documentElement.style.setProperty('--bqh', ($('bq').offsetHeight + 12) + 'px')); } bz.classList.toggle('q', !!L.question); }
+  if (L.type === 'choices') { $('cq').textContent = L.question || ''; const box = $('copts'); box.innerHTML = ''; (L.choices || []).forEach((c, i) => { const b = document.createElement('button'); b.style.background = CHOICE_COLORS[i % 4]; b.innerHTML = `<b>${'ABCD'[i]}</b><span>${String(c).replace(/[<>&]/g, '')}</span>`; b.disabled = !!L.locked || (L.out || []).includes(i); if (L.picked === i) b.classList.add('picked'); b.addEventListener('pointerdown', e => { e.preventDefault(); if (b.disabled) return; buzz(25); b.classList.add('on'); [...box.children].forEach(x => x.classList.toggle('picked', x === b)); sendMsg({ t: 'choice', i }); }); b.addEventListener('pointerup', () => b.classList.remove('on')); box.appendChild(b); }); }
+  if (L.type === 'text') { $('msg').textContent = L.text || ''; $('msg').style.whiteSpace = 'pre-line'; }
+}
+applyLayout({ type: 'gamepad' });
+window.__PAD = { net, state, go };
+</script>
+</body></html>

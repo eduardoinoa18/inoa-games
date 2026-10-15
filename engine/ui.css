@@ -50,3 +50,7 @@ p{margin:0;line-height:1.5}
 .ig-big{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);z-index:22;font-family:var(--f-d);font-weight:900;font-size:clamp(48px,12vw,110px);color:#fff;text-shadow:0 6px 0 rgba(0,0,0,.25),0 0 40px rgba(0,0,0,.25);pointer-events:none}
 @media (max-width:640px){.ig-tbtn{width:62px;height:62px}.ig-tbtn.big{width:76px;height:76px}.ig-stick{width:130px;height:130px}}
 @media (hover:hover) and (pointer:fine){.ig-pad .ig-stick{opacity:.5}}
+
+/* phone controllers + pad/gamepad menu focus */
+.ig-focus{outline:4px solid var(--sun,#ffd166)!important;outline-offset:3px;box-shadow:0 0 0 8px rgba(255,209,102,.35)!important}
+.ig-phones{justify-self:center;margin:2px auto 0;display:block}

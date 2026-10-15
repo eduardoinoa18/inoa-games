@@ -594,10 +594,17 @@ function start(opts = {}) {
 }
 
 /* ---------- (a) party pass-and-play ---------- */
-function partyStart() { const n = clamp(S.players, 2, 8); G.players = S.names.slice(0, n).map((nm, i) => ({ name: nm || `P${i + 1}`, score: 0, i })); G.turn = 0; G.turns = n * clamp(S.rounds, 1, 3); partyPass(); }
+function partyStart() { const n = clamp(S.players, 2, 8); const phones = E.net.role === 'host' ? E.net.pads().slice(0, 8) : []; G.phones = phones.length >= 2; G.players = G.phones ? phones.map((p, i) => ({ name: p.name, score: 0, i, slot: p.slot })) : S.names.slice(0, n).map((nm, i) => ({ name: nm || `P${i + 1}`, score: 0, i })); G.turn = 0; const n2 = G.players.length; G.turns = n2 * clamp(S.rounds, 1, 3); partyPass(); }
 function partyPass() {
   if (G.turn >= G.turns) { partyEnd(); return; }
   const dr = G.players[G.turn % G.players.length]; G.drawer = dr; G.word = drawWord(G.used); G.used.push(G.word); G.skipped = false; camView('room'); resetPad(); hud();
+  if (G.phones) { // the secret word goes to the drawer's phone: no peeking, no passing
+    G.players.forEach(p => { p.wrong = false; if (p !== dr) E.NET.setLayout({ type: 'text', text: (S.lang === 'es' ? `🎨 ${dr.name} va a dibujar.\n¡Prepárate para adivinar!` : `🎨 ${dr.name} is drawing next.\nGet ready to guess!`) }, p.slot); });
+    E.NET.setLayout({ type: 'text', text: `✏️ ${S.lang === 'es' ? 'Dibuja' : 'Draw'}:\n${wtxt(G.word)}` }, dr.slot); E.NET.rumble(dr.slot, 200);
+    const c = card(`<div class="ig-kicker">${S.lang === 'es' ? 'Turno' : 'Turn'} ${G.turn + 1}/${G.turns}</div><h2 style="color:${PCOL[dr.i]}">🎨 ${esc(dr.name)}</h2><p class="ig-sub">📱 ${S.lang === 'es' ? 'Tu palabra secreta está en tu teléfono. Dibuja aquí; los demás adivinan en sus teléfonos.' : 'Your secret word is on your phone. Draw here; everyone else guesses on their phones.'}</p><button class="ig-btn" data-a="go">${T().start}</button>`);
+    E.say(S.lang === 'es' ? `${dr.name}, mira tu teléfono` : `${dr.name}, check your phone`, { lang: S.lang });
+    c.querySelector('[data-a=go]').onclick = () => { c.remove(); partyDraw(); }; return;
+  }
   const c = card(`<div class="ig-kicker">${S.lang === 'es' ? 'Turno' : 'Turn'} ${G.turn + 1}/${G.turns}</div><h2 style="color:${PCOL[dr.i]}">${esc(T().pass(dr.name))}</h2><p class="ig-sub">${T().noPeek}</p><button class="ig-btn" data-a="show">🔒 ${T().show}</button>`);
   E.say(T().pass(dr.name), { lang: S.lang });
   c.querySelector('[data-a=show]').onclick = () => { c.remove(); partyPeek(); };
@@ -612,7 +619,13 @@ function partyDraw() {
   G.phase = 'draw'; camView('draw'); resetPad();
   openPad(`<span>${esc(T().drawer(G.drawer.name))}</span>`, 60, [{ id: 'peek', label: T().peek, cls: 'dw-peek', hold: on => { $('dwPrompt').innerHTML = on ? `<b>${esc(wtxt(G.word))}</b>` : `<span>${esc(T().drawer(G.drawer.name))}</span>`; } }, { id: 'got', label: T().guessed, cls: 'go', fn: partyWho }]);
   big('🎨 ' + T().guessOut); E.say(T().guessOut, { lang: S.lang }); SFX.good();
+  if (G.phones) { const opts = [G.word, ...wordPool().filter(w => w !== G.word).sort(() => Math.random() - .5).slice(0, 3)].sort(() => Math.random() - .5); G.opts = opts; G.players.forEach(p => { if (p !== G.drawer) E.NET.setLayout({ type: 'choices', question: S.lang === 'es' ? '¿Qué están dibujando?' : 'What is being drawn?', choices: opts.map(wtxt) }, p.slot); }); }
 }
+E.net.on('msg', (p, m) => {
+  if (!G || !G.phones || G.paused || m.t !== 'choice' || G.phase !== 'draw') return; const pl = G.players.find(x => x.slot === p.slot); if (!pl || pl === G.drawer || pl.wrong) return;
+  if (G.opts[m.i] === G.word) { E.NET.rumble(pl.slot, 150); partyScore(pl); }
+  else { pl.wrong = true; SFX.bad(); E.NET.setLayout({ type: 'text', text: S.lang === 'es' ? '❌ ¡Uy! Esa no era. Espera la próxima ronda.' : '❌ Not that one! Wait for the next round.' }, pl.slot); if (G.players.every(x => x === G.drawer || x.wrong)) timeUp(); }
+});
 function partyWho() {
   if (G.phase !== 'draw') return; G.phase = 'who'; G.timer && (G.timer.frozen = true);
   const others = G.players.filter(p => p !== G.drawer);
@@ -625,6 +638,7 @@ function partyScore(guesser) {
 }
 function partyReveal(guesser, gp) {
   G.phase = 'reveal'; G.timer = null; closePad(); camView('easel'); D.dirty = true; hud();
+  if (G.phones) G.players.forEach(p => E.NET.setLayout({ type: 'text', text: `${guesser ? (p === guesser ? '🎉 +' + gp : '🎉 ' + guesser.name) : '⏰'}\n${wtxt(G.word)}\n\n${p.name}: ${p.score}` }, p.slot));
   if (guesser) { SFX.win(); confettiBurst(); } else SFX.lose();
   const w = wtxt(G.word); E.say(`${T().wordWas} ${w}`, { lang: S.lang });
   later(1.1, () => { const c = card(`<div class="ig-kicker">${guesser ? '🎉' : '⏰ ' + T().timeUp}</div><div class="dw-word">${esc(w)}</div>${guesser ? `<p class="ig-sub" style="text-align:center"><b style="color:${PCOL[guesser.i]}">${esc(guesser.name)}</b> +${gp} · <b style="color:${PCOL[G.drawer.i]}">${esc(G.drawer.name)}</b> +2</p>` : `<p class="ig-sub" style="text-align:center">${T().nobody}</p>`}${board()}<button class="ig-btn" data-a="next">${T().next}</button>`);
@@ -632,7 +646,7 @@ function partyReveal(guesser, gp) {
 }
 function board() { const rows = [...G.players].sort((a, b) => b.score - a.score); return `<div class="dw-board">${rows.map((p, k) => `<div><b>${k + 1}</b><span style="border-left:6px solid ${PCOL[p.i]};padding-left:8px">${esc(p.name)}</span><b>${p.score}</b></div>`).join('')}</div>`; }
 function partyEnd() {
-  G.phase = 'end'; camView('room'); music && music.stop(); const rows = [...G.players].sort((a, b) => b.score - a.score); const tie = rows.length > 1 && rows[0].score === rows[1].score; SFX.win(); confettiBurst();
+  G.phase = 'end'; camView('room'); music && music.stop(); if (G.phones) E.NET.setLayout({ type: 'gamepad' }); const rows = [...G.players].sort((a, b) => b.score - a.score); const tie = rows.length > 1 && rows[0].score === rows[1].score; SFX.win(); confettiBurst();
   E.results({ gameId: 'draw', title: tie ? (S.lang === 'es' ? '¡Empate!' : 'It’s a tie!') : (S.lang === 'es' ? `¡Gana ${rows[0].name}!` : `${rows[0].name} wins!`), stats: rows.map((p, k) => [`${k + 1}. ${p.name}`, p.score]), xp: 40 + G.turns * 8, coins: 10 + G.turns * 2, onAgain: () => title(), share: `${rows[0].name} won our Draw the Pact party with ${rows[0].score} points! (Inoa Games) ${location.href}` });
 }
 
@@ -739,7 +753,7 @@ function title() {
   <div><p class="ig-sub" style="margin-bottom:6px">${es ? 'Palabras' : 'Words'} · <span id="pT"></span></p><div class="pk" id="pD">${[[0, es ? 'Todas' : 'Mixed'], [1, es ? 'Fácil' : 'Easy'], [2, es ? 'Media' : 'Medium'], [3, es ? 'Difícil' : 'Hard']].map(([d, l]) => `<button data-d="${d}" class="${S.diff === d ? 'on' : ''}">${l}</button>`).join('')}</div></div>
   <div class="pk" id="pL"><button data-l="en" class="${!es ? 'on' : ''}">🇬🇧 English</button><button data-l="es" class="${es ? 'on' : ''}">🇪🇸 Español</button></div>`;
   const how = es ? [['✏️', 'Dibuja con el dedo, el mouse o un lápiz (con presión). 12 colores, 3 grosores, borrador, deshacer (Z)'], ['🙈', 'Pasa el aparato: solo quien dibuja ve la palabra'], ['🖼️', 'Tus bocetos rápidos se cuelgan en la pared de la galería']] : [['✏️', 'Draw with finger, mouse or stylus (pressure works). 12 colours, 3 sizes, eraser, undo (Z)'], ['🙈', 'Pass the device: only the drawer sees the word'], ['🖼️', 'Speed sketches hang on the studio gallery wall']];
-  const d = E.titleScreen({ title: 'Draw the Pact', kicker: es ? 'Inoa Games · Dibuja y adivina' : 'Inoa Games · Draw & guess', lead: es ? 'Un estudio de arte acogedor para dibujar, adivinar y reír en el mismo aparato.' : 'A cozy art studio for drawing, guessing and laughing together on one device.', how, extra, onPlay: () => { save(); E.say(es ? '¡A dibujar!' : 'Let’s draw!', { lang: S.lang }); start(); } });
+  const d = E.titleScreen({ party: { label: es ? 'Adivinar con teléfonos' : 'Guess with phones', hint: es ? 'En modo Fiesta, cada teléfono es un jugador: quien dibuja ve la palabra en su teléfono y los demás adivinan en el suyo.' : 'In Party mode each phone is a player: the drawer sees the word on their phone, everyone else guesses on theirs.' }, title: 'Draw the Pact', kicker: es ? 'Inoa Games · Dibuja y adivina' : 'Inoa Games · Draw & guess', lead: es ? 'Un estudio de arte acogedor para dibujar, adivinar y reír en el mismo aparato.' : 'A cozy art studio for drawing, guessing and laughing together on one device.', how, extra, onPlay: () => { save(); E.say(es ? '¡A dibujar!' : 'Let’s draw!', { lang: S.lang }); start(); } });
   wideTitle(d);
   const sync = () => { $('pPl').hidden = S.mode === 'sketch'; const min = S.mode === 'phone' ? 3 : 2; if (S.players < min) S.players = min; d.querySelectorAll('#pN button').forEach(b => { b.classList.toggle('on', +b.dataset.n === S.players); b.disabled = +b.dataset.n < min; b.style.opacity = +b.dataset.n < min ? .4 : 1; }); d.querySelectorAll('.names input').forEach(inp => inp.hidden = +inp.dataset.i >= S.players); $('pT').textContent = `${wordPool().length} ${es ? 'palabras' : 'words'}`; };
   d.querySelectorAll('#pM button').forEach(b => b.onclick = () => { S.mode = b.dataset.m; d.querySelectorAll('#pM button').forEach(x => x.classList.toggle('on', x === b)); sync(); SFX.click(); });

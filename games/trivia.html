@@ -461,8 +461,10 @@ function buildDeck() {
 function mkQ(o) { const r = o.r, es = S.lang === 'es'; const q = es ? r[4] : r[2], ch0 = es ? r[5] : r[3]; const order = [0, 1, 2, 3].sort(() => Math.random() - .5); return { id: o.i, cat: r[0], d: r[1], q, ch: order.map(k => ch0[k]), correct: order.indexOf(0) }; }
 function start(opts = {}) {
   Object.assign(S, opts); save();
-  const humans = clamp(S.humans, 1, 4); const nb = humans === 1 ? 3 : S.bots ? 4 - humans : 0;
-  const players = []; for (let i = 0; i < humans; i++) players.push({ name: S.names[i] || `P${i + 1}`, human: true, score: 0 });
+  // Phones in the party room (engine/net.js) become the players: each phone buzzes and answers privately.
+  const phones = E.net.role === 'host' ? E.net.pads().slice(0, 4) : [];
+  const humans = phones.length || clamp(S.humans, 1, 4); const nb = humans === 1 ? 3 : S.bots ? 4 - humans : 0;
+  const players = []; for (let i = 0; i < humans; i++) players.push(phones.length ? { name: phones[i].name, human: true, slot: phones[i].slot, score: 0 } : { name: S.names[i] || `P${i + 1}`, human: true, score: 0 });
   for (let i = 0; i < nb; i++) players.push({ name: BOTS[i].name, bot: BOTS[i], score: 0 });
   const deck = buildDeck();
   G = { time: 0, sched: [], players, deck, qi: -1, cur: null, phase: 'intro', timer: null, out: [], tried: new Set(), buzzer: null, revealed: false, focus: null, focusT: 0, hype: 0, paused: false, auto: !!window.__AUTO, finalPicks: [], banner: '' };
@@ -528,7 +530,7 @@ function wagerNext(i) {
   const pl = G.players[i], maxW = Math.max(pl.score, 100);
   if (!pl.human || G.auto) { const b = pl.bot || BOTS[i % 3]; const f = b.wager < 0 ? pick([.25, .5, .75, 1]) : b.wager; G.wagers[i] = Math.round(maxW * f / 10) * 10; bubble(i, `${T().yourWager}: ${G.wagers[i]}`); later(G.auto ? .3 : 1.1, () => wagerNext(i + 1)); return; }
   const cat = CATS[G.deck.fin.cat]; const card = overlay(`<div class="ig-kicker" style="color:${PCSS[i]}">${T().allin} · ${T().cat}: ${cat[0]} ${S.lang === 'es' ? cat[2] : cat[1]}</div><h2>${esc(T().wager(pl.name))}</h2><p class="ig-sub">${T().score}: <b>${pl.score}</b></p><div class="wg">${[0, .25, .5, .75, 1].map(f => `<button data-f="${f}" class="${f === 1 ? 'all' : ''}"><b>${Math.round(maxW * f / 10) * 10}</b>${f === 1 ? T().allin : Math.round(f * 100) + '%'}</button>`).join('')}</div>`);
-  E.say(T().wager(pl.name), { lang: S.lang }); G.wagerCard = { card, i, maxW };
+  E.say(T().wager(pl.name), { lang: S.lang }); G.wagerCard = { card, i, maxW }; if (pl.slot) card.querySelector('.ig-sub').insertAdjacentHTML('beforeend', `<br>📱 ${esc(pl.name)}: ${S.lang === 'es' ? 'elige en tu teléfono' : 'choose on your phone'}`);
   card.querySelectorAll('.wg button').forEach(b => b.onclick = () => setWager(+b.dataset.f));
 }
 function setWager(f) { const wc = G.wagerCard; if (!wc) return; G.wagerCard = null; wc.card.remove(); G.wagers[wc.i] = Math.round(wc.maxW * f / 10) * 10; SFX.coin(); wagerNext(wc.i + 1); }
@@ -537,6 +539,7 @@ function finalPickNext(i) {
   if (i >= G.players.length) { finalReveal(); return; }
   const pl = G.players[i]; G.fi = i;
   if (!pl.human || G.auto) { const b = pl.bot || BOTS[i % 3]; const know = Math.random() < b.acc[G.cur.d - 1]; G.finalPicks[i] = know ? G.cur.correct : pick([0, 1, 2, 3].filter(k => k !== G.cur.correct)); react(i, 'think', 1.4); later(G.auto ? .3 : 1.2, () => { bubble(i, T().locked); finalPickNext(i + 1); }); return; }
+  if (pl.slot) { G.phase = 'fpick'; G.fcard = null; G.timer = { left: S.kids ? 30 : 20, max: S.kids ? 30 : 20, kind: 'final' }; bubble(i, '📱 ' + (S.lang === 'es' ? 'eligiendo en secreto…' : 'choosing in secret…')); react(i, 'think', 3); return; }
   const card = overlay(`<div class="ig-kicker" style="color:${PCSS[i]}">${T().allin} · ${T().yourWager} ${G.wagers[i]}</div><h2>${esc(T().look(pl.name))}</h2><button class="ig-btn" data-a="ready">👀 ${T().ready}</button>`);
   E.say(T().look(pl.name), { lang: S.lang });
   G.fcard = card; card.querySelector('[data-a=ready]').onclick = () => showFinalChoices(i);
@@ -546,7 +549,7 @@ function showFinalChoices(i) {
   card.querySelector('.ig-card').innerHTML = `<div class="ig-kicker" style="color:${PCSS[i]}">${esc(G.players[i].name)} · ${T().choose}</div><div class="q">${esc(q.q)}</div><div class="opts">${q.ch.map((c, k) => `<button class="tv-ch" data-k="${k}"><b>${'ABCD'[k]}</b>${esc(c)}</button>`).join('')}</div>`;
   card.querySelectorAll('.tv-ch').forEach(b => b.onclick = () => finalPick(+b.dataset.k));
 }
-function finalPick(k) { if (G.phase !== 'fpick') return; const i = G.fi; G.finalPicks[i] = k; G.phase = 'fwait'; G.timer = null; SFX.snap(); const card = G.fcard; const nxt = G.players.findIndex((p, j) => j > i && p.human); card.querySelector('.ig-card').innerHTML = `<h2>🔒 ${T().locked}</h2>${nxt >= 0 ? `<p class="ig-sub">${esc(T().pass(G.players[nxt].name))}</p>` : ''}<button class="ig-btn" data-a="ok">OK</button>`; card.querySelector('[data-a=ok]').onclick = () => { card.remove(); G.fcard = null; finalPickNext(i + 1); }; if (G.auto) { card.remove(); G.fcard = null; finalPickNext(i + 1); } }
+function finalPick(k) { if (G.phase !== 'fpick') return; const i = G.fi; G.finalPicks[i] = k; G.phase = 'fwait'; G.timer = null; SFX.snap(); const card = G.fcard; if (!card) { bubble(i, T().locked); finalPickNext(i + 1); return; } const nxt = G.players.findIndex((p, j) => j > i && p.human); card.querySelector('.ig-card').innerHTML = `<h2>🔒 ${T().locked}</h2>${nxt >= 0 ? `<p class="ig-sub">${esc(T().pass(G.players[nxt].name))}</p>` : ''}<button class="ig-btn" data-a="ok">OK</button>`; card.querySelector('[data-a=ok]').onclick = () => { card.remove(); G.fcard = null; finalPickNext(i + 1); }; if (G.auto) { card.remove(); G.fcard = null; finalPickNext(i + 1); } }
 function finalReveal() {
   G.phase = 'freveal'; G.timer = null; SCR.dirty = true; big(T().reveal); E.tone(220, .8, 'sawtooth', .06, 200);
   G.players.forEach((pl, i) => later(1.4 + i * 1.3, () => { const ok = G.finalPicks[i] === G.cur.correct; const w = G.wagers[i] || 0; pl.score += ok ? w : -w; G.pickedShow = G.finalPicks[i]; SCR.dirty = true; drawPodium(i); scores(); react(i, ok ? 'cheer' : 'slump', 2.2); floatAt(i, (ok ? '+' : '−') + w, ok ? 'gold' : 'bad'); ok ? SFX.good() : SFX.bad(); G.focus = i; G.focusT = 1.1; }));
@@ -556,7 +559,7 @@ function endGame() {
   G.phase = 'end'; const rows = G.players.map((p, i) => ({ ...p, i })).sort((a, b) => b.score - a.score); const tie = rows.length > 1 && rows[0].score === rows[1].score;
   const w = rows[0]; react(w.i, 'cheer', 99); G.players.forEach((p, i) => { if (i !== w.i && !(tie && p.score === w.score)) react(i, 'idle', 0); }); confetti(podiums[w.i].x, 240); SFX.win(); G.hype = 1.5; G.focus = w.i; G.focusT = 3;
   E.say(tie ? T().tie : T().wins(w.name), { lang: S.lang }); big(tie ? T().tie : '🏆 ' + w.name);
-  later(3.4, () => { music && music.stop(); const me = G.players[0]; const place = rows.findIndex(r => r.i === 0) + 1; const correct = G.correctCount || 0;
+  later(3.4, () => { music && music.stop(); if (E.net.role === 'host') E.NET.setLayout({ type: 'gamepad' }); const me = G.players[0]; const place = rows.findIndex(r => r.i === 0) + 1; const correct = G.correctCount || 0;
     E.results({ gameId: 'trivia', title: tie ? T().tie : T().wins(w.name), stats: rows.map((r, k) => [`${k + 1}. ${r.bot ? r.bot.e + ' ' : ''}${r.name}`, r.score]), xp: 40 + Math.max(0, me.score) / 10 + (place === 1 ? 40 : 0), coins: 8 + (place === 1 ? 20 : 6), best: G.players.filter(p => p.human).length === 1 ? me.score : null, bestLabel: 'Best solo score', onAgain: () => title(), share: `${w.name} won Pact Trivia with ${w.score} points! (Inoa Games) ${location.href}` }); });
 }
 
@@ -564,7 +567,7 @@ function endGame() {
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 function ensureHud() { if (hudEl) { document.querySelector('.ig-top').hidden = false; return; } hudEl = E.shell({ title: 'Pact Trivia', onPause: pause, buttons: [] }); }
 function scores() { if (!G) return; $('tvScores').innerHTML = G.players.map((p, i) => `<span class="${G.buzzer === i && G.phase === 'answer' ? 'on' : ''}"><i style="background:${PCSS[i]}"></i>${esc(p.bot ? p.bot.e + ' ' + p.name : p.name)} <b>${p.score}</b></span>`).join(''); }
-function buildBuzzers() { const box = $('tvBuzzers'); box.innerHTML = ''; G.players.forEach((p, i) => { if (!p.human) return; const b = document.createElement('button'); b.className = 'tv-buz off'; b.dataset.c = i; b.style.background = PCSS[i]; b.innerHTML = `${T().buzz}<small>${esc(p.name)} · ${G.players.filter(x => x.human).length === 1 ? 'Space' : KEYN[i]}</small>`; b.addEventListener('pointerdown', e => { e.preventDefault(); E.audio(); b.classList.add('hit'); setTimeout(() => b.classList.remove('hit'), 150); buzz(i); }); box.appendChild(b); }); }
+function buildBuzzers() { const box = $('tvBuzzers'); box.innerHTML = ''; G.players.forEach((p, i) => { if (!p.human || p.slot) return; const b = document.createElement('button'); b.className = 'tv-buz off'; b.dataset.c = i; b.style.background = PCSS[i]; b.innerHTML = `${T().buzz}<small>${esc(p.name)} · ${G.players.filter(x => x.human).length === 1 ? 'Space' : KEYN[i]}</small>`; b.addEventListener('pointerdown', e => { e.preventDefault(); E.audio(); b.classList.add('hit'); setTimeout(() => b.classList.remove('hit'), 150); buzz(i); }); box.appendChild(b); }); }
 function setBuzzers(on) { document.querySelectorAll('.tv-buz').forEach(b => b.classList.toggle('off', !on || G.tried.has(+b.dataset.c))); }
 function showChoices(on, i) {
   const el = $('tvChoices'); $('tvScores').style.visibility = on ? 'hidden' : ''; if (!on) { el.hidden = true; return; } const q = G.cur, pl = G.players[i];
@@ -600,6 +603,27 @@ function pollPads() {
     if (pressed(9)) pause(); }
 }
 
+/* ======================= phones (party room) ======================= */
+const WAGER_F = [0, .25, .5, .75, 1];
+function phoneLayout(i) {
+  const pl = G.players[i], q = G.cur, es = S.lang === 'es';
+  if (G.phase === 'end') return { type: 'text', text: `${pl.name}: ${pl.score}` };
+  if (G.wagerCard && G.wagerCard.i === i) return { type: 'choices', question: T().wager(pl.name) + ` (${pl.score})`, choices: WAGER_F.map(f => `${Math.round(G.wagerCard.maxW * f / 10) * 10}${f === 1 ? ' · ' + T().allin : ''}`) };
+  if (G.phase === 'fpick' && G.fi === i) return { type: 'choices', question: q.q, choices: q.ch };
+  if (!q) return { type: 'text', text: es ? `¡Listo, ${pl.name}! Mira la pantalla grande.` : `Ready, ${pl.name}! Watch the big screen.` };
+  if (G.phase === 'buzz' || G.phase === 'steal') return G.tried.has(i) ? { type: 'text', text: es ? 'Espera la próxima…' : 'Wait for the next one…' } : { type: 'buzzer', label: T().buzz, question: q.q, choices: q.ch, out: G.out };
+  if (G.phase === 'answer') return G.buzzer === i ? { type: 'choices', question: q.q, choices: q.ch, out: G.out } : { type: 'text', text: `🔔 ${G.players[G.buzzer].name}…` };
+  if (G.revealed || G.phase === 'result') return { type: 'text', text: `✅ ${q.ch[q.correct]}\n\n${pl.name}: ${pl.score}` };
+  return { type: 'text', text: q.q };
+}
+function syncPhones() { if (!G || E.net.role !== 'host') return; G.players.forEach((pl, i) => { if (!pl.slot) return; const L = phoneLayout(i), sig = JSON.stringify(L); if (pl.sig !== sig) { pl.sig = sig; E.NET.setLayout(L, pl.slot); } }); }
+E.net.on('msg', (p, m) => {
+  if (!G || G.paused || !p) return; const i = G.players.findIndex(x => x.slot === p.slot); if (i < 0) return;
+  if (m.t === 'buzz' && (G.phase === 'buzz' || G.phase === 'steal')) buzz(i);
+  else if (m.t === 'choice') { const k = +m.i; if (G.wagerCard && G.wagerCard.i === i) setWager(WAGER_F[k] ?? 0); else if (G.phase === 'fpick' && G.fi === i) finalPick(k); else if (G.phase === 'answer' && G.buzzer === i && !G.out.includes(k)) answer(k); }
+});
+E.net.on('join', p => { if (G) { const pl = G.players.find(x => x.slot === p.slot); if (pl) pl.sig = null; } });
+
 /* ======================= main loop ======================= */
 let lastScr = 0;
 function update(dt) {
@@ -622,7 +646,7 @@ function update(dt) {
   rim.material.emissiveIntensity = 1.3 + Math.sin(t * 3) * .4 + (G ? G.hype : 0);
   updateAudience(t, G ? .2 + G.hype : .2); updateConfetti(dt); P.update(dt);
   if (SCR.dirty && t - lastScr > .05) { lastScr = t; drawScreen(); }
-  updateCamera(dt);
+  updateCamera(dt); syncPhones();
 }
 function pause() { if (!G || G.paused || G.phase === 'end') return; G.paused = true; music && music.stop(); E.pauseMenu({ onResume: () => { G.paused = false; music = E.music(G.final ? E.SONGS.tense : E.SONGS.bright); }, onRestart: () => { cleanup(); start(); } }); }
 document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
@@ -637,7 +661,11 @@ function title() {
   <div id="pN" ${S.humans > 1 ? '' : 'hidden'}><div class="names">${[0, 1, 2, 3].map(i => `<input data-i="${i}" maxlength="10" value="${esc(S.names[i])}" style="border-left:6px solid ${PCSS[i]}" ${i < S.humans ? '' : 'hidden'} aria-label="Player ${i + 1}">`).join('')}</div><div class="pk" style="margin-top:6px"><button id="pB" class="${S.bots ? 'on' : ''}">🤖 ${L ? 'Llenar con bots' : 'Fill empty podiums with bots'}</button></div></div>
   <div class="pk"><button id="pK" class="${S.kids ? 'on' : ''}">🧸 ${T().kids}<small>${L ? 'preguntas fáciles, más tiempo, sin restar' : 'easy questions, more time, no minus points'}</small></button></div>`;
   const how = L ? [['🔔', 'Pulsa tu botón: J1 A · J2 L · J3 Z · J4 M, un control cada uno, o toca tu botón de color'], ['1️⃣', 'Responde con 1–4 o tocando la opción. ¡Si fallas, los demás pueden robar!'], ['🎲', 'Ronda final: apuesta tus puntos y responde en secreto']] : [['🔔', 'Buzz: P1 A · P2 L · P3 Z · P4 M, one gamepad each, or tap your colored buzzer'], ['1️⃣', 'Answer with 1–4 or tap a choice. Miss it and the others can steal!'], ['🎲', 'Final round: wager your points and answer in secret']];
-  const d = E.titleScreen({ title: 'Pact Trivia', kicker: L ? 'Inoa Games · Concurso' : 'Inoa Games · Game show', lead: L ? 'Un concurso de preguntas para 1–4 jugadores en el mismo aparato. Cada pregunta se lee en voz alta.' : 'A family quiz show for 1–4 players on one device. Every question is read aloud.', how, extra, onPlay: () => { save(); start(); } });
+  const nPh = E.net.role === 'host' ? E.net.pads().length : 0;
+  const PARTY = { label: L ? 'Jugar con teléfonos' : 'Play with phones', hint: L ? 'Cada teléfono es un jugador (hasta 4): pulsa y responde en tu teléfono, en secreto.' : 'Each phone is a player (up to 4): buzz and answer on your phone, in secret.', online: { page: 'pad.html', text: L ? 'Amigos lejos: abran este enlace; las preguntas salen en su teléfono.' : 'Friends far away: open this link; the questions show on your phone.' } };
+  const phoneLine = `<p class="ig-sub" id="tvPhones" style="margin:0;font-weight:800;color:#0f5c48">${nPh ? `📱 ${nPh} ${L ? 'teléfonos conectados: cada uno es un jugador' : 'phones connected: each phone is a player'}` : ''}</p>`;
+  const d = E.titleScreen({ party: PARTY, title: 'Pact Trivia', kicker: L ? 'Inoa Games · Concurso' : 'Inoa Games · Game show', lead: L ? 'Un concurso de preguntas para 1–4 jugadores en el mismo aparato. Cada pregunta se lee en voz alta.' : 'A family quiz show for 1–4 players on one device. Every question is read aloud.', how, extra: extra + phoneLine, onPlay: () => { save(); start(); } });
+  const upd = () => { const el = document.getElementById('tvPhones'); if (!el) return; const n = E.net.role === 'host' ? E.net.pads().length : 0; el.textContent = n ? `📱 ${n} ${L ? 'teléfonos conectados: cada uno es un jugador' : 'phones connected: each phone is a player'}` : ''; }; E.net.on('change', upd);
   wideTitle(d);
   d.querySelectorAll('#pL button').forEach(b => b.onclick = () => { S.lang = b.dataset.l; save(); d.remove(); title(); });
   d.querySelectorAll('#pH button').forEach(b => b.onclick = () => { S.humans = +b.dataset.n; d.querySelectorAll('#pH button').forEach(x => x.classList.toggle('on', x === b)); $('pN').hidden = S.humans < 2; d.querySelectorAll('.names input').forEach(inp => inp.hidden = +inp.dataset.i >= S.humans); SFX.click(); });
@@ -650,7 +678,7 @@ function wideTitle(d) { const card = d.querySelector('.ig-card'); card.classList
 
 // idle preview: everyone on stage
 G = null; LAY = null; layout(); podiums.forEach((pd, i) => { pd.grp.visible = true; });
-title(); ld.done(); window.__READY = true;
+title(); if (new URLSearchParams(location.search).get('online')) setTimeout(() => document.querySelector('[data-a=phones]')?.click(), 300); ld.done(); window.__READY = true;
 E.loop((dt) => { if (!window.__HOLD) update(dt); R.render(dt); });
 window.__GAME = { get G() { return G; }, S, Q, start, update, buzz, answer, title, warm: () => { R.render(1 / 60); R.renderer.getContext().finish(); }, setAuto: v => { window.__AUTO = v; if (G) G.auto = v; } };
 </script>
