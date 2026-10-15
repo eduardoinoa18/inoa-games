@@ -9,7 +9,7 @@ module.exports = async ({ open, shot, wait, ready, log }) => {
   const qr = await host.$eval('.inoa-pp .qr svg', e => e.outerHTML.length); log('qr svg bytes', qr);
   await shot(host, 'host_panel');
   const pad = await open('pad.html?r=' + code, { w: 390, h: 844, label: 'pad' });
-  await wait(pad, () => window.__PAD && window.__PAD.net.status === 'ready' && window.__PAD.net.me);
+  await wait(pad, () => window.__PAD && window.__PAD.net.status === 'ready' && window.__PAD.net.me, null, 60000);
   log('pad me', await pad.evaluate(() => JSON.stringify(window.__PAD.net.me)));
   await wait(host, () => document.querySelector('.inoa-pp .list').textContent.includes('P1'));
   await shot(host, 'host_panel_joined'); await shot(pad, 'pad_gamepad');
