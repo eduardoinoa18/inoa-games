@@ -1,8 +1,8 @@
 {
   "enabled": false,
-  "supabaseUrl": "",
-  "supabaseAnonKey": "",
+  "supabaseUrl": "https://bqmmgtylygxwyjyyyxim.supabase.co",
+  "supabaseAnonKey": "sb_publishable_MsoR3larxEHPUHlZmaTodg_llPWFJWd",
   "stripeMode": "test",
   "freeDailyStarts": 3,
-  "note": "Public config only. Set enabled:true with the Supabase project URL + anon (publishable) key. Secrets go in Vercel env vars, never here. See docs/PLATFORM_ARCHITECTURE.md §3."
+  "note": "Public values only (the publishable key is designed to be public; RLS + RPC checks protect data). Shared Supabase project WebDesigns/Presentations \u2014 see docs/PLATFORM_ARCHITECTURE.md \u00a712. enabled stays false until the owner finishes \u00a711 (auth URLs/SMTP, Stripe test keys, Vercel env) and switches it on."
 }

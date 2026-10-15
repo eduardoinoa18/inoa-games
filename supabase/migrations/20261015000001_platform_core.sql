@@ -246,6 +246,6 @@ create policy ach_read_own on public.ig_user_achievements for select to authenti
 -- user_roles, customers, payment_webhook_events, session_rounds, events, admin_audit_logs, app_config: no grants, no policies → invisible to clients.
 
 -- keep updated_at honest
-create function public.ig_touch_updated_at() returns trigger language plpgsql as $$ begin new.updated_at := now(); return new; end $$;
+create function public.ig_touch_updated_at() returns trigger language plpgsql set search_path = public as $$ begin new.updated_at := now(); return new; end $$;
 create trigger ig_profiles_touch before update on public.ig_profiles for each row execute function public.ig_touch_updated_at();
 create trigger ig_subscriptions_touch before update on public.ig_subscriptions for each row execute function public.ig_touch_updated_at();

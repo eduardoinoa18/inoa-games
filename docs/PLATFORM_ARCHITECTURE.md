@@ -98,8 +98,8 @@ Accounts require ticking "13 or older, or a parent/guardian creating this accoun
 - **Free-limit hits**: `start_denied` events with reason `limit`.
 
 ## 11. Owner setup checklist (external — cannot be done from code)
-1. Supabase: create a project for Inoa Games (the org is on the Free plan with 2 active projects — pause one or upgrade), then run `supabase/migrations/*.sql` in order (SQL editor or `supabase db push`). Auth → URL configuration: Site URL = production URL, redirect URLs = `<site>/account.html`. Auth → SMTP: add a production SMTP provider.
-2. Put the project URL + anon key into `platform.json` and set `enabled: true`.
+1. Supabase: ✅ **done 2026-10-15** — migrations `ig_platform_core`, `ig_platform_functions`, `ig_owner_bootstrap`, `ig_account_deletion` applied to the shared WebDesigns/Presentations project (§12); Listing Studio grants verified unchanged. Owner still to do: Auth → URL configuration: add `<inoa site>/account.html` to the redirect URLs (keep Listing Studio's Site URL/redirects); Auth → SMTP: add a production SMTP provider (the built-in sender is rate-limited); Auth → enable leaked-password protection (advisor warning).
+2. ✅ Project URL + publishable key are in `platform.json`. Set `enabled: true` when steps 1, 3 and 4 are done (turning it on makes Play require a free account).
 3. Stripe (test mode): create product "Inoa Games Premium", recurring price $4.99/month; add webhook endpoint `<site>/api/stripe-webhook` with events `checkout.session.completed`, `customer.subscription.created|updated|deleted`, `invoice.paid`, `invoice.payment_failed`, `charge.refunded`; enable the customer portal.
 4. Vercel: import the repo; set env vars from §3 (Preview + Production). Upgrade to Pro before charging real money (Hobby is non-commercial).
 5. Sign up on the site with the owner email, verify it, run `supabase/admin/grant_owner.sql`, enable MFA.

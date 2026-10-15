@@ -15,7 +15,7 @@ async function rawBody(req) { if (typeof req.body === 'string') return req.body;
 // ---- Supabase (service role: bypasses RLS, so only used for the narrow jobs below) ----
 async function supa(path, { method = 'POST', body, token } = {}) {
   const url = env('SUPABASE_URL').replace(/\/$/, '') + path, key = env('SUPABASE_SERVICE_ROLE_KEY');
-  const r = await fetchImpl(url, { method, headers: { apikey: key, Authorization: 'Bearer ' + (token || key), 'Content-Type': 'application/json' }, body: body == null ? undefined : JSON.stringify(body) });
+  const r = await fetchImpl(url, { method, headers: Object.assign({ apikey: key, 'Content-Type': 'application/json' }, (token || /^eyJ/.test(key)) ? { Authorization: 'Bearer ' + (token || key) } : {}), body: body == null ? undefined : JSON.stringify(body) });
   const txt = await r.text(); let data = null; try { data = txt ? JSON.parse(txt) : null; } catch (e) { data = txt; }
   if (!r.ok) throw Object.assign(new Error('supabase ' + r.status + ' ' + (data && data.message || '')), { status: 502 });
   return data;

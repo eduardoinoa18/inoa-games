@@ -5,7 +5,7 @@
 create function public.ig_cfg_int(k text) returns integer language sql stable security definer set search_path = public as
 $$ select (value #>> '{}')::integer from public.ig_app_config where key = k $$;
 
-create function public.ig_utc_today() returns date language sql stable as $$ select (now() at time zone 'utc')::date $$;
+create function public.ig_utc_today() returns date language sql stable set search_path = public as $$ select (now() at time zone 'utc')::date $$;
 
 create function public.ig_is_admin(uid uuid default auth.uid()) returns boolean language sql stable security definer set search_path = public as
 $$ select exists (select 1 from public.ig_user_roles where user_id = uid and role = 'admin') $$;
@@ -23,7 +23,7 @@ create function public.ig_entitlement(uid uuid) returns text language sql stable
     else 'free' end
 $$;
 
-create function public.ig_hero_level(xp integer) returns integer language plpgsql immutable as $$
+create function public.ig_hero_level(xp integer) returns integer language plpgsql immutable set search_path = public as $$
 declare lv int := 1; need int := 100; x int := xp;
 begin
   while x >= need and lv < 50 loop x := x - need; lv := lv + 1; need := round(need * 1.12); end loop;

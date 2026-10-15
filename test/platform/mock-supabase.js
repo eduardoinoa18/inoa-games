@@ -22,7 +22,7 @@ module.exports = function start({ port, db = 'inoa_test', host = '/tmp/pgt', pgp
     const send = (code, body) => { res.writeHead(code, { 'content-type': 'application/json', 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': '*' }); res.end(body == null ? '' : JSON.stringify(body)); };
     if (req.method === 'OPTIONS') return send(204);
     const url = new URL(req.url, 'http://x'); let raw = ''; for await (const ch of req) raw += ch; let body = {}; try { body = raw ? JSON.parse(raw) : {}; } catch (e) { return send(400, { message: 'bad json' }); }
-    const bearer = (req.headers.authorization || '').replace(/^Bearer /, ''); const service = bearer === 'test-service-key' && req.headers.apikey === 'test-service-key';
+    const bearer = (req.headers.authorization || '').replace(/^Bearer /, ''); const service = req.headers.apikey === 'test-service-key' && (!bearer || bearer === 'test-service-key'); // new-style secret keys go in apikey only (no Bearer)
     const claims = service ? null : bearer ? verify(bearer) : null;
     if (!['test-anon-key', 'test-service-key'].includes(req.headers.apikey)) return send(401, { message: 'No API key found in request' });
     try {
