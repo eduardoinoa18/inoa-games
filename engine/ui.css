@@ -60,3 +60,7 @@ html.ig-reduced *{animation-duration:.001s!important;animation-iteration-count:1
 @media (prefers-reduced-motion:reduce){.ig-float{animation-duration:.001s}}
 
 .ig-fbchip{justify-self:center;margin-top:4px}
+
+/* phone controllers + pad/gamepad menu focus */
+.ig-focus{outline:4px solid var(--sun,#ffd166)!important;outline-offset:3px;box-shadow:0 0 0 8px rgba(255,209,102,.35)!important}
+.ig-phones{justify-self:center;margin:2px auto 0;display:block}

@@ -53,12 +53,13 @@ head = head.replace('</style>', '''.heropanel{padding-block:18px 0;background:va
 .hp-row{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;font-weight:800;color:var(--mist);letter-spacing:.04em;text-transform:uppercase}
 .game img.thumb{width:100%;height:150px;object-fit:cover;display:block;background:#0b2a3a}
 .game.flag img.thumb{height:180px}
+.game.flag{grid-template-rows:180px auto}
 .game .st.live{background:var(--lagoon);color:var(--coral-ink)}
 </style>''', 1)
 head = head.replace('href="https://claude.ai/artifact/R39Es5YCcbYnxRhuoDboVg" target="_blank" rel="noopener"', 'href="games/pixelpact.html"')
 head = head.replace('<!--', '<!--')
 # beta strip + optional account + feedback (ES module: engine/platform.js, engine/feedback.js; no three.js)
 js = js + '\n<script type="module">\n' + open(f'{HUB}/account.js').read() + '</script>'
-out = '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n' + head.replace('<nav>', '</head><body>\n<nav>', 1) + js + '\n</body></html>\n'
+out = '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n' + head.replace('<nav>', '</head><body>\n<nav>', 1) + js + '\n<script type="module">\n' + open(f'{HUB}/party.js').read() + '</script>\n</body></html>\n'
 open(f'{HERE}/index.html', 'w').write(out)
 print('index.html', len(out), 'bytes;', ', '.join(f"{k}:{'LIVE' if v['live'] else 'soon'}{'+thumb' if v['thumb'] else ''}" for k, v in live.items()))

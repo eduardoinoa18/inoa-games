@@ -68,6 +68,15 @@
 .h3-name{display:flex;gap:8px;align-items:center;font-size:12px;font-weight:800;color:var(--mist);text-transform:uppercase;letter-spacing:.04em}
 .h3-name input{flex:1;min-width:0;font:800 15px var(--f-body);background:var(--glass-2);color:var(--foam);border:1px solid var(--line);padding:9px 10px;min-height:40px}
 .h3-models button:focus-visible,.h3-colors button:focus-visible,.h3-name input:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.pconsole{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:28px}
+.pc-card{background:var(--glass);border:1px solid var(--line);padding:20px;display:grid;gap:10px;align-content:start;clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px)}
+.pc-card h3{margin:0;font-family:var(--f-display);font-size:20px}.pc-card p{margin:0;color:var(--mist);line-height:1.5}
+.pc-host{background:linear-gradient(135deg,rgba(255,209,102,.16),var(--glass))}
+.pc-row{display:flex;gap:10px;flex-wrap:wrap}.pc-games .btn{display:grid;text-align:left;gap:2px;flex:1;min-width:200px}.pc-games small{font-size:11px;font-weight:700;opacity:.75;text-transform:none;letter-spacing:0}
+.pc-live{display:flex;align-items:center;gap:12px}.pc-code{font-family:var(--f-display);font-size:34px;font-weight:900;letter-spacing:.2em;color:var(--sun)}
+.pc-dots{display:flex;gap:5px}.pc-dots i{width:16px;height:16px;border-radius:50%;display:block;border:2px solid #fff}
+.pc-join{display:flex;gap:10px}.pc-join input{flex:1;min-width:0;font-family:var(--f-display);font-size:26px;font-weight:900;letter-spacing:.25em;text-transform:uppercase;text-align:center;border:0;padding:10px;background:#fff;color:#1b2430}
+.pc-note{font-size:12px}
 </style>
 
 <nav><div class="wrap"><div class="logo">INOA<span>GAMES</span></div><ul><li><a href="#shelf">Games</a></li><li><a href="#hero">Your hero</a></li><li><a href="#party">Party</a></li><li><a href="#faq">FAQ</a></li></ul><a class="btn" href="#shelf">Play</a></div></nav>
@@ -134,6 +143,28 @@
       <div class="stp"><b>Grab a controller</b><p>Keyboard, gamepads or the on-screen buttons. Party games take 2–4 players on one screen or pass the device around.</p></div>
       <div class="stp"><b>Bots fill the seats</b><p>Racing, turf, trivia and the brawler fill empty slots with friendly bots, so solo play always works.</p></div>
       <div class="stp"><b>Share the moment</b><p>Share codes for drawers and islands, and results you can copy to friends. Online rooms are on the roadmap, not here yet.</p></div>
+    </div>
+    <div class="pconsole" id="pconsole">
+      <div class="pc-card pc-host">
+        <div class="eyebrow">On this screen (TV or laptop)</div>
+        <h3>Phones as controllers</h3>
+        <p>Open a room here, scan the QR with each phone, then pick any game. Every phone becomes a gamepad with vibration. The room follows you from game to game.</p>
+        <div class="pc-live" id="pcLive" hidden><span class="pc-code" id="pcCode">····</span><span class="pc-dots" id="pcDots"></span></div>
+        <div class="pc-row"><button class="btn" id="pcHost">📱 Start a party</button><button class="btn glass" id="pcShow" hidden>Show QR</button></div>
+      </div>
+      <div class="pc-card">
+        <div class="eyebrow">On your phone</div>
+        <h3>Join a party</h3>
+        <p>Type the 4 letters from the big screen, or the code a friend sent you.</p>
+        <form class="pc-join" id="pcJoin"><input id="pcJoinCode" maxlength="4" placeholder="ABCD" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Room code"><button class="btn" type="submit">Join</button></form>
+      </div>
+      <div class="pc-card">
+        <div class="eyebrow">Online · from different homes</div>
+        <h3>Play online with friends</h3>
+        <p>Host here, share the link, and friends far away join on their own phone or laptop.</p>
+        <div class="pc-row pc-games"><a class="btn glass" href="games/drift.html?online=1">🏁 Island Drift race<small>each player on their own screen</small></a><a class="btn glass" href="games/trivia.html?online=1">❓ Pact Trivia<small>answer on your phone</small></a></div>
+        <p class="pc-note">Online rooms connect device to device. A few strict school or office networks block that; home Wi-Fi and mobile data work.</p>
+      </div>
     </div>
   </div>
 </section>

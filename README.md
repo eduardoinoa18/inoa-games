@@ -4,6 +4,11 @@ A hub of browser games by **Inoa Services**: one link, no download, phone + lapt
 
 **13 games:** Pixel Pact (2D co-op + brawler) · Pixel Pact: Depths (3D roguelite) · Island Drift (kart racer) · Snack Squad Safari (allergy-safety game for families) · Tide Runner · Tide Lines · Perfect Fit · Junkyard to Jewel · Brew and Bloom · Driftwood Builders · Fail Tray · Pact Trivia · Draw the Pact.
 
+## Play together
+- **Phones as controllers:** open the hub on a TV or laptop → Party → Start a party, scan the QR with each phone.
+- **Online:** host shares the link from the party panel (Island Drift races on separate screens; Trivia and Draw on phones).
+- Details: `docs/MULTIPLAYER.md`.
+
 ## Run locally
 ```bash
 npm install

@@ -85,7 +85,7 @@ await E.loadPack('../packs/tidelines.json', R, p => ld.set(p));
 R.setLook({ skyTop: 0x3f8fe0, skyHor: 0xd6effb, skyGlow: 0xfff3d0, sunDir: [.4, .5, -.75], fog: 0xcfe8f4, fogNear: 90, fogFar: 300, sun: 1.85, sunColor: 0xfff1dc, hemi: .62, ground: 0x9a8a70, exposure: .95, env: .2, bloom: .12, clouds: true });
 R.setEnv(E.ASSETS.hdri.dawn);
 sun.position.set(14, 30, 12); sun.target.position.set(0, 0, 0); sun.target.updateMatrixWorld();
-const input = E.createInput({ surface: $('gl') });
+const input = E.createInput({ surface: $('gl'), pads: 'first' });
 const PT = new E.Particles(scene);
 const S = Object.assign({ char: 0, skill: 'normal', best: 0 }, E.store.get('inoa.tidelines', {}));
 { const HERO = E.hero(); if (HERO.chosen && !S.picked) { const k = CHARS.findIndex(c => c.model === HERO.model); if (k >= 0) S.char = k; } } // hub hero is the default painter until one is picked here
@@ -294,6 +294,22 @@ function playerControl(u, dt) {
 const angDiff = (a, b) => { let d = a - b; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; return d; };
 function nearestEnemy(u, r) { let best = null, bd = r * r; for (const o of units) { if (o.team === u.team || !o.alive) continue; const d = (o.x - u.x) ** 2 + (o.z - u.z) ** 2; if (d < bd) { bd = d; best = o; } } return best; }
 
+/* ---------- phone controllers: phone 1 = you, phones 2-4 = your teammates, phones 5-8 = the other team ---------- */
+function netControl(u) {
+  const n = input.pad(u.netSlot) || { x: 0, y: 0 }; let mx = n.x, mz = n.y; const ml = Math.hypot(mx, mz); if (ml > 1) { mx /= ml; mz /= ml; }
+  let aim = ml > .2 ? Math.atan2(mx, mz) : u.aimH; const fire = !!n.a;
+  if (fire) { const e = nearestEnemy(u, 9); if (e) { const ea = Math.atan2(e.x - u.x, e.z - u.z); if (ml < .2 || Math.abs(angDiff(ea, aim)) < .7) aim = ea; } }
+  return { mx, mz, aim, fire, bomb: !!n.cPressed };
+}
+let tlLayoutSent = false;
+E.net.on('join', () => { tlLayoutSent = false; });
+function syncPhones() {
+  if (E.net.role !== 'host' || !G) return; if (!tlLayoutSent) { tlLayoutSent = true; E.NET.setLayout({ type: 'gamepad', labels: { A: '💦', C: '💣' }, buttons: ['A', 'C'] }); }
+  const me = units.find(u => u.isPlayer); const phones = E.net.pads('pad').slice(1, 8);
+  for (const u of units) if (u.netSlot && !phones.some(p => p.slot === u.netSlot)) { u.netSlot = 0; E.toast(`${u.netName} left: a bot takes over`, 1500); }
+  phones.forEach((p, k) => { if (units.some(u => u.netSlot === p.slot)) return; const team = k < 3 ? me.team : 1 - me.team; const u = units.find(o => !o.isPlayer && !o.netSlot && o.team === team); if (!u) return; u.netSlot = p.slot; u.netName = p.name; E.toast(`📱 ${p.name} joined ${team === me.team ? 'your team' : 'the other team'}!`, 1600); E.NET.rumble(p.slot, 120); });
+}
+
 /* ---------- bots ---------- */
 function botControl(u, dt) {
   const b = u.bot, sk = G.sk; b.think -= dt; b.sideT -= dt;
@@ -371,12 +387,12 @@ function update(dt) {
   G.t += dt;
   if (G.state === 'intro') { const c = Math.ceil(3.4 - G.t); if (G.t > .4 && c !== G.cd && c >= 1 && c <= 3) { G.cd = c; bigText(String(c)); E.tone(440, .2, 'square', .1); } if (G.t >= 3.4) { G.state = 'play'; bigText(tr('GO!', '¡YA!')); E.tone(880, .45, 'square', .12); } }
   if (G.state === 'play') { G.time -= dt; if (G.time <= 30 && !G.music30) { G.music30 = true; music && music.stop(); music = E.music(E.SONGS.race); } if (G.time <= 10 && !G.warned) { G.warned = true; bigText(tr('10 SECONDS!', '¡10 SEGUNDOS!')); E.say(tr('Ten seconds left!', '¡Quedan diez segundos!'), { interrupt: true }); } if (G.time <= 10 && Math.ceil(G.time) !== G.lastTick) { G.lastTick = Math.ceil(G.time); E.tone(1200, .08, 'square', .07); } if (G.time <= 0) { G.time = 0; endMatch(); } }
-  const playing = G.state === 'play';
+  const playing = G.state === 'play'; syncPhones();
   for (const u of units) {
     u.inv = Math.max(0, u.inv - dt); u.lastHit += dt; if (u.spawnPop != null && u.spawnPop < 1) u.spawnPop = Math.min(1, u.spawnPop + dt * 4); u.aimT = Math.max(0, (u.aimT || 0) - dt);
     if (!u.alive) { if (u.squash > 0) u.squash = Math.max(0, u.squash - dt * 3); if (playing) { u.respawnT -= dt; if (u.isPlayer) $('tlResp').innerHTML = `${tr('Splatted!', '¡Salpicado!')} <small>${tr('Back in', 'Vuelves en')} ${Math.max(1, Math.ceil(u.respawnT))}…</small>`; if (u.respawnT <= 0) { spawn(u); if (u.isPlayer) { $('tlResp').hidden = true; SFX.pop(); } } } dressUnit(u, dt); continue; }
     let c = { mx: 0, mz: 0, aim: u.aimH, fire: false, bomb: false };
-    if (playing) c = (u.isPlayer && !(G.auto || window.__AUTOPILOT)) ? playerControl(u, dt) : botControl(u, dt);
+    if (playing) c = (u.isPlayer && !(G.auto || window.__AUTOPILOT)) ? playerControl(u, dt) : (u.netSlot && E.net.pad(u.netSlot)) ? netControl(u) : botControl(u, dt);
     u.aimH = c.aim; moveUnit(u, c.mx, c.mz, dt);
     u.firing = playing && c.fire && u.ink > 1.5;
     if (u.firing) { u.aimT = .5; u.fireCD -= dt; while (u.fireCD <= 0) { u.fireCD += .075; fireBlob(u); u.ink -= .7; } if (u.isPlayer && (G.sprayT = (G.sprayT || 0) - dt) <= 0) { G.sprayT = .14; E.noise(.1, .03, 2400, 1.2); } } else { u.fireCD = Math.max(u.fireCD, 0); const own = ownerAt(u.x, u.z) === u.team + 1; u.ink = Math.min(100, u.ink + dt * (own ? 34 : 9)); }
@@ -484,7 +500,7 @@ function updateCamera(dt) {
 let shellEl = null, lastHud = '';
 function ensureShell() {
   if (shellEl) { shellEl.pad.hidden = false; document.querySelector('.ig-top').hidden = false; return; }
-  shellEl = E.shell({ title: 'Tide Lines', onPause: pause, stick: true, buttons: [{ id: 'bB', icon: '💣', label: tr('Throw ink bomb', 'Lanzar bomba de tinta') }, { id: 'bF', icon: '💦', label: tr('Spray (drag to aim)', 'Rociar (arrastra para apuntar)'), cls: 'big' }] });
+  shellEl = E.shell({ title: 'Tide Lines', onPause: pause, stick: true, party: { hint: tr('Phone 1 plays you. Phones 2-4 join your team, phones 5-8 the other team: up to 8 players, 4v4!', 'El teléfono 1 eres tú. Los teléfonos 2-4 se unen a tu equipo y los 5-8 al otro: ¡hasta 8 jugadores, 4 contra 4!') }, buttons: [{ id: 'bB', icon: '💣', label: tr('Throw ink bomb', 'Lanzar bomba de tinta') }, { id: 'bF', icon: '💦', label: tr('Spray (drag to aim)', 'Rociar (arrastra para apuntar)'), cls: 'big' }] });
   input.bindStick($('igStick'), $('igKnob')); input.bindButton($('bB'), 'c');
   const f = $('bF'); f.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); E.audio(); f.setPointerCapture(e.pointerId); aimPad = { down: true, sx: e.clientX, sy: e.clientY, dx: 0, dy: 0, len: 0, id: e.pointerId }; f.classList.add('on'); });
   f.addEventListener('pointermove', e => { if (!aimPad || e.pointerId !== aimPad.id) return; aimPad.dx = e.clientX - aimPad.sx; aimPad.dy = e.clientY - aimPad.sy; aimPad.len = Math.hypot(aimPad.dx, aimPad.dy); });
@@ -520,7 +536,7 @@ function title() {
   const extra = `<div class="tl-opts"><div><p class="ig-sub tl-lbl">${tr('Your painter', 'Tu pintor')}</p><div class="pick" id="pC">${CHARS.map((c, i) => `<button data-i="${i}" class="${i === S.char ? 'on' : ''}">${c.name}</button>`).join('')}</div></div>
   <div><p class="ig-sub tl-lbl">${tr('Bots', 'Bots')}</p><div class="pick" id="pS">${Object.entries(SKILL).map(([k, v]) => `<button data-s="${k}" class="${k === S.skill ? 'on' : ''}">${tr(...v.label)}<small>${tr(...v.desc)}</small></button>`).join('')}</div></div>
   <p class="ig-sub" style="font-size:13px">${tr('4 vs 4 · 2:30 match · Team', '4 contra 4 · partida de 2:30 · Equipo')} <b style="color:var(--teal)">${teamName(0)}</b> vs <b style="color:var(--coralT)">${teamName(1)}</b>${S.best ? ` · ${tr('best', 'récord')} ${S.best}%` : ''}</p></div>`;
-  const d = E.titleScreen({ title: 'Tide Lines', kicker: tr('Inoa Games · 4v4 Team Turf', 'Inoa Games · Territorio 4 contra 4'), lead: tr('Grab a water cannon and cover the pier in teal. The team with the most painted floor when the clock hits zero wins!', 'Toma un cañón de agua y pinta el muelle de turquesa. ¡Gana el equipo con más suelo pintado cuando el reloj llegue a cero!'), how: [['🕹️', tr('Move: WASD, arrows, left stick', 'Moverse: WASD, flechas, stick izquierdo')], ['💦', tr('Spray: hold Space / mouse / 💦 (drag 💦 or right stick to aim)', 'Rociar: mantén Espacio / ratón / 💦 (arrastra 💦 o el stick derecho para apuntar)')], ['🪣', tr('Refill: stand on your own colour', 'Recargar: párate sobre tu color')], ['💣', tr('Ink bomb: E / 💣 / pad X (big splash)', 'Bomba de tinta: E / 💣 / botón X (gran salpicón)')], ['💥', tr('Splat rivals: they pop back at base', 'Salpica rivales: vuelven a su base')]], extra, onPlay: () => { save(); startMatch(); } });
+  const d = E.titleScreen({ party: { label: tr('Phones as controllers (up to 8 players, 4v4)', 'Teléfonos como controles (hasta 8 jugadores, 4 contra 4)'), hint: tr('Phone 1 plays you. Phones 2-4 join your team, phones 5-8 the other team: up to 8 players, 4v4!', 'El teléfono 1 eres tú. Los teléfonos 2-4 se unen a tu equipo y los 5-8 al otro: ¡hasta 8 jugadores, 4 contra 4!') }, title: 'Tide Lines', kicker: tr('Inoa Games · 4v4 Team Turf', 'Inoa Games · Territorio 4 contra 4'), lead: tr('Grab a water cannon and cover the pier in teal. The team with the most painted floor when the clock hits zero wins!', 'Toma un cañón de agua y pinta el muelle de turquesa. ¡Gana el equipo con más suelo pintado cuando el reloj llegue a cero!'), how: [['🕹️', tr('Move: WASD, arrows, left stick', 'Moverse: WASD, flechas, stick izquierdo')], ['💦', tr('Spray: hold Space / mouse / 💦 (drag 💦 or right stick to aim)', 'Rociar: mantén Espacio / ratón / 💦 (arrastra 💦 o el stick derecho para apuntar)')], ['🪣', tr('Refill: stand on your own colour', 'Recargar: párate sobre tu color')], ['💣', tr('Ink bomb: E / 💣 / pad X (big splash)', 'Bomba de tinta: E / 💣 / botón X (gran salpicón)')], ['💥', tr('Splat rivals: they pop back at base', 'Salpica rivales: vuelven a su base')]], extra, onPlay: () => { save(); startMatch(); } });
   d.querySelectorAll('#pC button').forEach(b => b.onclick = () => { S.char = +b.dataset.i; S.picked = true; d.querySelectorAll('#pC button').forEach(x => x.classList.toggle('on', x === b)); SFX.click(); });
   d.querySelectorAll('#pS button').forEach(b => b.onclick = () => { S.skill = b.dataset.s; d.querySelectorAll('#pS button').forEach(x => x.classList.toggle('on', x === b)); SFX.click(); });
 }

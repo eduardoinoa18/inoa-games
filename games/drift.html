@@ -57,6 +57,12 @@ const S = E.store.get('inoa.drift', { track: 0, racer: 0, mode: 'gp', bestLap: {
 // hub hero (profile.hero): default to it until the player picks a character in this game
 const HERO = E.hero(); if (HERO.chosen && !S.picked) { const k = RACERS.findIndex(r => r.model === HERO.model); if (k >= 0) S.racer = k; }
 let G = null, music = null, engineSnd = null;
+// Online: ?join=CODE = this screen races as a guest in someone's room (host simulates, we render snapshots).
+const JOIN = new URLSearchParams(location.search).get('join');
+const ONLINE_INFO = { page: 'games/drift.html', label: '🏁 Race on this screen' };
+const PARTY = { label: 'Phones & online race', hint: 'Phones nearby: scan to steer (player 1). Friends far away: send them the online link below and they race on their own screen.', online: { page: 'games/drift.html', text: 'Friends in other homes race on their own screen with this link (up to 5 friends):' } };
+let hzId = 0;
+const isBot = k => !k.isPlayer && !(k.remote && E.net.pad(k.remote));
 
 /* ---------- world build ---------- */
 const world = new THREE.Group(); scene.add(world);
@@ -118,21 +124,31 @@ function makeKart(def, isPlayer) {
   const shadow = new THREE.Mesh(new THREE.CircleGeometry(1.9, 20), new THREE.MeshBasicMaterial({ color: 0, transparent: true, opacity: .28, depthWrite: false })); shadow.rotation.x = -Math.PI / 2; shadow.position.y = .03; shadow.scale.set(1, 1.6, 1); g.add(shadow);
   const shield = new THREE.Mesh(new THREE.SphereGeometry(2.6, 20, 16), new THREE.MeshStandardMaterial({ color: 0x7fd8ff, transparent: true, opacity: .25, emissive: 0x5bd2ff, emissiveIntensity: .6, depthWrite: false })); shield.position.y = 1.1; shield.visible = false; g.add(shield);
   const flame = new THREE.Mesh(new THREE.ConeGeometry(.35, 1.6, 10), new THREE.MeshBasicMaterial({ color: 0xffb347, transparent: true, opacity: .85, blending: THREE.AdditiveBlending })); flame.rotation.x = -Math.PI / 2; flame.position.set(0, .6, 2.3); flame.visible = false; g.add(flame);
-  if (!isPlayer) { const nt = E.tag('', def.name, { width: 3 }); nt.position.y = 3.4; g.add(nt); }
+  if (!isPlayer) { const nt = E.tag('', def.slot > 0 || (JOIN && def.slot === 0) ? '🌐 ' + def.name : def.name, { width: 3 }); nt.position.y = 3.4; g.add(nt); }
   scene.add(g);
   return { g, body, driver, rig, shadow, shield, flame, def, isPlayer, x: 0, z: 0, y: 0, h: 0, v: 0, steer: 0, idx: 0, lap: 0, prog: 0, half: false, drift: 0, driftCharge: 0, driftDir: 0, boost: 0, spin: 0, item: null, rolling: 0, shieldT: 0, lane: rnd(-.5, .5), skill: 1, finished: false, finishTime: 0, lapStart: 0, bestLap: null, lapTimes: [] };
 }
 function nearestIdx(k, x, z) { let best = k.idx, bd = 1e9; for (let d = -25; d <= 60; d++) { const i = (k.idx + d + SAMPLES) % SAMPLES, p = pts[i]; const dd = (p.x - x) ** 2 + (p.z - z) ** 2; if (dd < bd) { bd = dd; best = i; } } return best; }
 
 /* ---------- race setup ---------- */
-function startRace() {
+function startRace(spec) {
+  if (spec) { S.track = spec.track; S.mode = 'gp'; }
   const T = TRACKS[S.track]; const boxes = buildTrack(T);
   if (G) for (const k of G.karts) scene.remove(k.g); for (const h of (G?.hazards || [])) scene.remove(h.m);
-  const roster = [RACERS[S.racer], ...RACERS.filter((r, i) => i !== S.racer)].slice(0, S.mode === 'gp' ? 6 : 1);
-  const karts = roster.map((d, i) => makeKart(d, i === 0));
+  let roster;
+  if (spec) roster = spec.roster.map(r => ({ ...RACERS[r.ri], name: r.name, slot: r.slot, ri: r.ri }));
+  else {
+    const humans = E.net.role === 'host' ? E.net.pads('player').slice(0, 5) : []; const used = [S.racer];
+    const hum = humans.map(p => { const ri = RACERS.findIndex((r, i) => !used.includes(i)); used.push(ri); return { ...RACERS[ri], name: p.name, slot: p.slot, ri }; });
+    if (hum.length && S.mode !== 'gp') { S.mode = 'gp'; E.toast('Online race: Grand Prix with your friends!'); }
+    roster = [{ ...RACERS[S.racer], ri: S.racer, slot: 0 }, ...hum, ...RACERS.map((r, i) => ({ ...r, ri: i, slot: -1 })).filter(r => !used.includes(r.ri))].slice(0, S.mode === 'gp' ? 6 : 1);
+  }
+  const mySlot = spec ? E.net.me.slot : 0;
+  const karts = roster.map(d => { const k = makeKart(d, d.slot === mySlot); if (!spec && d.slot > 0) k.remote = d.slot; k.slot = d.slot; return k; });
   karts.forEach((k, i) => { const row = Math.floor((karts.length - 1 - i) / 2) + 1, col = i % 2 ? 1 : -1; const idx = SAMPLES - row * 9; const p = pts[idx], t = tans[idx], n = new THREE.Vector3(-t.z, 0, t.x).normalize(); k.x = p.x + n.x * col * 3.4; k.z = p.z + n.z * col * 3.4; k.y = p.y; k.h = Math.atan2(t.x, t.z); k.idx = idx; k.lap = -1; k.half = true; k.skill = k.isPlayer ? 1 : .86 + (i / karts.length) * .1 + rnd(0, .03); });
   if (S.mode === 'gp') { const pk = karts[0]; const last = karts[karts.length - 1]; [pk.x, last.x] = [last.x, pk.x]; [pk.z, last.z] = [last.z, pk.z]; [pk.idx, last.idx] = [last.idx, pk.idx]; }
-  G = { T, karts, me: karts[0], boxes, hazards: [], t: -3.6, count: 3, raceT: 0, done: false, paused: false, shake: 0, camPos: new THREE.Vector3(), camLook: new THREE.Vector3(), fov: 62 };
+  G = { T, karts, me: karts.find(k => k.isPlayer) || karts[0], boxes, hazards: [], t: -3.6, count: 3, raceT: 0, done: false, paused: false, shake: 0, camPos: new THREE.Vector3(), camLook: new THREE.Vector3(), fov: 62, client: !!spec, online: !spec && karts.some(k => k.remote) };
+  if (G.online) E.NET.broadcast({ t: 'dr-start', track: S.track, roster: roster.map(r => ({ ri: r.ri, name: r.name, slot: r.slot })) }, 'player');
   ['drLeft', 'drItem', 'drDrift', 'drSpeed', 'minimap'].forEach(id => $(id).hidden = false); $('drItem').textContent = '·';
   drawMinimapBase(); hud(); if (music) music.stop(); music = E.music(E.SONGS.race);
   const k = G.me; G.camPos.set(k.x - Math.sin(k.h) * 12, k.y + 6, k.z - Math.cos(k.h) * 12);
@@ -153,9 +169,10 @@ function useItem(k) {
   if (it === 'boost') { k.boost = 1.6; SFX.boost(); }
   else if (it === 'triple') { k.boost = 3.6; SFX.boost(); }
   else if (it === 'shield') { k.shieldT = 8; SFX.good(); }
-  else if (it === 'coco') { const m = E.instance('coconut', { scale: 1.3 }); m.position.set(k.x - Math.sin(k.h) * 3.5, k.y, k.z - Math.cos(k.h) * 3.5); scene.add(m); G.hazards.push({ m, x: m.position.x, z: m.position.z, owner: k, t: 0 }); SFX.pop(); }
+  else if (it === 'coco') { const m = E.instance('coconut', { scale: 1.3 }); m.position.set(k.x - Math.sin(k.h) * 3.5, k.y, k.z - Math.cos(k.h) * 3.5); scene.add(m); G.hazards.push({ id: ++hzId, m, x: m.position.x, z: m.position.z, y: m.position.y, owner: k, t: 0 }); SFX.pop(); }
 }
 function update(dt) {
+  if (G && G.client) return clientUpdate(dt);
   if (!G || G.paused) return; G.t += dt; P.update(dt); if (waterMat) waterMat.uniforms.uTime.value += dt;
   world.children.forEach(o => { if (o.userData.spin) o.children[0].rotation.z += dt * .1; });
   if (G.t < 0) { const c = Math.ceil(-G.t); if (c !== G.count && c <= 3) { G.count = c; bigText(String(c)); E.tone(440, .2, 'square', .1); } }
@@ -166,6 +183,7 @@ function update(dt) {
   for (const k of G.karts) {
     let steer = 0, throttle = 0, cap = 1, wantDrift = false;
     if (k.isPlayer) { steer = s.x; throttle = s.y > .5 ? -.6 : 1; wantDrift = s.b; if (s.aPressed && k.item && !k.rolling) useItem(k); if (k.finished || window.__AUTOPILOT) { const ai = steerAI(k, dt); steer = ai.steer; cap = k.finished ? .8 : 1; if (window.__AUTOPILOT && k.item && !k.rolling && racing) useItem(k); } }
+    else if (k.remote && !k.finished && E.net.pad(k.remote)) { const n = input.pad(k.remote); steer = clamp(n.x, -1, 1); throttle = n.y > .5 ? -.6 : 1; wantDrift = n.b; if (n.aPressed && k.item && !k.rolling && racing) useItem(k); }
     else { const ai = steerAI(k, dt); steer = ai.steer; throttle = ai.throttle; cap = ai.cap; if (ai.useItem && !k.rolling && racing) useItem(k); }
     if (!racing) { throttle = 0; if (k.isPlayer && s.y < -.5) k.revv = (k.revv || 0) + dt; }
     // rolling item roulette
@@ -176,7 +194,7 @@ function update(dt) {
     // drift: hold drift while steering
     if (wantDrift && Math.abs(steer) > .25 && k.v > 18 && !k.drift) { k.drift = 1; k.driftDir = Math.sign(steer); k.driftCharge = 0; if (k.isPlayer) SFX.whoosh(); }
     if (k.drift && (!wantDrift || k.v < 12)) { const c = k.driftCharge; if (c > 2.1) { k.boost = Math.max(k.boost, 1.3); k.isPlayer && (SFX.boost(), toastSmall('Super mini-turbo!')); } else if (c > 1) { k.boost = Math.max(k.boost, .7); k.isPlayer && SFX.boost(); } k.drift = 0; k.driftCharge = 0; }
-    if (!k.isPlayer && k.v > 26) { const tn = tans[(k.idx + 25) % SAMPLES], t = tans[k.idx]; const corner = t.x * tn.z - t.z * tn.x; if (Math.abs(corner) > .18 && !k.drift && Math.abs(steer) > .3 && Math.random() < dt * 2) { k.drift = 1; k.driftDir = Math.sign(steer); k.driftCharge = 0; } if (k.drift && Math.abs(corner) < .05) { k.boost = Math.max(k.boost, k.driftCharge > 1 ? .7 : 0); k.drift = 0; } }
+    if (isBot(k) && k.v > 26) { const tn = tans[(k.idx + 25) % SAMPLES], t = tans[k.idx]; const corner = t.x * tn.z - t.z * tn.x; if (Math.abs(corner) > .18 && !k.drift && Math.abs(steer) > .3 && Math.random() < dt * 2) { k.drift = 1; k.driftDir = Math.sign(steer); k.driftCharge = 0; } if (k.drift && Math.abs(corner) < .05) { k.boost = Math.max(k.boost, k.driftCharge > 1 ? .7 : 0); k.drift = 0; } }
     // physics
     const nIdx = nearestIdx(k, k.x, k.z); const p = pts[nIdx], tg = tans[nIdx]; const nrm = new THREE.Vector3(-tg.z, 0, tg.x).normalize(); const lat = (k.x - p.x) * nrm.x + (k.z - p.z) * nrm.z; const off = Math.abs(lat) > HALF + .6;
     let maxV = MAXV * cap * (off ? .55 : 1) * (k.boost > 0 ? 1.35 : 1);
@@ -193,11 +211,11 @@ function update(dt) {
     if (Math.abs(lat) > HALF + 9) { const push = Math.abs(lat) - (HALF + 9); k.x -= nrm.x * Math.sign(lat) * push; k.z -= nrm.z * Math.sign(lat) * push; const th = Math.atan2(tg.x, tg.z); let dh = th - k.h; while (dh > Math.PI) dh -= Math.PI * 2; while (dh < -Math.PI) dh += Math.PI * 2; if (Math.abs(dh) < Math.PI / 2) k.h += dh * .35; if (!(k.wallT > 0)) { k.v *= .75; k.wallT = .4; if (k.isPlayer) { G.shake = .5; SFX.crash(); } } }
     if (k.wallT > 0) k.wallT -= dt;
     // AI recovery: if stuck, face the track again
-    if (!k.isPlayer && racing) { if (Math.abs(k.v) < 6) k.stuck = (k.stuck || 0) + dt; else k.stuck = 0; if (k.stuck > 1.2) { const tt = tans[(k.idx + 8) % SAMPLES]; k.h = Math.atan2(tt.x, tt.z); const pp = pts[k.idx]; k.x = lerp(k.x, pp.x, .5); k.z = lerp(k.z, pp.z, .5); k.stuck = 0; k.drift = 0; } }
+    if (isBot(k) && racing) { if (Math.abs(k.v) < 6) k.stuck = (k.stuck || 0) + dt; else k.stuck = 0; if (k.stuck > 1.2) { const tt = tans[(k.idx + 8) % SAMPLES]; k.h = Math.atan2(tt.x, tt.z); const pp = pts[k.idx]; k.x = lerp(k.x, pp.x, .5); k.z = lerp(k.z, pp.z, .5); k.stuck = 0; k.drift = 0; } }
     k.y = damp(k.y, p.y, .0005, dt);
     // progress / laps
     const prev = k.idx; k.idx = nIdx; if (nIdx > SAMPLES * .45 && nIdx < SAMPLES * .55) k.half = true;
-    if (prev > SAMPLES * .9 && nIdx < SAMPLES * .1 && k.half) { k.lap++; k.half = false; if (k.lap >= 1 && racing) { const lt = G.raceT - k.lapStart; k.lapTimes.push(lt); if (k.bestLap == null || lt < k.bestLap) k.bestLap = lt; k.lapStart = G.raceT; if (k.isPlayer) { const key = G.T.id; const prevBest = S.bestLap[key]; if (prevBest == null || lt < prevBest) { S.bestLap[key] = lt; E.store.set('inoa.drift', S); if (prevBest != null) toastSmall(`New lap record ${fmt(lt)}!`); } if (S.mode === 'gp' && k.lap < LAPS) { bigText(k.lap === LAPS - 1 ? 'FINAL LAP' : `LAP ${k.lap + 1}`); SFX.level(); } } } if (S.mode === 'gp' && k.lap >= LAPS && !k.finished) { k.finished = true; k.finishTime = G.raceT; if (k.isPlayer) finish(); } if (S.mode === 'tt' && k.isPlayer && k.lap >= LAPS) finish(); }
+    if (prev > SAMPLES * .9 && nIdx < SAMPLES * .1 && k.half) { k.lap++; k.half = false; if (k.lap >= 1 && racing) { const lt = G.raceT - k.lapStart; k.lapTimes.push(lt); if (k.bestLap == null || lt < k.bestLap) k.bestLap = lt; k.lapStart = G.raceT; if (k.isPlayer) { const key = G.T.id; const prevBest = S.bestLap[key]; if (prevBest == null || lt < prevBest) { S.bestLap[key] = lt; E.store.set('inoa.drift', S); if (prevBest != null) toastSmall(`New lap record ${fmt(lt)}!`); } if (S.mode === 'gp' && k.lap < LAPS) { bigText(k.lap === LAPS - 1 ? 'FINAL LAP' : `LAP ${k.lap + 1}`); SFX.level(); } } } if (S.mode === 'gp' && k.lap >= LAPS && !k.finished) { k.finished = true; k.finishTime = G.raceT; if (k.isPlayer) finish(); if (k.remote) remoteFinish(k); } if (S.mode === 'tt' && k.isPlayer && k.lap >= LAPS) finish(); }
     if (prev < SAMPLES * .1 && nIdx > SAMPLES * .9) k.lap--;
     k.prog = k.lap * SAMPLES + k.idx;
     // item boxes
@@ -206,8 +224,7 @@ function update(dt) {
     for (const hz of G.hazards.slice()) { if (hz.owner === k && hz.t < .6) continue; if ((hz.x - k.x) ** 2 + (hz.z - k.z) ** 2 < 4.5) { scene.remove(hz.m); G.hazards.splice(G.hazards.indexOf(hz), 1); if (k.shieldT > 0) { k.shieldT = 0; SFX.pop(); } else { k.spin = 1.1; k.drift = 0; if (k.isPlayer) { G.shake = .7; SFX.crash(); toastSmall('Bonk! Coconut!'); } } } }
     if (k.shieldT > 0) k.shieldT -= dt; k.shield.visible = k.shieldT > 0; k.flame.visible = k.boost > 0; if (k.boost > 0) k.flame.scale.set(1, 1 + Math.random() * .6, 1);
     // place
-    k.g.position.set(k.x, k.y, k.z); k.g.rotation.set(0, k.h + (k.drift ? k.driftDir * -.32 : 0), (k.drift ? k.driftDir * .07 : 0) - k.steer * .04);
-    const lean = -k.steer * (k.drift ? .5 : .25); E.pose(k.rig, { ...E.POSES.sit(), Spine: [.05, 0, lean], Head: [0, -k.steer * .4, lean * .5], LeftArm: [-1.1, 0, -.8 + k.steer * .2], RightArm: [-1.1, 0, .8 + k.steer * .2], LeftForeArm: [-.4], RightForeArm: [-.4] });
+    placeKart(k);
     if (k.finished && !k.isPlayer) k.v *= Math.pow(.6, dt);
   }
   for (const hz of G.hazards) { hz.t += dt; hz.m.rotation.y += dt; }
@@ -215,7 +232,81 @@ function update(dt) {
   // kart-kart bumps
   const K = G.karts; for (let i = 0; i < K.length; i++) for (let j = i + 1; j < K.length; j++) { const a = K[i], b = K[j]; const dx = b.x - a.x, dz = b.z - a.z, d = Math.hypot(dx, dz); if (d < 3.2 && d > .01) { const push = (3.2 - d) / 2; a.x -= dx / d * push; a.z -= dz / d * push; b.x += dx / d * push; b.z += dz / d * push; if ((a.isPlayer || b.isPlayer) && Math.random() < .2) { SFX.hit(); G.shake = .25; } } }
   hud(); updateEngine();
+  if (G.online) { G.snapT = (G.snapT || 0) - dt; if (G.snapT <= 0) { G.snapT = .05; sendSnap(); } }
 }
+function placeKart(k) {
+  k.g.position.set(k.x, k.y, k.z); k.g.rotation.set(0, k.h + (k.drift ? k.driftDir * -.32 : 0), (k.drift ? k.driftDir * .07 : 0) - k.steer * .04);
+  const lean = -k.steer * (k.drift ? .5 : .25); E.pose(k.rig, { ...E.POSES.sit(), Spine: [.05, 0, lean], Head: [0, -k.steer * .4, lean * .5], LeftArm: [-1.1, 0, -.8 + k.steer * .2], RightArm: [-1.1, 0, .8 + k.steer * .2], LeftForeArm: [-.4], RightForeArm: [-.4] });
+}
+
+/* ---------- online: host side ---------- */
+const r2 = v => Math.round(v * 100) / 100;
+function sendSnap() {
+  const it = id => id ? ITEMS.findIndex(i => i.id === id) : -1;
+  E.NET.broadcast({ t: 'dr', gt: r2(G.t), rt: r2(G.raceT), k: G.karts.map(k => [r2(k.x), r2(k.z), r2(k.y), Math.round(k.h * 1000) / 1000, r2(k.v), r2(k.steer), k.drift ? k.driftDir : 0, k.boost > 0 ? 1 : 0, k.shieldT > 0 ? 1 : 0, r2(Math.max(0, k.spin)), k.lap, k.prog, k.finished ? 1 : 0, it(k.item), k.rolling > 0 ? 1 : 0, r2(k.driftCharge), r2(k.lapStart), k.bestLap ? r2(k.bestLap) : 0]), bx: G.boxes.map(b => b.t > 0 ? 0 : 1).join(''), hz: G.hazards.map(h => [h.id, r2(h.x), r2(h.z), r2(h.y)]) }, 'player');
+}
+function remoteFinish(k) { const place = G.karts.filter(o => o.finished).length; E.NET.send(k.remote, { t: 'dr-fin', place, time: r2(k.finishTime), best: k.bestLap ? r2(k.bestLap) : 0, track: G.T.name }); E.toast(`🌐 ${k.def.name} finished ${ORD(place)}`); }
+
+/* ---------- online: guest side (renders the host's race) ---------- */
+let lobbyEl = null;
+function lobby(html, retry = false) {
+  if (!lobbyEl) { lobbyEl = document.createElement('div'); lobbyEl.className = 'ig-screen'; document.body.appendChild(lobbyEl); }
+  lobbyEl.innerHTML = `<div class="ig-card"><div class="ig-kicker">Island Drift · Online room ${JOIN}</div><h2>Online race</h2><p class="ig-sub">${html}</p><p class="ig-sub" style="font-size:13px">Steer with A/D or arrows, drift with Shift, items with Space. On a phone, use the on-screen buttons.</p><div class="ig-row"><a class="ig-btn ghost" href="../index.html">Hub</a>${retry ? '<button class="ig-btn" data-a="retry">Try again</button>' : ''}</div></div>`;
+  const rb = lobbyEl.querySelector('[data-a=retry]'); if (rb) rb.onclick = () => { E.net.role = null; clientJoin(); };
+}
+function closeLobby() { if (lobbyEl) { lobbyEl.remove(); lobbyEl = null; } }
+async function clientJoin() {
+  lobby(`Joining room <b>${JOIN}</b>…`);
+  let nm = ''; try { nm = (JSON.parse(localStorage.getItem('inoa.pad') || '{}').name) || E.profile().name || ''; } catch (e) { }
+  try { await E.NET.join(JOIN, { kind: 'player', name: nm }); }
+  catch (e) { lobby(`Couldn't reach room <b>${JOIN}</b> (${e.message}). Check the code, and that the host still has Island Drift open.`, true); return; }
+  lobby(`You're in as <b style="color:${E.net.me.color}">${E.net.me.name}</b>! Waiting for the host to start the race…`);
+}
+function endClientRace() { if (G && G.client) { for (const k of G.karts) scene.remove(k.g); for (const h of G.hazards) scene.remove(h.m); G = null; ['drLeft', 'drItem', 'drDrift', 'drSpeed', 'minimap'].forEach(id => $(id).hidden = true); if (engineSnd) engineSnd.g.gain.value = 0; music && music.stop(); } }
+function applySnap(m) {
+  if (!G || !G.client) return; if (Math.abs(G.t - m.gt) > .25) G.t = m.gt; G.raceT = m.rt;
+  m.k.forEach((a, i) => { const k = G.karts[i]; if (!k) return; const first = k.tx == null;
+    k.tx = a[0]; k.tz = a[1]; k.ty = a[2]; k.th = a[3]; k.v = a[4]; k.steer = a[5]; k.drift = a[6] ? 1 : 0; k.driftDir = a[6]; k.boost = a[7]; k.shieldT = a[8]; k.spin = a[9]; const lapWas = k.lap; k.lap = a[10]; k.prog = a[11]; k.finished = !!a[12]; k.driftCharge = a[15]; k.lapStart = a[16]; k.bestLap = a[17] || null;
+    if (first) { k.x = k.tx; k.z = k.tz; k.y = k.ty; k.h = k.th; }
+    if (k === G.me) { const item = a[13] >= 0 ? ITEMS[a[13]] : null; const roll = !!a[14]; if (roll) { $('drItem').classList.add('roll'); $('drItem').textContent = pick(ITEMS).e; if (!k.rolling) SFX.pop(); } else { $('drItem').classList.remove('roll'); if (item && k.item !== item.id) { SFX.coin(); E.say(item.name, { interrupt: false }); } $('drItem').textContent = item ? item.e : '·'; } k.rolling = roll ? 1 : 0; k.item = item ? item.id : null;
+      if (k.lap > lapWas && lapWas >= 0 && k.lap < LAPS) { bigText(k.lap === LAPS - 1 ? 'FINAL LAP' : `LAP ${k.lap + 1}`); SFX.level(); } }
+  });
+  G.boxes.forEach((b, i) => { b.m.visible = m.bx[i] === '1'; });
+  const ids = new Set(m.hz.map(h => h[0]));
+  for (const h of G.hazards.slice()) if (!ids.has(h.id)) { scene.remove(h.m); G.hazards.splice(G.hazards.indexOf(h), 1); }
+  for (const [id, x, z, y] of m.hz) if (!G.hazards.some(h => h.id === id)) { const mm = E.instance('coconut', { scale: 1.3 }); mm.position.set(x, y, z); scene.add(mm); G.hazards.push({ id, m: mm, x, z }); SFX.pop(); }
+}
+function clientUpdate(dt) {
+  if (G.paused) return; G.t += dt; P.update(dt); if (waterMat) waterMat.uniforms.uTime.value += dt;
+  world.children.forEach(o => { if (o.userData.spin) o.children[0].rotation.z += dt * .1; });
+  if (G.t < 0) { const c = Math.ceil(-G.t); if (c !== G.count && c <= 3) { G.count = c; bigText(String(c)); E.tone(440, .2, 'square', .1); } }
+  else if (G.count > 0) { G.count = 0; bigText('GO!'); E.tone(880, .45, 'square', .12); }
+  if (G.t >= 0 && !G.done) G.raceT += dt;
+  const s = input.poll(); E.NET.sendInput({ x: r2(s.x), y: r2(s.y), a: s.a, b: s.b, c: s.c });
+  for (const k of G.karts) {
+    if (k.tx == null) continue;
+    k.tx += Math.sin(k.th) * k.v * dt; k.tz += Math.cos(k.th) * k.v * dt;
+    k.x = damp(k.x, k.tx, .00002, dt); k.z = damp(k.z, k.tz, .00002, dt); k.y = damp(k.y, k.ty, .001, dt);
+    let dh = k.th - k.h; while (dh > Math.PI) dh -= Math.PI * 2; while (dh < -Math.PI) dh += Math.PI * 2; k.h += dh * (1 - Math.pow(.00002, dt));
+    if (Math.hypot(k.tx - k.x, k.tz - k.z) > 12) { k.x = k.tx; k.z = k.tz; }
+    k.body.rotation.y = k.spin > 0 ? Math.PI + (1 - k.spin / 1.1) * Math.PI * 4 : Math.PI;
+    if (k.drift && Math.random() < .7) { const c = k.driftCharge > 2.1 ? 0xd27bff : k.driftCharge > 1 ? 0xffa53a : 0x5bd2ff; for (const sd of [-1, 1]) P.burst(new THREE.Vector3(k.x - Math.sin(k.h) * 1.8 + Math.cos(k.h) * sd * 1.1, k.y + .3, k.z - Math.cos(k.h) * 1.8 - Math.sin(k.h) * sd * 1.1), { color: c, n: 2, speed: 1.5, up: 2, size: .55, life: .35 }); }
+    k.shield.visible = k.shieldT > 0; k.flame.visible = k.boost > 0; if (k.boost > 0) k.flame.scale.set(1, 1 + Math.random() * .6, 1);
+    placeKart(k);
+  }
+  for (const hz of G.hazards) hz.m.rotation.y += dt;
+  for (const b of G.boxes) { b.m.rotation.y += dt * 1.4; b.m.rotation.x += dt * .6; }
+  hud(); updateEngine();
+}
+function clientFinish(m) {
+  if (!G || G.done) return; G.done = true; const place = m.place; SFX.win(); bigText(place === 1 ? '🏆 1ST!' : ORD(place));
+  setTimeout(() => { music && music.stop(); E.results({ gameId: 'drift', title: place === 1 ? 'You won the online race!' : `You finished ${ORD(place)}`, stats: [['Place', ORD(place)], ['Race time', fmt(m.time)], ['Best lap', m.best ? fmt(m.best) : '–']], xp: [120, 95, 80, 65, 55, 45][place - 1] || 40, coins: [40, 30, 22, 16, 12, 10][place - 1] || 8, best: m.best || null, bestLower: true, bestLabel: 'Best lap (s)', onAgain: () => { endClientRace(); lobby('Waiting for the host to start the next race…'); } }); }, 1600);
+}
+E.net.on('msg', m => { if (!JOIN || !m) return; if (m.t === 'dr-start') { closeLobby(); document.querySelectorAll('.ig-results').forEach(e => e.remove()); startRace(m); } else if (m.t === 'dr') applySnap(m); else if (m.t === 'dr-fin') clientFinish(m); else if (m.t === 'dr-lobby') { if (G && !G.done) { endClientRace(); lobby('The host went back to the menu. Waiting for the next race…'); } } });
+E.net.on('status', st => { if (!JOIN) return; if (st === 'ended') { endClientRace(); lobby('The host ended the party. Thanks for racing!'); } else if (st === 'reconnecting' && !G) lobby('Reconnecting to the room…'); else if (st === 'ready' && !G && E.net.me) lobby(`You're in as <b style="color:${E.net.me.color}">${E.net.me.name}</b>! Waiting for the host to start the race…`); });
+// Host: advertise the own-screen mode to every phone in the room.
+if (!JOIN) { const adv = () => { if (E.net.role === 'host' && E.net.status === 'ready') E.NET.setOnline(ONLINE_INFO); }; E.net.on('status', adv); adv(); }
+
 function updateEngine() { const ac = E.audio(); if (!ac || !E.profile().sound) return; if (!engineSnd) { const o = ac.createOscillator(), o2 = ac.createOscillator(), f = ac.createBiquadFilter(), g = ac.createGain(); o.type = 'sawtooth'; o2.type = 'square'; f.type = 'lowpass'; f.frequency.value = 600; g.gain.value = .0; o.connect(f); o2.connect(f); f.connect(g); g.connect(ac.destination); o.start(); o2.start(); engineSnd = { o, o2, g, f }; } const k = G.me, sp = Math.abs(k.v) / MAXV; engineSnd.o.frequency.setTargetAtTime(55 + sp * 120 + (k.boost > 0 ? 40 : 0), ac.currentTime, .05); engineSnd.o2.frequency.setTargetAtTime(110 + sp * 240, ac.currentTime, .05); engineSnd.g.gain.setTargetAtTime(G.paused || G.done ? 0 : .025 + sp * .03, ac.currentTime, .1); engineSnd.f.frequency.setTargetAtTime(400 + sp * 1600, ac.currentTime, .05); }
 
 /* ---------- camera / hud ---------- */
@@ -224,7 +315,7 @@ function updateCamera(dt) { if (!G) { camera.position.set(Math.cos(performance.n
 const ORD = n => n + (n === 1 ? 'st' : n === 2 ? 'nd' : n === 3 ? 'rd' : 'th');
 const fmt = t => `${Math.floor(t / 60)}:${(t % 60).toFixed(2).padStart(5, '0')}`;
 let hudEl = null;
-function hud() { if (!G) return; const k = G.me; const place = 1 + G.karts.filter(o => o !== k && (o.finished && !k.finished ? true : o.prog > k.prog && !(k.finished && !o.finished))).length; G.place = place; $('drPos').innerHTML = S.mode === 'gp' ? `${place}<small>${ORD(place).slice(-2)}</small>` : `<small>${fmt(G.raceT - k.lapStart)}</small>`; if (!hudEl) { hudEl = E.shell({ title: 'Island Drift', onPause: pause, stick: false, buttons: [{ id: 'bL', icon: '◀', label: 'Steer left' }, { id: 'bR', icon: '▶', label: 'Steer right' }, { id: 'bD', icon: '💨', label: 'Drift', cls: 'big' }, { id: 'bI', icon: '🎁', label: 'Use item' }] }); bindTouch(); } hudEl.hud.innerHTML = `<span class="ig-chip">Lap <b>${clamp(k.lap + 1, 1, LAPS)}/${LAPS}</b></span><span class="ig-chip">⏱ <b>${fmt(G.raceT)}</b></span>${S.bestLap[G.T.id] ? `<span class="ig-chip">Best <b>${fmt(S.bestLap[G.T.id])}</b></span>` : ''}`; $('drSpeed').textContent = `${Math.round(Math.abs(k.v) * 3.6)} km/h`; $('drDrift').firstElementChild.style.width = Math.min(100, k.driftCharge / 2.1 * 100) + '%'; $('drDrift').firstElementChild.style.background = k.driftCharge > 2.1 ? '#d27bff' : k.driftCharge > 1 ? '#ffa53a' : '#5bd2ff'; drawMinimap(); }
+function hud() { if (!G) return; const k = G.me; const place = 1 + G.karts.filter(o => o !== k && (o.finished && !k.finished ? true : o.prog > k.prog && !(k.finished && !o.finished))).length; G.place = place; $('drPos').innerHTML = S.mode === 'gp' ? `${place}<small>${ORD(place).slice(-2)}</small>` : `<small>${fmt(G.raceT - k.lapStart)}</small>`; if (!hudEl) { hudEl = E.shell({ title: 'Island Drift', onPause: pause, stick: false, party: JOIN ? false : PARTY, buttons: [{ id: 'bL', icon: '◀', label: 'Steer left' }, { id: 'bR', icon: '▶', label: 'Steer right' }, { id: 'bD', icon: '💨', label: 'Drift', cls: 'big' }, { id: 'bI', icon: '🎁', label: 'Use item' }] }); bindTouch(); } hudEl.hud.innerHTML = `<span class="ig-chip">Lap <b>${clamp(k.lap + 1, 1, LAPS)}/${LAPS}</b></span><span class="ig-chip">⏱ <b>${fmt(G.raceT)}</b></span>${S.bestLap[G.T.id] ? `<span class="ig-chip">Best <b>${fmt(S.bestLap[G.T.id])}</b></span>` : ''}`; $('drSpeed').textContent = `${Math.round(Math.abs(k.v) * 3.6)} km/h`; $('drDrift').firstElementChild.style.width = Math.min(100, k.driftCharge / 2.1 * 100) + '%'; $('drDrift').firstElementChild.style.background = k.driftCharge > 2.1 ? '#d27bff' : k.driftCharge > 1 ? '#ffa53a' : '#5bd2ff'; drawMinimap(); }
 function bindTouch() { const tx = { L: false, R: false }; const upd = () => { input.touch.x = (tx.R ? 1 : 0) - (tx.L ? 1 : 0); }; for (const [id, key] of [['bL', 'L'], ['bR', 'R']]) { const b = $(id); b.addEventListener('pointerdown', e => { e.preventDefault(); E.audio(); tx[key] = true; b.classList.add('on'); upd(); }); for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) b.addEventListener(ev, () => { tx[key] = false; b.classList.remove('on'); upd(); }); } input.bindButton($('bD'), 'b'); input.bindButton($('bI'), 'a'); const pad = document.querySelector('.ig-pad'); const btns = pad.querySelector('.ig-btns'); const left = document.createElement('div'); left.className = 'ig-btns'; left.append($('bL'), $('bR')); pad.replaceChild(left, pad.firstElementChild); }
 let mmBase = null, mmScale = 1, mmOff = [0, 0];
 function drawMinimapBase() { const c = $('minimap'); mmBase = document.createElement('canvas'); mmBase.width = c.width; mmBase.height = c.height; const g = mmBase.getContext('2d'); let minx = 1e9, maxx = -1e9, minz = 1e9, maxz = -1e9; for (const p of pts) { minx = Math.min(minx, p.x); maxx = Math.max(maxx, p.x); minz = Math.min(minz, p.z); maxz = Math.max(maxz, p.z); } mmScale = (c.width - 40) / Math.max(maxx - minx, maxz - minz); mmOff = [minx, minz]; g.lineJoin = 'round'; g.lineCap = 'round'; for (const [w, col] of [[16, 'rgba(255,255,255,.25)'], [8, '#fff8ee']]) { g.strokeStyle = col; g.lineWidth = w; g.beginPath(); pts.forEach((p, i) => { const x = 20 + (p.x - minx) * mmScale, y = 20 + (p.z - minz) * mmScale; i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.closePath(); g.stroke(); } }
@@ -235,23 +326,28 @@ function toastSmall(t) { E.toast(t, 1400); }
 /* ---------- flow ---------- */
 function finish() {
   if (G.done) return; G.done = true; const k = G.me; const place = G.place || 1; SFX.win(); bigText(S.mode === 'gp' ? (place === 1 ? '🏆 1ST!' : `${ORD(place)}`) : 'FINISH');
-  setTimeout(() => { G.paused = true; music && music.stop(); const best = k.bestLap; const xp = S.mode === 'gp' ? [120, 95, 80, 65, 55, 45][place - 1] : 70; const coins = S.mode === 'gp' ? [40, 30, 22, 16, 12, 10][place - 1] : 15;
+  setTimeout(() => { if (!G.online) G.paused = true; music && music.stop(); const best = k.bestLap; const xp = S.mode === 'gp' ? [120, 95, 80, 65, 55, 45][place - 1] : 70; const coins = S.mode === 'gp' ? [40, 30, 22, 16, 12, 10][place - 1] : 15;
     E.results({ gameId: 'drift', title: S.mode === 'gp' ? (place === 1 ? 'Grand Prix winner!' : `You finished ${ORD(place)}`) : 'Time trial complete', stats: S.mode === 'gp' ? [['Place', ORD(place)], ['Race time', fmt(k.finishTime || G.raceT)], ['Best lap', best ? fmt(best) : '–']] : [['Total', fmt(G.raceT)], ['Best lap', best ? fmt(best) : '–'], ['Track', G.T.name]], xp, coins, best: best ? +best.toFixed(2) : null, bestLower: true, bestLabel: 'Best lap (s)', onAgain: () => { title(); }, share: `I ${S.mode === 'gp' ? 'finished ' + ORD(place) : 'set a ' + fmt(best || 0) + ' lap'} on ${G.T.name} in Island Drift (Inoa Games)! ${location.href}` }); }, 1600);
 }
-function pause() { if (!G || G.done) return; G.paused = true; music && music.stop(); E.pauseMenu({ onResume: () => { G.paused = false; music = E.music(E.SONGS.race); }, onRestart: () => startRace() }); }
+function pause() { if (!G || G.done || document.querySelector('.ig-screen')) return; const live = G.online || G.client; if (!live) { G.paused = true; music && music.stop(); } E.pauseMenu({ extra: live ? '<p class="ig-sub">Online race: the race keeps going while this menu is open.</p>' : '', onResume: () => { if (!live) { G.paused = false; music = E.music(E.SONGS.race); } }, onRestart: () => { if (!G.client) startRace(); } }); }
 input.poll(); addEventListener('keydown', e => { if ((e.code === 'Escape' || e.code === 'KeyP') && G && !G.paused) pause(); });
-document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden && G && !G.online && !G.client) pause(); });
 function title() {
+  if (E.net.role === 'host') E.NET.broadcast({ t: 'dr-lobby' }, 'player');
   ['drLeft', 'drItem', 'drDrift', 'drSpeed', 'minimap'].forEach(id => $(id).hidden = true); if (G) { for (const k of G.karts) scene.remove(k.g); G = null; } if (engineSnd) engineSnd.g.gain.value = 0;
   buildTrack(TRACKS[S.track]);
   const extra = `<div><p class="ig-sub" style="margin-bottom:6px">Track</p><div class="pick" id="pT">${TRACKS.map((t, i) => `<button data-i="${i}" class="${i === S.track ? 'on' : ''}">${t.e} ${t.name}<small>${t.desc}${S.bestLap[t.id] ? ' · best ' + fmt(S.bestLap[t.id]) : ''}</small></button>`).join('')}</div></div><div><p class="ig-sub" style="margin-bottom:6px">Driver</p><div class="pick" id="pR">${RACERS.map((r, i) => `<button data-i="${i}" class="${i === S.racer ? 'on' : ''}" style="border-left:8px solid #${new THREE.Color(r.tint).getHexString()}">${r.name}</button>`).join('')}</div></div><div><p class="ig-sub" style="margin-bottom:6px">Mode</p><div class="pick" id="pM"><button data-m="gp" class="${S.mode === 'gp' ? 'on' : ''}">🏁 Grand Prix<small>3 laps vs 5 rivals</small></button><button data-m="tt" class="${S.mode === 'tt' ? 'on' : ''}">⏱ Time Trial<small>Chase your best lap</small></button></div></div>`;
-  const d = E.titleScreen({ title: 'Island Drift', kicker: 'Inoa Games · Signature 3D', lead: 'Kart racing around the islands. Hold drift through corners until the sparks turn orange or purple, then let go for a turbo.', how: [['◀▶', 'Steer: A/D, arrows, stick or the on-screen buttons'], ['💨', 'Drift: hold Shift/K or 💨 while turning, release for a boost'], ['🎁', 'Item: Space/J or 🎁 after driving through a ? box']], extra, onPlay: () => { E.store.set('inoa.drift', S); startRace(); } });
+  const onlineLine = `<p class="ig-sub" id="drOnline" style="margin:0;font-weight:800;color:#0f5c48"></p>`;
+  const d = E.titleScreen({ party: PARTY, title: 'Island Drift', kicker: 'Inoa Games · Signature 3D', lead: 'Kart racing around the islands. Hold drift through corners until the sparks turn orange or purple, then let go for a turbo.', how: [['◀▶', 'Steer: A/D, arrows, stick or the on-screen buttons'], ['💨', 'Drift: hold Shift/K or 💨 while turning, release for a boost'], ['🎁', 'Item: Space/J or 🎁 after driving through a ? box']], extra: extra + onlineLine, onPlay: () => { E.store.set('inoa.drift', S); startRace(); } });
+  const showOnline = () => { const el = document.getElementById('drOnline'); if (!el) return; const n = E.net.role === 'host' ? E.net.pads('player').length : 0; el.textContent = n ? `🌐 ${n} online racer${n > 1 ? 's' : ''} ready: press Play to start the race together` : ''; };
+  E.net.on('change', showOnline); showOnline();
   d.querySelectorAll('#pT button').forEach(b => b.onclick = () => { S.track = +b.dataset.i; d.querySelectorAll('#pT button').forEach(x => x.classList.toggle('on', x === b)); buildTrack(TRACKS[S.track]); });
   d.querySelectorAll('#pR button').forEach(b => b.onclick = () => { S.racer = +b.dataset.i; S.picked = true; d.querySelectorAll('#pR button').forEach(x => x.classList.toggle('on', x === b)); });
   d.querySelectorAll('#pM button').forEach(b => b.onclick = () => { S.mode = b.dataset.m; d.querySelectorAll('#pM button').forEach(x => x.classList.toggle('on', x === b)); });
 }
-title(); ld.done(); window.__READY = true;
+if (JOIN) { buildTrack(TRACKS[S.track]); clientJoin(); } else { title(); if (new URLSearchParams(location.search).get('online')) setTimeout(() => E.NET.partyPanel(PARTY), 300); }
+ld.done(); window.__READY = true;
 E.loop((dt) => { update(dt); updateCamera(dt); R.render(dt); });
-window.__GAME = { get G() { return G; }, S, startRace, update, title, updateCamera };
+window.__GAME = { get G() { return G; }, get pts() { return pts; }, S, startRace, update, title, updateCamera, net: E.net };
 </script>
 </body></html>

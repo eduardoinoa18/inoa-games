@@ -522,6 +522,10 @@ function readSrc(src, o) {
   if (src === 'k1') { o.x = (k('KeyD')) - (k('KeyA')); o.y = (k('KeyS')) - (k('KeyW')); o.jump = k('Space') || k('KeyW'); o.atk = k('KeyJ') || k('KeyZ'); o.spec = k('KeyK') || k('KeyX'); o.dodge = k('KeyL') || k('ShiftLeft') || k('KeyC'); o.ult = k('KeyU') || k('KeyV'); o.pause = k('Escape') || k('KeyP'); o.ok = k('Enter'); o.back = k('Escape') || k('Backspace'); }
   else if (src === 'k2') { o.x = k('ArrowRight') - k('ArrowLeft'); o.y = k('ArrowDown') - k('ArrowUp'); o.jump = k('ArrowUp') || k('Numpad0'); o.atk = k('KeyN') || k('Numpad1'); o.spec = k('KeyM') || k('Numpad2'); o.dodge = k('Comma') || k('Numpad3') || k('ShiftRight'); o.ult = k('Period') || k('Numpad4'); o.pause = k('Escape'); o.ok = k('NumpadEnter') || k('Enter'); o.back = k('Escape'); }
   else if (src === 'touch') { Object.assign(o, tch); o.pause = 0; }
+  else if (src.startsWith('net')) { // phone controller (engine/net.js): A jump · B attack · C special · D dodge · C+D ultimate
+    const N = window.__NETMOD, n = N && N.net.role === 'host' ? N.net.pad(+src.slice(3)) : null;
+    if (n) { o.x = Math.abs(n.x) > .25 ? n.x : 0; o.y = Math.abs(n.y) > .25 ? n.y : 0; o.jump = n.a ? 1 : 0; o.ok = o.jump; o.atk = n.b ? 1 : 0; o.spec = n.c ? 1 : 0; o.back = 0; o.dodge = n.d ? 1 : 0; o.ult = n.c && n.d ? 1 : 0; o.pause = 0; if (o.x || o.y || n.a || n.b || n.c || n.d) inputKind = 'pad'; }
+  }
   else if (src.startsWith('pad')) {
     const pads = navigator.getGamepads ? navigator.getGamepads() : [], g = pads[+src.slice(3)];
     if (g) {
@@ -537,7 +541,8 @@ function readSrc(src, o) {
 function edge(o, prev, just) { for (const key in o) { just[key] = (o[key] && !prev[key]) ? 1 : 0; prev[key] = o[key]; } }
 /* menu input: union of every real source */
 const menuIn = BLANK(), menuPrev = {}, menuJust = {}, tmpIn = BLANK();
-const ALL_SRC = ['k1', 'k2', 'touch', 'pad0', 'pad1', 'pad2', 'pad3'];
+const ALL_SRC = ['k1', 'k2', 'touch', 'pad0', 'pad1', 'pad2', 'pad3', 'net1', 'net2', 'net3', 'net4', 'net5', 'net6', 'net7', 'net8'];
+const srcName = s => { if (s.startsWith('net')) { const N = window.__NETMOD, p = N && N.net.players.find(q => q.slot === +s.slice(3)); return '📱 ' + (p ? p.name : 'Phone'); } return SRC_NAMES[s]; };
 function pollMenu() {
   for (const key in menuIn) menuIn[key] = 0;
   for (const s of ALL_SRC) { readSrc(s, tmpIn); for (const key in tmpIn) if (tmpIn[key]) menuIn[key] = tmpIn[key]; }
@@ -2339,7 +2344,7 @@ function drawTitle() {
 const scCanvas = $('showcase'), scCtx = scCanvas.getContext('2d');
 const lobby = { slots: [], focus: 0 };
 function freeSources() { const used = new Set(lobby.slots.map(s => s.src)); return ALL_SRC.filter(s => !used.has(s)); }
-function primarySource() { return matchMedia('(pointer:coarse)').matches || inputKind === 'touch' ? 'touch' : inputKind === 'pad' ? 'pad0' : 'k1'; }
+function primarySource() { const gp = navigator.getGamepads ? navigator.getGamepads()[0] : null; return matchMedia('(pointer:coarse)').matches || inputKind === 'touch' ? 'touch' : inputKind === 'pad' && gp ? 'pad0' : 'k1'; }
 function openLobby() {
   G.scene = 'lobby'; G.world = false; show('scrLobby'); setPlayUI(false);
   const adv = G.mode === 'adventure';
@@ -2364,7 +2369,7 @@ function buildSlots() {
       d.innerHTML = `<div class="pn">${s.src === 'bot' ? 'BOT' : 'P' + (i + 1)}</div>`;
       const cn = document.createElement('canvas'); d.appendChild(cn); s.cn = cn;
       const nm = document.createElement('div'); nm.className = 'nm'; nm.textContent = h.short; d.appendChild(nm);
-      const src = document.createElement('div'); src.className = 'src'; src.textContent = SRC_NAMES[s.src]; d.appendChild(src);
+      const src = document.createElement('div'); src.className = 'src'; src.textContent = srcName(s.src); d.appendChild(src);
       const pick = document.createElement('div'); pick.className = 'pick';
       const l = document.createElement('button'); l.textContent = '◀'; l.setAttribute('aria-label', 'Previous hero'); l.addEventListener('click', () => cycleHero(s, -1));
       const r = document.createElement('button'); r.textContent = '▶'; r.setAttribute('aria-label', 'Next hero'); r.addEventListener('click', () => cycleHero(s, 1));
@@ -2578,8 +2583,10 @@ function menuNav() {
   const mv = menuJust.d ? 1 : menuJust.u ? -1 : 0, mh = menuJust.r ? 1 : menuJust.l ? -1 : 0;
   if (mh && act && act.type === 'range') { act.value = +act.value + mh * 5; act.dispatchEvent(new Event('input')); return; }
   if (mv || mh) { i = i < 0 ? 0 : (i + (mv || mh) + items.length) % items.length; items[i].focus(); Sound.sfx.select(); return; }
+  if (menuJust.ok && !(act && items.includes(act))) { (items.find(el => el.matches('.btn') && !/back/i.test(el.id)) || items[0]).focus(); Sound.sfx.select(); return; }
   if (menuJust.ok && act && items.includes(act)) act.click();
 }
+window.__PPDBG = () => ({ curScreen, inputKind, ok: menuIn.ok, jump: menuIn.jump, active: document.activeElement && (document.activeElement.id || document.activeElement.className) });
 const on = (id, fn) => $(id).addEventListener('click', fn);
 on('btnAdventure', () => { Sound.init(); Sound.sfx.select(); openPicks('adventure'); });
 on('btnMatch', () => { Sound.init(); Sound.sfx.select(); openPicks('match'); });
@@ -2636,6 +2643,14 @@ function boot() {
 const fontsReady = document.fonts && document.fonts.load ? Promise.all([document.fonts.load('900 20px "Unbounded"'), document.fonts.load('800 12px "Manrope"'), document.fonts.load('10px "Press Start 2P"')]).catch(() => {}) : Promise.resolve();
 Promise.race([fontsReady, new Promise(r => setTimeout(r, 1500))]).then(() => { if (window.claude && window.claude.hot && window.claude.hot.ready) window.claude.hot.ready(boot); else boot(); });
 })();
+</script>
+<script type="module">
+// Phones as controllers: each phone in the party room is its own player source (net1..net8). Press A on a phone in the lobby to join.
+import * as NET from '../engine/net.js';
+window.__NETMOD = NET; NET.resume();
+const push = () => { if (NET.net.role === 'host') NET.setLayout({ type: 'gamepad', labels: { A: '⤒', B: '⚔', C: '✨', D: '💨' }, buttons: ['A', 'B', 'C', 'D'] }); };
+NET.net.on('status', s => { if (s === 'ready') push(); }); NET.net.on('join', push);
+NET.partyWidget({ hint: 'Every phone is its own player (up to 4 fighters). In the lobby, press A (jump) on a phone to join. C + D together = ultimate.' });
 </script>
 
 </body>

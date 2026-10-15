@@ -14,6 +14,11 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { clone as skClone } from 'three/addons/utils/SkeletonUtils.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 export { THREE };
+import * as NET from './net.js';
+export { NET };
+export const net = NET.net;
+// If this tab is hosting a party (phones as controllers), keep the room alive on every game page.
+try { NET.resume(); } catch (e) { }
 
 /* ---------------- math ---------------- */
 export const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -324,12 +329,19 @@ export function createInput(opts = {}) {
     let a = !!(keys.Space || keys.KeyJ || keys.Enter), b = !!(keys.KeyK || keys.ShiftLeft || keys.ShiftRight), c = !!(keys.KeyL || keys.KeyE), pause = !!(keys.Escape || keys.KeyP);
     const pads = navigator.getGamepads ? navigator.getGamepads() : []; for (const p of pads) { if (!p) continue; const ax = p.axes[0] || 0, ay = p.axes[1] || 0; if (Math.abs(ax) > .2) x = ax; if (Math.abs(ay) > .2) y = ay; if (p.buttons[14]?.pressed) x = -1; if (p.buttons[15]?.pressed) x = 1; if (p.buttons[12]?.pressed) y = -1; if (p.buttons[13]?.pressed) y = 1; a = a || p.buttons[0]?.pressed; b = b || p.buttons[1]?.pressed || p.buttons[7]?.pressed; c = c || p.buttons[2]?.pressed || p.buttons[3]?.pressed; pause = pause || p.buttons[9]?.pressed; }
     if (touch.x || touch.y) { x = touch.x; y = touch.y; } a = a || touch.a; b = b || touch.b; c = c || touch.c;
+    // Phone controllers (engine/net.js): by default ANY connected phone also drives player 1 (great for solo + hot-seat games).
+    // Multiplayer games pass {pads:'first'} (phone 1 = P1) or {pads:'separate'} and read input.pad(slot) for the other players.
+    if (opts.pads !== 'separate' && net.role === 'host') for (const pl of (opts.pads === 'first' ? net.pads('pad').slice(0, 1) : net.pads('pad'))) { const n = net.pad(pl.slot); if (!n) continue; if (Math.abs(n.x) > .15) x = n.x; if (Math.abs(n.y) > .15) y = n.y; a = a || n.a; b = b || n.b; c = c || n.c || n.d; }
     state.x = clamp(x, -1, 1); state.y = clamp(y, -1, 1); state.a = a; state.b = b; state.c = c; state.pause = pause;
     state.aPressed = a && !prev.a; state.bPressed = b && !prev.b; state.cPressed = c && !prev.c; state.pausePressed = pause && !prev.pause; prev.a = a; prev.b = b; prev.c = c; prev.pause = pause;
     return state;
   }
   function consumeSwipe() { const s = state.swipe; state.swipe = null; return s; }
-  return { state, keys, poll, bindButton, bindStick, consumeSwipe, touch };
+  // Per-phone input with edge flags. Call once per frame per slot. Returns null if that slot has no phone.
+  const padPrev = {};
+  function pad(slot) { const n = net.pad(slot); if (!n) { delete padPrev[slot]; return null; } const pv = padPrev[slot] || (padPrev[slot] = {}); const o = { x: n.x || 0, y: n.y || 0, a: !!n.a, b: !!n.b, c: !!n.c, d: !!n.d, pause: !!n.pause }; for (const k of ['a', 'b', 'c', 'd', 'pause']) { o[k + 'Pressed'] = o[k] && !pv[k]; pv[k] = o[k]; } return o; }
+  const pads = (kind = 'pad') => net.pads(kind).map(p => p.slot);
+  return { state, keys, poll, bindButton, bindStick, consumeSwipe, touch, pad, pads, net };
 }
 
 /* ---------------- UI helpers ---------------- */
@@ -352,13 +364,14 @@ export function results({ gameId, title, stats = [], xp = 0, coins = 0, best = n
 }
 export function hudChip(html, cls = '') { const d = document.createElement('div'); d.className = 'ig-chip ' + cls; d.innerHTML = html; return d; }
 // The standard game shell: back-to-hub, pause, touch controls container.
-export function shell({ title, onPause, buttons = [], stick = false, help = '' }) {
+export function shell({ title, onPause, buttons = [], stick = false, help = '', party }) {
   const top = document.createElement('div'); top.className = 'ig-top'; top.innerHTML = `<a class="ig-chip ig-home" href="../index.html" aria-label="${t('back')}">⌂</a><div class="ig-hud" id="igHud"></div><button class="ig-chip ig-pause" aria-label="${t('paused')}">⏸</button>`; document.body.appendChild(top);
   top.querySelector('.ig-pause').onclick = () => onPause && onPause();
+  if (party !== false) try { NET.partyWidget(typeof party === 'object' ? party : {}); } catch (e) { }
   const pad = document.createElement('div'); pad.className = 'ig-pad'; pad.innerHTML = `${stick ? '<div class="ig-stick" id="igStick"><div class="ig-knob" id="igKnob"></div></div>' : '<div></div>'}<div class="ig-btns">${buttons.map(b => `<button class="ig-tbtn ${b.cls || ''}" id="${b.id}" aria-label="${b.label}">${b.icon}</button>`).join('')}</div>`; document.body.appendChild(pad);
   return { hud: top.querySelector('#igHud'), pad };
 }
-export function pauseMenu({ onResume, onRestart, extra = '' }) { const d = document.createElement('div'); d.className = 'ig-screen'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true'); d.innerHTML = `<div class="ig-card"><h2>${t('paused')}</h2>${extra}<div class="ig-row"><button class="ig-btn ghost" data-a="hub">${t('hub')}</button><button class="ig-btn ghost" data-a="restart">${t('restart')}</button><button class="ig-btn" data-a="resume">${t('resume')}</button></div><div class="ig-row"><button class="ig-chipbtn" data-a="sound">🔊 ${t('sound')} ${profile().sound ? t('on') : t('off')}</button><button class="ig-chipbtn" data-a="voice">🗣️ ${t('voice')} ${profile().voice ? t('on') : t('off')}</button><button class="ig-chipbtn" data-a="settings">⚙️ ${t('settings')}</button></div></div>`; document.body.appendChild(d); d.querySelector('[data-a=resume]').onclick = () => { d.remove(); onResume(); }; d.querySelector('[data-a=restart]').onclick = () => { d.remove(); onRestart(); }; d.querySelector('[data-a=hub]').onclick = () => location.href = '../index.html'; d.querySelector('[data-a=sound]').onclick = e => { const v = !profile().sound; setSetting('sound', v); e.target.textContent = `🔊 ${t('sound')} ${v ? t('on') : t('off')}`; }; d.querySelector('[data-a=voice]').onclick = e => { const v = !profile().voice; setSetting('voice', v); e.target.textContent = `🗣️ ${t('voice')} ${v ? t('on') : t('off')}`; }; d.querySelector('[data-a=settings]').onclick = () => settingsPanel(); setTimeout(() => d.querySelector('[data-a=resume]')?.focus({ preventScroll: true }), 30); return d; }
+export function pauseMenu({ onResume, onRestart, extra = '' }) { const d = document.createElement('div'); d.className = 'ig-screen'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true'); d.innerHTML = `<div class="ig-card"><h2>${t('paused')}</h2>${extra}<div class="ig-row"><button class="ig-btn ghost" data-a="hub">${t('hub')}</button><button class="ig-btn ghost" data-a="restart">${t('restart')}</button><button class="ig-btn" data-a="resume">${t('resume')}</button></div><div class="ig-row"><button class="ig-chipbtn" data-a="phones">📱 ${t('phones')}${net.pads().length ? ' · ' + net.pads().length : ''}</button><button class="ig-chipbtn" data-a="sound">🔊 ${t('sound')} ${profile().sound ? t('on') : t('off')}</button><button class="ig-chipbtn" data-a="voice">🗣️ ${t('voice')} ${profile().voice ? t('on') : t('off')}</button><button class="ig-chipbtn" data-a="settings">⚙️ ${t('settings')}</button></div></div>`; document.body.appendChild(d); d.querySelector('[data-a=resume]').onclick = () => { d.remove(); onResume(); }; d.querySelector('[data-a=restart]').onclick = () => { d.remove(); onRestart(); }; d.querySelector('[data-a=hub]').onclick = () => location.href = '../index.html'; d.querySelector('[data-a=sound]').onclick = e => { const v = !profile().sound; setSetting('sound', v); e.target.textContent = `🔊 ${t('sound')} ${v ? t('on') : t('off')}`; }; d.querySelector('[data-a=voice]').onclick = e => { const v = !profile().voice; setSetting('voice', v); e.target.textContent = `🗣️ ${t('voice')} ${v ? t('on') : t('off')}`; }; d.querySelector('[data-a=settings]').onclick = () => settingsPanel(); d.querySelector('[data-a=phones]').onclick = () => NET.partyPanel({}); setTimeout(() => d.querySelector('[data-a=resume]')?.focus({ preventScroll: true }), 30); return d; }
 // Shared settings panel (sound, music, read-aloud, language, reduced motion, graphics). Saved in the profile, used by every game + the hub.
 export function settingsPanel({ onClose } = {}) {
   const d = document.createElement('div'); d.className = 'ig-screen ig-settings'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true'); d.setAttribute('aria-label', t('settings'));
@@ -375,7 +388,30 @@ export function settingsPanel({ onClose } = {}) {
     d.querySelector('[data-a=done]').onclick = () => { d.remove(); onClose && onClose(); }; const fb = d.querySelector('[data-a=feedback]'); if (fb) fb.onclick = () => feedbackForm(); setTimeout(() => d.querySelector('[data-a=done]')?.focus({ preventScroll: true }), 30); };
   draw(); document.body.appendChild(d); return d;
 }
-export function titleScreen({ title, kicker, lead, how = [], onPlay, extra = '' }) { const d = document.createElement('div'); d.className = 'ig-screen ig-title'; d.innerHTML = `<div class="ig-card"><div class="ig-kicker">${kicker}</div><h1>${title}</h1><p class="ig-sub">${lead}</p>${how.length ? `<div class="ig-how">${how.map(h => `<div><span>${h[0]}</span>${h[1]}</div>`).join('')}</div>` : ''}${extra}<div class="ig-row"><a class="ig-btn ghost" href="../index.html">${t('hub')}</a><button class="ig-btn" data-a="play">${t('play')}</button></div><button class="ig-chipbtn ig-setbtn" data-a="settings">⚙️ ${t('settings')}</button></div>`; document.body.appendChild(d); d.querySelector('[data-a=play]').onclick = async e => { audio(); const b = e.currentTarget; b.disabled = true; const ok = await platformStart(); b.disabled = false; if (!ok) return; d.remove(); onPlay(); }; d.querySelector('[data-a=settings]').onclick = () => settingsPanel(); return d; }
+export function titleScreen({ title, kicker, lead, how = [], onPlay, extra = '', party }) { const d = document.createElement('div'); d.className = 'ig-screen ig-title'; d.innerHTML = `<div class="ig-card"><div class="ig-kicker">${kicker}</div><h1>${title}</h1><p class="ig-sub">${lead}</p>${how.length ? `<div class="ig-how">${how.map(h => `<div><span>${h[0]}</span>${h[1]}</div>`).join('')}</div>` : ''}${extra}${party !== false ? `<button class="ig-chipbtn ig-phones" data-a="phones">📱 ${(party && party.label) || t('usePhones')}${net.pads().length ? ` · ${net.pads().length} ${t('connected')}` : ''}</button>` : ''}<div class="ig-row"><a class="ig-btn ghost" href="../index.html">${t('hub')}</a><button class="ig-btn" data-a="play">${t('play')}</button></div><button class="ig-chipbtn ig-setbtn" data-a="settings">⚙️ ${t('settings')}</button></div>`; document.body.appendChild(d); d.querySelector('[data-a=play]').onclick = async e => { audio(); const b = e.currentTarget; b.disabled = true; const ok = await platformStart(); b.disabled = false; if (!ok) return; d.remove(); onPlay(); }; d.querySelector('[data-a=settings]').onclick = () => settingsPanel(); const ph = d.querySelector('[data-a=phones]'); if (ph) ph.onclick = () => NET.partyPanel(typeof party === 'object' ? party : {}); return d; }
+addStrings({ en: { phones: 'Phones', usePhones: 'Use phones as controllers', connected: 'connected' }, es: { phones: 'Teléfonos', usePhones: 'Usa teléfonos como controles', connected: 'conectados' } });
+
+/* ---------------- menu navigation with a gamepad or phone controller ---------------- */
+// When a menu card (.ig-screen) is open, the stick/d-pad moves a focus ring between its buttons and A presses it.
+{ let prev = { a: false, x: 0, y: 0 }, focus = null;
+  setInterval(() => {
+    if (_menuNavActive > 0) { focus = null; return; }
+    const scr = [...document.querySelectorAll('.ig-screen, .inoa-pp')].filter(e => e.getClientRects().length > 0).pop();
+    let x = 0, y = 0, a = false;
+    const gps = navigator.getGamepads ? navigator.getGamepads() : []; for (const p of gps) { if (!p) continue; x = x || (Math.abs(p.axes[0]) > .5 ? Math.sign(p.axes[0]) : p.buttons[14]?.pressed ? -1 : p.buttons[15]?.pressed ? 1 : 0); y = y || (Math.abs(p.axes[1]) > .5 ? Math.sign(p.axes[1]) : p.buttons[12]?.pressed ? -1 : p.buttons[13]?.pressed ? 1 : 0); a = a || !!p.buttons[0]?.pressed; }
+    if (net.role === 'host') for (const pl of net.pads('pad')) { const n = net.pad(pl.slot); if (!n) continue; x = x || (Math.abs(n.x) > .5 ? Math.sign(n.x) : 0); y = y || (Math.abs(n.y) > .5 ? Math.sign(n.y) : 0); a = a || !!n.a; }
+    if (!scr) { focus = null; prev = { a, x, y }; return; }
+    const btns = [...scr.querySelectorAll('button, a.ig-btn')].filter(b => !b.disabled && b.getClientRects().length > 0);
+    if (!btns.length) { prev = { a, x, y }; return; }
+    if (!focus || !btns.includes(focus)) { if (x || y || a) { focus = btns.filter(b => b.matches('.ig-btn:not(.ghost), .go')).pop() || btns[btns.length - 1]; document.querySelectorAll('.ig-focus').forEach(e => e.classList.remove('ig-focus')); focus.classList.add('ig-focus'); focus.scrollIntoView?.({ block: 'nearest' }); prev = { a, x, y }; return; } }
+    else {
+      const mv = (x && x !== prev.x) || (y && y !== prev.y);
+      if (mv) { const r0 = focus.getBoundingClientRect(), c0 = [r0.left + r0.width / 2, r0.top + r0.height / 2]; let best = null, bd = 1e9; for (const b of btns) { if (b === focus) continue; const r = b.getBoundingClientRect(), dx = r.left + r.width / 2 - c0[0], dy = r.top + r.height / 2 - c0[1]; const along = x ? dx * x : dy * y, across = x ? Math.abs(dy) : Math.abs(dx); if (along <= 4) continue; const d = along + across * 2.2; if (d < bd) { bd = d; best = b; } } if (best) { focus.classList.remove('ig-focus'); focus = best; focus.classList.add('ig-focus'); focus.scrollIntoView?.({ block: 'nearest' }); SFX.tick && SFX.tick(); } }
+      if (a && !prev.a) { const f = focus; f.classList.remove('ig-focus'); focus = null; f.click(); }
+    }
+    prev = { a, x, y };
+  }, 50);
+}
 
 /* ---------------- loop ---------------- */
 export function loop(fn) { let last = performance.now(); const f = now => { requestAnimationFrame(f); const dt = Math.min(.05, (now - last) / 1000); last = now; fn(dt, now / 1000); }; requestAnimationFrame(f); }
@@ -471,8 +507,9 @@ export async function promptInstall() { if (!_installEvt) return false; const e 
 /* ---------------- menu navigation (gamepad d-pad/stick + arrow keys) ---------------- */
 // Opt-in: E.menuNav() moves a focus ring over the buttons of the top-most .ig-screen card (or opts.root()), A/Enter clicks,
 // B/Escape clicks the element marked [data-back] (or the card's "Hub"/"Back" button). Returns {stop()}. Skips while typing.
+let _menuNavActive = 0;
 export function menuNav(opts = {}) {
-  let stopped = false, prev = {}; const sel = opts.selector || 'button:not([disabled]), a.ig-btn, [role=button], input[type=range]';
+  _menuNavActive++; let stopped = false, prev = {}; const sel = opts.selector || 'button:not([disabled]), a.ig-btn, [role=button], input[type=range]';
   const root = () => opts.root ? opts.root() : [...document.querySelectorAll('.ig-screen')].pop();
   const items = r => [...r.querySelectorAll(sel)].filter(el => el.offsetParent !== null);
   function move(dir) { const r = root(); if (!r) return; const L = items(r); if (!L.length) return; const a = document.activeElement; let i = L.indexOf(a);
@@ -489,7 +526,7 @@ export function menuNav(opts = {}) {
     for (const p of pads) { if (!p) continue; const ax = p.axes[0] || 0, ay = p.axes[1] || 0; st.l ||= ax < -.5 || p.buttons[14]?.pressed; st.r ||= ax > .5 || p.buttons[15]?.pressed; st.u ||= ay < -.5 || p.buttons[12]?.pressed; st.d ||= ay > .5 || p.buttons[13]?.pressed; st.a ||= p.buttons[0]?.pressed; st.b ||= p.buttons[1]?.pressed; }
     if (root()) { for (const k of ['l', 'r', 'u', 'd']) if (st[k] && !prev[k]) move(k); if (st.a && !prev.a) { const a = document.activeElement; if (a && root().contains(a)) a.click(); else move('d'); } if (st.b && !prev.b) back(); }
     prev = st; })();
-  return { stop() { stopped = true; removeEventListener('keydown', key); } };
+  return { stop() { if (!stopped) _menuNavActive--; stopped = true; removeEventListener('keydown', key); } };
 }
 
 /* ---------------- occluder fading (camera → target) ---------------- */
