@@ -88,6 +88,7 @@ sun.position.set(14, 30, 12); sun.target.position.set(0, 0, 0); sun.target.updat
 const input = E.createInput({ surface: $('gl') });
 const PT = new E.Particles(scene);
 const S = Object.assign({ char: 0, skill: 'normal', best: 0 }, E.store.get('inoa.tidelines', {}));
+{ const HERO = E.hero(); if (HERO.chosen && !S.picked) { const k = CHARS.findIndex(c => c.model === HERO.model); if (k >= 0) S.char = k; } } // hub hero is the default painter until one is picked here
 const save = () => E.store.set('inoa.tidelines', S);
 let G = null, music = null;
 
@@ -520,7 +521,7 @@ function title() {
   <div><p class="ig-sub tl-lbl">${tr('Bots', 'Bots')}</p><div class="pick" id="pS">${Object.entries(SKILL).map(([k, v]) => `<button data-s="${k}" class="${k === S.skill ? 'on' : ''}">${tr(...v.label)}<small>${tr(...v.desc)}</small></button>`).join('')}</div></div>
   <p class="ig-sub" style="font-size:13px">${tr('4 vs 4 · 2:30 match · Team', '4 contra 4 · partida de 2:30 · Equipo')} <b style="color:var(--teal)">${teamName(0)}</b> vs <b style="color:var(--coralT)">${teamName(1)}</b>${S.best ? ` · ${tr('best', 'récord')} ${S.best}%` : ''}</p></div>`;
   const d = E.titleScreen({ title: 'Tide Lines', kicker: tr('Inoa Games · 4v4 Team Turf', 'Inoa Games · Territorio 4 contra 4'), lead: tr('Grab a water cannon and cover the pier in teal. The team with the most painted floor when the clock hits zero wins!', 'Toma un cañón de agua y pinta el muelle de turquesa. ¡Gana el equipo con más suelo pintado cuando el reloj llegue a cero!'), how: [['🕹️', tr('Move: WASD, arrows, left stick', 'Moverse: WASD, flechas, stick izquierdo')], ['💦', tr('Spray: hold Space / mouse / 💦 (drag 💦 or right stick to aim)', 'Rociar: mantén Espacio / ratón / 💦 (arrastra 💦 o el stick derecho para apuntar)')], ['🪣', tr('Refill: stand on your own colour', 'Recargar: párate sobre tu color')], ['💣', tr('Ink bomb: E / 💣 / pad X (big splash)', 'Bomba de tinta: E / 💣 / botón X (gran salpicón)')], ['💥', tr('Splat rivals: they pop back at base', 'Salpica rivales: vuelven a su base')]], extra, onPlay: () => { save(); startMatch(); } });
-  d.querySelectorAll('#pC button').forEach(b => b.onclick = () => { S.char = +b.dataset.i; d.querySelectorAll('#pC button').forEach(x => x.classList.toggle('on', x === b)); SFX.click(); });
+  d.querySelectorAll('#pC button').forEach(b => b.onclick = () => { S.char = +b.dataset.i; S.picked = true; d.querySelectorAll('#pC button').forEach(x => x.classList.toggle('on', x === b)); SFX.click(); });
   d.querySelectorAll('#pS button').forEach(b => b.onclick = () => { S.skill = b.dataset.s; d.querySelectorAll('#pS button').forEach(x => x.classList.toggle('on', x === b)); SFX.click(); });
 }
 title(); ld.done(); window.__READY = true;

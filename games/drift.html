@@ -54,6 +54,8 @@ await E.loadPack('../packs/drift.json', R, p => ld.set(p));
 const input = E.createInput({ surface: $('gl') });
 const P = new E.Particles(scene);
 const S = E.store.get('inoa.drift', { track: 0, racer: 0, mode: 'gp', bestLap: {} });
+// hub hero (profile.hero): default to it until the player picks a character in this game
+const HERO = E.hero(); if (HERO.chosen && !S.picked) { const k = RACERS.findIndex(r => r.model === HERO.model); if (k >= 0) S.racer = k; }
 let G = null, music = null, engineSnd = null;
 
 /* ---------- world build ---------- */
@@ -111,7 +113,7 @@ function checkerTex() { const c = document.createElement('canvas'); c.width = 25
 /* ---------- karts ---------- */
 function makeKart(def, isPlayer) {
   const g = new THREE.Group();
-  const body = E.instance(def.car, { scale: 4.2, tint: def.tint }); body.rotation.y = Math.PI; E.detail(body, 'paint', .35); g.add(body);
+  const body = E.instance(def.car, { scale: 4.2, tint: isPlayer && HERO.chosen && def.model === HERO.model ? HERO.colorHex : def.tint }); body.rotation.y = Math.PI; E.detail(body, 'paint', .35); g.add(body);
   const driver = E.instance(def.model, { scale: 1.75, outline: false, fit: 'height' }); driver.position.set(0, .35, .15); g.add(driver); const rig = E.bones(driver);
   const shadow = new THREE.Mesh(new THREE.CircleGeometry(1.9, 20), new THREE.MeshBasicMaterial({ color: 0, transparent: true, opacity: .28, depthWrite: false })); shadow.rotation.x = -Math.PI / 2; shadow.position.y = .03; shadow.scale.set(1, 1.6, 1); g.add(shadow);
   const shield = new THREE.Mesh(new THREE.SphereGeometry(2.6, 20, 16), new THREE.MeshStandardMaterial({ color: 0x7fd8ff, transparent: true, opacity: .25, emissive: 0x5bd2ff, emissiveIntensity: .6, depthWrite: false })); shield.position.y = 1.1; shield.visible = false; g.add(shield);
@@ -245,7 +247,7 @@ function title() {
   const extra = `<div><p class="ig-sub" style="margin-bottom:6px">Track</p><div class="pick" id="pT">${TRACKS.map((t, i) => `<button data-i="${i}" class="${i === S.track ? 'on' : ''}">${t.e} ${t.name}<small>${t.desc}${S.bestLap[t.id] ? ' · best ' + fmt(S.bestLap[t.id]) : ''}</small></button>`).join('')}</div></div><div><p class="ig-sub" style="margin-bottom:6px">Driver</p><div class="pick" id="pR">${RACERS.map((r, i) => `<button data-i="${i}" class="${i === S.racer ? 'on' : ''}" style="border-left:8px solid #${new THREE.Color(r.tint).getHexString()}">${r.name}</button>`).join('')}</div></div><div><p class="ig-sub" style="margin-bottom:6px">Mode</p><div class="pick" id="pM"><button data-m="gp" class="${S.mode === 'gp' ? 'on' : ''}">🏁 Grand Prix<small>3 laps vs 5 rivals</small></button><button data-m="tt" class="${S.mode === 'tt' ? 'on' : ''}">⏱ Time Trial<small>Chase your best lap</small></button></div></div>`;
   const d = E.titleScreen({ title: 'Island Drift', kicker: 'Inoa Games · Signature 3D', lead: 'Kart racing around the islands. Hold drift through corners until the sparks turn orange or purple, then let go for a turbo.', how: [['◀▶', 'Steer: A/D, arrows, stick or the on-screen buttons'], ['💨', 'Drift: hold Shift/K or 💨 while turning, release for a boost'], ['🎁', 'Item: Space/J or 🎁 after driving through a ? box']], extra, onPlay: () => { E.store.set('inoa.drift', S); startRace(); } });
   d.querySelectorAll('#pT button').forEach(b => b.onclick = () => { S.track = +b.dataset.i; d.querySelectorAll('#pT button').forEach(x => x.classList.toggle('on', x === b)); buildTrack(TRACKS[S.track]); });
-  d.querySelectorAll('#pR button').forEach(b => b.onclick = () => { S.racer = +b.dataset.i; d.querySelectorAll('#pR button').forEach(x => x.classList.toggle('on', x === b)); });
+  d.querySelectorAll('#pR button').forEach(b => b.onclick = () => { S.racer = +b.dataset.i; S.picked = true; d.querySelectorAll('#pR button').forEach(x => x.classList.toggle('on', x === b)); });
   d.querySelectorAll('#pM button').forEach(b => b.onclick = () => { S.mode = b.dataset.m; d.querySelectorAll('#pM button').forEach(x => x.classList.toggle('on', x === b)); });
 }
 title(); ld.done(); window.__READY = true;

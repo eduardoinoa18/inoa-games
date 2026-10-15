@@ -206,6 +206,7 @@ function setGhost(i) { if (ghost.model) ghost.root.remove(ghost.model); ghost.mo
 const ghostTag = E.tag('👻', 'BEST', { width: 1.6, bg: '#dff7ff' }); ghostTag.position.y = 2.25; ghost.root.add(ghostTag);
 ghost.root.rotation.y = Math.PI; ghost.root.visible = false; scene.add(ghost.root);
 player.root.rotation.y = Math.PI; // models face +Z; the course runs toward -Z
+{ const HERO = E.hero(); if (HERO.chosen && !S.picked) { const k = RUNNERS.findIndex(r => r.model === HERO.model); if (k >= 0) S.runner = k; } } // hub hero is the default runner until one is picked here
 setRunner(S.runner); setGhost(S.runner);
 
 /* ---------- course generation (by distance → deterministic per seed) ---------- */
@@ -457,7 +458,7 @@ function title() {
   <div><p class="ig-sub rn-lbl">Course</p><div class="pick" id="pM"><button data-m="endless" class="${S.mode === 'endless' ? 'on' : ''}">🌴 Endless<small>New course every run${S.best.endless ? ' · best ' + S.best.endless + ' m' : ''}</small></button><button data-m="daily" class="${S.mode === 'daily' ? 'on' : ''}">📅 Daily run<small>Same course for everyone today${dBest ? ' · best ' + dBest + ' m' : ''}</small></button></div></div>
   <div><p class="ig-sub rn-lbl">Style</p><div class="pick" id="pD"><button data-d="friendly" class="${S.diff === 'friendly' ? 'on' : ''}">♥ Friendly<small>3 stumbles allowed</small></button><button data-d="classic" class="${S.diff === 'classic' ? 'on' : ''}">⚡ Classic<small>One hit, faster start</small></button></div></div></div>`;
   const d = E.titleScreen({ title: 'Tide Runner', kicker: 'Inoa Games · Signature 3D', lead: 'Race the island boardwalk at golden hour. Dodge carts, hop barrels, slide under beams, grab coins — and beat your ghost!', how: [['⬅➡', 'Change lane: swipe, A/D, arrows or ◀ ▶'], ['⤒', 'Jump: swipe up, W, ↑ or Space'], ['⤓', 'Slide: swipe down, S, ↓ or Shift'], ['👻', 'Your best run comes back as a ghost to race']], extra, onPlay: () => { save(); startRun(); } });
-  d.querySelectorAll('#pR button').forEach(b => b.onclick = () => { S.runner = +b.dataset.i; d.querySelectorAll('#pR button').forEach(x => x.classList.toggle('on', x === b)); setRunner(S.runner); SFX.click(); });
+  d.querySelectorAll('#pR button').forEach(b => b.onclick = () => { S.runner = +b.dataset.i; S.picked = true; d.querySelectorAll('#pR button').forEach(x => x.classList.toggle('on', x === b)); setRunner(S.runner); SFX.click(); });
   d.querySelectorAll('#pM button').forEach(b => b.onclick = () => { S.mode = b.dataset.m; d.querySelectorAll('#pM button').forEach(x => x.classList.toggle('on', x === b)); SFX.click(); });
   d.querySelectorAll('#pD button').forEach(b => b.onclick = () => { S.diff = b.dataset.d; d.querySelectorAll('#pD button').forEach(x => x.classList.toggle('on', x === b)); SFX.click(); });
 }
