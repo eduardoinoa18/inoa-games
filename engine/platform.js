@@ -65,7 +65,7 @@ const api = {
   async signUp(email, password, displayName, redirectTo) {
     const name = String(displayName || '').replace(/[<>]/g, '').trim().slice(0, 24);
     if (String(password || '').length < 8) throw new PlatformError('weak_password', 'Use at least 8 characters');
-    const d = await http('/auth/v1/signup', { query: redirectTo ? '?redirect_to=' + encodeURIComponent(redirectTo) : '', body: { email, password, data: { display_name: name } } });
+    const d = await http('/auth/v1/signup', { query: redirectTo ? '?redirect_to=' + encodeURIComponent(redirectTo) : '', body: { email, password, data: { display_name: name, app: 'inoa' } } });
     if (d && d.access_token) { saveAuth(d); emit(); } // only when the project does not require confirmation
     return { needsVerify: !(d && d.access_token) };
   },
@@ -95,18 +95,18 @@ const api = {
     saveAuth({ access_token, refresh_token, expires_in: +h.get('expires_in') || 3600, user }); await api.refreshStatus().catch(() => { }); emit();
     return { type };
   },
-  async refreshStatus() { const st = await rpc('my_status'); cacheStatus(st); mirrorProfile(st); emit(); return st; },
+  async refreshStatus() { const st = await rpc('ig_my_status'); cacheStatus(st); mirrorProfile(st); emit(); return st; },
   async updateProfile(patch) {
     const t = await token(); if (!t) throw new PlatformError('auth'); const body = {};
     if (patch.display_name != null) body.display_name = String(patch.display_name).replace(/[<>]/g, '').trim().slice(0, 24);
     if (patch.hero != null) body.hero = patch.hero; if (patch.lang) body.lang = patch.lang === 'es' ? 'es' : 'en'; if (patch.public_profile != null) body.public_profile = !!patch.public_profile;
-    await http('/rest/v1/profiles', { method: 'PATCH', token: t, query: '?id=eq.' + S.auth.user.id, body }); return api.refreshStatus();
+    await http('/rest/v1/ig_profiles', { method: 'PATCH', token: t, query: '?id=eq.' + S.auth.user.id, body }); return api.refreshStatus();
   },
-  achievements() { return rpc('my_achievements'); },
+  achievements() { return rpc('ig_my_achievements'); },
   async importLocal() {
     const p = ls.get('inoa.profile', null); if (!p || (!p.xp && !p.coins)) return { ok: false, reason: 'nothing' };
     const games = {}; for (const [k, v] of Object.entries(p.games || {})) games[k] = { plays: v.plays | 0, best: typeof v.best === 'number' ? v.best : null };
-    const r = await rpc('import_local_profile', { p_xp: p.xp | 0, p_coins: p.coins | 0, p_games: games }); await api.refreshStatus().catch(() => { }); return r;
+    const r = await rpc('ig_import_local_profile', { p_xp: p.xp | 0, p_coins: p.coins | 0, p_games: games }); await api.refreshStatus().catch(() => { }); return r;
   },
 
   // ---- the gate: one qualifying start per play session (server decides; see start_game) ----
@@ -116,7 +116,7 @@ const api = {
     const sk = 'inoa.sess.' + gameId; let ck = null; try { ck = sessionStorage.getItem(sk); } catch (e) { }
     if (!ck) { ck = rid(); try { sessionStorage.setItem(sk, ck); } catch (e) { } }
     try {
-      const r = await rpc('start_game', { p_game: gameId, p_client_key: ck });
+      const r = await rpc('ig_start_game', { p_game: gameId, p_client_key: ck });
       if (r.allowed) { S.session = { gameId, id: r.session_id, expires: Date.parse(r.expires_at), access: r.access, ck }; api.refreshStatus().catch(() => { }); }
       return r;
     } catch (e) {
@@ -139,7 +139,7 @@ const api = {
     try { const r = await api._send(item); return r; } catch (e) { if (e.code === 'offline') { api._queue(item); return { queued: true }; } return { ok: false, reason: e.message }; }
   },
   async _send(item) {
-    const r = await rpc('finish_round', { p_session: item.sid, p_round_key: item.roundKey, p_score: item.score, p_best_lower: item.bestLower, p_xp: item.xp, p_coins: item.coins });
+    const r = await rpc('ig_finish_round', { p_session: item.sid, p_round_key: item.roundKey, p_score: item.score, p_best_lower: item.bestLower, p_xp: item.xp, p_coins: item.coins });
     if (r && r.ok) { const st = Object.assign({}, S.status || {}, { xp: r.xp_total, coins: r.coins_total, level: r.level }); cacheStatus(st); mirrorProfile(st); emit(); }
     return r;
   },
@@ -152,7 +152,7 @@ const api = {
     for (const it of q) {
       if (Date.now() - it.at > 24 * 3600e3) { dropped++; continue; }
       try {
-        if (!it.sid) { const r = await rpc('start_game', { p_game: it.gameId, p_client_key: it.ck }); if (!r.allowed) { dropped++; continue; } it.sid = r.session_id; for (const o of q) if (o.ck === it.ck && !o.sid) o.sid = r.session_id; }
+        if (!it.sid) { const r = await rpc('ig_start_game', { p_game: it.gameId, p_client_key: it.ck }); if (!r.allowed) { dropped++; continue; } it.sid = r.session_id; for (const o of q) if (o.ck === it.ck && !o.sid) o.sid = r.session_id; }
         const r = await api._send(it); if (r && (r.ok || r.duplicate)) sent++; else dropped++;
       } catch (e) { if (e.code === 'offline') { keep.push(it); } else dropped++; }
     }

@@ -11,7 +11,8 @@
     "postinstall": "npx playwright install chromium || true",
     "test:db": "bash test/db/run.sh",
     "test:api": "node test/api.test.js",
-    "test:platform": "ALLOW_4XX=1 node test/run.js account.html test/platform.js"
+    "test:platform": "ALLOW_4XX=1 node test/run.js account.html test/platform.js",
+    "test:admin": "ALLOW_4XX=1 node test/run.js admin.html test/admin.js"
   },
   "devDependencies": {
     "@gltf-transform/core": "4.1.1",

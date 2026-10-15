@@ -41,17 +41,17 @@ module.exports = async (p, shot) => {
     // ---- the game gate: Play on a real game page consumes a start ----
     await p.goto(base + 'games/junk.html'); await until(() => window.__READY === true, 120000);
     await p.click('.ig-title [data-a=play]'); await until(() => !document.querySelector('.ig-title'), 30000);
-    let st = (await sql("select starts from public.daily_usage d join auth.users u on u.id = d.user_id where u.email = 'ana@example.test'"))[0];
+    let st = (await sql("select starts from public.ig_daily_usage d join auth.users u on u.id = d.user_id where u.email = 'ana@example.test'"))[0];
     ok(st && st.starts === 1, 'Play pressed → 1 start used (server)');
     // results go to the server: XP is clamped to the per-round cap and shown on the card
-    await sql("update public.game_sessions set started_at = started_at - interval '2 minutes'");
+    await sql("update public.ig_game_sessions set started_at = started_at - interval '2 minutes'");
     const card = await p.evaluate(async () => { const E = await import('/engine/inoa3d.js'); E.results({ gameId: 'junk', title: 'Test', stats: [], xp: 99999, coins: 99999, best: 30, bestLower: true }); await new Promise(r => setTimeout(r, 1500)); return document.querySelector('.ig-results .ig-reward span').textContent; });
     ok(card === '+400 XP', 'results card shows the server-clamped reward (+400 XP), got ' + card);
-    const prof = (await sql("select xp from public.profiles p join auth.users u on u.id = p.id where u.email = 'ana@example.test'"))[0];
+    const prof = (await sql("select xp from public.ig_profiles p join auth.users u on u.id = p.id where u.email = 'ana@example.test'"))[0];
     ok(prof.xp === 5400, 'server XP = 5000 imported + 400 round');
     // reload keeps the session (same tab key) → no extra start
     await p.reload(); await until(() => window.__READY === true, 120000); await p.click('.ig-title [data-a=play]'); await until(() => !document.querySelector('.ig-title'), 30000);
-    st = (await sql("select starts from public.daily_usage d join auth.users u on u.id = d.user_id where u.email = 'ana@example.test'"))[0]; ok(st.starts === 1, 'reload + Play reuses the session (still 1 start)');
+    st = (await sql("select starts from public.ig_daily_usage d join auth.users u on u.id = d.user_id where u.email = 'ana@example.test'"))[0]; ok(st.starts === 1, 'reload + Play reuses the session (still 1 start)');
     // use the other two starts, then a fresh tab hits the limit gate
     await p.evaluate(async () => { const E = await import('/engine/inoa3d.js'); const P = await E.platform(); await P.startGame('fit'); await P.startGame('drift'); sessionStorage.clear(); });
     await p.reload(); await until(() => window.__READY === true, 120000); await p.click('.ig-title [data-a=play]'); await until(() => !!document.querySelector('.ig-gate'), 30000);

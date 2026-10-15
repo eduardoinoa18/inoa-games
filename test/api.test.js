@@ -35,7 +35,7 @@ const event = (id, type, obj, created = Math.floor(Date.now() / 1000)) => JSON.s
   const A = { apikey: 'test-anon-key', 'content-type': 'application/json' };
   const api = (p, init) => fetch(`http://localhost:${MP}${p}`, Object.assign({ headers: A }, init)).then(r => r.json());
   const sql = (q, params) => api('/__test/sql', { method: 'POST', body: JSON.stringify({ sql: q, params }) });
-  const signup = async (email, verify = true) => { await api('/auth/v1/signup', { method: 'POST', body: JSON.stringify({ email, password: 'password-123', data: { display_name: email.split('@')[0] } }) }); if (!verify) { const t = await api('/auth/v1/token?grant_type=password', { method: 'POST', body: JSON.stringify({ email, password: 'password-123' }) }); return t; } const link = (await api(`/__test/confirm?email=${email}`)).link; const q = new URLSearchParams(link.split('#')[1]); const u = (await sql('select id from auth.users where email = $1', [email]))[0]; return { token: q.get('access_token'), id: u.id }; };
+  const signup = async (email, verify = true) => { await api('/auth/v1/signup', { method: 'POST', body: JSON.stringify({ email, password: 'password-123', data: { display_name: email.split('@')[0], app: 'inoa' } }) }); if (!verify) { const t = await api('/auth/v1/token?grant_type=password', { method: 'POST', body: JSON.stringify({ email, password: 'password-123' }) }); return t; } const link = (await api(`/__test/confirm?email=${email}`)).link; const q = new URLSearchParams(link.split('#')[1]); const u = (await sql('select id from auth.users where email = $1', [email]))[0]; return { token: q.get('access_token'), id: u.id }; };
   try {
     const kim = await signup('kim@example.test');
     const auth = t => ({ authorization: 'Bearer ' + t });
@@ -63,7 +63,7 @@ const event = (id, type, obj, created = Math.floor(Date.now() / 1000)) => JSON.s
     const w1 = await call(H.webhook, { headers: { 'stripe-signature': sign(e1) }, body: e1 });
     ok(w1.status === 200 && w1.body.result === 'processed', 'valid subscription.created → processed');
     ok((await call(H.webhook, { headers: { 'stripe-signature': sign(e1) }, body: e1 })).body.result === 'duplicate', 'Stripe retry of the same event → duplicate (idempotent)');
-    let st = (await sql('select status, cancel_at_period_end from public.subscriptions where provider_subscription_id = $1', ['sub_k1']))[0];
+    let st = (await sql('select status, cancel_at_period_end from public.ig_subscriptions where provider_subscription_id = $1', ['sub_k1']))[0];
     ok(st && st.status === 'active', 'subscription mirrored as active');
     ok((await call(H.checkout, { headers: auth(kim.token) })).status === 409, 'second checkout while premium → 409');
     const stale = event('evt_k0', 'customer.subscription.updated', Object.assign({}, sub, { status: 'canceled' }), now - 3600);
@@ -74,7 +74,7 @@ const event = (id, type, obj, created = Math.floor(Date.now() / 1000)) => JSON.s
     ok((await call(H.webhook, { headers: { 'stripe-signature': sign(failed) }, body: failed })).body.result === 'processed', 'invoice.payment_failed recorded');
     const pd = event('evt_k4', 'customer.subscription.updated', Object.assign({}, sub, { status: 'past_due' }), now + 5);
     await call(H.webhook, { headers: { 'stripe-signature': sign(pd) }, body: pd });
-    const kimStatus = async () => (await sql("select public.entitlement($1::uuid) as e", [kim.id]))[0].e;
+    const kimStatus = async () => (await sql("select public.ig_entitlement($1::uuid) as e", [kim.id]))[0].e;
     ok(await kimStatus() === 'premium', 'past_due keeps access until the paid period ends (no invented grace)');
     const cancel = event('evt_k5', 'customer.subscription.updated', Object.assign({}, sub, { cancel_at_period_end: true }), now + 10);
     await call(H.webhook, { headers: { 'stripe-signature': sign(cancel) }, body: cancel });
@@ -96,9 +96,9 @@ const event = (id, type, obj, created = Math.floor(Date.now() / 1000)) => JSON.s
     stripeCalls.length = 0;
     const d = await call(H.del, { headers: auth(kim.token) }); ok(d.status === 200, 'account deletion succeeds');
     ok(stripeCalls.some(c => c.method === 'DELETE' && c.url.endsWith('/v1/subscriptions/sub_k2')), 'active Stripe subscription cancelled before deletion');
-    ok(!(await sql('select 1 from auth.users where id = $1', [kim.id])).length && !(await sql('select 1 from public.profiles where id = $1', [kim.id])).length, 'auth user + profile removed');
-    ok((await sql("select count(*)::int as n from public.subscriptions where provider_subscription_id in ('sub_k1','sub_k2') and user_id is null"))[0].n === 2, 'billing records kept, unlinked from the person');
-    ok((await sql('select count(*)::int as n from public.events where user_id = $1', [kim.id]))[0].n === 0, 'analytics events unlinked');
+    ok(!(await sql('select 1 from auth.users where id = $1', [kim.id])).length && !(await sql('select 1 from public.ig_profiles where id = $1', [kim.id])).length, 'auth user + profile removed');
+    ok((await sql("select count(*)::int as n from public.ig_subscriptions where provider_subscription_id in ('sub_k1','sub_k2') and user_id is null"))[0].n === 2, 'billing records kept, unlinked from the person');
+    ok((await sql('select count(*)::int as n from public.ig_events where user_id = $1', [kim.id]))[0].n === 0, 'analytics events unlinked');
     ok((await call(H.checkout, { headers: auth(kim.token) })).status === 401, 'deleted account token no longer works');
   } catch (e) { fails++; console.log('FAIL - exception', e.stack); }
   await mock.close();

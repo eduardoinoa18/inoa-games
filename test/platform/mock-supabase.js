@@ -55,14 +55,14 @@ module.exports = function start({ port, db = 'inoa_test', host = '/tmp/pgt', pgp
         const vals = keys.map(k => body[k] != null && typeof body[k] === 'object' ? JSON.stringify(body[k]) : body[k]);
         const r = await asUser(claims ? { sub: claims.sub, role: 'authenticated' } : null, c => c.query(sql, vals), service ? 'service_role' : null); return send(200, r.rows[0].r);
       }
-      if (P === '/rest/v1/profiles' && req.method === 'PATCH') {
+      if (P === '/rest/v1/ig_profiles' && req.method === 'PATCH') {
         if (!claims) return send(401, { message: 'JWT required' }); const id = (url.searchParams.get('id') || '').replace(/^eq\./, '');
         const cols = Object.keys(body).filter(k => ['display_name', 'hero', 'lang', 'public_profile'].includes(k)); if (!cols.length) return send(400, { message: 'nothing to update' });
-        await asUser({ sub: claims.sub }, c => c.query(`update public.profiles set ${cols.map((k, i) => `${k} = $${i + 2}`).join(', ')} where id = $1`, [id, ...cols.map(k => typeof body[k] === 'object' ? JSON.stringify(body[k]) : body[k])]));
+        await asUser({ sub: claims.sub }, c => c.query(`update public.ig_profiles set ${cols.map((k, i) => `${k} = $${i + 2}`).join(', ')} where id = $1`, [id, ...cols.map(k => typeof body[k] === 'object' ? JSON.stringify(body[k]) : body[k])]));
         return send(204);
       }
       // service-role table read with simple PostgREST filters (eq / in / gt) on whitelisted tables + columns
-      const tm = P.match(/^\/rest\/v1\/(subscriptions)$/);
+      const tm = P.match(/^\/rest\/v1\/(ig_subscriptions)$/);
       if (tm && req.method === 'GET') {
         if (!service) return send(401, { message: 'service role only in this mock' }); const where = [], vals = [];
         for (const [k, v] of url.searchParams) { if (k === 'select') continue; if (!/^[a-z_]+$/.test(k)) return send(400, {}); const [op, ...rest] = v.split('.'); const val = rest.join('.');

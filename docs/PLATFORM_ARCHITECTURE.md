@@ -104,3 +104,10 @@ Accounts require ticking "13 or older, or a parent/guardian creating this accoun
 4. Vercel: import the repo; set env vars from §3 (Preview + Production). Upgrade to Pro before charging real money (Hobby is non-commercial).
 5. Sign up on the site with the owner email, verify it, run `supabase/admin/grant_owner.sql`, enable MFA.
 6. Live billing: only after explicit approval — swap to live keys and set `STRIPE_LIVE_ENABLED=yes`.
+
+## 12. Shared Supabase project (current setup)
+For now Inoa Games runs in the owner's existing **WebDesigns / Presentations** Supabase project (`bqmmgtylygxwyjyyyxim`), which also hosts Listing Studio (`la_*` tables/functions). Never the `viventa-rd` project. To coexist safely:
+- Every Inoa table, function, trigger and index is prefixed **`ig_`**; privilege revokes loop over `ig_*` objects only (no schema-wide `revoke … on all tables/functions in schema public`), so Listing Studio's grants are untouched.
+- `auth.users` is shared: the sign-up trigger creates an Inoa profile only when the sign-up metadata has `app = 'inoa'` (sent by `engine/platform.js`). Someone who already has a Listing Studio login and signs in to Inoa gets a profile lazily (`ig_ensure_profile`, called by `ig_my_status` / `ig_start_game`).
+- Admin KPIs and the user list count **Inoa accounts only** (joined to `ig_profiles`), not every login in the project.
+- Consequences the owner should know: the same email/password works in both apps; Auth email templates, Site URL, redirect allow-list, SMTP and rate limits are shared (add `<inoa site>/account.html` to the redirect URLs; generic email wording); `ig_user_roles` admin is separate from Listing Studio roles. Moving to a dedicated project later = run the same migrations there and switch `platform.json` (accounts would need to re-register or be exported).
