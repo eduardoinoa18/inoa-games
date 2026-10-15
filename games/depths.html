@@ -48,12 +48,16 @@ body{background:#07080d}
 .dp-intro{position:fixed;left:0;right:0;bottom:16%;z-index:22;text-align:center;pointer-events:none;opacity:0;transition:opacity .4s}
 .dp-intro.on{opacity:1}
 .dp-intro small{display:block;font:800 13px var(--f-b);letter-spacing:.3em;color:#ffb38a;text-transform:uppercase}
+@media (max-aspect-ratio:3/4){.dp-intro{bottom:21%}.dp-intro b{font-size:34px}}
 .dp-intro b{display:block;font:900 clamp(30px,7vw,60px) var(--f-d);color:#fff2dc;text-shadow:0 4px 0 #3a0d0d,0 0 30px rgba(255,80,40,.5)}
 .dp-intro i{display:block;font:700 15px var(--f-b);color:#e8d8c8;font-style:normal}
 .dp-room{font:900 12px var(--f-d)}
 .ig-toast{top:27%}
+.dp-big{top:36%;font-size:clamp(30px,9.5vw,80px);line-height:1.02;text-align:center;width:max-content;max-width:92vw;opacity:0;text-shadow:0 5px 0 rgba(0,0,0,.45),0 0 28px rgba(0,0,0,.5);transition:none}
+@media (max-width:640px){.ig-toast{top:21%}}
 @media (max-width:640px){.ig-hud{flex-wrap:nowrap;gap:6px}.ig-hud .ig-chip{padding:6px 9px;font-size:13px;min-height:36px}}
 .ig-float.dp-d{font-size:20px}
+.ig-float.dp-ally{font-size:15px;opacity:.72}
 .ig-float.dp-c{font-size:30px;color:#ffd166;text-shadow:0 3px 0 #6b2a00,0 0 14px rgba(255,140,0,.6)}
 .ig-float.dp-h{color:#8ff0b4}
 .ig-float.dp-hurt{color:#ff8a7a;font-size:22px}
@@ -321,10 +325,14 @@ function buildRoom(type, idx) {
   const room = { type, T, W, D, idx, obst: [], props: [], doorOpen: false, door: null, cleared: false };
   if (G) G.room = room; else camp.room = room;
   const Gref = G || camp; Gref.flames = []; BR = room; BF = Gref.flames;
-  R.setLook(Object.assign({ background: T.fog, fog: T.fog, fogNear: 26, fogFar: 62, sunColor: T.sun, env: .2, bloom: .32, bloomThreshold: .82, sunDir: [0, 1, 0] }, T.look));
+  R.setLook(Object.assign({ background: T.fog, fog: T.fog, fogNear: 26, fogFar: 62, sunColor: T.sun, env: .2, bloom: .2, bloomThreshold: .88, sunDir: [0, 1, 0] }, T.look));
   // floor
   const fl = E.pbr(T.floor[0], T.floor[1], [(W + 2.4) / 3.2, (D + 2.4) / 3.2], { bump: T.floor[0] === 'wood' ? 2.5 : 3.5 });
   const floor = mesh(own(new THREE.PlaneGeometry(W + 2.4, D + 2.4)), fl, 0, 0, 0); floor.rotation.x = -Math.PI / 2; floor.castShadow = false;
+  // south apron: floor continues past the low front wall so tall (portrait) views never end in a black void
+  const apMat = E.pbr(T.floor[0], new THREE.Color(T.floor[1]).multiplyScalar(.85).getHex(), [(W + 12) / 3.2, 14 / 3.2], { bump: 3 });
+  const apron = mesh(own(new THREE.PlaneGeometry(W + 12, 14)), apMat, 0, -.02, D / 2 + 1.2 + 7); apron.rotation.x = -Math.PI / 2; apron.castShadow = false;
+  if (type !== 'camp') for (let x = -W / 2 - 2; x <= W / 2 + 2; x += sr(2.6, 4.2)) { const z = D / 2 + sr(3, 9); if (srnd() < .55) addRock(srnd() < .5 ? 'formation-rock' : 'formation-stone', x, z, sr(1, 2.2), T.tint, false); }
   // walls
   const wallMat = T.wall === 'plank' ? E.pbr('wood', T.tint, [1, 1], { bump: 2 }) : E.pbr('stone', T.wall === 'rock' ? T.back : T.tint, [1, 1], { bump: 4 });
   const wallH = T.wall === 'rock' ? 6 : 4.6, sideH = T.wall === 'rock' ? 5 : 3.8, th = 1.2, gap = 1.7;
@@ -551,7 +559,15 @@ function p2JoinPressed() { if (p2Active) return false; const kb = K.Numpad1 || K
 function hitStop(t) { G.freeze = Math.max(G.freeze, t); }
 function shake(a) { camState.shake = Math.min(.7, Math.max(camState.shake, a)); }
 let floatN = 0;
-function popText(text, pos, cls) { if (floatN > 26) return; const s = E.toScreen(pos, camera); if (s.x < 0 || s.y < 0 || s.x > innerWidth || s.y > innerHeight) return; floatN++; setTimeout(() => floatN--, 1000); E.floatText(text, s.x + rnd(-12, 12), s.y, cls); }
+function popText(text, pos, cls) { if (floatN > 14) return; const s = E.toScreen(pos, camera); if (s.x < 0 || s.y < 0 || s.x > innerWidth || s.y > innerHeight) return; floatN++; setTimeout(() => floatN--, 1000); E.floatText(text, s.x + rnd(-12, 12), s.y, cls); }
+// Damage numbers are merged per target: hits within a short window add up into one number (crit = gold "!").
+// Hits that only allies (bots) dealt show smaller and dimmer, so your own numbers stand out.
+function popDmg(t, dmg, crit, hero, src) {
+  const a = t.dacc || (t.dacc = { n: 0, crit: false, mine: false, open: -9 }); a.n += dmg; a.crit ||= crit; a.mine ||= hero || !src || src.ctrl !== 'bot';
+  if (G.t - a.open < .5) return; a.open = G.t; // (re-opens if a room change dropped the pending timer)
+  setTimeoutG(.28, () => { a.open = -9; const n = a.n, c = a.crit, mine = a.mine; a.n = 0; a.crit = false; a.mine = false; if (!n || (t.dead && !hero && t.st > .3)) return;
+    if (hero) popText('-' + n, _v1.set(t.x, 2, t.z), 'dp-hurt'); else popText(c ? n + '!' : String(n), _v1.set(t.x, (t.type === 'boss' ? 3.2 : 1.6) + rnd(0, .3), t.z), c ? 'dp-c' : mine ? 'dp-d' : 'dp-d dp-ally'); });
+}
 function heroDmgMul() { return (1 + ml('dmg') * .06) * (1 + boon('dmg') * .2); }
 function damageFoe(t, amount, src, o = {}) {
   if (t.dead || t.state === 'spawn' || t.invuln) return 0;
@@ -564,7 +580,7 @@ function damageFoe(t, amount, src, o = {}) {
   if (o.stun && t.type !== 'boss' && t.type !== 'cannon') { t.stun = Math.max(t.stun, o.stun); if (t.tele) { killTele(t.tele); t.tele = null; } if (t.state !== 'spawn') { t.state = 'chase'; t.st = 0; } }
   if (o.slow) t.slow = Math.max(t.slow, o.slow);
   if (o.heavy && t.type !== 'boss' && t.type !== 'cannon' && (t.state === 'wind')) { killTele(t.tele); t.tele = null; t.state = 'recover'; t.st = 0; }
-  _v1.set(t.x, (t.type === 'boss' ? 3 : 1.4) + rnd(0, .4), t.z); popText(crit ? dmg + '!' : String(dmg), _v1, crit ? 'dp-c' : 'dp-d');
+  popDmg(t, dmg, crit, false, src);
   burst(_v1.set(t.x, 1.1, t.z), { color: crit ? 0xffd166 : 0xfff2c8, n: crit ? 14 : 8, speed: 3.5, up: 2.5, size: .35, life: .3, gravity: 6 });
   crit ? SND.crit() : SND.hit();
   if (src && src.kind === 'hero') { src.ult = Math.min(100, src.ult + (3 + dmg * .05) * (1 + boon('trance') * .4)); src.stats.dmg += dmg; if (boon('leech')) healHero(src, dmg * .05 * boon('leech'), true); hitStop(src.ctrl === 'bot' ? ((o.heavy || crit) ? .03 : .012) : (o.heavy || crit) ? .07 : .045); }
@@ -574,11 +590,11 @@ function damageFoe(t, amount, src, o = {}) {
 function healHero(h, amt, quiet) { if (h.down) return; const before = h.hp; h.hp = Math.min(h.maxHp, h.hp + amt); if (!quiet && h.hp - before >= 1) popText('+' + Math.round(h.hp - before), _v1.set(h.x, 2, h.z), 'dp-h'); }
 function damageHero(h, amount, src, o = {}) {
   if (h.down || G.over || G.won) return false;
-  if (h.iframes > 0) { if (!h.dodgeTxt || G.t - h.dodgeTxt > .6) { h.dodgeTxt = G.t; popText('dodged', _v1.set(h.x, 2.1, h.z), 'dp-h'); } return false; }
+  if (h.iframes > 0) { if (h.ctrl !== 'bot' && !h.dodgeTxt || G.t - h.dodgeTxt > .6) { h.dodgeTxt = G.t; popText('dodged', _v1.set(h.x, 2.1, h.z), 'dp-h'); } return false; }
   let dmg = Math.round(amount * (1 - boon('guard') * .15)); h.hp -= dmg; h.flash = .2; h.stats.taken = (h.stats.taken || 0) + dmg;
   if (o.kb) { const d = Math.hypot(o.dx, o.dz) || 1; h.kx += o.dx / d * o.kb; h.kz += o.dz / d * o.kb; }
   h.ult = Math.min(100, h.ult + 4);
-  popText('-' + dmg, _v1.set(h.x, 2, h.z), 'dp-hurt'); SND.hurt(); burst(_v1.set(h.x, 1.2, h.z), { color: 0xff5a4f, n: 10, speed: 3, up: 2.5, size: .35, life: .35, gravity: 8 });
+  popDmg(h, dmg, false, true); SND.hurt(); burst(_v1.set(h.x, 1.2, h.z), { color: 0xff5a4f, n: 10, speed: 3, up: 2.5, size: .35, life: .35, gravity: 8 });
   if (h.ctrl !== 'bot') { shake(.35); hitStop(.05); }
   if (src && boon('thorns') && !src.dead && src.kind === 'foe') damageFoe(src, 12 * boon('thorns') / heroDmgMul(), null);
   if (h.state !== 'ult' && h.state !== 'special' && o.kb > 6) { h.state = 'hurt'; h.st = 0; }
@@ -587,9 +603,9 @@ function damageHero(h, amount, src, o = {}) {
 }
 function downHero(h) {
   h.hp = 0; h.down = true; h.state = 'down'; h.st = 0; h.reviveP = 0; SFX.bad(); burst(_v1.set(h.x, 1, h.z), { color: 0x8a8aff, n: 18, speed: 2, up: 3, size: .5, life: .8 });
-  if (h.ctrl !== 'bot') E.toast(G.heroes.some(o => !o.down) ? 'You are down! An ally can revive you.' : 'Down…', 1800);
+  if (h.ctrl !== 'bot') E.toast(G.heroes.some(o => !o.down) ? E.L('You are down! An ally can revive you.', '¡Caíste! Un aliado puede revivirte.') : E.L('Down…', 'Caído…'), 1800);
   if (partyAlive().length === 0) {
-    if (G.phoenix > 0) { G.phoenix--; setTimeoutG(.9, () => { if (!G || G.over) return; for (const o of G.heroes) reviveHero(o, .5); bigText('🪶 PHOENIX!'); E.toast('A phoenix feather revives the party', 2000); }); }
+    if (G.phoenix > 0) { G.phoenix--; setTimeoutG(.9, () => { if (!G || G.over) return; for (const o of G.heroes) reviveHero(o, .5); bigText(E.L('🪶 PHOENIX!', '🪶 ¡FÉNIX!')); E.toast('A phoenix feather revives the party', 2000); }); }
     else gameOver();
   }
 }
@@ -656,7 +672,7 @@ function startSpecial(h, c) {
   else if (h.cls === 'brawler') { SND.swish(); h.iframes = .55; }
 }
 function startUlt(h) {
-  if (h.ult < 100) return; h.ult = 0; h.state = 'ult'; h.st = 0; h.hitSet.clear(); h.uk = 0; h.iframes = 99; SND.ult(); bigText(h.C.ult.toUpperCase()); G.slow = .45; shake(.3);
+  if (h.ult < 100) return; h.ult = 0; h.state = 'ult'; h.st = 0; h.hitSet.clear(); h.uk = 0; h.iframes = 99; SND.ult(); if (h.ctrl === 'bot') popText(h.C.ult, _v1.set(h.x, 2.6, h.z), 'dp-h'); else bigText(h.C.ult.toUpperCase()); G.slow = .45; shake(.3);
   shock(h.x, h.z, 3, new THREE.Color(h.C.color).getHex(), .5);
   if (h.cls === 'ninja') { h.targets = G.foes.filter(t => !t.dead && t.state !== 'spawn').sort((a, b) => ((a.x - h.x) ** 2 + (a.z - h.z) ** 2) - ((b.x - h.x) ** 2 + (b.z - h.z) ** 2)).slice(0, 8); h.home = [h.x, h.z]; }
   if (h.cls === 'mage') { const tg = G.foes.filter(t => !t.dead && t.state !== 'spawn'); for (let k = 0; k < 9; k++) { const t = tg.length ? tg[k % tg.length] : null; const x = clamp((t ? t.x : h.x) + rnd(-1.6, 1.6) * (k >= tg.length ? 2.5 : .5), -G.room.W / 2 + 1, G.room.W / 2 - 1), z = clamp((t ? t.z : h.z) + rnd(-1.6, 1.6) * (k >= tg.length ? 2.5 : .5), -G.room.D / 2 + 1, G.room.D / 2 - 1); const delay = .25 + k * .2; setTimeoutG(delay, () => { const tl = teleCircle(x, z, 2.6, .75, true); shoot({ kind: 'meteor', team: 'hero', owner: h, sx: x + 3, sz: z - 6, tx: x, tz: z, x, z, dur: .75, rad: 2.6, dmg: 48, tele: tl }); }); } }
@@ -732,8 +748,13 @@ function botControl(h, dt) {
   const ai = h.ai; ai.t = (ai.t || 0) + dt;
   const go = (tx, tz, sp = 1) => { const [x, z] = steerDir(h, tx - h.x, tz - h.z); c.x = x * sp; c.z = z * sp; };
   // 1) danger: telegraphs and incoming balls
-  let danger = null; for (const T of G.teles) { if (T.done || T.friendly) continue; if (inTele(h, T, .3) && T.t / T.dur > .25) { danger = T; break; } }
-  if (danger && h.state === 'move') { let ax, az; if (danger.kind === 'c') { ax = h.x - danger.x; az = h.z - danger.z; } else { const s = Math.sin(danger.ang), co = Math.cos(danger.ang); const lat = (h.x - danger.x) * co - (h.z - danger.z) * s; ax = co * Math.sign(lat || 1); az = -s * Math.sign(lat || 1); } const d = Math.hypot(ax, az) || 1; [c.x, c.z] = steerDir(h, ax / d, az / d); if (danger.t / danger.dur > .55 && h.dodges > 0 && Math.random() < .5) c.b = true; return c; }
+  // Story allies react like people: a reaction delay per telegraph, sometimes they miss it, and they roll less often.
+  const human = h.ctrl === 'bot' && S.diff === 'story';
+  let danger = null; for (const T of G.teles) { if (T.done || T.friendly) continue; if (inTele(h, T, .3) && T.t / T.dur > .25) {
+    if (human) { const sn = T.seen || (T.seen = {}); const k = sn[h.slot] || (sn[h.slot] = { t: T.t, d: Math.random() < .22 ? 99 : rnd(.3, .65) }); if (T.t - k.t < k.d) continue; }
+    danger = T; break; } }
+  ai.rollCd = Math.max(0, (ai.rollCd || 0) - dt);
+  if (danger && h.state === 'move') { let ax, az; if (danger.kind === 'c') { ax = h.x - danger.x; az = h.z - danger.z; } else { const s = Math.sin(danger.ang), co = Math.cos(danger.ang); const lat = (h.x - danger.x) * co - (h.z - danger.z) * s; ax = co * Math.sign(lat || 1); az = -s * Math.sign(lat || 1); } const d = Math.hypot(ax, az) || 1; [c.x, c.z] = steerDir(h, ax / d, az / d); if (danger.t / danger.dur > .55 && h.dodges > 0 && !ai.rollCd && Math.random() < (human ? .12 : .5)) { c.b = true; if (human) ai.rollCd = rnd(1.2, 2.2); } return c; }
   // 2) revive
   const downed = G.heroes.filter(o => o.down && o !== h); if (downed.length) { const o = downed.sort((a, b) => ((a.x - h.x) ** 2 + (a.z - h.z) ** 2) - ((b.x - h.x) ** 2 + (b.z - h.z) ** 2))[0]; const threat = nearestFoe(o.x, o.z, 2.5); if (!threat || partyAlive().length === 1) { const d = Math.hypot(o.x - h.x, o.z - h.z); if (d > 1.4) go(o.x, o.z); return c; } }
   // 3) fight
@@ -805,7 +826,7 @@ function foeUpdate(e, dt) {
 /* ================= boss ================= */
 function bossUpdate(e, T, dx, dz, d, aT, dt, tm) {
   let mx = 0, mz = 0; const fx = Math.sin(e.h), fz = Math.cos(e.h); const frac = e.hp / e.maxHp; const ph = frac > .66 ? 1 : frac > .33 ? 2 : 3; const spd = ph === 3 ? .78 : 1;
-  if (ph > e.phase && e.state !== 'roar' && e.state !== 'jump') { e.phase = ph; killTele(e.tele); e.tele = null; e.state = 'roar'; e.st = 0; bigText(ph === 2 ? 'PHASE 2' : 'FINAL PHASE'); SND.roar(); shake(.6); E.toast(ph === 2 ? 'The captain calls his crew!' : 'The captain is enraged!', 1800); for (const h of G.heroes) { const ddx = h.x - e.x, ddz = h.z - e.z; const dd = Math.hypot(ddx, ddz) || 1; if (dd < 6 && !h.down) { h.kx += ddx / dd * 10; h.kz += ddz / dd * 10; } } shock(e.x, e.z, 6, 0xff5030, .6); }
+  if (ph > e.phase && e.state !== 'roar' && e.state !== 'jump') { e.phase = ph; killTele(e.tele); e.tele = null; e.state = 'roar'; e.st = 0; bigText(ph === 2 ? E.L('PHASE 2', 'FASE 2') : E.L('FINAL PHASE', 'FASE FINAL')); SND.roar(); shake(.6); E.toast(ph === 2 ? 'The captain calls his crew!' : 'The captain is enraged!', 1800); for (const h of G.heroes) { const ddx = h.x - e.x, ddz = h.z - e.z; const dd = Math.hypot(ddx, ddz) || 1; if (dd < 6 && !h.down) { h.kx += ddx / dd * 10; h.kz += ddz / dd * 10; } } shock(e.x, e.z, 6, 0xff5030, .6); }
   const s = e.state;
   if (s === 'chase') { turnTo(e, aT, 2.6, dt); if (d > 3) { const [sx, sz] = steerDir(e, dx, dz); mx = sx * e.speed * (ph === 3 ? 1.3 : 1); mz = sz * e.speed * (ph === 3 ? 1.3 : 1); } e.cd -= dt;
     if (e.cd <= 0) { const opts = []; if (d < 5) opts.push('sweep', 'sweep'); opts.push('slam', 'charge'); if (ph >= 2) { opts.push('barrage'); if (G.foes.filter(f => !f.dead && f.type === 'zombie').length < 3) opts.push('summon'); } let a = pick(opts); if (a === e.lastAtk && Math.random() < .6) a = pick(opts); e.lastAtk = a; e.atk = a; e.state = 'wind'; e.st = 0;
@@ -834,7 +855,7 @@ function bossUpdate(e, T, dx, dz, d, aT, dt, tm) {
   return [mx, mz];
 }
 function bossDefeated(b) {
-  G.won = true; G.slow = 2.2; SND.roar(); setTimeout(() => SFX.win(), 400); bigText('VICTORY!'); shake(.7); $('boss').hidden = true;
+  G.won = true; G.slow = 2.2; SND.roar(); setTimeout(() => SFX.win(), 400); bigText(E.L('VICTORY!', '¡VICTORIA!'), { top: true, dur: 1.8 }); shake(.7); $('boss').hidden = true;
   for (const f of G.foes) if (!f.dead && f !== b) killFoe(f, null);
   for (let i = 0; i < 4; i++) setTimeoutG(i * .25, () => { burst(_v1.set(b.x + rnd(-1, 1), rnd(1, 3), b.z + rnd(-1, 1)), { color: pick([0xffd166, 0xff7b6b, 0xffffff]), n: 26, speed: 6, up: 6, size: .7, life: 1 }); SND.boom(); });
   G.roomsCleared = 9; dropGold(b.x, b.z, 60);
@@ -975,13 +996,13 @@ function spawnPoint(type) {
 }
 function enterRoom(idx) {
   // clean actors
-  for (const f of G.foes) scene.remove(f.g); G.foes = []; for (const s of G.shots) fxGroup.remove(s.m); G.shots = []; G.teles = []; G.coins = []; FX.length = 0; timers.length = 0; G.pending = 0;
+  for (const f of G.foes) scene.remove(f.g); G.foes = []; for (const s of G.shots) fxGroup.remove(s.m); G.shots = []; G.teles = []; G.coins = []; FX.length = 0; timers.length = 0; G.pending = 0; bigClear();
   G.roomIdx = idx; const type = SEQ[idx]; buildRoom(type, idx);
   G.room.phase = 'intro'; G.room.t = 0; G.room.waveI = 0; G.room.waves = type === 'boss' ? [] : roomPlan(idx);
   const n = G.heroes.length; G.heroes.forEach((h, i) => { h.x = (i - (n - 1) / 2) * 1.6; h.z = G.room.D / 2 - 1.2; h.h = Math.PI; h.vx = h.vz = h.kx = h.kz = 0; if (h.down && type !== 'boss') reviveHero(h, .3); if (h.down) reviveHero(h, .3); h.state = 'move'; h.iframes = 1; });
   camState.look.set(0, 0, G.room.D / 2 - 4); placeCamera(1, true);
   $('boss').hidden = true;
-  E.toast(type === 'boss' ? "Captain's Grotto" : `${ROOMS[type].name} · Room ${idx + 1} of 8`, 1800);
+  E.toast(type === 'boss' ? E.L("Captain's Grotto", 'Gruta del Capitán') : `${ROOMS[type].name} · ${E.L('Room', 'Sala')} ${idx + 1} ${E.L('of', 'de')} 8`, 1800);
   if (type === 'boss') startBossIntro();
   hudBuild();
 }
@@ -999,13 +1020,13 @@ function roomUpdate(dt) {
 }
 function spawnWave() { const Rm = G.room; const list = Rm.waves[Rm.waveI++] || []; const cap = 10; let alive = G.foes.filter(f => !f.dead).length + (G.pending || 0); const over = []; list.forEach((t, i) => { if (alive >= cap) { over.push(t); return; } alive++; G.pending = (G.pending || 0) + 1; setTimeoutG(i * .18, () => { G.pending--; const [x, z] = spawnPoint(t); makeFoe(t, x, z); }); }); if (over.length) Rm.waves.splice(Rm.waveI, 0, over); }
 function roomCleared() {
-  const Rm = G.room; Rm.cleared = true; G.roomsCleared = Rm.idx + 1; SFX.win(); bigText('ROOM CLEAR');
+  const Rm = G.room; Rm.cleared = true; G.roomsCleared = Rm.idx + 1; SFX.win(); bigText(E.L('ROOM CLEAR', '¡SALA LIMPIA!'));
   for (const h of G.heroes) if (h.down) reviveHero(h, .35);
   // chest
   const ch = E.instance('chest', { scale: 1.1 }); ch.position.set(0, 0, -1); scene.add(ch); fxGroup.add(ch);
   setTimeoutG(.7, () => { burst(_v1.set(0, .8, -1), { color: 0xffd166, n: 30, speed: 4, up: 6, size: .5, life: 1 }); dropGold(0, -1, 10 + Rm.idx * 3); SFX.coin(); ch.scale.setScalar(1.15); setTimeoutG(.6, () => { fxGroup.remove(ch); burst(_v1.set(0, .5, -1), { color: 0xfff2c8, n: 12, speed: 2, up: 2, size: .5, life: .5 }); }); });
 }
-function openDoor() { const Rm = G.room; Rm.doorOpen = true; Rm.phase = 'exit'; Rm.t = 0; SND.door(); shake(.2); E.toast(Rm.idx === 7 ? 'The captain awaits… head north' : 'The way is open, head north', 2000); }
+function openDoor() { const Rm = G.room; Rm.doorOpen = true; Rm.phase = 'exit'; Rm.t = 0; SND.door(); shake(.2); E.toast(Rm.idx === 7 ? E.L('The captain awaits… head north', 'El capitán espera… ve al norte') : E.L('The way is open, head north', 'El camino está abierto, ve al norte'), 2000); }
 function nextRoom() {
   const fade = $('fade'); fade.classList.add('on');
   setTimeoutG(.38, () => { if (!G) return; enterRoom(G.roomIdx + 1); setTimeoutG(.12, () => fade.classList.remove('on')); });
@@ -1016,14 +1037,16 @@ let bossRef = null;
 function startBossIntro() {
   const b = makeFoe('boss', 0, -G.room.D / 2 + 4, { h: 0 }); b.state = 'intro'; b.invuln = true; b.phase = 1; b.h = 0; bossRef = b;
   G.cine = { t: 0, dur: 4.4, roared: false }; $('boss').hidden = true; music && music.stop(); music = E.music(Object.assign({}, E.SONGS.tense, { bpm: 138 }));
-  E.say('Captain Brinehollow! Watch the red zones on the floor and dodge out of them.');
+  E.say(E.L('Captain Brinehollow! Watch the red zones on the floor and dodge out of them.', '¡El capitán Brinehollow! Mira las zonas rojas del suelo y esquívalas rodando.'));
 }
 function cineUpdate(dt) {
   const c = G.cine; c.t += dt; const b = bossRef;
+  // close-up on a pale boss: soften bloom, exposure and the party light so he reads clearly instead of glowing white
+  const kk = sstep(.2, 1.1, c.t) * (1 - sstep(3.6, 4.4, c.t)); R.bloom.strength = lerp(.2, .05, kk); R.renderer.toneMappingExposure = lerp(1.05, .86, kk); LIGHTS[0].base = lerp(22, 6, kk);
   if (c.t > 1.3 && !c.roared) { c.roared = true; SND.roar(); shake(.6); $('intro').classList.add('on'); b.state = 'roar'; b.st = 0; }
   if (b && b.state === 'roar') { b.st += dt; }
   if (c.t > 3.6) $('intro').classList.remove('on');
-  if (c.t > c.dur) { G.cine = null; b.state = 'chase'; b.st = 0; b.invuln = false; b.cd = 1.2; G.room.phase = 'fight'; $('boss').hidden = false; bigText('FIGHT!'); }
+  if (c.t > c.dur) { R.bloom.strength = .2; R.renderer.toneMappingExposure = 1.05; LIGHTS[0].base = 22; G.cine = null; b.state = 'chase'; b.st = 0; b.invuln = false; b.cd = 1.2; G.room.phase = 'fight'; $('boss').hidden = false; bigText(E.L('FIGHT!', '¡A LUCHAR!')); }
 }
 
 /* ================= cards ================= */
@@ -1032,9 +1055,9 @@ function rollCards() { const pool = BOONS.filter(b => boon(b.id) < b.max); const
 function showCards() {
   G.paused = true; G.cardsOpen = true; cardChoices = rollCards(); cardSel = 0;
   cardsEl = document.createElement('div'); cardsEl.className = 'ig-screen dp-cards';
-  cardsEl.innerHTML = `<div class="dp-cwrap"><h2>Choose a boon</h2><p>It powers up the whole party for this run</p><div class="dp-crow">${cardChoices.map((b, i) => `<button class="dp-card ${i === 0 ? 'sel' : ''}" data-i="${i}"><span class="k">${i + 1}</span><span class="ic">${b.icon}</span><b>${b.name}</b><small>${b.desc}</small>${boon(b.id) ? `<span class="lv">Lv ${boon(b.id) + 1}</span>` : ''}</button>`).join('')}</div></div>`;
+  cardsEl.innerHTML = `<div class="dp-cwrap"><h2>${E.L('Choose a boon', 'Elige un don')}</h2><p>${E.L('It powers up the whole party for this run', 'Mejora a todo el grupo en esta partida')}</p><div class="dp-crow">${cardChoices.map((b, i) => `<button class="dp-card ${i === 0 ? 'sel' : ''}" data-i="${i}"><span class="k">${i + 1}</span><span class="ic">${b.icon}</span><b>${b.name}</b><small>${b.desc}</small>${boon(b.id) ? `<span class="lv">Lv ${boon(b.id) + 1}</span>` : ''}</button>`).join('')}</div></div>`;
   document.body.appendChild(cardsEl); cardsEl.querySelectorAll('.dp-card').forEach(b => b.onclick = () => pickCard(+b.dataset.i));
-  E.say('Choose a boon.', { interrupt: false }); SFX.good(); G.cardT = 0;
+  E.say(E.L('Choose a boon.', 'Elige un don.'), { interrupt: false, once: true }); SFX.good(); G.cardT = 0;
 }
 function pickCard(i) {
   if (!G || !G.cardsOpen) return; const b = cardChoices[i]; if (!b) return; G.cardsOpen = false; G.paused = false; cardsEl && cardsEl.remove(); cardsEl = null;
@@ -1071,19 +1094,36 @@ function hud() {
   const me = G.heroes.find(h => h.ctrl === 'p1'); if (me) { const cdp = (me.cd / me.C.cd).toFixed(3); const el = $('bCcd'); if (el && el.dataset.p !== cdp) { el.dataset.p = cdp; el.style.setProperty('--p', cdp); } const u = $('bU'); if (u) { u.classList.toggle('ready', me.ult >= 100); $('bUcd').style.setProperty('--p', (1 - me.ult / 100).toFixed(3)); } }
   if (bossRef && !$('boss').hidden) { const p = clamp(bossRef.hp / bossRef.maxHp, 0, 1) * 100 + '%'; $('bossFill').style.width = p; $('bossLag').style.width = p; }
 }
+const depthTxt = n => n >= 9 ? E.L('8/8 rooms + boss', '8/8 salas + jefe') : `${n}/8 ${E.L('rooms', 'salas')}`;
 const fmt = t => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
-let bigQ = 0; function bigText(t) { const now = performance.now(); const at = Math.max(now, bigQ); bigQ = at + 750; if (at > now) { setTimeout(() => bigText0(t), at - now); return; } bigText0(t); }
-function bigText0(t) { const d = document.createElement('div'); d.className = 'ig-big'; d.textContent = t; d.style.fontSize = 'clamp(36px,9vw,84px)'; document.body.appendChild(d); d.animate([{ transform: 'translate(-50%,-50%) scale(.5)', opacity: 0 }, { transform: 'translate(-50%,-50%) scale(1.1)', opacity: 1, offset: .25 }, { transform: 'translate(-50%,-50%) scale(1)', opacity: 1, offset: .7 }, { transform: 'translate(-50%,-60%) scale(1)', opacity: 0 }], { duration: 1100, easing: 'ease-out' }); setTimeout(() => d.remove(), 1100); }
+// Big banners: one at a time, queued and timed on game time (so they never overlap, and they pause with the game).
+// o.top = jump the queue and drop the rest (victory / defeat); duplicates are ignored; at most 2 wait.
+const BIG = { q: [], cur: null, el: null };
+function bigText(t, o = {}) {
+  if (!G) return; if (BIG.cur?.t === t || BIG.q.some(b => b.t === t)) return;
+  const b = { t, dur: o.dur || 1.15, a: 0 };
+  if (o.top) { BIG.q = [b]; if (BIG.cur) BIG.cur.a = Math.max(BIG.cur.a, BIG.cur.dur * .8); } else { BIG.q.push(b); if (BIG.q.length > 2) BIG.q.splice(0, BIG.q.length - 2); }
+}
+function bigClear() { BIG.q = []; BIG.cur = null; if (BIG.el) BIG.el.style.opacity = 0; }
+function bigUpdate(dt) {
+  if (!BIG.cur && BIG.q.length && !(G && G.cine)) { BIG.cur = BIG.q.shift(); if (!BIG.el) { BIG.el = document.createElement('div'); BIG.el.className = 'ig-big dp-big'; document.body.appendChild(BIG.el); } BIG.el.textContent = BIG.cur.t; }
+  const c = BIG.cur; if (!c) { if (BIG.el && BIG.el.style.opacity !== '0') BIG.el.style.opacity = 0; return; }
+  c.a += dt; const k = c.a / c.dur, rm = E.reducedMotion(); let sc = 1, op = 1, y = 0;
+  if (k < .18) { op = k / .18; sc = rm ? 1 : lerp(.6, 1.08, k / .18); } else if (k < .28) sc = rm ? 1 : lerp(1.08, 1, (k - .18) / .1); else if (k > .78) { const q = (k - .78) / .22; op = 1 - q; y = rm ? 0 : -q * 12; }
+  BIG.el.style.opacity = clamp(op, 0, 1).toFixed(3); BIG.el.style.transform = `translate(-50%,${(-50 + y).toFixed(1)}%) scale(${sc.toFixed(3)})`;
+  if (k >= 1) BIG.cur = null;
+}
 
 /* ================= camera ================= */
 function placeCamera(dt, snap) {
   const portrait = innerHeight > innerWidth; let cx = 0, cz = 0, n = 0, spread = 0;
   const focus = G.heroes.filter(h => !h.down); const list = focus.length ? focus : G.heroes;
   for (const h of list) { cx += h.x; cz += h.z; n++; } cx /= n; cz /= n; for (const h of list) spread = Math.max(spread, Math.hypot((h.x - cx) * (portrait ? 1.6 : 1), (h.z - cz) * (portrait ? .8 : 1.3)));
-  let dist = (portrait ? 18 : 14) + spread * (portrait ? 1.4 : 1.0); if (window.__GAME && window.__GAME.zoom) dist = window.__GAME.zoom; let pitch = portrait ? 1.02 : .92;
+  // portrait: higher, steeper and farther so the room fills the tall screen (the south apron covers the bottom edge)
+  let dist = (portrait ? 19.5 : 14) + spread * (portrait ? 1.3 : 1.0); if (window.__GAME && window.__GAME.zoom) dist = window.__GAME.zoom; let pitch = portrait ? 1.12 : .92;
   if (G.room.type === 'boss' && bossRef && !bossRef.dead) { cx = lerp(cx, bossRef.x, .3); cz = lerp(cz, bossRef.z, .3); dist += 3; }
-  if (G.cine) { const k = sstep(.2, 1.1, G.cine.t) * (1 - sstep(3.6, 4.4, G.cine.t)); cx = lerp(cx, bossRef.x, k); cz = lerp(cz, bossRef.z + 1, k); dist = lerp(dist, 9.5, k); pitch = lerp(pitch, .45, k); }
-  cz = clamp(cz - (portrait ? 1.5 : 0), -G.room.D / 2 + 3, G.room.D / 2 - (portrait ? 5.2 : 3.6)); cx = clamp(cx, -G.room.W / 2 + 4, G.room.W / 2 - 4);
+  if (G.cine) { const k = sstep(.2, 1.1, G.cine.t) * (1 - sstep(3.6, 4.4, G.cine.t)); cx = lerp(cx, bossRef.x, k); cz = lerp(cz, bossRef.z + 1, k); dist = lerp(dist, portrait ? 13 : 9.5, k); pitch = lerp(pitch, .45, k); }
+  cz = clamp(cz - (portrait ? 2.2 : 0), -G.room.D / 2 + (portrait ? 2 : 3), G.room.D / 2 - (portrait ? 3.4 : 3.6)); cx = clamp(cx, -G.room.W / 2 + 4, G.room.W / 2 - 4);
   const want = _v1.set(cx, G.cine ? lerp(0, 2.4, sstep(.2, 1.1, G.cine.t) * (1 - sstep(3.6, 4.4, G.cine.t))) : 0, cz);
   if (snap) camState.look.copy(want); else camState.look.lerp(want, 1 - Math.pow(.02, dt));
   camState.dist = snap || camState.dist == null ? dist : damp(camState.dist, dist, .1, dt); camState.pitch = pitch;
@@ -1099,6 +1139,7 @@ function placeCamera(dt, snap) {
 /* ================= main update ================= */
 function update(dt) {
   if (!G) { titleUpdate(dt); return; }
+  if (!G.paused || G.cardsOpen) bigUpdate(dt);
   if (G.cardsOpen) { cardsInput(dt); placeCamera(dt); idleVisuals(dt); return; }
   if (G.paused) return;
   if (G.freeze > 0) { G.freeze -= dt; placeCamera(dt); return; }
@@ -1155,7 +1196,7 @@ function newRun(opts = {}) {
   if (titleEl) { titleEl.remove(); titleEl = null; }
   music && music.stop(); music = E.music(E.SONGS.tense);
   enterRoom(opts.room || 0);
-  if (!opts.room) setTimeout(() => E.say('Move with W A S D or the stick. J attacks, K dodges, L is your special, and I unleashes your ultimate.'), 600);
+  if (!opts.room) setTimeout(() => E.say(document.body.classList.contains('dp-touch') ? E.L('Move with the stick. Tap the sword to attack, the wind to dodge, the sparkle for your special, and the fire for your ultimate.', 'Muévete con la palanca. Toca la espada para atacar, el viento para esquivar, la chispa para tu especial y el fuego para tu ataque definitivo.') : E.L('Move with W A S D or the stick. J attacks, K dodges, L is your special, and I unleashes your ultimate.', 'Muévete con W A S D o la palanca. J ataca, K esquiva, L es tu especial, e I lanza tu ataque definitivo.'), { once: true }), 600);
   S.runs++; save();
 }
 function joinP2() {
@@ -1165,19 +1206,22 @@ function joinP2() {
   for (const h of G.heroes) if (h.ctrl === 'p2') h.slot = 1;
   hudBuild(); E.toast('Player 2 joined! Arrows to move, Numpad 1/2/3/0 or Enter to act', 2600, false); SFX.good();
 }
-function cleanupRun() { if (!G) return; for (const h of G.heroes) scene.remove(h.g); for (const f of G.foes) scene.remove(f.g); for (const s of G.shots) fxGroup.remove(s.m); FX.length = 0; timers.length = 0; cardsEl && cardsEl.remove(); cardsEl = null; $('boss').hidden = true; $('party').hidden = true; $('intro').classList.remove('on'); G = null; }
+function cleanupRun() { if (!G) return; for (const h of G.heroes) scene.remove(h.g); for (const f of G.foes) scene.remove(f.g); for (const s of G.shots) fxGroup.remove(s.m); FX.length = 0; timers.length = 0; cardsEl && cardsEl.remove(); cardsEl = null; $('boss').hidden = true; $('party').hidden = true; $('intro').classList.remove('on'); bigClear(); G = null; }
 function gameOver() {
-  if (G.over) return; G.over = true; SFX.lose(); bigText('FALLEN'); E.toast('The depths claim the party…', 2200);
+  if (G.over) return; G.over = true; SFX.lose(); bigText(E.L('FALLEN', 'CAÍDOS'), { top: true, dur: 1.8 }); E.toast('The depths claim the party…', 2200);
   setTimeoutG(2.6, () => endRun(false));
 }
 function endRun(win) {
   if (!G || G.ended) return; G.ended = true; G.paused = true; music && music.stop(); music = null;
-  const rooms = win ? 9 : G.roomsCleared; const xp = 30 + rooms * 18 + G.kills * 2 + (win ? 160 : 0); const coins = Math.round(G.gold * .5 + (win ? 40 : 0));
+  const rooms = win ? 9 : G.roomsCleared, roomsN = Math.min(8, rooms); const xp = 30 + rooms * 18 + G.kills * 2 + (win ? 160 : 0); const coins = Math.round(G.gold * .5 + (win ? 40 : 0));
   S.gold += G.gold; if (win) S.wins++; S.best = Math.max(S.best, rooms); save();
-  E.results({ gameId: 'depths', title: win ? 'The Depths are conquered!' : 'Fallen in the Depths', stats: [['Rooms cleared', `${rooms}/9`], ['Foes defeated', G.kills], ['Time', fmt(G.runT)], ['Gold found', `🪙 ${G.gold}`]], xp, coins, best: rooms, bestLabel: 'Deepest room', onAgain: () => title(), share: `I ${win ? 'defeated Captain Brinehollow' : 'reached room ' + rooms} in Pixel Pact: Depths (Inoa Games)! ${location.href}` });
-  const hubBtn = document.querySelector('.ig-results [data-a=again]'); if (hubBtn) hubBtn.textContent = 'Back to camp';
+  const bossTxt = win ? E.L('Yes', 'Sí') : E.L('No', 'No');
+  const rd = E.results({ gameId: 'depths', title: win ? E.L('The Depths are conquered!', '¡Las Profundidades son tuyas!') : E.L('Fallen in the Depths', 'Caídos en las Profundidades'), stats: [[E.L('Rooms cleared', 'Salas superadas'), `${roomsN}/8`], [E.L('Boss beaten', 'Jefe vencido'), bossTxt], [E.L('Foes defeated', 'Enemigos vencidos'), G.kills], [E.L('Time', 'Tiempo'), fmt(G.runT)], [E.L('Gold found', 'Oro'), `🪙 ${G.gold}`]], xp, coins, best: rooms, bestLabel: E.L('Best depth', 'Mejor profundidad'), won: win, onAgain: () => title(), share: `I ${win ? 'defeated Captain Brinehollow' : 'reached room ' + rooms} in Pixel Pact: Depths (Inoa Games)! ${location.href}` });
+  const bp = rd && rd.querySelector('p.ig-sub b'); if (bp && /^\d+$/.test(bp.textContent)) bp.textContent = depthTxt(+bp.textContent);
+  const hubBtn = document.querySelector('.ig-results [data-a=again]'); if (hubBtn) hubBtn.textContent = E.L('Back to camp', 'Volver al campamento');
 }
-function pause() { if (!G || G.paused || G.over || G.ended) return; G.paused = true; music && music.stop(); const extra = `<p class="ig-sub">Room ${Math.min(9, G.roomIdx + 1)} · 🪙 ${G.gold} · Boons: ${G.picked.map(id => BOONS.find(b => b.id === id).icon).join(' ') || 'none yet'}</p>`; E.pauseMenu({ extra, onResume: () => { G.paused = false; music = E.music(E.SONGS.tense); }, onRestart: () => newRun() }); }
+function pause() { if (!G || G.paused || G.over || G.ended) return; G.paused = true; music && music.stop(); const extra = `<p class="ig-sub">${G.roomIdx >= 8 ? E.L('Boss', 'Jefe') : E.L('Room', 'Sala') + ' ' + (G.roomIdx + 1) + '/8'} · 🪙 ${G.gold} · Boons: ${G.picked.map(id => BOONS.find(b => b.id === id).icon).join(' ') || 'none yet'}</p>`; E.pauseMenu({ extra, onResume: () => { G.paused = false; music = E.music(E.SONGS.tense); }, onRestart: () => newRun() }); }
+addEventListener('inoa:settings', () => { if (!G && titleEl) showTitle(); });
 addEventListener('keydown', e => { if ((e.code === 'Escape' || e.code === 'KeyP') && G && !G.paused) pause(); });
 document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
 let padPausePrev = false;
@@ -1194,11 +1238,11 @@ function title() {
 }
 function showTitle() {
   if (titleEl) titleEl.remove();
-  const extra = `<div class="dp-opts"><div><p class="ig-sub" style="margin-bottom:6px">Hero class</p><div class="pick" id="pC">${CLS_ORDER.map(c => { const C = CLASSES[c]; return `<button data-c="${c}" class="${S.cls === c ? 'on' : ''}" style="border-left:8px solid ${C.color}"><span class="ci">${C.icon}</span>${C.name}<small>${C.desc}</small></button>`; }).join('')}</div></div>
-  <div><p class="ig-sub" style="margin-bottom:6px">Party</p><div class="pick" id="pA">${[0, 1, 2, 3].map(n => `<button data-n="${n}" class="${S.allies === n ? 'on' : ''}">${n ? '+' + n + ' all' + (n > 1 ? 'ies' : 'y') : 'Solo'}<small>${n ? 'AI allies fight and revive you' : 'Just you'}</small></button>`).join('')}</div><p class="ig-sub" style="font-size:12.5px;margin-top:6px">👥 Player 2 can drop in anytime: press Enter / Numpad 1 or A on a second gamepad.</p></div>
-  <div><p class="ig-sub" style="margin-bottom:6px">Difficulty</p><div class="pick" id="pD">${Object.entries(DIFF).map(([k, d]) => `<button data-d="${k}" class="${S.diff === k ? 'on' : ''}">${d.e} ${d.name}<small>${d.desc}</small></button>`).join('')}</div></div>
-  <div class="ig-row"><button class="ig-btn sun" data-a="camp">⛺ Camp · 🪙 ${S.gold}</button></div>${S.runs ? `<p class="ig-sub" style="text-align:center;font-size:13px">Deepest room ${S.best}/9 · Victories ${S.wins}</p>` : ''}</div>`;
-  titleEl = E.titleScreen({ party: { label: 'Phones as controllers (up to 4 players)', hint: 'Phone 1 plays P1. Phones 2 to 4 jump in as P2 to P4 (they take over the AI allies).' }, title: 'Pixel Pact: Depths', kicker: 'Inoa Games · Signature 3D', lead: 'Dive beneath the islands with your party. Clear 8 rooms, choose boons, and defeat the drowned captain.', how: [['🕹️', 'Move: WASD / arrows / stick'], ['⚔️', 'Attack: J or Space (pad A), tap in rhythm for combos'], ['💨', 'Dodge roll: K or Shift (pad B), untouchable mid-roll'], ['✨', 'Special: L or E (pad X) · 🔥 Ultimate: I or Q (pad Y)'], ['🟥', 'Red zones on the floor = incoming attack. Roll out!']], extra, onPlay: () => { save(); titleEl = null; newRun(); } });
+  const extra = `<div class="dp-opts"><div><p class="ig-sub" style="margin-bottom:6px">${E.L('Hero class', 'Clase de héroe')}</p><div class="pick" id="pC">${CLS_ORDER.map(c => { const C = CLASSES[c]; return `<button data-c="${c}" class="${S.cls === c ? 'on' : ''}" style="border-left:8px solid ${C.color}"><span class="ci">${C.icon}</span>${C.name}<small>${C.desc}</small></button>`; }).join('')}</div></div>
+  <div><p class="ig-sub" style="margin-bottom:6px">${E.L('Party', 'Grupo')}</p><div class="pick" id="pA">${[0, 1, 2, 3].map(n => `<button data-n="${n}" class="${S.allies === n ? 'on' : ''}">${n ? '+' + n + ' all' + (n > 1 ? 'ies' : 'y') : 'Solo'}<small>${n ? 'AI allies fight and revive you' : 'Just you'}</small></button>`).join('')}</div><p class="ig-sub" style="font-size:12.5px;margin-top:6px">👥 Player 2 can drop in anytime: press Enter / Numpad 1 or A on a second gamepad.</p></div>
+  <div><p class="ig-sub" style="margin-bottom:6px">${E.L('Difficulty', 'Dificultad')}</p><div class="pick" id="pD">${Object.entries(DIFF).map(([k, d]) => `<button data-d="${k}" class="${S.diff === k ? 'on' : ''}">${d.e} ${d.name}<small>${d.desc}</small></button>`).join('')}</div></div>
+  <div class="ig-row"><button class="ig-btn sun" data-a="camp">⛺ Camp · 🪙 ${S.gold}</button></div>${S.runs ? `<p class="ig-sub" style="text-align:center;font-size:13px">${E.L('Best depth', 'Mejor profundidad')} ${depthTxt(S.best)} · ${E.L('Victories', 'Victorias')} ${S.wins}</p>` : ''}</div>`;
+  titleEl = E.titleScreen({ party: { label: E.L('Phones as controllers (up to 4 players)', 'Teléfonos como controles (hasta 4 jugadores)'), hint: E.L('Phone 1 plays P1. Phones 2 to 4 jump in as P2 to P4 (they take over the AI allies).', 'El teléfono 1 es J1. Los teléfonos 2 a 4 entran como J2 a J4 (reemplazan a los aliados IA).') }, title: 'Pixel Pact: Depths', kicker: 'Inoa Games · Signature 3D', lead: E.L('Dive beneath the islands with your party. Clear 8 rooms, choose boons, and defeat the drowned captain.', 'Bucea bajo las islas con tu grupo. Supera 8 salas, elige dones y derrota al capitán ahogado.'), how: [['🕹️', E.L('Move: WASD / arrows / stick', 'Moverse: WASD / flechas / palanca')], ['⚔️', E.L('Attack: J or Space (pad A), tap in rhythm for combos', 'Atacar: J o Espacio (mando A), pulsa a ritmo para combos')], ['💨', E.L('Dodge roll: K or Shift (pad B), untouchable mid-roll', 'Rodar: K o Shift (mando B), intocable al rodar')], ['✨', E.L('Special: L or E (pad X) · 🔥 Ultimate: I or Q (pad Y)', 'Especial: L o E (mando X) · 🔥 Definitivo: I o Q (mando Y)')], ['🟥', E.L('Red zones on the floor = incoming attack. Roll out!', 'Zonas rojas en el suelo = ataque. ¡Rueda fuera!')]], extra, onPlay: () => { save(); titleEl = null; newRun(); } });
   const d = titleEl;
   d.querySelectorAll('#pC button').forEach(b => b.onclick = () => { S.cls = b.dataset.c; d.querySelectorAll('#pC button').forEach(x => x.classList.toggle('on', x === b)); E.say(CLASSES[S.cls].name + '. ' + CLASSES[S.cls].desc.replace('·', 'and')); });
   d.querySelectorAll('#pA button').forEach(b => b.onclick = () => { S.allies = +b.dataset.n; d.querySelectorAll('#pA button').forEach(x => x.classList.toggle('on', x === b)); });
@@ -1210,7 +1254,7 @@ function showCamp() {
   const render = () => { el.innerHTML = `<div class="ig-card"><div class="ig-kicker">Between runs</div><h2>⛺ The Camp</h2><p class="ig-sub">Spend gold from your runs on permanent upgrades.</p><div class="dp-gold">🪙 ${S.gold}</div><div class="dp-meta">${META.map(m => { const l = ml(m.id), maxed = l >= m.max, cost = m.cost(l); return `<div><span>${m.icon}</span><p><b>${m.name} ${'●'.repeat(l)}${'○'.repeat(m.max - l)}</b><small>${m.desc}</small></p><button class="ig-chipbtn" data-m="${m.id}" ${maxed || S.gold < cost ? 'disabled' : ''}>${maxed ? 'Max' : '🪙 ' + cost}</button></div>`; }).join('')}</div><div class="ig-row"><button class="ig-btn" data-a="back">Back</button></div></div>`;
     el.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { const m = META.find(x => x.id === b.dataset.m); const l = ml(m.id), cost = m.cost(l); if (l >= m.max || S.gold < cost) return; S.gold -= cost; S.meta[m.id] = l + 1; save(); SFX.level(); render(); });
     el.querySelector('[data-a=back]').onclick = () => { el.remove(); showTitle(); }; };
-  render(); document.body.appendChild(el); E.say('The camp. Spend gold on upgrades that last forever.');
+  render(); document.body.appendChild(el); E.say(E.L('The camp. Spend gold on upgrades that last forever.', 'El campamento. Gasta oro en mejoras permanentes.'), { once: true });
 }
 function titleUpdate(dt) {
   if (!camp) return; camp.t += dt; const t = camp.t;

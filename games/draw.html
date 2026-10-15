@@ -45,6 +45,10 @@
 .names{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:6px}.names input{min-height:40px;border-radius:12px;border:2px solid var(--line);padding:0 10px;font:inherit;font-weight:800;box-sizing:border-box;width:100%;user-select:text;-webkit-user-select:text}
 .ttl-scroll{max-height:calc(100dvh - 32px);overflow:auto}
 .tt-wide .tt-col{display:grid;gap:12px;align-content:start}
+.dw-cursor{position:absolute;left:50%;top:50%;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;border:3px solid #1b2430;box-shadow:0 0 0 2px #fff;pointer-events:none;display:none;z-index:2;box-sizing:border-box}
+.dw-cursor.down{background:rgba(27,36,48,.3)}
+.gp-focus{outline:4px solid #ffb703!important;outline-offset:3px}
+.dw-gp{flex-basis:100%;text-align:center;font-size:11px;font-weight:800;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7);line-height:1.3}
 .tt-wide .ig-row:last-child{position:sticky;bottom:-26px;background:var(--paper);padding:10px 0 14px;margin-bottom:-14px;z-index:2}
 @media (min-width:760px) and (orientation:landscape){.tt-wide{width:min(940px,100%);grid-template-columns:1fr 1.1fr;column-gap:22px}}
 @media (orientation:portrait){.dw{grid-template-columns:1fr;grid-template-rows:auto auto auto;align-content:start;padding:60px 10px 10px}.dw-tools{flex-direction:row;flex-wrap:wrap;justify-content:center;align-self:start}.dw-pal{grid-template-columns:repeat(6,34px)}.dw-pal button{width:34px;height:34px}.dw-act{grid-template-columns:repeat(auto-fit,minmax(110px,1fr));width:100%}.dw-paper{width:100%;height:auto}}
@@ -54,7 +58,7 @@
 </head><body>
 <canvas class="ig-gl" id="gl"></canvas>
 <div class="dw" id="dw" hidden>
-  <div class="dw-top"><div class="dw-time" id="dwTime"><svg viewBox="0 0 54 54"><circle cx="27" cy="27" r="22" fill="rgba(13,27,38,.55)" stroke="rgba(255,255,255,.25)" stroke-width="6"/><circle id="dwRing" cx="27" cy="27" r="22" fill="none" stroke="#ffd166" stroke-width="6" stroke-linecap="round" stroke-dasharray="138.2" stroke-dashoffset="0"/></svg><span id="dwSec">60</span></div><div class="dw-prompt" id="dwPrompt"></div></div>
+  <div class="dw-top"><div class="dw-time" id="dwTime"><svg viewBox="0 0 54 54"><circle cx="27" cy="27" r="22" fill="rgba(13,27,38,.55)" stroke="rgba(255,255,255,.25)" stroke-width="6"/><circle id="dwRing" cx="27" cy="27" r="22" fill="none" stroke="#ffd166" stroke-width="6" stroke-linecap="round" stroke-dasharray="138.2" stroke-dashoffset="0"/></svg><span id="dwSec">60</span></div><div class="dw-prompt" id="dwPrompt"></div><div class="dw-gp" id="dwGp" hidden></div></div>
   <div class="dw-stage" id="dwStage"><div class="dw-paper" id="dwPaper"><canvas id="pad" width="1024" height="768"></canvas></div></div>
   <div class="dw-tools" id="dwTools"></div>
 </div>
@@ -432,10 +436,10 @@ space station|estación espacial|3`;
 const WORDS = WORDS_RAW.trim().split('\n').map(l => { const [en, es, d] = l.split('|'); return { en, es, d: +d }; });
 
 /* ======================= strings ======================= */
-const L0 = E.profile().lang === 'es' ? 'es' : 'en';
+const L0 = (E.store.get('inoa.draw', {}).lang || E.profile().lang) === 'es' ? 'es' : 'en';
 const STR = {
-  en: { pass: n => `Pass the device to ${n}`, noPeek: 'Everyone else: no peeking! 🙈', show: 'Show my word', start: 'Start drawing ▶', skip: 'New word', drawThis: 'Draw this:', drawer: n => `🎨 ${n} is drawing — shout your guesses!`, guessed: '✓ Someone guessed it!', who: 'Who guessed it?', timeUp: 'Time’s up!', wordWas: 'The word was', nobody: 'Nobody got it this time.', next: 'Next ▶', peek: '👁 Peek', done: 'Done ✓', sketch: n => `Sketch ${n}`, saved: 'Saved to the gallery wall!', desc: n => `${n}: describe this drawing in a few words`, descPh: 'It looks like…', drawDesc: n => `${n}: draw this description!`, story: 'It started as…', said: n => `${n} said:`, drew: n => `${n} drew:`, ended: 'And it ended as…', points: 'points', undo: 'Undo', clear: 'Clear', eraser: 'Eraser', gallery: 'Gallery', yourTurn: n => `${n}, your turn!`, ok: 'OK', send: 'Send ▶', guessOut: 'Guess out loud!' },
-  es: { pass: n => `Pásale el aparato a ${n}`, noPeek: '¡Los demás no miren! 🙈', show: 'Ver mi palabra', start: 'Empezar a dibujar ▶', skip: 'Otra palabra', drawThis: 'Dibuja esto:', drawer: n => `🎨 ${n} está dibujando — ¡griten sus respuestas!`, guessed: '✓ ¡Alguien adivinó!', who: '¿Quién adivinó?', timeUp: '¡Se acabó el tiempo!', wordWas: 'La palabra era', nobody: 'Esta vez nadie adivinó.', next: 'Siguiente ▶', peek: '👁 Ver', done: 'Listo ✓', sketch: n => `Boceto ${n}`, saved: '¡Guardado en la pared de la galería!', desc: n => `${n}: describe este dibujo en pocas palabras`, descPh: 'Parece…', drawDesc: n => `${n}: ¡dibuja esta descripción!`, story: 'Empezó como…', said: n => `${n} dijo:`, drew: n => `${n} dibujó:`, ended: 'Y terminó como…', points: 'puntos', undo: 'Deshacer', clear: 'Borrar todo', eraser: 'Borrador', gallery: 'Galería', yourTurn: n => `¡${n}, te toca!`, ok: 'OK', send: 'Enviar ▶', guessOut: '¡Adivinen en voz alta!' }
+  en: { pass: n => `Pass the device to ${n}`, noPeek: 'Everyone else: no peeking! 🙈', show: 'Show my word', start: 'Start drawing ▶', skip: 'New word', drawThis: 'Draw this:', drawer: n => `🎨 ${n} is drawing — shout your guesses!`, guessed: '✓ Someone guessed it!', who: 'Who guessed it?', timeUp: 'Time’s up!', wordWas: 'The word was', nobody: 'Nobody got it this time.', next: 'Next ▶', peek: '👁 Peek', done: 'Done ✓', sketch: n => `Sketch ${n}`, saved: 'Saved to the gallery wall!', desc: n => `${n}: describe this drawing in a few words`, descPh: 'It looks like…', drawDesc: n => `${n}: draw this description!`, story: 'It started as…', said: n => `${n} said:`, drew: n => `${n} drew:`, ended: 'And it ended as…', points: 'points', undo: 'Undo', clear: 'Clear', eraser: 'Eraser', gallery: 'Gallery', yourTurn: n => `${n}, your turn!`, ok: 'OK', send: 'Send ▶', guessOut: 'Guess out loud!', color: n => `Colour ${n}`, brush: n => `Brush ${n}`, player: n => `Player ${n}`, description: 'Description', speed: 'Speed Sketch', bestSketch: 'Most sketches in one session', gp: '🎮 Stick + A draw · B undo · X eraser · LB/RB colour · LT/RT size · Y peek · Select done', copied: 'Copied! Paste it anywhere.' },
+  es: { pass: n => `Pásale el aparato a ${n}`, noPeek: '¡Los demás no miren! 🙈', show: 'Ver mi palabra', start: 'Empezar a dibujar ▶', skip: 'Otra palabra', drawThis: 'Dibuja esto:', drawer: n => `🎨 ${n} está dibujando — ¡griten sus respuestas!`, guessed: '✓ ¡Alguien adivinó!', who: '¿Quién adivinó?', timeUp: '¡Se acabó el tiempo!', wordWas: 'La palabra era', nobody: 'Esta vez nadie adivinó.', next: 'Siguiente ▶', peek: '👁 Ver', done: 'Listo ✓', sketch: n => `Boceto ${n}`, saved: '¡Guardado en la pared de la galería!', desc: n => `${n}: describe este dibujo en pocas palabras`, descPh: 'Parece…', drawDesc: n => `${n}: ¡dibuja esta descripción!`, story: 'Empezó como…', said: n => `${n} dijo:`, drew: n => `${n} dibujó:`, ended: 'Y terminó como…', points: 'puntos', undo: 'Deshacer', clear: 'Borrar todo', eraser: 'Borrador', gallery: 'Galería', yourTurn: n => `¡${n}, te toca!`, ok: 'OK', send: 'Enviar ▶', guessOut: '¡Adivinen en voz alta!', color: n => `Color ${n}`, brush: n => `Pincel ${n}`, player: n => `Jugador ${n}`, description: 'Descripción', speed: 'Boceto rápido', bestSketch: 'Más bocetos en una sesión', gp: '🎮 Palanca + A dibuja · B deshacer · X borrador · LB/RB color · LT/RT grosor · Y ver · Select listo', copied: '¡Copiado! Pégalo donde quieras.' }
 };
 const PAL = ['#1b2430', '#ffffff', '#e2443a', '#ff8a2a', '#ffd166', '#2fbf8a', '#1f7a4a', '#4fb3ff', '#2f5fd0', '#8c6cff', '#ff7bc0', '#8a5a36'];
 const PCOL = ['#ff6b6b', '#4fb3ff', '#ffd166', '#2fd18a', '#c9b8ff', '#ff9a3c', '#ff7bc0', '#9fe3cf'];
@@ -444,7 +448,8 @@ const GAL_KEY = 'inoa.draw.gallery', GAL_MAX = 12;
 const PAPER = '#fffdf7';
 
 /* ======================= engine ======================= */
-const ld = E.loading('Draw the Pact', 'Sharpening the pencils…');
+document.documentElement.lang = L0;
+const ld = E.loading('Draw the Pact', L0 === 'es' ? 'Afilando los lápices…' : 'Sharpening the pencils…');
 const R = E.createRenderer($('gl'), { fov: 50, portraitFov: 68, shadowSize: 10, far: 120 });
 const { scene, camera, sun, hemi } = R;
 await E.loadPack('../packs/draw.json', R, p => ld.set(p));
@@ -452,6 +457,7 @@ R.setLook({ background: 0x3a2b24, fog: 0x3a2b24, fogNear: 30, fogFar: 60, sun: 2
 R.setEnv(E.ASSETS.hdri.interior);
 sun.position.set(-12, 7, -1); sun.target.position.set(0, 0, -1); sun.target.updateMatrixWorld(); sun.shadow.camera.far = 40;
 const S = Object.assign({ lang: L0, mode: 'party', players: 4, rounds: 1, diff: 0, sketchSec: 30, names: ['Ana', 'Leo', 'Mia', 'Rafa', 'Luz', 'Teo', 'Sol', 'Gabi'] }, E.store.get('inoa.draw', {}));
+if (E.lang) S.lang = E.lang() === 'es' ? 'es' : 'en'; // shared settings (hub / settings panel) own the language
 const save = () => E.store.set('inoa.draw', S);
 const T = () => STR[S.lang];
 let G = null, music = null, hudEl = null;
@@ -514,10 +520,10 @@ for (const [x, z, s] of [[5.3, -4.4, 1.5], [-5.3, -4.4, 1.8], [-5.2, .9, 1.1], [
 { const plinth = new THREE.Mesh(new THREE.BoxGeometry(.5, 1.0, .5), E.pbr('paint', 0xf4efe6, [1, 1])); plinth.position.set(4.6, .5, -2.6); plinth.castShadow = plinth.receiveShadow = true; room.add(plinth); const lucy = E.instance('lucy', { scale: .9, outline: false }); lucy.traverse(o => { if (o.isMesh) o.material = new THREE.MeshStandardMaterial({ color: 0xf2ece2, roughness: .65 }); }); lucy.position.set(4.6, 1.0, -2.6); lucy.rotation.y = -.9; room.add(lucy); }
 { const st = new THREE.Group(); const stoolM = E.pbr('wood', 0xa8743f, [1, 1]); const seat = new THREE.Mesh(new THREE.CylinderGeometry(.24, .24, .06, 20), stoolM); seat.position.y = .72; st.add(seat); for (let k = 0; k < 3; k++) { const l = new THREE.Mesh(new THREE.CylinderGeometry(.025, .03, .74, 6), stoolM); const a = k / 3 * Math.PI * 2; l.position.set(Math.cos(a) * .15, .36, Math.sin(a) * .15); l.rotation.set(Math.sin(a) * .15, 0, -Math.cos(a) * .15); st.add(l); } st.traverse(o => { if (o.isMesh) o.castShadow = true; }); st.position.set(.2, 0, -.6); room.add(st); const fr = E.instance('frappe', { scale: .24 }); fr.position.set(.25, .75, -.6); room.add(fr); }
 // gallery wall frames (right wall)
-const frames = []; const emptyTex = (() => { const c = document.createElement('canvas'); c.width = 128; c.height = 96; const g = c.getContext('2d'); g.fillStyle = '#f2e8d8'; g.fillRect(0, 0, 128, 96); g.strokeStyle = 'rgba(122,82,50,.35)'; g.lineWidth = 3; g.setLineDash([8, 6]); g.strokeRect(10, 10, 108, 76); g.fillStyle = 'rgba(122,82,50,.4)'; g.font = '800 40px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('+', 64, 50); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; })();
+let gallerySign = null; const frames = []; const emptyTex = (() => { const c = document.createElement('canvas'); c.width = 128; c.height = 96; const g = c.getContext('2d'); g.fillStyle = '#f2e8d8'; g.fillRect(0, 0, 128, 96); g.strokeStyle = 'rgba(122,82,50,.35)'; g.lineWidth = 3; g.setLineDash([8, 6]); g.strokeRect(10, 10, 108, 76); g.fillStyle = 'rgba(122,82,50,.4)'; g.font = '800 40px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('+', 64, 50); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; })();
 { const fm = [E.pbr('wood', 0x3b2a1e, [1, 1]), E.pbr('wood', 0xc58a52, [1, 1]), E.pbr('paint', 0x1b2430, [1, 1]), E.pbr('metal', 0xd9b066, [1, 1])];
   for (let i = 0; i < GAL_MAX; i++) { const c = i % 4, r = Math.floor(i / 4); const g = new THREE.Group(); const fw = .92, fh = .72; const frame = new THREE.Mesh(new THREE.BoxGeometry(fw + .12, fh + .12, .06), fm[(i * 3) % 4]); frame.castShadow = true; g.add(frame); const mat = new THREE.Mesh(new THREE.PlaneGeometry(fw, fh), new THREE.MeshStandardMaterial({ map: emptyTex, roughness: .85 })); mat.position.z = .032; g.add(mat); g.position.set(5.93, 3.25 - r * 1.0, -3.4 + c * 1.2 + (r % 2) * .15); g.rotation.y = -Math.PI / 2; g.rotation.z = (hash(i, 3) - .5) * .05; room.add(g); frames.push({ g, mat }); }
-  const sign = E.tag('🖼️', 'GALLERY', { width: 2.2, bg: '#ffd166' }); sign.position.set(5.85, 4.1, -1.6); room.add(sign); }
+  gallerySign = E.tag('🖼️', 'GALLERY', { width: 2.2, bg: '#ffd166' }); gallerySign.position.set(5.85, 4.1, -1.6); room.add(gallerySign); }
 function loadGallery() { const list = E.store.get(GAL_KEY, []); frames.forEach((f, i) => { const it = list[i]; if (f.mat.material.map && f.mat.material.map !== emptyTex) f.mat.material.map.dispose(); if (!it) { f.mat.material.map = emptyTex; f.mat.material.needsUpdate = true; return; } const img = new Image(); img.onload = () => { const t = new THREE.Texture(img); t.colorSpace = THREE.SRGBColorSpace; t.needsUpdate = true; f.mat.material.map = t; f.mat.material.needsUpdate = true; }; img.src = it.img; }); return list; }
 function saveToGallery(word) { const c = document.createElement('canvas'); c.width = 320; c.height = 240; const g = c.getContext('2d'); g.fillStyle = PAPER; g.fillRect(0, 0, 320, 240); g.drawImage(padCanvas, 0, 0, 320, 240); let url = ''; try { url = c.toDataURL('image/jpeg', .62); } catch (e) { return; } const list = E.store.get(GAL_KEY, []); list.unshift({ img: url, word, t: Date.now() }); while (list.length > GAL_MAX) list.pop(); E.store.set(GAL_KEY, list); if (E.store.get(GAL_KEY, []).length === 0 && list.length) { list.length = Math.max(1, Math.floor(list.length / 2)); E.store.set(GAL_KEY, list); } loadGallery(); }
 
@@ -539,13 +545,13 @@ function resetPad() { D.strokes = []; D.cur = null; D.ink = 0; clearPad(); }
 function padPoint(e) { const r = padCanvas.getBoundingClientRect(); return [clamp((e.clientX - r.left) / r.width, 0, 1), clamp((e.clientY - r.top) / r.height, 0, 1), e.pointerType === 'pen' && e.pressure > 0 ? e.pressure : .5]; }
 function beginStroke(pt, pen) { D.cur = { c: D.color, s: D.size, e: D.eraser, pen: !!pen, p: [pt] }; D.strokes.push(D.cur); drawStroke(D.cur); scratch(true); }
 function extendStroke(pt) { const s = D.cur; if (!s) return; const last = s.p[s.p.length - 1]; const d = Math.hypot(pt[0] - last[0], pt[1] - last[1]); if (d < .002) return; s.p.push(pt); D.ink += d; drawStroke(s, s.p.length - 1); scratchSpeed(d); D.dirty = true; }
-function endStroke() { if (!D.cur) return; D.cur.done = true; const P = D.cur.p; if (P.length > 1) { const g = padCtx, a = P[P.length - 2], b = P[P.length - 1]; g.lineWidth = strokeWidth(D.cur, b[2]); g.strokeStyle = D.cur.e ? PAPER : D.cur.c; g.beginPath(); g.moveTo((a[0] + b[0]) / 2 * 1024, (a[1] + b[1]) / 2 * 768); g.lineTo(b[0] * 1024, b[1] * 768); g.stroke(); } D.cur = null; scratch(false); D.dirty = true; }
+function endStroke() { if (!D.cur) return; D.cur.done = true; const P = D.cur.p; if (P.length > 1) { const g = padCtx, a = P[P.length - 2], b = P[P.length - 1]; g.lineWidth = strokeWidth(D.cur, b[2]); g.strokeStyle = D.cur.e ? PAPER : D.cur.c; g.beginPath(); g.moveTo((a[0] + b[0]) / 2 * 1024, (a[1] + b[1]) / 2 * 768); g.lineTo(b[0] * 1024, b[1] * 768); g.stroke(); } D.cur = null; scratch(false); redraw(); }  // replay so the committed canvas is canonical: undo then restores it pixel-exactly
 let activePointer = null;
-padCanvas.addEventListener('pointerdown', e => { if (!D.enabled) return; e.preventDefault(); E.audio(); activePointer = e.pointerId; padCanvas.setPointerCapture(e.pointerId); beginStroke(padPoint(e), e.pointerType === 'pen'); });
+padCanvas.addEventListener('pointerdown', e => { if (!D.enabled) return; e.preventDefault(); E.audio(); if (D.cur) endStroke(); activePointer = e.pointerId; try { padCanvas.setPointerCapture(e.pointerId); } catch (err) { } beginStroke(padPoint(e), e.pointerType === 'pen'); });
 padCanvas.addEventListener('pointermove', e => { if (e.pointerId !== activePointer || !D.cur) return; const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e]; for (const ev of (evs.length ? evs : [e])) extendStroke(padPoint(ev)); });
 const up = e => { if (e.pointerId !== activePointer) return; activePointer = null; endStroke(); };
-padCanvas.addEventListener('pointerup', up); padCanvas.addEventListener('pointercancel', up);
-function undo() { if (!D.strokes.length) return; D.strokes.pop(); redraw(); SFX.pop(); }
+padCanvas.addEventListener('pointerup', up); padCanvas.addEventListener('pointercancel', up); padCanvas.addEventListener('lostpointercapture', up);
+function undo() { if (D.cur) { endStroke(); activePointer = null; NAV.cur.drawing = false; } if (!D.strokes.length) return; D.strokes.pop(); redraw(); SFX.pop(); }
 function clearAll() { if (!D.strokes.length) return; D.strokes.push({ clear: true }); redraw(); E.noise(.3, .08, 1200, .6); }
 // pencil scratch: looping filtered noise whose loudness follows stroke speed
 let scr = null;
@@ -553,12 +559,14 @@ function scratch(on) { const ac = E.audio(); if (!ac || !E.profile().sound) retu
 function scratchSpeed(d) { if (!scr || !E.profile().sound) return; const v = clamp(d * 60, 0, 1); scr.gn.gain.setTargetAtTime(D.eraser ? v * .05 : .015 + v * .09, scr.ac.currentTime, .02); scr.bp.frequency.setTargetAtTime(3000 + v * 2500 + (SIZES[D.size] > .02 ? -1200 : 0), scr.ac.currentTime, .05); }
 
 /* ---------- tools UI ---------- */
+let curActions = [];
 function tools(actions) {
   const el = $('dwTools');
-  el.innerHTML = `<div class="dw-pal">${PAL.map((c, i) => `<button data-c="${c}" style="background:${c}" class="${!D.eraser && D.color === c ? 'on' : ''}" aria-label="Color ${i + 1}"></button>`).join('')}</div>
-  <div class="dw-row dw-size">${SIZES.map((s, i) => `<button data-s="${i}" class="${D.size === i ? 'on' : ''}" aria-label="Brush ${i + 1}"><i style="width:${6 + i * 7}px;height:${6 + i * 7}px"></i></button>`).join('')}</div>
+  el.innerHTML = `<div class="dw-pal">${PAL.map((c, i) => `<button data-c="${c}" style="background:${c}" class="${!D.eraser && D.color === c ? 'on' : ''}" aria-label="${T().color(i + 1)}"></button>`).join('')}</div>
+  <div class="dw-row dw-size">${SIZES.map((s, i) => `<button data-s="${i}" class="${D.size === i ? 'on' : ''}" aria-label="${T().brush(i + 1)}"><i style="width:${6 + i * 7}px;height:${6 + i * 7}px"></i></button>`).join('')}</div>
   <div class="dw-row"><button data-t="eraser" class="${D.eraser ? 'on' : ''}" title="${T().eraser}" aria-label="${T().eraser}">🧽</button><button data-t="undo" title="${T().undo}" aria-label="${T().undo}">↶</button><button data-t="clear" title="${T().clear}" aria-label="${T().clear}">🗑</button></div>
-  <div class="dw-act">${actions.map(a => `<button data-a="${a.id}" class="${a.cls || ''}">${a.label}</button>`).join('')}</div>`;
+  <div class="dw-act">${actions.map(a => `<button data-a="${a.id}" class="${a.cls || ''}">${a.label}</button>`).join('')}</div>`; $('dwGp').textContent = T().gp; $('dwGp').hidden = !NAV.padSeen;
+  curActions = actions;
   el.querySelectorAll('.dw-pal button').forEach(b => b.onclick = () => { D.color = b.dataset.c; D.eraser = false; tools(actions); SFX.click(); });
   el.querySelectorAll('.dw-size button').forEach(b => b.onclick = () => { D.size = +b.dataset.s; tools(actions); SFX.click(); });
   el.querySelector('[data-t=eraser]').onclick = () => { D.eraser = !D.eraser; tools(actions); SFX.click(); };
@@ -568,7 +576,7 @@ function tools(actions) {
 function fitPaper() { const st = $('dwStage'); const r = st.getBoundingClientRect(); const portrait = innerHeight > innerWidth; let w = r.width, h = w * .75; if (!portrait && h > r.height) { h = r.height; w = h / .75; } if (portrait) { const maxH = innerHeight * .5; if (h > maxH) { h = maxH; w = h / .75; } } $('dwPaper').style.width = Math.floor(w) + 'px'; $('dwPaper').style.height = Math.floor(h) + 'px'; }
 addEventListener('resize', () => { if (!$('dw').hidden) fitPaper(); });
 function openPad(prompt, sec, actions) { $('dw').hidden = false; D.enabled = true; $('dwPrompt').innerHTML = prompt; tools(actions); G.timer = sec ? { left: sec, max: sec } : null; $('dwTime').style.display = sec ? '' : 'none'; requestAnimationFrame(fitPaper); fitPaper(); showPad(false); }
-function closePad() { $('dw').hidden = true; D.enabled = false; endStroke(); scratch(false); }
+function closePad() { $('dw').hidden = true; D.enabled = false; endStroke(); activePointer = null; NAV.cur.drawing = false; curEl.style.display = 'none'; scratch(false); }
 
 /* ======================= camera ======================= */
 const VIEWS = { room: [new THREE.Vector3(2.6, 2.5, 5.6), new THREE.Vector3(-.4, 1.5, -2.2)], easel: [new THREE.Vector3(.1, 1.75, 1.35), new THREE.Vector3(-.5, 1.62, -1.6)], draw: [new THREE.Vector3(1.4, 2.2, 3.6), new THREE.Vector3(-.3, 1.5, -1.8)], gallery: [new THREE.Vector3(.4, 2.3, -.4), new THREE.Vector3(6, 2.2, -1.6)] };
@@ -588,7 +596,7 @@ function killCards() { document.querySelectorAll('.ig-screen:not(.ig-title):not(
 function start(opts = {}) {
   Object.assign(S, opts); save(); killCards();
   G = { mode: S.mode, time: 0, sched: [], timer: null, paused: false, cards: [], used: [] };
-  ensureHud(); resetPad(); loadGallery();
+  ensureHud(); applyLang(); resetPad(); loadGallery();
   if (music) music.stop(); music = E.music(E.SONGS.chill);
   if (S.mode === 'party') partyStart(); else if (S.mode === 'sketch') sketchStart(); else phoneStart();
 }
@@ -646,10 +654,12 @@ function partyReveal(guesser, gp) {
 }
 function board() { const rows = [...G.players].sort((a, b) => b.score - a.score); return `<div class="dw-board">${rows.map((p, k) => `<div><b>${k + 1}</b><span style="border-left:6px solid ${PCOL[p.i]};padding-left:8px">${esc(p.name)}</span><b>${p.score}</b></div>`).join('')}</div>`; }
 function partyEnd() {
-  G.phase = 'end'; camView('room'); music && music.stop(); if (G.phones) E.NET.setLayout({ type: 'gamepad' }); const rows = [...G.players].sort((a, b) => b.score - a.score); const tie = rows.length > 1 && rows[0].score === rows[1].score; SFX.win(); confettiBurst();
-  E.results({ gameId: 'draw', title: tie ? (S.lang === 'es' ? '¡Empate!' : 'It’s a tie!') : (S.lang === 'es' ? `¡Gana ${rows[0].name}!` : `${rows[0].name} wins!`), stats: rows.map((p, k) => [`${k + 1}. ${p.name}`, p.score]), xp: 40 + G.turns * 8, coins: 10 + G.turns * 2, onAgain: () => title(), share: `${rows[0].name} won our Draw the Pact party with ${rows[0].score} points! (Inoa Games) ${location.href}` });
+  if (G.ended) return; G.phase = 'end'; camView('room'); music && music.stop(); if (G.phones) E.NET.setLayout({ type: 'gamepad' }); const rows = [...G.players].sort((a, b) => b.score - a.score); const tie = rows.length > 1 && rows[0].score === rows[1].score; SFX.win(); confettiBurst();
+  finish({ gameId: 'draw', title: tie ? (S.lang === 'es' ? '¡Empate!' : 'It’s a tie!') : (S.lang === 'es' ? `¡Gana ${rows[0].name}!` : `${rows[0].name} wins!`), stats: rows.map((p, k) => [`${k + 1}. ${p.name}`, p.score]), xp: 40 + G.turns * 8, coins: 10 + G.turns * 2, bestLabel: T().bestSketch, won: true, onAgain: () => title(), share: S.lang === 'es' ? `¡${rows[0].name} ganó nuestra fiesta de Draw the Pact con ${rows[0].score} puntos! (Inoa Games) ${location.href}` : `${rows[0].name} won our Draw the Pact party with ${rows[0].score} points! (Inoa Games) ${location.href}` });
 }
 
+// Every mode ends here: E.results exactly once per round (G.ended guard), engine card localised.
+function finish(o) { if (!G || G.ended) return null; G.ended = true; G.phase = 'end'; const d = E.results(o); if (d) d._share = o.share; locScreen(d); return d; }
 /* ---------- (b) solo speed sketch ---------- */
 function sketchStart() { G.n = 5; G.k = 0; G.done = []; G.inkTotal = 0; sketchNext(); }
 function sketchNext() {
@@ -663,8 +673,8 @@ function sketchSave() {
   later(2.2, () => { frames[0].g.scale.setScalar(1); G.k++; sketchNext(); });
 }
 function sketchEnd() {
-  G.phase = 'end'; camView('gallery'); music && music.stop(); SFX.win(); const n = G.done.filter(d => d.strokes > 0).length;
-  E.results({ gameId: 'draw', title: S.lang === 'es' ? '¡Galería actualizada!' : 'Gallery updated!', stats: [[S.lang === 'es' ? 'Bocetos' : 'Sketches', `${n}/${G.n}`], [S.lang === 'es' ? 'Tinta' : 'Ink used', Math.round(G.inkTotal * 100) + ' cm'], [S.lang === 'es' ? 'Tiempo' : 'Timer', S.sketchSec + 's']], xp: 25 + n * 10, coins: 5 + n * 3, best: n, bestLabel: 'Most sketches in one session', onAgain: () => title(), share: `I sketched ${n} drawings in Draw the Pact Speed Sketch! (Inoa Games) ${location.href}` });
+  if (G.ended) return; G.phase = 'end'; camView('gallery'); music && music.stop(); SFX.win(); const n = G.done.filter(d => d.strokes > 0).length;
+  finish({ gameId: 'draw', title: S.lang === 'es' ? '¡Galería actualizada!' : 'Gallery updated!', stats: [[S.lang === 'es' ? 'Bocetos' : 'Sketches', `${n}/${G.n}`], [S.lang === 'es' ? 'Tinta' : 'Ink used', Math.round(G.inkTotal * 100) + ' cm'], [S.lang === 'es' ? 'Tiempo' : 'Timer', S.sketchSec + 's']], xp: 25 + n * 10, coins: 5 + n * 3, best: n, bestLabel: T().bestSketch, won: n > 0, onAgain: () => title(), share: S.lang === 'es' ? `¡Hice ${n} bocetos en Boceto rápido de Draw the Pact! (Inoa Games) ${location.href}` : `I sketched ${n} drawings in Draw the Pact Speed Sketch! (Inoa Games) ${location.href}` });
 }
 
 /* ---------- (c) telephone ---------- */
@@ -685,7 +695,7 @@ function phoneDrawn() { if (G.phase !== 'draw') return; G.phase = 'between'; G.t
 function phoneDescribe() {
   const pl = G.players[G.step]; const prev = G.chain[G.chain.length - 1]; G.phase = 'describe'; camView('easel');
   restoreStrokes(prev.strokes);
-  const c = card(`<div class="ig-kicker" style="color:${PCOL[pl.i]}">${esc(pl.name)}</div><h2>${esc(T().desc(pl.name))}</h2><img class="dw-show" src="${prev.img}" alt=""><input class="dw-in" maxlength="60" placeholder="${T().descPh}" aria-label="Description"><button class="ig-btn" data-a="send">${T().send}</button>`);
+  const c = card(`<div class="ig-kicker" style="color:${PCOL[pl.i]}">${esc(pl.name)}</div><h2>${esc(T().desc(pl.name))}</h2><img class="dw-show" src="${prev.img}" alt=""><input class="dw-in" maxlength="60" placeholder="${T().descPh}" aria-label="${T().description}"><button class="ig-btn" data-a="send">${T().send}</button>`);
   const inp = c.querySelector('input'); inp.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') send(); }); setTimeout(() => inp.focus(), 50);
   const send = () => { const v = inp.value.trim(); if (!v) { inp.focus(); E.toast('✏️', 600); return; } c.remove(); G.chain.push({ kind: 'text', text: v, by: pl.name, i: pl.i }); SFX.pop(); G.step++; later(.2, phonePass); };
   c.querySelector('[data-a=send]').onclick = send; G.descCard = { c, inp, send };
@@ -703,9 +713,10 @@ function slideNext() {
   else if (it.kind === 'draw') { html = `<div class="by" style="color:${PCOL[it.i]}">${esc(T().drew(it.by))}</div><img class="dw-show" src="${it.img}" alt="">`; restoreStrokes(it.strokes); D.dirty = true; E.tone(392 + k * 40, .25, 'triangle', .08); E.noise(.15, .06, 3000, 1); }
   else { html = `<div class="by" style="color:${PCOL[it.i]}">${esc(T().said(it.by))}</div><div class="says">“${esc(it.text)}”</div>`; E.say(it.text, { lang: S.lang }); [660, 520, 780].forEach((f, j) => E.tone(f, .1, 'square', .05, 0, j * .08)); }
   const d = document.createElement('div'); d.className = 'dw-slide'; d.innerHTML = `<div class="ig-card">${html}<p class="ig-sub" style="text-align:center;font-size:12px">${k + 1}/${G.chain.length + 1} · ${S.lang === 'es' ? 'toca para seguir' : 'tap to continue'}</p></div>`; document.body.appendChild(d);
-  d.addEventListener('pointerdown', () => { G.slideT = 0; G.slide++; slideNext(); }); G.slideT = 4.2;
+  d.addEventListener('pointerdown', advanceSlide); G.slideT = 4.2;
 }
-function phoneEnd() { G.phase = 'end'; document.querySelectorAll('.dw-slide').forEach(d => d.remove()); music && music.stop(); const draws = G.chain.filter(c => c.kind === 'draw').length; E.results({ gameId: 'draw', title: S.lang === 'es' ? '¡Qué teléfono descompuesto!' : 'What a telephone!', stats: [[S.lang === 'es' ? 'Empezó' : 'Started', G.chain[0].text], [S.lang === 'es' ? 'Dibujos' : 'Drawings', draws], [S.lang === 'es' ? 'Jugadores' : 'Players', G.players.length]], xp: 30 + G.players.length * 8, coins: 8 + G.players.length * 2, onAgain: () => title(), share: `Our Draw the Pact telephone started as "${G.chain[0].text}" and ended as "${(G.chain.filter(c => c.kind === 'text').pop() || {}).text || '…'}" 😂 (Inoa Games) ${location.href}` }); }
+function advanceSlide() { if (!G || G.phase !== 'show') return; G.slideT = 4.2; G.slide++; slideNext(); }
+function phoneEnd() { if (G.ended) return; G.phase = 'end'; document.querySelectorAll('.dw-slide').forEach(d => d.remove()); music && music.stop(); const draws = G.chain.filter(c => c.kind === 'draw').length; finish({ gameId: 'draw', title: S.lang === 'es' ? '¡Qué teléfono descompuesto!' : 'What a telephone!', stats: [[S.lang === 'es' ? 'Empezó' : 'Started', G.chain[0].text], [S.lang === 'es' ? 'Dibujos' : 'Drawings', draws], [S.lang === 'es' ? 'Jugadores' : 'Players', G.players.length]], xp: 30 + G.players.length * 8, coins: 8 + G.players.length * 2, bestLabel: T().bestSketch, won: true, onAgain: () => title(), share: S.lang === 'es' ? `Nuestro teléfono de Draw the Pact empezó como "${G.chain[0].text}" y terminó como "${(G.chain.filter(c => c.kind === 'text').pop() || {}).text || '…'}" 😂 (Inoa Games) ${location.href}` : `Our Draw the Pact telephone started as "${G.chain[0].text}" and ended as "${(G.chain.filter(c => c.kind === 'text').pop() || {}).text || '…'}" 😂 (Inoa Games) ${location.href}` }); }
 
 /* ======================= HUD / fx ======================= */
 function ensureHud() { if (hudEl) { document.querySelector('.ig-top').hidden = false; return; } hudEl = E.shell({ title: 'Draw the Pact', onPause: pause, buttons: [] }); }
@@ -729,7 +740,7 @@ function autoDraw(n = 6) {
 /* ======================= loop ======================= */
 let texT = 0;
 function update(dt) {
-  P.update(dt);
+  P.update(dt); padPoll(dt);
   if (G && !G.paused) {
     G.time += dt; runSched();
     if (G.timer && !G.timer.frozen) { const before = Math.ceil(G.timer.left); G.timer.left -= dt; const after = Math.ceil(G.timer.left); if (after !== before && after <= 10 && after >= 0) E.tone(after <= 3 ? 1100 : 820, .05, 'sine', .05); $('dwSec').textContent = Math.max(0, Math.ceil(G.timer.left)); const k = clamp(G.timer.left / G.timer.max, 0, 1); $('dwRing').setAttribute('stroke-dashoffset', String(138.2 * (1 - k))); $('dwRing').setAttribute('stroke', k < .2 ? '#ff6b6b' : k < .5 ? '#ffd166' : '#9fe3cf'); if (G.timer.left <= 0) { G.timer = null; timeUp(); } }
@@ -740,20 +751,122 @@ function update(dt) {
   updateCamera(dt);
 }
 function timeUp() { closePad(); big(T().timeUp); if (G.mode !== 'party') E.tone(440, .25, 'triangle', .08, -120); if (G.mode === 'party') partyReveal(null, 0); else if (G.mode === 'sketch') { G.phase = 'draw'; sketchSave(); } else { G.phase = 'draw'; phoneDrawn(); } }
-function pause() { if (!G || G.paused || G.phase === 'end') return; G.paused = true; music && music.stop(); E.pauseMenu({ onResume: () => { G.paused = false; music = E.music(E.SONGS.chill); }, onRestart: () => { G.paused = false; closePad(); start(); } }); }
-addEventListener('keydown', e => { if (e.target && e.target.tagName === 'INPUT') return; if (!G || G.paused) return; if (e.code === 'Escape' || e.code === 'KeyP') pause(); if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') { e.preventDefault(); undo(); } else if (e.code === 'KeyZ' && D.enabled) undo(); if (e.code === 'KeyE' && D.enabled) { D.eraser = !D.eraser; $('dwTools').querySelector('[data-t=eraser]')?.classList.toggle('on', D.eraser); } if (/^Digit[1-3]$/.test(e.code) && D.enabled) { D.size = +e.code.slice(5) - 1; $('dwTools').querySelectorAll('.dw-size button').forEach((b, i) => b.classList.toggle('on', i === D.size)); } });
+function pause() { if (!G || G.paused || G.phase === 'end') return; G.paused = true; music && music.stop(); locScreen(E.pauseMenu({ onResume: () => { G.paused = false; music = E.music(E.SONGS.chill); }, onRestart: () => { G.paused = false; closePad(); start(); } })); }
+/* ======================= language for engine-made UI ======================= */
+const ES_UI = { 'Hub': 'Inicio', 'Play': 'Jugar', 'Paused': 'Pausa', 'Restart': 'Reiniciar', 'Resume': 'Seguir', 'Play again': 'Jugar otra vez', 'ROUND OVER': 'FIN DE LA RONDA', 'NEW BEST': '¡NUEVO RÉCORD!', '📣 Share': '📣 Compartir' };
+// The engine builds title/pause/results cards in English; translate them in place so the chosen language is used everywhere.
+function locScreen(d) {
+  if (!d || typeof E.t === 'function') return d; // newer engines localise their own cards from the profile language const es = S.lang === 'es';
+  if (es) { d.querySelectorAll('button, a, h2, .ig-kicker').forEach(el => { if (el.children.length) return; const t = el.textContent.trim(); if (ES_UI[t]) el.textContent = ES_UI[t]; }); d.querySelectorAll('.ig-reward span').forEach(sp => { sp.textContent = sp.textContent.replace(/^Hero lv/, 'Héroe nv'); }); }
+  const snd = d.querySelector('[data-a=sound]'), vo = d.querySelector('[data-a=voice]');
+  const lab = () => { const p = E.profile(); if (snd) snd.textContent = `🔊 ${es ? 'Sonido' : 'Sound'} ${p.sound ? (es ? 'sí' : 'on') : (es ? 'no' : 'off')}`; if (vo) vo.textContent = `🗣️ ${es ? 'Leer en voz alta' : 'Read aloud'} ${p.voice ? (es ? 'sí' : 'on') : (es ? 'no' : 'off')}`; };
+  if (snd) snd.onclick = () => { E.setProfile({ sound: !E.profile().sound }); lab(); }; if (vo) vo.onclick = () => { E.setProfile({ voice: !E.profile().voice }); lab(); }; lab();
+  const sh = d.querySelector('[data-a=share]'); if (sh && es) { const old = sh.onclick; sh.onclick = async () => { if (navigator.share) return old && old(); try { const txt = d._share; if (txt) { await navigator.clipboard.writeText(txt); E.toast(T().copied); } else old && old(); } catch (e) { } }; }
+  return d;
+}
+function applyLang() {
+  if (E.setSetting && E.lang && E.lang() !== S.lang) E.setSetting('lang', S.lang); // keep engine cards (title/pause/results/settings) in the same language
+  document.documentElement.lang = S.lang;
+  if (gallerySign) { const m = E.tagMaterial('🖼️', S.lang === 'es' ? 'GALERÍA' : 'GALLERY', '#ffd166', undefined, true); gallerySign.material = m; if (m.userData && m.userData.aspect) gallerySign.scale.x = gallerySign.scale.y * m.userData.aspect; }
+  const home = document.querySelector('.ig-home'); if (home) home.setAttribute('aria-label', S.lang === 'es' ? 'Volver a Inoa Games' : 'Back to Inoa Games');
+  const pz = document.querySelector('.ig-pause'); if (pz) pz.setAttribute('aria-label', S.lang === 'es' ? 'Pausa' : 'Pause');
+}
+
+/* ======================= gamepad + keyboard navigation ======================= */
+// Menus: D-pad / stick / arrow keys move a focus ring over the top-most card's buttons, A / Enter presses it
+// (with nothing focused, A presses the card's main button), B / Esc presses "back". Start = pause / resume.
+// Drawing: stick (or D-pad) moves a cursor on the paper, hold A to draw, B undo, X eraser, LB/RB colour,
+// LT/RT size, Y hold to peek (party), Select = the green action (Done / Someone guessed). L3 = slow cursor.
+const NAV = { prev: {}, rep: 0, dir: '', padSeen: false, cur: { x: .5, y: .5, drawing: false } };
+const curEl = document.createElement('div'); curEl.className = 'dw-cursor'; $('dwPaper').appendChild(curEl);
+let navFocus = null;
+const PRIMARY = '[data-a=play],[data-a=resume],[data-a=next],[data-a=go],[data-a=show],[data-a=send],[data-a=again]';
+function activeScreen() { const sl = document.querySelector('.dw-slide'); if (sl) return sl; const sc = [...document.querySelectorAll('.ig-screen')].filter(s => s.getClientRects().length); return sc[sc.length - 1] || null; }
+function focusables(root) { return [...root.querySelectorAll('button, a.ig-btn')].filter(b => !b.disabled && b.getClientRects().length); }
+function setFocus(el) { document.querySelectorAll('.gp-focus').forEach(x => x.classList.remove('gp-focus')); navFocus = el; if (el) { el.classList.add('gp-focus'); try { el.focus({ preventScroll: true }); } catch (e) { } el.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } }
+function curFocus(root) { return navFocus && navFocus.isConnected && root.contains(navFocus) ? navFocus : null; }
+function primaryOf(root) { const list = focusables(root); return list.find(b => b.matches(PRIMARY)) || list[0]; }
+function navMove(root, dx, dy) {
+  const list = focusables(root); if (!list.length) return; const f = curFocus(root); if (!f) { setFocus(primaryOf(root)); SFX.click(); return; }
+  const a = f.getBoundingClientRect(), ax = a.left + a.width / 2, ay = a.top + a.height / 2; let best = null, bs = 1e9;
+  for (const b of list) { if (b === f) continue; const r = b.getBoundingClientRect(), bx = r.left + r.width / 2, by = r.top + r.height / 2; const along = dx ? (bx - ax) * dx : (by - ay) * dy, across = dx ? Math.abs(by - ay) : Math.abs(bx - ax); if (along <= 4) continue; const sc = along + across * 2.2; if (sc < bs) { bs = sc; best = b; } }
+  if (best) { setFocus(best); SFX.click(); }
+}
+function navActivate(root) { if (root.classList.contains('dw-slide')) { advanceSlide(); return; } const f = curFocus(root) || primaryOf(root); if (f) f.click(); }
+function navBack(root) { const b = root.querySelector('[data-a=back]') || root.querySelector('[data-a=resume]'); if (b) { b.click(); return true; } return false; }
+function primaryDraw() { const a = curActions.find(x => !x.hold && /\bgo\b/.test(x.cls || '')); if (a && D.enabled) a.fn(); }
+function peekHold(on) { const a = curActions.find(x => x.hold); if (a && D.enabled) a.hold(on); }
+function refreshTools() { if (D.enabled) tools(curActions); }
+function setSize(i) { D.size = clamp(i, 0, SIZES.length - 1); refreshTools(); SFX.click(); }
+function toggleEraser() { D.eraser = !D.eraser; refreshTools(); SFX.click(); }
+function cycleColor(d) { const i = PAL.indexOf(D.color); D.color = PAL[(i + d + PAL.length) % PAL.length]; D.eraser = false; refreshTools(); SFX.click(); }
+function showCursor() { curEl.style.display = 'block'; curEl.style.left = (NAV.cur.x * 100) + '%'; curEl.style.top = (NAV.cur.y * 100) + '%'; curEl.classList.toggle('down', NAV.cur.drawing); }
+function endPadStroke() { if (NAV.cur.drawing) { NAV.cur.drawing = false; if (activePointer === 'pad') { activePointer = null; endStroke(); } showCursor(); } }
+function padPoll(dt) {
+  const pads = navigator.getGamepads ? [...navigator.getGamepads()].filter(p => p && p.connected !== false) : [];
+  if (!pads.length) { endPadStroke(); NAV.prev = {}; return; }
+  const btn = i => pads.some(p => p.buttons[i] && (p.buttons[i].pressed || p.buttons[i].value > .5));
+  let ax = 0, ay = 0; for (const p of pads) { if (Math.abs(p.axes[0] || 0) > .18) ax = p.axes[0]; if (Math.abs(p.axes[1] || 0) > .18) ay = p.axes[1]; }
+  const now = {}; for (let i = 0; i < 16; i++) now[i] = btn(i);
+  if (now[14]) ax = -1; if (now[15]) ax = 1; if (now[12]) ay = -1; if (now[13]) ay = 1;
+  const pressed = i => now[i] && !NAV.prev[i], released = i => !now[i] && NAV.prev[i];
+  if (!NAV.padSeen && (Object.values(now).some(Boolean) || ax || ay)) { NAV.padSeen = true; refreshTools(); }
+  const root = activeScreen();
+  if (pressed(9)) { if (root && root.querySelector('[data-a=resume]')) root.querySelector('[data-a=resume]').click(); else if (G && !G.paused && G.phase !== 'end') pause(); }
+  else if (root) {
+    endPadStroke();
+    const dir = Math.abs(ax) > .5 || Math.abs(ay) > .5 ? (Math.abs(ax) > Math.abs(ay) ? (ax > 0 ? 'R' : 'L') : (ay > 0 ? 'D' : 'U')) : '';
+    const go = () => navMove(root, dir === 'R' ? 1 : dir === 'L' ? -1 : 0, dir === 'D' ? 1 : dir === 'U' ? -1 : 0);
+    if (dir && dir !== NAV.dir) { go(); NAV.rep = .38; } else if (dir) { NAV.rep -= dt; if (NAV.rep <= 0) { go(); NAV.rep = .14; } } NAV.dir = dir;
+    if (pressed(0)) navActivate(root); else if (pressed(1)) navBack(root);
+  } else if (D.enabled && G && !G.paused) {
+    NAV.dir = '';
+    if (ax || ay) { const sp = .55 * dt * (now[10] ? .35 : 1); NAV.cur.x = clamp(NAV.cur.x + ax * sp, 0, 1); NAV.cur.y = clamp(NAV.cur.y + ay * sp * 4 / 3, 0, 1); showCursor(); }
+    if (pressed(0) && activePointer == null) { if (D.cur) endStroke(); activePointer = 'pad'; NAV.cur.drawing = true; beginStroke([NAV.cur.x, NAV.cur.y, .5], false); showCursor(); }
+    else if (NAV.cur.drawing && (ax || ay)) extendStroke([NAV.cur.x, NAV.cur.y, .5]);
+    if (released(0)) endPadStroke();
+    if (pressed(1)) undo(); if (pressed(2)) toggleEraser(); if (pressed(4)) cycleColor(-1); if (pressed(5)) cycleColor(1); if (pressed(6)) setSize(D.size - 1); if (pressed(7)) setSize(D.size + 1);
+    if (pressed(3)) peekHold(true); if (released(3)) peekHold(false);
+    if (pressed(8)) primaryDraw();
+  }
+  NAV.prev = now;
+}
+const DIRS = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] };
+addEventListener('keydown', e => {
+  if (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+  const root = activeScreen();
+  if (root) {
+    if (DIRS[e.code]) { e.preventDefault(); navMove(root, ...DIRS[e.code]); return; }
+    if (e.code === 'Enter' || e.code === 'NumpadEnter' || e.code === 'Space') { const ae = document.activeElement; if (ae && ae !== document.body && root.contains(ae) && ae.matches('button,a')) return; e.preventDefault(); if (!e.repeat) navActivate(root); return; }
+    if (e.code === 'Escape' && navBack(root)) return;
+  }
+  if (!G || G.paused) return;
+  if (e.code === 'Escape' || e.code === 'KeyP') { pause(); return; }
+  if (!D.enabled || root) return;
+  if (e.code === 'Enter' || e.code === 'NumpadEnter') { e.preventDefault(); if (!e.repeat) primaryDraw(); return; }
+  if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') { e.preventDefault(); undo(); return; }
+  if (e.code === 'KeyZ') undo();
+  else if (e.code === 'KeyE') toggleEraser();
+  else if (/^Digit[1-3]$/.test(e.code)) setSize(+e.code.slice(5) - 1);
+  else if (e.code === 'BracketLeft') cycleColor(-1); else if (e.code === 'BracketRight') cycleColor(1);
+  else if (e.code === 'KeyQ' || e.code === 'Space') { e.preventDefault(); if (!e.repeat) peekHold(true); }
+});
+addEventListener('keyup', e => { if ((e.code === 'KeyQ' || e.code === 'Space') && D.enabled && !activeScreen()) { e.preventDefault(); peekHold(false); } });
+addEventListener('pointerdown', () => { if (navFocus) setFocus(null); }, true);
+// language changed from the shared settings panel: follow it everywhere
+addEventListener('inoa:settings', e => { const v = e.detail && e.detail.settings && e.detail.settings.lang; if (!v || v === S.lang) return; S.lang = v === 'es' ? 'es' : 'en'; save(); applyLang(); const tt = document.querySelector('.ig-title'); if (tt && !G) { tt.remove(); title(); } else { refreshTools(); hud(); } });
 document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
 
 /* ======================= title ======================= */
 function title() {
   killCards(); closePad(); G = null; if (hudEl) document.querySelector('.ig-top').hidden = true; if (music) music.stop(); music = E.music(E.SONGS.chill); camView('room'); loadGallery(); resetPad(); autoDraw(5); D.strokes = [];
-  const es = S.lang === 'es';
-  const extra = `<div><p class="ig-sub" style="margin-bottom:6px">${es ? 'Modo' : 'Mode'}</p><div class="pk" id="pM"><button data-m="party" class="${S.mode === 'party' ? 'on' : ''}">🎉 ${es ? 'Fiesta' : 'Party'}<small>${es ? 'uno dibuja, todos adivinan' : 'one draws, everyone guesses'}</small></button><button data-m="sketch" class="${S.mode === 'sketch' ? 'on' : ''}">⏱ Speed Sketch<small>${es ? 'solo, a la galería' : 'solo, to the gallery'}</small></button><button data-m="phone" class="${S.mode === 'phone' ? 'on' : ''}">📞 ${es ? 'Teléfono' : 'Telephone'}<small>${es ? 'dibuja → describe → dibuja' : 'draw → describe → draw'}</small></button></div></div>
-  <div id="pPl"><p class="ig-sub" style="margin-bottom:6px">${es ? 'Jugadores' : 'Players'}</p><div class="pk" id="pN">${[2, 3, 4, 5, 6, 8].map(n => `<button data-n="${n}" class="${n === S.players ? 'on' : ''}">${n}</button>`).join('')}</div><div class="names" style="margin-top:6px">${S.names.map((nm, i) => `<input data-i="${i}" maxlength="10" value="${esc(nm)}" style="border-left:6px solid ${PCOL[i]}" ${i < S.players ? '' : 'hidden'} aria-label="Player ${i + 1}">`).join('')}</div></div>
+  applyLang(); const es = S.lang === 'es';
+  const extra = `<div><p class="ig-sub" style="margin-bottom:6px">${es ? 'Modo' : 'Mode'}</p><div class="pk" id="pM"><button data-m="party" class="${S.mode === 'party' ? 'on' : ''}">🎉 ${es ? 'Fiesta' : 'Party'}<small>${es ? 'uno dibuja, todos adivinan' : 'one draws, everyone guesses'}</small></button><button data-m="sketch" class="${S.mode === 'sketch' ? 'on' : ''}">⏱ ${T().speed}<small>${es ? 'solo, a la galería' : 'solo, to the gallery'}</small></button><button data-m="phone" class="${S.mode === 'phone' ? 'on' : ''}">📞 ${es ? 'Teléfono' : 'Telephone'}<small>${es ? 'dibuja → describe → dibuja' : 'draw → describe → draw'}</small></button></div></div>
+  <div id="pPl"><p class="ig-sub" style="margin-bottom:6px">${es ? 'Jugadores' : 'Players'}</p><div class="pk" id="pN">${[2, 3, 4, 5, 6, 8].map(n => `<button data-n="${n}" class="${n === S.players ? 'on' : ''}">${n}</button>`).join('')}</div><div class="names" style="margin-top:6px">${S.names.map((nm, i) => `<input data-i="${i}" maxlength="10" value="${esc(nm)}" style="border-left:6px solid ${PCOL[i]}" ${i < S.players ? '' : 'hidden'} aria-label="${esc(T().player(i + 1))}">`).join('')}</div></div>
   <div><p class="ig-sub" style="margin-bottom:6px">${es ? 'Palabras' : 'Words'} · <span id="pT"></span></p><div class="pk" id="pD">${[[0, es ? 'Todas' : 'Mixed'], [1, es ? 'Fácil' : 'Easy'], [2, es ? 'Media' : 'Medium'], [3, es ? 'Difícil' : 'Hard']].map(([d, l]) => `<button data-d="${d}" class="${S.diff === d ? 'on' : ''}">${l}</button>`).join('')}</div></div>
   <div class="pk" id="pL"><button data-l="en" class="${!es ? 'on' : ''}">🇬🇧 English</button><button data-l="es" class="${es ? 'on' : ''}">🇪🇸 Español</button></div>`;
-  const how = es ? [['✏️', 'Dibuja con el dedo, el mouse o un lápiz (con presión). 12 colores, 3 grosores, borrador, deshacer (Z)'], ['🙈', 'Pasa el aparato: solo quien dibuja ve la palabra'], ['🖼️', 'Tus bocetos rápidos se cuelgan en la pared de la galería']] : [['✏️', 'Draw with finger, mouse or stylus (pressure works). 12 colours, 3 sizes, eraser, undo (Z)'], ['🙈', 'Pass the device: only the drawer sees the word'], ['🖼️', 'Speed sketches hang on the studio gallery wall']];
-  const d = E.titleScreen({ party: { label: es ? 'Adivinar con teléfonos' : 'Guess with phones', hint: es ? 'En modo Fiesta, cada teléfono es un jugador: quien dibuja ve la palabra en su teléfono y los demás adivinan en el suyo.' : 'In Party mode each phone is a player: the drawer sees the word on their phone, everyone else guesses on theirs.' }, title: 'Draw the Pact', kicker: es ? 'Inoa Games · Dibuja y adivina' : 'Inoa Games · Draw & guess', lead: es ? 'Un estudio de arte acogedor para dibujar, adivinar y reír en el mismo aparato.' : 'A cozy art studio for drawing, guessing and laughing together on one device.', how, extra, onPlay: () => { save(); E.say(es ? '¡A dibujar!' : 'Let’s draw!', { lang: S.lang }); start(); } });
+  const how = es ? [['✏️', 'Dibuja con el dedo, el mouse o un lápiz (con presión). 12 colores, 3 grosores, borrador, deshacer (Z), borrador (E), grosor (1-3), color ([ ]), Enter = listo'], ['🎮', 'Control: palanca + A dibuja, B deshacer, X borrador, LB/RB color, LT/RT grosor, Y ver, Select listo; la cruceta mueve los menús'], ['🙈', 'Pasa el aparato: solo quien dibuja ve la palabra'], ['🖼️', 'Tus bocetos rápidos se cuelgan en la pared de la galería']] : [['✏️', 'Draw with finger, mouse or stylus (pressure works). 12 colours, 3 sizes, eraser, undo (Z), eraser (E), sizes (1-3), colours ([ ]), Enter = done'], ['🎮', 'Gamepad: stick + A to draw, B undo, X eraser, LB/RB colour, LT/RT size, Y peek, Select done; D-pad moves through menus'], ['🙈', 'Pass the device: only the drawer sees the word'], ['🖼️', 'Speed sketches hang on the studio gallery wall']];
+  const d = locScreen(E.titleScreen({ party: { label: es ? 'Adivinar con teléfonos' : 'Guess with phones', hint: es ? 'En modo Fiesta, cada teléfono es un jugador: quien dibuja ve la palabra en su teléfono y los demás adivinan en el suyo.' : 'In Party mode each phone is a player: the drawer sees the word on their phone, everyone else guesses on theirs.' }, title: 'Draw the Pact', kicker: es ? 'Inoa Games · Dibuja y adivina' : 'Inoa Games · Draw & guess', lead: es ? 'Un estudio de arte acogedor para dibujar, adivinar y reír en el mismo aparato.' : 'A cozy art studio for drawing, guessing and laughing together on one device.', how, extra, onPlay: () => { save(); E.say(es ? '¡A dibujar!' : 'Let’s draw!', { lang: S.lang }); start(); } }));
   wideTitle(d);
   const sync = () => { $('pPl').hidden = S.mode === 'sketch'; const min = S.mode === 'phone' ? 3 : 2; if (S.players < min) S.players = min; d.querySelectorAll('#pN button').forEach(b => { b.classList.toggle('on', +b.dataset.n === S.players); b.disabled = +b.dataset.n < min; b.style.opacity = +b.dataset.n < min ? .4 : 1; }); d.querySelectorAll('.names input').forEach(inp => inp.hidden = +inp.dataset.i >= S.players); $('pT').textContent = `${wordPool().length} ${es ? 'palabras' : 'words'}`; };
   d.querySelectorAll('#pM button').forEach(b => b.onclick = () => { S.mode = b.dataset.m; d.querySelectorAll('#pM button').forEach(x => x.classList.toggle('on', x === b)); sync(); SFX.click(); });
@@ -772,6 +885,6 @@ window.__GAME = { get G() { return G; }, S, D, WORDS, start, update, title, auto
   next: () => { document.querySelector('.ig-screen [data-a=next], .ig-screen [data-a=go], .ig-screen [data-a=show]')?.click(); },
   done: () => document.querySelector('#dwTools [data-a=done]')?.click(),
   describe: t => { if (G.descCard) { G.descCard.inp.value = t; G.descCard.send(); } },
-  gallery: () => E.store.get(GAL_KEY, []).length, camView };
+  gallery: () => E.store.get(GAL_KEY, []).length, camView, NAV, advanceSlide };
 </script>
 </body></html>

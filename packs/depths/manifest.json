@@ -1,0 +1,39 @@
+{
+ "v": 1,
+ "game": "depths",
+ "base": "../assets/",
+ "models": {
+  "skater-female": "models/skater-female.glb?h=fb0e1605",
+  "skater-male": "models/skater-male.glb?h=849a827d",
+  "survivor-female": "models/survivor-female.glb?h=9157aa20",
+  "survivor-male": "models/survivor-male.glb?h=69d38b39",
+  "cyborg-female": "models/cyborg-female.glb?h=86c5fb7b",
+  "male": "models/male.glb?h=37b571ee",
+  "zombie-1": "models/zombie-1.glb?h=7e988ce8",
+  "zombie-2": "models/zombie-2.glb?h=384350e7",
+  "pirate-crew": "models/pirate-crew.glb?h=245f50dc",
+  "pirate-officer": "models/pirate-officer.glb?h=b29aa9ce",
+  "pirate-captain": "models/pirate-captain.glb?h=584b4fb5",
+  "cannon": "models/cannon.glb?h=2398d7e7",
+  "cannon-ball": "models/cannon-ball.glb?h=c9456dba",
+  "sword": "models/sword.glb?h=a91b24ad",
+  "sword-scimitar": "models/sword-scimitar.glb?h=5369db7c",
+  "axe": "models/axe.glb?h=a1f3bdbf",
+  "blaster-a": "models/blaster-a.glb?h=b088eaec",
+  "ship-wreck": "models/ship-wreck.glb?h=9a846824",
+  "barrel": "models/barrel.glb?h=2b75ee0a",
+  "chest": "models/chest.glb?h=3cd5506f",
+  "formation-rock": "models/formation-rock.glb?h=dca30313",
+  "formation-large-rock": "models/formation-large-rock.glb?h=1f0f1b0e",
+  "formation-large-stone": "models/formation-large-stone.glb?h=637216f4",
+  "formation-stone": "models/formation-stone.glb?h=cf993936",
+  "mushroom": "models/mushroom.glb?h=ab63ca7d",
+  "pot": "models/pot.glb?h=c691d1e0",
+  "bottle": "models/bottle.glb?h=9686e7fa"
+ },
+ "hdri": {
+  "interior": "hdri/interior.hdr?h=dd54c722"
+ },
+ "lazy": [],
+ "bytes": 2021069
+}

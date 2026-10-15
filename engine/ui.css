@@ -13,7 +13,8 @@ p{margin:0;line-height:1.5}
 .ig-brand{font-family:var(--f-d);font-weight:900;font-size:13px;letter-spacing:.12em;opacity:.8}.ig-brand span{color:var(--sun)}
 .ig-bar{width:240px;height:8px;background:rgba(255,255,255,.15);border-radius:6px;overflow:hidden;margin:0 auto}.ig-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--mint),var(--sun));transition:width .2s}
 .ig-loading p{opacity:.7;font-weight:600}
-.ig-screen{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom));box-sizing:border-box;overflow:auto;background:rgba(13,27,38,.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.ig-screen{position:fixed;inset:0;z-index:30;display:flex;align-items:flex-start;justify-content:center;padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom));box-sizing:border-box;overflow:auto;background:rgba(13,27,38,.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.ig-screen>.ig-card{margin:auto 0}
 .ig-card{width:min(540px,100%);background:var(--paper);border-radius:28px;padding:26px 22px;box-shadow:0 24px 70px rgba(0,0,0,.3),inset 0 0 0 1px rgba(255,255,255,.7);display:grid;gap:14px;box-sizing:border-box}
 .ig-card h1{font-size:clamp(32px,7vw,50px);line-height:.95}.ig-card h2{font-size:24px}
 .ig-kicker{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mint-ink)}
@@ -50,6 +51,15 @@ p{margin:0;line-height:1.5}
 .ig-big{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);z-index:22;font-family:var(--f-d);font-weight:900;font-size:clamp(48px,12vw,110px);color:#fff;text-shadow:0 6px 0 rgba(0,0,0,.25),0 0 40px rgba(0,0,0,.25);pointer-events:none}
 @media (max-width:640px){.ig-tbtn{width:62px;height:62px}.ig-tbtn.big{width:76px;height:76px}.ig-stick{width:130px;height:130px}}
 @media (hover:hover) and (pointer:fine){.ig-pad .ig-stick{opacity:.5}}
+.ig-set{display:grid;grid-template-columns:minmax(120px,1fr) auto;gap:10px;align-items:center;font-weight:800}
+.ig-seg{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.ig-seg .ig-chipbtn{min-width:56px}
+.ig-setbtn{justify-self:center;background:transparent;border-color:transparent;color:#4c5868}
+@media (max-width:420px){.ig-set{grid-template-columns:1fr}.ig-seg{justify-content:flex-start}}
+.ig-chip:focus-visible,.ig-tbtn:focus-visible{outline:3px solid var(--berry);outline-offset:2px}
+html.ig-reduced *{animation-duration:.001s!important;animation-iteration-count:1!important;transition-duration:.001s!important;scroll-behavior:auto!important}
+@media (prefers-reduced-motion:reduce){.ig-float{animation-duration:.001s}}
+
+.ig-fbchip{justify-self:center;margin-top:4px}
 
 /* phone controllers + pad/gamepad menu focus */
 .ig-focus{outline:4px solid var(--sun,#ffd166)!important;outline-offset:3px;box-shadow:0 0 0 8px rgba(255,209,102,.35)!important}

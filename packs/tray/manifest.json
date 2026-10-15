@@ -1,0 +1,41 @@
+{
+ "v": 1,
+ "game": "tray",
+ "base": "../assets/",
+ "models": {
+  "male": "models/male.glb?h=37b571ee",
+  "skater-male": "models/skater-male.glb?h=849a827d",
+  "survivor-female": "models/survivor-female.glb?h=9157aa20",
+  "cyborg-female": "models/cyborg-female.glb?h=86c5fb7b",
+  "cake": "models/cake.glb?h=e9782007",
+  "cake-birthday": "models/cake-birthday.glb?h=2ea86053",
+  "pie": "models/pie.glb?h=4e7760f3",
+  "plate": "models/plate.glb?h=1c8b79a1",
+  "plate-dinner": "models/plate-dinner.glb?h=3ce23084",
+  "cup-saucer": "models/cup-saucer.glb?h=1363c9fc",
+  "cup-tea": "models/cup-tea.glb?h=4388b878",
+  "mug": "models/mug.glb?h=c4a08f7b",
+  "donut-chocolate": "models/donut-chocolate.glb?h=e40cb289",
+  "donut-sprinkles": "models/donut-sprinkles.glb?h=113223bc",
+  "watermelon": "models/watermelon.glb?h=80552c56",
+  "pumpkin": "models/pumpkin.glb?h=a6512cf9",
+  "pizza-box": "models/pizza-box.glb?h=4da3fc57",
+  "cupcake": "models/cupcake.glb?h=954e4d1a",
+  "sundae": "models/sundae.glb?h=9bcd1f5c",
+  "pancakes": "models/pancakes.glb?h=bdc2b3ac",
+  "plant": "models/plant.glb?h=eb44ede4",
+  "barrel": "models/barrel.glb?h=2b75ee0a",
+  "bench": "models/bench.glb?h=e6f3b898",
+  "low-poly-tree": "models/low-poly-tree.glb?h=0a0be3f1",
+  "palm-detailed-short": "models/palm-detailed-short.glb?h=5a24b027",
+  "tree-big": "models/tree-big.glb?h=d1beaf82",
+  "formation-rock": "models/formation-rock.glb?h=dca30313",
+  "house-5": "models/house-5.glb?h=77ff96ef",
+  "house-3": "models/house-3.glb?h=713a38b8"
+ },
+ "hdri": {
+  "dawn": "hdri/dawn.hdr?h=b48993a4"
+ },
+ "lazy": [],
+ "bytes": 1217884
+}

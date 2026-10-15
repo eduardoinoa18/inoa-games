@@ -1,0 +1,20 @@
+{
+ "v": 1,
+ "game": "trivia",
+ "base": "../assets/",
+ "models": {
+  "male": "models/male.glb?h=37b571ee",
+  "skater-male": "models/skater-male.glb?h=849a827d",
+  "skater-female": "models/skater-female.glb?h=fb0e1605",
+  "survivor-female": "models/survivor-female.glb?h=9157aa20",
+  "survivor-male": "models/survivor-male.glb?h=69d38b39",
+  "cyborg-female": "models/cyborg-female.glb?h=86c5fb7b",
+  "plant": "models/plant.glb?h=eb44ede4",
+  "present": "models/present.glb?h=f35755a2"
+ },
+ "hdri": {
+  "studio": "hdri/studio.hdr?h=b583ab9f"
+ },
+ "lazy": [],
+ "bytes": 1439698
+}

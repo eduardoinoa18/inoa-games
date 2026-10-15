@@ -54,6 +54,8 @@ await E.loadPack('../packs/drift.json', R, p => ld.set(p));
 const input = E.createInput({ surface: $('gl') });
 const P = new E.Particles(scene);
 const S = E.store.get('inoa.drift', { track: 0, racer: 0, mode: 'gp', bestLap: {} });
+// hub hero (profile.hero): default to it until the player picks a character in this game
+const HERO = E.hero(); if (HERO.chosen && !S.picked) { const k = RACERS.findIndex(r => r.model === HERO.model); if (k >= 0) S.racer = k; }
 let G = null, music = null, engineSnd = null;
 // Online: ?join=CODE = this screen races as a guest in someone's room (host simulates, we render snapshots).
 const JOIN = new URLSearchParams(location.search).get('join');
@@ -117,7 +119,7 @@ function checkerTex() { const c = document.createElement('canvas'); c.width = 25
 /* ---------- karts ---------- */
 function makeKart(def, isPlayer) {
   const g = new THREE.Group();
-  const body = E.instance(def.car, { scale: 4.2, tint: def.tint }); body.rotation.y = Math.PI; E.detail(body, 'paint', .35); g.add(body);
+  const body = E.instance(def.car, { scale: 4.2, tint: isPlayer && HERO.chosen && def.model === HERO.model ? HERO.colorHex : def.tint }); body.rotation.y = Math.PI; E.detail(body, 'paint', .35); g.add(body);
   const driver = E.instance(def.model, { scale: 1.75, outline: false, fit: 'height' }); driver.position.set(0, .35, .15); g.add(driver); const rig = E.bones(driver);
   const shadow = new THREE.Mesh(new THREE.CircleGeometry(1.9, 20), new THREE.MeshBasicMaterial({ color: 0, transparent: true, opacity: .28, depthWrite: false })); shadow.rotation.x = -Math.PI / 2; shadow.position.y = .03; shadow.scale.set(1, 1.6, 1); g.add(shadow);
   const shield = new THREE.Mesh(new THREE.SphereGeometry(2.6, 20, 16), new THREE.MeshStandardMaterial({ color: 0x7fd8ff, transparent: true, opacity: .25, emissive: 0x5bd2ff, emissiveIntensity: .6, depthWrite: false })); shield.position.y = 1.1; shield.visible = false; g.add(shield);
@@ -308,7 +310,8 @@ if (!JOIN) { const adv = () => { if (E.net.role === 'host' && E.net.status === '
 function updateEngine() { const ac = E.audio(); if (!ac || !E.profile().sound) return; if (!engineSnd) { const o = ac.createOscillator(), o2 = ac.createOscillator(), f = ac.createBiquadFilter(), g = ac.createGain(); o.type = 'sawtooth'; o2.type = 'square'; f.type = 'lowpass'; f.frequency.value = 600; g.gain.value = .0; o.connect(f); o2.connect(f); f.connect(g); g.connect(ac.destination); o.start(); o2.start(); engineSnd = { o, o2, g, f }; } const k = G.me, sp = Math.abs(k.v) / MAXV; engineSnd.o.frequency.setTargetAtTime(55 + sp * 120 + (k.boost > 0 ? 40 : 0), ac.currentTime, .05); engineSnd.o2.frequency.setTargetAtTime(110 + sp * 240, ac.currentTime, .05); engineSnd.g.gain.setTargetAtTime(G.paused || G.done ? 0 : .025 + sp * .03, ac.currentTime, .1); engineSnd.f.frequency.setTargetAtTime(400 + sp * 1600, ac.currentTime, .05); }
 
 /* ---------- camera / hud ---------- */
-function updateCamera(dt) { if (!G) { camera.position.set(Math.cos(performance.now() / 6000) * 160, 70, Math.sin(performance.now() / 6000) * 160 + 110); camera.lookAt(30, 0, 110); return; } const k = G.me; const back = 10.5 + Math.min(4, k.v * .05), hgt = 4.6; const want = new THREE.Vector3(k.x - Math.sin(k.h) * back, k.y + hgt, k.z - Math.cos(k.h) * back); G.camPos.lerp(want, 1 - Math.pow(.004, dt)); const look = new THREE.Vector3(k.x + Math.sin(k.h) * 6, k.y + 1.6, k.z + Math.cos(k.h) * 6); G.camLook.lerp(look, 1 - Math.pow(.0005, dt)); G.shake = Math.max(0, G.shake - dt * 2); const sh = G.shake * .4; camera.position.copy(G.camPos).add(new THREE.Vector3(rnd(-sh, sh), rnd(-sh, sh), rnd(-sh, sh))); camera.lookAt(G.camLook); const portrait = innerHeight > innerWidth; const fovT = (portrait ? 78 : 62) + (k.boost > 0 ? 10 : 0) + k.v * .08; camera.fov = damp(camera.fov, fovT, .02, dt); camera.updateProjectionMatrix(); sun.position.set(k.x + 30, 60, k.z + 20); sun.target.position.set(k.x, 0, k.z); sun.target.updateMatrixWorld(); }
+// while drifting the camera catches up faster and aims nearer the kart so it stays in frame (G.driftCam 0..1)
+function updateCamera(dt) { if (!G) { camera.position.set(Math.cos(performance.now() / 6000) * 160, 70, Math.sin(performance.now() / 6000) * 160 + 110); camera.lookAt(30, 0, 110); return; } const k = G.me; const back = 10.5 + Math.min(4, k.v * .05), hgt = 4.6; const want = new THREE.Vector3(k.x - Math.sin(k.h) * back, k.y + hgt, k.z - Math.cos(k.h) * back); G.driftCam = damp(G.driftCam || 0, k.drift ? 1 : 0, .02, dt); G.camPos.lerp(want, 1 - Math.pow(lerp(.004, .0008, G.driftCam), dt)); const lead = lerp(6, 2.5, G.driftCam); const look = new THREE.Vector3(k.x + Math.sin(k.h) * lead, k.y + 1.6, k.z + Math.cos(k.h) * lead); G.camLook.lerp(look, 1 - Math.pow(lerp(.0005, .00005, G.driftCam), dt)); G.shake = Math.max(0, G.shake - dt * 2); const sh = G.shake * .4; camera.position.copy(G.camPos).add(new THREE.Vector3(rnd(-sh, sh), rnd(-sh, sh), rnd(-sh, sh))); camera.lookAt(G.camLook); const portrait = innerHeight > innerWidth; const fovT = (portrait ? 78 : 62) + (k.boost > 0 ? 10 : 0) + k.v * .08; camera.fov = damp(camera.fov, fovT, .02, dt); camera.updateProjectionMatrix(); sun.position.set(k.x + 30, 60, k.z + 20); sun.target.position.set(k.x, 0, k.z); sun.target.updateMatrixWorld(); }
 const ORD = n => n + (n === 1 ? 'st' : n === 2 ? 'nd' : n === 3 ? 'rd' : 'th');
 const fmt = t => `${Math.floor(t / 60)}:${(t % 60).toFixed(2).padStart(5, '0')}`;
 let hudEl = null;
@@ -339,7 +342,7 @@ function title() {
   const showOnline = () => { const el = document.getElementById('drOnline'); if (!el) return; const n = E.net.role === 'host' ? E.net.pads('player').length : 0; el.textContent = n ? `🌐 ${n} online racer${n > 1 ? 's' : ''} ready: press Play to start the race together` : ''; };
   E.net.on('change', showOnline); showOnline();
   d.querySelectorAll('#pT button').forEach(b => b.onclick = () => { S.track = +b.dataset.i; d.querySelectorAll('#pT button').forEach(x => x.classList.toggle('on', x === b)); buildTrack(TRACKS[S.track]); });
-  d.querySelectorAll('#pR button').forEach(b => b.onclick = () => { S.racer = +b.dataset.i; d.querySelectorAll('#pR button').forEach(x => x.classList.toggle('on', x === b)); });
+  d.querySelectorAll('#pR button').forEach(b => b.onclick = () => { S.racer = +b.dataset.i; S.picked = true; d.querySelectorAll('#pR button').forEach(x => x.classList.toggle('on', x === b)); });
   d.querySelectorAll('#pM button').forEach(b => b.onclick = () => { S.mode = b.dataset.m; d.querySelectorAll('#pM button').forEach(x => x.classList.toggle('on', x === b)); });
 }
 if (JOIN) { buildTrack(TRACKS[S.track]); clientJoin(); } else { title(); if (new URLSearchParams(location.search).get('online')) setTimeout(() => E.NET.partyPanel(PARTY), 300); }

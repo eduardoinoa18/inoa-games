@@ -12,6 +12,7 @@ import { SMAAPass } from 'three/addons/postprocessing/SMAAPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { clone as skClone } from 'three/addons/utils/SkeletonUtils.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 export { THREE };
 import * as NET from './net.js';
 export { NET };
@@ -34,39 +35,80 @@ export const store = {
   get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } }
 };
-const PROFILE_KEY = 'inoa.profile';
-export function profile() { return Object.assign({ name: '', xp: 0, coins: 0, games: {}, lang: 'en', voice: true, sound: true }, store.get(PROFILE_KEY, {})); }
+const PROFILE_KEY_GUEST = 'inoa.profile';
+// Signed-in players get a per-user profile cache (written by engine/platform.js from the server); guests use the device profile.
+const pkey = () => { const k = store.get('inoa.activeProfile', null); return typeof k === 'string' && k.startsWith('inoa.profile.u.') ? k : PROFILE_KEY_GUEST; };
+// Profile v2 (localStorage 'inoa.profile'): older saves are upgraded in place, never reset.
+// { v, name, xp, coins, games: {id: {plays, best, last, newBest}}, recent: [ids], lang, voice, sound, music, motion, quality, hero }
+const PDEF = { v: 2, name: '', xp: 0, coins: 0, games: {}, recent: [], lang: 'en', voice: true, sound: true, music: true, motion: 'auto', quality: 'auto', hero: null };
+export function profile() {
+  const raw = store.get(pkey(), {}); const p = Object.assign({}, PDEF, raw && typeof raw === 'object' ? raw : {});
+  p.xp = Number.isFinite(+p.xp) ? Math.max(0, +p.xp) : 0; p.coins = Number.isFinite(+p.coins) ? Math.max(0, +p.coins) : 0;
+  if (!p.games || typeof p.games !== 'object') p.games = {}; if (!Array.isArray(p.recent)) p.recent = []; if (p.lang !== 'es') p.lang = 'en'; p.v = 2; return p;
+}
 export function heroLevel(xp) { let lv = 1, need = 100, x = xp; while (x >= need && lv < 50) { x -= need; lv++; need = Math.round(need * 1.12); } return { lv, into: x, need }; }
 // Called by a game at the end of a round. Returns {xp, coins, levelUp, level}.
+// A second results() for the same game within 3 s (double click, double callback) does not pay out twice.
+let _lastReward = null;
 export function reward(gameId, { xp = 0, coins = 0, best = null, bestLower = false } = {}) {
-  const p = profile(); const before = heroLevel(p.xp).lv; p.xp += Math.round(xp); p.coins += Math.round(coins);
-  const g = p.games[gameId] || { plays: 0, best: null }; g.plays++; if (best != null && (g.best == null || (bestLower ? best < g.best : best > g.best))) { g.best = best; g.newBest = true; } else g.newBest = false; p.games[gameId] = g; store.set(PROFILE_KEY, p);
-  const after = heroLevel(p.xp); return { xp: Math.round(xp), coins: Math.round(coins), levelUp: after.lv > before, level: after.lv, best: g.best, newBest: g.newBest };
+  const now = Date.now(); if (_lastReward && _lastReward.gameId === gameId && now - _lastReward.t < 3000) return _lastReward.r;
+  const p = profile(); const before = heroLevel(p.xp).lv; xp = Math.max(0, Math.min(5000, +xp || 0)); coins = Math.max(0, Math.min(5000, +coins || 0)); p.xp += Math.round(xp); p.coins += Math.round(coins);
+  const g = p.games[gameId] || { plays: 0, best: null }; g.plays = (g.plays || 0) + 1; g.last = now; if (best != null && Number.isFinite(+best) && (g.best == null || (bestLower ? best < g.best : best > g.best))) { g.best = best; g.newBest = true; } else g.newBest = false; p.games[gameId] = g;
+  p.recent = [gameId, ...p.recent.filter(x => x !== gameId)].slice(0, 8); store.set(pkey(), p);
+  const after = heroLevel(p.xp); const r = { xp: Math.round(xp), coins: Math.round(coins), levelUp: after.lv > before, level: after.lv, best: g.best, newBest: g.newBest }; _lastReward = { gameId, t: now, r }; return r;
 }
-export function setProfile(patch) { store.set(PROFILE_KEY, Object.assign(profile(), patch)); }
+// The player's chosen hero (picked on the hub): {model, color, name}. model is one of HERO_MODELS; falls back safely.
+export const HERO_MODELS = ['skater-female', 'skater-male', 'survivor-female', 'survivor-male', 'cyborg-female', 'male'];
+export function hero(fallbackModel = 'skater-female') { const p = profile(), h = p.hero || {}; const model = HERO_MODELS.includes(h.model) ? h.model : fallbackModel; const color = /^#[0-9a-f]{6}$/i.test(h.color || '') ? h.color : '#5bb8ff'; return { model, color, colorHex: parseInt(color.slice(1), 16), name: String(p.name || '').replace(/[<>]/g, '').slice(0, 18), chosen: !!p.hero }; }
+export function setProfile(patch) { store.set(pkey(), Object.assign(profile(), patch)); }
+// Shared settings (live in the profile so every game and the hub agree). Changing one fires 'inoa:settings' on window.
+export function settings() { const p = profile(); return { sound: p.sound, music: p.music, voice: p.voice, lang: p.lang, motion: p.motion, quality: p.quality }; }
+export function setSetting(k, v) { setProfile({ [k]: v }); applySettings(); dispatchEvent(new CustomEvent('inoa:settings', { detail: { key: k, value: v, settings: settings() } })); }
+export const lang = () => profile().lang;
+export const reducedMotion = () => { const m = profile().motion; return m === 'reduced' || (m === 'auto' && typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches); };
+// Pick the string for the current language: L({en: 'Hi', es: 'Hola'}) or L('Hi', 'Hola').
+export const L = (en, es) => (typeof en === 'object' && en) ? (en[lang()] ?? en.en) : (lang() === 'es' && es != null ? es : en);
+function applySettings() { try { document.documentElement.classList.toggle('ig-reduced', reducedMotion()); document.documentElement.lang = lang(); _quality = profile().quality; if (musicGain) musicGain.gain.value = profile().music ? .22 : 0; } catch (e) { } }
+/* engine UI strings */
+const STR = {
+  en: { paused: 'Paused', hub: 'Hub', restart: 'Restart', resume: 'Resume', sound: 'Sound', voice: 'Read aloud', on: 'on', off: 'off', settings: 'Settings', newBest: 'NEW BEST', roundOver: 'ROUND OVER', again: 'Play again', share: 'Share', heroLv: 'Hero lv', best: 'Best', play: 'Play', loading: 'Loading…', copied: 'Copied! Paste it anywhere.', install: 'Install Inoa Games (plays offline)', music: 'Music', language: 'Language', motion: 'Reduced motion', quality: 'Graphics', auto: 'Auto', high: 'High', low: 'Low', done: 'Done', back: 'Back to Inoa Games' },
+  es: { paused: 'En pausa', hub: 'Inicio', restart: 'Reiniciar', resume: 'Seguir', sound: 'Sonido', voice: 'Leer en voz alta', on: 'sí', off: 'no', settings: 'Ajustes', newBest: 'NUEVO RÉCORD', roundOver: 'FIN DE LA RONDA', again: 'Otra vez', share: 'Compartir', heroLv: 'Nivel', best: 'Récord', play: 'Jugar', loading: 'Cargando…', copied: '¡Copiado! Pégalo donde quieras.', install: 'Instalar Inoa Games (funciona sin conexión)', music: 'Música', language: 'Idioma', motion: 'Menos movimiento', quality: 'Gráficos', auto: 'Auto', high: 'Alta', low: 'Baja', done: 'Listo', back: 'Volver a Inoa Games' }
+};
+export const t = k => (STR[lang()] || STR.en)[k] ?? STR.en[k] ?? k;
+export function addStrings(table) { for (const l in table) Object.assign(STR[l] ||= {}, table[l]); }
 
 /* ---------------- renderer ---------------- */
 export function createRenderer(canvas, opts = {}) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: !!opts.preserve });
-  const DPR = Math.min(devicePixelRatio || 1, opts.maxDpr || 2);
+  _quality = profile().quality; const Q = _quality; // 'auto' | 'high' | 'low' (shared setting)
+  const DPR = Math.min(devicePixelRatio || 1, Q === 'low' ? 1 : (opts.maxDpr || 2));
   renderer.setPixelRatio(DPR); renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1; renderer.shadowMap.enabled = opts.shadows !== false; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   const scene = new THREE.Scene(); scene.fog = new THREE.Fog(0xcfe9f5, 60, 160);
   const camera = new THREE.PerspectiveCamera(opts.fov || 50, 1, .1, opts.far || 400);
   const hemi = new THREE.HemisphereLight(0xeaf6ff, 0x9a7b55, .4); scene.add(hemi);
-  const sun = new THREE.DirectionalLight(0xfff0d6, 1.5); sun.position.set(8, 16, 6); sun.castShadow = renderer.shadowMap.enabled; const ss = opts.shadowSize || 20; sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left: -ss, right: ss, top: ss, bottom: -ss, near: 1, far: 90 }); sun.shadow.bias = -.0006; sun.shadow.normalBias = .02; scene.add(sun); scene.add(sun.target);
+  const sun = new THREE.DirectionalLight(0xfff0d6, 1.5); sun.position.set(8, 16, 6); sun.castShadow = renderer.shadowMap.enabled; const ss = opts.shadowSize || 20; sun.shadow.mapSize.set(Q === 'low' ? 1024 : 2048, Q === 'low' ? 1024 : 2048); Object.assign(sun.shadow.camera, { left: -ss, right: ss, top: ss, bottom: -ss, near: 1, far: 90 }); sun.shadow.bias = -.0006; sun.shadow.normalBias = .02; scene.add(sun); scene.add(sun.target);
   const pmrem = new THREE.PMREMGenerator(renderer); pmrem.compileEquirectangularShader();
   const composer = new EffectComposer(renderer); composer.addPass(new RenderPass(scene, camera));
   const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), .15, .4, .95); composer.addPass(bloom);
   const vignette = new ShaderPass({ uniforms: { tDiffuse: { value: null }, uAmt: { value: .25 } }, vertexShader: 'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}', fragmentShader: 'uniform sampler2D tDiffuse;uniform float uAmt;varying vec2 vUv;void main(){vec4 c=texture2D(tDiffuse,vUv);float d=distance(vUv,vec2(.5));c.rgb*=1.-smoothstep(.45,.95,d)*uAmt;gl_FragColor=c;}' });
   composer.addPass(vignette); composer.addPass(new OutputPass()); const smaa = new SMAAPass(1, 1); composer.addPass(smaa);
-  let low = false, fpsAcc = 0, fpsN = 0;
+  let low = Q === 'low', fpsAcc = 0, fpsN = 0; if (low) bloom.enabled = false;
+  // Render on demand: opts.onDemand (or R.setOnDemand(true)) renders only after R.invalidate(); window.__NORENDER skips rendering (headless tests).
+  let onDemand = !!opts.onDemand, dirty = true; const invalidate = () => { dirty = true; };
+  // Distance-scaled fog: setLook({fogScale: true, fogNear: .8, fogFar: 4}) makes near/far multiples of the camera → R.focus distance.
+  const focus = new THREE.Vector3(); let fogK = null;
   function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); composer.setSize(w, h); bloom.resolution.set(w / 2, h / 2); camera.aspect = w / h; if (opts.portraitFov) camera.fov = w < h ? opts.portraitFov : (opts.fov || 50); camera.updateProjectionMatrix(); }
   addEventListener('resize', resize); resize();
-  function render(dt) { fpsAcc += dt; fpsN++; if (fpsAcc > 3) { const fps = fpsN / fpsAcc; fpsAcc = 0; fpsN = 0; if (fps < 40 && !low) { low = true; renderer.setPixelRatio(Math.min(DPR, 1.25)); bloom.enabled = false; resize(); } } composer.render(); }
+  function render(dt) {
+    if (fogK) { const d = Math.max(1, camera.position.distanceTo(focus)); scene.fog.near = d * fogK[0]; scene.fog.far = d * fogK[1]; }
+    if (window.__NORENDER || (onDemand && !dirty)) return; dirty = false;
+    fpsAcc += dt; fpsN++; if (fpsAcc > 3) { const fps = fpsN / fpsAcc; fpsAcc = 0; fpsN = 0; if (fps < 40 && !low && Q !== 'high') { low = true; renderer.setPixelRatio(Math.min(DPR, 1.25)); bloom.enabled = false; resize(); } }
+    composer.render();
+  }
   // Look presets: sky, fog, light balance. Keeps the house style consistent across games.
   let sky = null;
   function setLook(L) {
-    renderer.toneMappingExposure = L.exposure ?? .95; scene.fog.color.set(L.fog ?? 0xcfe9f5); scene.fog.near = L.fogNear ?? 60; scene.fog.far = L.fogFar ?? 160;
+    renderer.toneMappingExposure = L.exposure ?? .95; scene.fog.color.set(L.fog ?? 0xcfe9f5); fogK = L.fogScale ? [L.fogNear ?? .8, L.fogFar ?? 4] : null; if (!fogK) { scene.fog.near = L.fogNear ?? 60; scene.fog.far = L.fogFar ?? 160; } invalidate();
     sun.intensity = L.sun ?? 1.5; sun.color.set(L.sunColor ?? 0xfff0d6); hemi.intensity = L.hemi ?? .4; hemi.color.set(L.skyHor ?? 0xcfe9f5); hemi.groundColor.set(L.ground ?? 0x9a7b55);
     bloom.strength = L.bloom ?? .14; bloom.threshold = L.bloomThreshold ?? .96; scene.environmentIntensity = L.env ?? .15;
     if (sky) scene.remove(sky); sky = null; scene.background = null;
@@ -74,7 +116,8 @@ export function createRenderer(canvas, opts = {}) {
     else { sky = skyDome(L); scene.add(sky); }
   }
   function setEnv(tex) { if (tex) scene.environment = tex; }
-  return { renderer, scene, camera, hemi, sun, composer, bloom, vignette, pmrem, resize, render, setLook, setEnv, get low() { return low; } };
+  addEventListener('resize', invalidate);
+  return { renderer, scene, camera, hemi, sun, composer, bloom, vignette, pmrem, resize, render, setLook, setEnv, focus, invalidate, setOnDemand(v) { onDemand = !!v; dirty = true; }, get low() { return low; } };
 }
 export function skyDome(L) {
   const g = new THREE.Group();
@@ -89,9 +132,32 @@ export function skyDome(L) {
 export const ASSETS = { models: {}, hdri: {} };
 const gltfLoader = new GLTFLoader(), rgbeLoader = new RGBELoader();
 const b64 = str => { const bin = atob(str); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u.buffer; };
-// pack.json = { models: {name: base64 glb}, hdri: {name: base64 hdr} }
-export async function loadPack(url, eng, onProgress = () => { }) {
-  onProgress(.03); const res = await fetch(url); const total = Number(res.headers.get('content-length')) || 4e6; const reader = res.body.getReader(); const chunks = []; let got = 0;
+gltfLoader.setMeshoptDecoder(MeshoptDecoder);
+function finishHdri(name, t, eng) { t.mapping = THREE.EquirectangularReflectionMapping; t.colorSpace = THREE.LinearSRGBColorSpace; t.needsUpdate = true; ASSETS.hdri[name] = eng ? eng.pmrem.fromEquirectangular(t).texture : t; }
+// Preferred format: packs/<game>/manifest.json = { v, models: {name: url}, hdri: {name: url}, lazy: [names], base } (real .glb/.hdr files,
+// cacheable and shared between games; built by tools/build_packs.mjs). loadPack('../packs/<game>.json') tries that manifest first and falls back
+// to the legacy base64 pack.json = { models: {name: base64 glb}, hdri: {name: base64 hdr} }. opts.manifest=false forces the legacy pack.
+let _eng = null;
+async function loadManifest(man, manUrl, eng, onProgress) {
+  const base = new URL(man.base || './', manUrl); ASSETS.manifest = { man, base };
+  const lazy = new Set(man.lazy || []), names = Object.keys(man.models || {}).filter(n => !lazy.has(n)), hn = Object.keys(man.hdri || {});
+  let n = 0; const total = Math.max(1, names.length + hn.length), tick = () => onProgress(.05 + .95 * (++n / total));
+  await Promise.all([...names.map(name => loadModelFile(name, new URL(man.models[name], base).href).then(tick)),
+    ...hn.map(name => rgbeLoader.loadAsync(new URL(man.hdri[name], base).href).then(t => finishHdri(name, t, eng), e => console.warn('hdri', name, e)).then(tick))]);
+  return ASSETS;
+}
+const _modelLoads = {};
+// meshopt/quantized GLBs store attributes as normalized ints; games that edit or merge geometry expect Float32, so expand them on load.
+function dequantize(root) { root.traverse(o => { const g = o.geometry; if (!g) return; for (const k in g.attributes) { const at = g.attributes[k]; if (at.isInterleavedBufferAttribute || !(at.array instanceof Float32Array) || at.normalized) { const n = at.count, sz = at.itemSize, f = new Float32Array(n * sz); for (let i = 0; i < n; i++) for (let c = 0; c < sz; c++) f[i * sz + c] = at.getComponent(i, c); g.setAttribute(k, new THREE.BufferAttribute(f, sz, false)); } } }); }
+function loadModelFile(name, href) { return _modelLoads[name] ||= gltfLoader.loadAsync(href).then(g => { dequantize(g.scene); ASSETS.models[name] = g.scene; g.scene.userData.animations = g.animations; }, e => { console.warn('model', name, e); }); }
+// Load models listed as lazy in the manifest (or any manifest model) after the game has started. Resolves when all are in ASSETS.models.
+export async function ensureModels(names) { const m = ASSETS.manifest; if (!m) return ASSETS; await Promise.all(names.filter(n => !ASSETS.models[n] && m.man.models[n]).map(n => loadModelFile(n, new URL(m.man.models[n], m.base).href))); return ASSETS; }
+export async function loadPack(url, eng, onProgress = () => { }, opts = {}) {
+  _eng = eng; onProgress(.03);
+  if (opts.manifest !== false && /\.json$/.test(url) && !/manifest\.json$/.test(url)) {
+    const mu = new URL(url.replace(/\.json$/, '/manifest.json'), location.href);
+    try { const r = await fetch(mu); if (r.ok) { const man = await r.json(); if (man && man.models) return await loadManifest(man, mu, eng, onProgress); } } catch (e) { console.warn('manifest failed, using pack', e); }
+  } else if (/manifest\.json$/.test(url)) { const mu = new URL(url, location.href); const man = await (await fetch(mu)).json(); return loadManifest(man, mu, eng, onProgress); } const res = await fetch(url); const total = Number(res.headers.get('content-length')) || 4e6; const reader = res.body.getReader(); const chunks = []; let got = 0;
   while (true) { const { done, value } = await reader.read(); if (done) break; chunks.push(value); got += value.length; onProgress(.03 + .6 * Math.min(1, got / total)); }
   const pack = JSON.parse(new TextDecoder().decode(await new Blob(chunks).arrayBuffer()));
   const names = Object.keys(pack.models || {}), hn = Object.keys(pack.hdri || {}); let n = 0; const tick = () => onProgress(.63 + .37 * (++n / Math.max(1, names.length + hn.length)));
@@ -129,24 +195,85 @@ export const POSES = {
   hit: (t) => ({ Spine: [-.4], Head: [-.4], LeftArm: [0, 0, .3], RightArm: [0, 0, -.3] })
 };
 
+/* ---------------- limb aiming + held items (moved from Depths, generalised) ---------------- */
+// Aim limbs in WORLD-ish directions instead of Euler angles: aimLimbs(rig, root, {ru: dir, rf: dir, ...}) where each dir is a unit
+// vector in the root's local frame (+Y up, +Z the way the model faces). Missing bones are skipped, so any Kenney-style rig works.
+export const LIMBS = [['ru', 'RightArm', 'RightForeArm'], ['rf', 'RightForeArm', 'RightHand'], ['lu', 'LeftArm', 'LeftForeArm'], ['lf', 'LeftForeArm', 'LeftHand'], ['rt', 'RightUpLeg', 'RightLeg'], ['rs', 'RightLeg', 'RightFoot'], ['lt', 'LeftUpLeg', 'LeftLeg'], ['ls', 'LeftLeg', 'LeftFoot']];
+const _a1 = new THREE.Vector3(), _a2 = new THREE.Vector3(), _a3 = new THREE.Vector3(), _aw = new THREE.Vector3(), _aq1 = new THREE.Quaternion(), _aq2 = new THREE.Quaternion(), _aq3 = new THREE.Quaternion(), _aqR = new THREE.Quaternion(), _as = new THREE.Vector3(), _am = new THREE.Matrix4();
+// Rotate `bone` so the bone→child segment points along dirW (world space, normalised).
+export function aimBone(bone, child, dirW) {
+  if (!bone || !child || !bone.parent) return; _a1.setFromMatrixPosition(bone.matrixWorld); _a2.setFromMatrixPosition(child.matrixWorld).sub(_a1); const len = _a2.length(); if (len < 1e-6) return; _a2.divideScalar(len);
+  _aq1.setFromUnitVectors(_a2, dirW); bone.matrixWorld.decompose(_a3, _aq2, _as); _aq2.premultiply(_aq1); bone.parent.matrixWorld.decompose(_a3, _aq3, _as); bone.quaternion.copy(_aq3.invert().multiply(_aq2)); bone.updateMatrixWorld(true);
+}
+export function aimLimbs(rig, root, dirs) { if (!rig || !root) return; root.updateMatrixWorld(true); root.matrixWorld.decompose(_a3, _aqR, _as); for (const [n, b, c] of LIMBS) if (dirs[n]) aimBone(rig[b], rig[c], _aw.copy(dirs[n]).normalize().applyQuaternion(_aqR)); }
+// Orient an object parented to `bone` so its +Y points along dirW (world) with +Z close to hintW (world).
+export function orientTo(obj, bone, dirW, hintW) { const y = _a1.copy(dirW).normalize(), x = _a2.crossVectors(y, hintW); if (x.lengthSq() < 1e-4) x.set(1, 0, 0); x.normalize(); const z = _a3.crossVectors(x, y); _am.makeBasis(x, y, z); _aq1.setFromRotationMatrix(_am); bone.matrixWorld.decompose(_aw, _aq2, _as); obj.quaternion.copy(_aq2.invert().multiply(_aq1)); }
+// A packed model wrapped so +Y is the blade/barrel direction and the origin is the grip (grip = 0..1 along its length).
+export function weaponPivot(name, len = 1, grip = .15, rot = null, opts = {}) { const pv = new THREE.Group(); const w = instance(name, { scale: len, outline: opts.outline !== false }); w.position.y = -grip * len; if (rot) { const inner = new THREE.Group(); inner.rotation.set(...rot); inner.add(w); pv.add(inner); } else pv.add(w); return pv; }
+// Parent obj to a bone, cancelling the bone's world scale (Kenney rigs are scaled ~100x) so obj keeps its size in world units.
+export function attach(rig, obj, boneName = 'RightHand') { const bone = rig && rig[boneName]; if (!bone) { console.warn('attach: no bone', boneName); return null; } let r = bone; while (r.parent) r = r.parent; r.updateMatrixWorld(true); bone.matrixWorld.decompose(_a1, _aq1, _as); obj.scale.setScalar(1 / (_as.x || 1)); bone.add(obj); return obj; }
+
 /* ---------------- textures / sprites ---------------- */
 let _grain = null;
 export function grainTex(repeat = [6, 28]) { if (!_grain) { const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'); const d = g.createImageData(256, 256); for (let i = 0; i < d.data.length; i += 4) { const n = 215 + Math.random() * 40; d.data[i] = d.data[i + 1] = d.data[i + 2] = n; d.data[i + 3] = 255; } g.putImageData(d, 0, 0); for (let i = 0; i < 160; i++) { g.fillStyle = `rgba(0,0,0,${.04 + Math.random() * .06})`; g.beginPath(); g.ellipse(Math.random() * 256, Math.random() * 256, 2 + Math.random() * 6, 1 + Math.random() * 3, Math.random() * 3, 0, 6.3); g.fill(); } _grain = c; } const t = new THREE.CanvasTexture(_grain); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(...repeat); t.colorSpace = THREE.SRGBColorSpace; return t; }
 const TAGS = {};
-export function tagMaterial(emoji, text, bg = '#ffffff', fg = '#1b2430') { const k = emoji + text + bg + fg; if (TAGS[k]) return TAGS[k]; const c = document.createElement('canvas'); c.width = 512; c.height = 160; const g = c.getContext('2d'); g.fillStyle = bg; g.beginPath(); g.roundRect(8, 8, 496, 144, 40); g.fill(); g.lineWidth = 8; g.strokeStyle = '#1b2430'; g.stroke(); let x = 40; if (emoji) { g.font = '96px serif'; g.textBaseline = 'middle'; g.fillText(emoji, 28, 86); x = 140; } g.fillStyle = fg; let f = 54; g.font = `900 ${f}px Unbounded, Manrope, sans-serif`; while (g.measureText(text).width > 512 - x - 36 && f > 26) { f -= 4; g.font = `900 ${f}px Unbounded, Manrope, sans-serif`; } g.textBaseline = 'middle'; g.fillText(text, x, 86); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; const m = new THREE.SpriteMaterial({ map: t, depthTest: false, transparent: true, toneMapped: false, fog: false }); TAGS[k] = m; return m; }
-export function tag(emoji, text, opts = {}) { const s = new THREE.Sprite(tagMaterial(emoji, text, opts.bg, opts.fg)); const w = opts.width || 3.2; s.scale.set(w, w * .3125, 1); s.renderOrder = 6; return s; }
+// fit=true sizes the pill to its content (used by tag()); the default keeps the fixed 512x160 canvas for callers that set their own scale.
+export function tagMaterial(emoji, text, bg = '#ffffff', fg = '#1b2430', fit = false) {
+  const k = emoji + text + bg + fg + (fit ? '|fit' : ''); if (TAGS[k]) return TAGS[k];
+  const c = document.createElement('canvas'); c.height = 160; let g = c.getContext('2d'); let f = 54; const font = () => `900 ${f}px Unbounded, Manrope, sans-serif`;
+  let W = 512; if (fit) { g.font = font(); W = clamp(Math.ceil(g.measureText(text).width + (emoji ? 140 : 40) + 44), 200, 512); }
+  c.width = W; g = c.getContext('2d'); g.fillStyle = bg; g.beginPath(); g.roundRect(8, 8, W - 16, 144, 40); g.fill(); g.lineWidth = 8; g.strokeStyle = '#1b2430'; g.stroke();
+  let x = 40; if (emoji) { g.font = '96px serif'; g.textBaseline = 'middle'; g.fillText(emoji, 28, 86); x = 140; }
+  g.fillStyle = fg; g.font = font(); while (g.measureText(text).width > W - x - 36 && f > 26) { f -= 4; g.font = font(); }
+  g.textBaseline = 'middle'; if (fit && !emoji) { g.textAlign = 'center'; g.fillText(text, W / 2, 86); } else g.fillText(text, x, 86);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; const m = new THREE.SpriteMaterial({ map: t, depthTest: false, transparent: true, toneMapped: false, fog: false }); m.userData.aspect = W / 160; TAGS[k] = m; return m;
+}
+export function tag(emoji, text, opts = {}) { const m = tagMaterial(emoji, text, opts.bg, opts.fg, opts.fit !== false); const s = new THREE.Sprite(m); const w = opts.width || 3.2, h = w * .3125; s.scale.set(opts.fit === false ? w : h * m.userData.aspect, h, 1); s.renderOrder = 6; return s; }
 
 /* ---------------- particles ---------------- */
 let _spark = null; function sparkTex() { if (_spark) return _spark; const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); const r = g.createRadialGradient(32, 32, 0, 32, 32, 32); r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(.4, 'rgba(255,255,255,.7)'); r.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = r; g.fillRect(0, 0, 64, 64); _spark = new THREE.CanvasTexture(c); _spark.colorSpace = THREE.SRGBColorSpace; return _spark; }
+// Pooled particles: one Points mesh per blend mode (additive / normal), fixed-capacity ring buffer, no per-burst GPU allocation.
+// API unchanged: new Particles(scene[, {capacity}]) → .burst(pos, {color, n, speed, up, size, life, gravity, additive}), .update(dt).
+// .list holds the active bursts (games cap effects with P.list.length). Respects E.quality(): low quality halves particle counts.
+const PVS = 'attribute vec3 aColor;attribute float aSize;attribute float aAlpha;uniform float uScale;varying vec3 vC;varying float vA;void main(){vC=aColor;vA=aAlpha;vec4 mv=modelViewMatrix*vec4(position,1.);gl_PointSize=aAlpha>0.?aSize*uScale/max(.001,-mv.z):0.;gl_Position=projectionMatrix*mv;}';
+const PFS = 'uniform sampler2D uMap;varying vec3 vC;varying float vA;void main(){vec4 t=texture2D(uMap,gl_PointCoord);if(vA<=0.||t.a<.01)discard;gl_FragColor=vec4(vC,t.a*vA);\n#include <colorspace_fragment>\n}';
 export class Particles {
-  constructor(scene) { this.scene = scene; this.list = []; }
-  burst(pos, { color = 0xffe9a8, n = 18, speed = 4, up = 4, size = .45, life = .9, gravity = 12, additive = true } = {}) { const geo = new THREE.BufferGeometry(); const p = new Float32Array(n * 3), v = []; for (let i = 0; i < n; i++) { p[i * 3] = pos.x; p[i * 3 + 1] = pos.y; p[i * 3 + 2] = pos.z; v.push(new THREE.Vector3(rnd(-speed, speed), rnd(up * .4, up), rnd(-speed, speed))); } geo.setAttribute('position', new THREE.BufferAttribute(p, 3)); const m = new THREE.Points(geo, new THREE.PointsMaterial({ size, map: sparkTex(), color, transparent: true, depthWrite: false, blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending })); m.frustumCulled = false; this.scene.add(m); this.list.push({ m, v, t: 0, life, gravity }); }
-  update(dt) { for (const s of this.list.slice()) { s.t += dt; const p = s.m.geometry.attributes.position; for (let i = 0; i < s.v.length; i++) { s.v[i].y -= s.gravity * dt; p.setXYZ(i, p.getX(i) + s.v[i].x * dt, p.getY(i) + s.v[i].y * dt, p.getZ(i) + s.v[i].z * dt); } p.needsUpdate = true; s.m.material.opacity = 1 - s.t / s.life; if (s.t > s.life) { this.scene.remove(s.m); s.m.geometry.dispose(); s.m.material.dispose(); this.list.splice(this.list.indexOf(s), 1); } } }
+  constructor(scene, { capacity = 1536 } = {}) { this.scene = scene; this.cap = capacity; this.pools = {}; this.list = []; }
+  pool(additive) {
+    const k = additive ? 'add' : 'norm'; if (this.pools[k]) return this.pools[k]; const N = this.cap;
+    const geo = new THREE.BufferGeometry(), A = (n, c) => new THREE.BufferAttribute(new Float32Array(n * c), c).setUsage(THREE.DynamicDrawUsage);
+    geo.setAttribute('position', A(N, 3)); geo.setAttribute('aColor', A(N, 3)); geo.setAttribute('aSize', A(N, 1)); geo.setAttribute('aAlpha', A(N, 1));
+    const mat = new THREE.ShaderMaterial({ uniforms: { uMap: { value: sparkTex() }, uScale: { value: 300 } }, vertexShader: PVS, fragmentShader: PFS, transparent: true, depthWrite: false, blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending });
+    const pts = new THREE.Points(geo, mat); pts.frustumCulled = false; pts.renderOrder = 5; const sz = new THREE.Vector2();
+    pts.onBeforeRender = (r) => { r.getDrawingBufferSize(sz); mat.uniforms.uScale.value = sz.y / 2; }; // matches PointsMaterial size attenuation
+    this.scene.add(pts);
+    const P = { pts, geo, head: 0, vel: new Float32Array(N * 3), age: new Float32Array(N), life: new Float32Array(N), grav: new Float32Array(N), base: new Float32Array(N), alive: 0 };
+    return (this.pools[k] = P);
+  }
+  burst(pos, { color = 0xffe9a8, n = 18, speed = 4, up = 4, size = .45, life = .9, gravity = 12, additive = true } = {}) {
+    if (_quality === 'low') n = Math.max(1, n >> 1); n = Math.min(n, this.cap);
+    const P = this.pool(additive), c = _pc.set(color), g = P.geo.attributes;
+    for (let j = 0; j < n; j++) { const i = P.head; P.head = (P.head + 1) % this.cap; if (P.life[i] <= 0) P.alive++;
+      g.position.setXYZ(i, pos.x, pos.y, pos.z); g.aColor.setXYZ(i, c.r, c.g, c.b); g.aSize.setX(i, size); g.aAlpha.setX(i, 1);
+      P.vel[i * 3] = rnd(-speed, speed); P.vel[i * 3 + 1] = rnd(up * .4, up); P.vel[i * 3 + 2] = rnd(-speed, speed); P.age[i] = 0; P.life[i] = life; P.grav[i] = gravity; }
+    this.list.push({ t: 0, life });
+  }
+  update(dt) {
+    for (const k in this.pools) { const P = this.pools[k]; if (!P.alive) continue; const g = P.geo.attributes, pa = g.position.array, al = g.aAlpha.array;
+      for (let i = 0; i < this.cap; i++) { if (P.life[i] <= 0) continue; P.age[i] += dt; if (P.age[i] >= P.life[i]) { P.life[i] = 0; al[i] = 0; P.alive--; continue; }
+        P.vel[i * 3 + 1] -= P.grav[i] * dt; pa[i * 3] += P.vel[i * 3] * dt; pa[i * 3 + 1] += P.vel[i * 3 + 1] * dt; pa[i * 3 + 2] += P.vel[i * 3 + 2] * dt; al[i] = 1 - P.age[i] / P.life[i]; }
+      g.position.needsUpdate = true; g.aAlpha.needsUpdate = true; g.aColor.needsUpdate = true; g.aSize.needsUpdate = true; }
+    for (let i = this.list.length - 1; i >= 0; i--) { const b = this.list[i]; b.t += dt; if (b.t > b.life) this.list.splice(i, 1); }
+  }
+  clear() { for (const k in this.pools) { const P = this.pools[k]; P.life.fill(0); P.geo.attributes.aAlpha.array.fill(0); P.geo.attributes.aAlpha.needsUpdate = true; P.alive = 0; } this.list.length = 0; }
+  dispose() { for (const k in this.pools) { const P = this.pools[k]; this.scene.remove(P.pts); P.geo.dispose(); P.pts.material.dispose(); } this.pools = {}; this.list.length = 0; }
 }
+const _pc = new THREE.Color();
+let _quality = 'auto';
 
 /* ---------------- audio ---------------- */
 let AC = null, master = null, musicGain = null;
-export function audio() { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); master = AC.createGain(); master.gain.value = .9; master.connect(AC.destination); musicGain = AC.createGain(); musicGain.gain.value = .22; musicGain.connect(master); } catch (e) { } } if (AC && AC.state === 'suspended') AC.resume(); return AC; }
+export function audio() { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); master = AC.createGain(); master.gain.value = .9; master.connect(AC.destination); musicGain = AC.createGain(); musicGain.gain.value = profile().music ? .22 : 0; musicGain.connect(master); } catch (e) { } } if (AC && AC.state === 'suspended') AC.resume(); return AC; }
 export function tone(f, d, type = 'sine', g = .16, slide = 0, delay = 0, dest) { const c = audio(); if (!c || !profile().sound) return; const t0 = c.currentTime + delay; const o = c.createOscillator(), v = c.createGain(); o.type = type; o.frequency.setValueAtTime(f, t0); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), t0 + d); v.gain.setValueAtTime(0, t0); v.gain.linearRampToValueAtTime(g, t0 + .008); v.gain.exponentialRampToValueAtTime(.0008, t0 + d); o.connect(v); v.connect(dest || master); o.start(t0); o.stop(t0 + d + .02); }
 export function noise(d, g = .12, f = 1200, q = 1, delay = 0, type = 'bandpass') { const c = audio(); if (!c || !profile().sound) return; const t0 = c.currentTime + delay; const len = Math.max(1, Math.floor(c.sampleRate * d)); const buf = c.createBuffer(1, len, c.sampleRate); const ch = buf.getChannelData(0); for (let i = 0; i < len; i++) ch[i] = Math.random() * 2 - 1; const s = c.createBufferSource(); s.buffer = buf; const fl = c.createBiquadFilter(); fl.type = type; fl.frequency.value = f; fl.Q.value = q; const v = c.createGain(); v.gain.setValueAtTime(g, t0); v.gain.exponentialRampToValueAtTime(.0008, t0 + d); s.connect(fl); fl.connect(v); v.connect(master); s.start(t0); }
 export const SFX = {
@@ -168,7 +295,7 @@ export const SFX = {
   level: () => [784, 988, 1175, 1568].forEach((f, i) => tone(f, .22, 'square', .07, 0, i * .08))
 };
 // Tiny step-sequencer music. pattern: array of [noteSemitoneOffset|null], root Hz.
-export function music(song) { const c = audio(); if (!c) return { stop() { } }; let stopped = false, step = 0; const beat = 60 / (song.bpm || 110) / 2; const next = () => { if (stopped) return; if (profile().sound) { const n = song.lead[step % song.lead.length], b = song.bass[step % song.bass.length]; if (n != null) tone(song.root * Math.pow(2, n / 12), beat * .9, song.leadWave || 'triangle', .05, 0, 0, musicGain); if (b != null) tone(song.root / 2 * Math.pow(2, b / 12), beat * 1.6, 'sine', .07, 0, 0, musicGain); if (song.hat && step % 2 === 1) noise(.04, .025, 7000, 1); if (song.kick && step % 4 === 0) tone(90, .12, 'sine', .12, -50, 0, musicGain); } step++; setTimeout(next, beat * 1000); }; next(); return { stop() { stopped = true; } }; }
+export function music(song) { const c = audio(); if (!c) return { stop() { } }; let stopped = false, step = 0; const beat = 60 / (song.bpm || 110) / 2; const next = () => { if (stopped) return; if (profile().sound && profile().music !== false && !document.hidden) { const n = song.lead[step % song.lead.length], b = song.bass[step % song.bass.length]; if (n != null) tone(song.root * Math.pow(2, n / 12), beat * .9, song.leadWave || 'triangle', .05, 0, 0, musicGain); if (b != null) tone(song.root / 2 * Math.pow(2, b / 12), beat * 1.6, 'sine', .07, 0, 0, musicGain); if (song.hat && step % 2 === 1) noise(.04, .025, 7000, 1); if (song.kick && step % 4 === 0) tone(90, .12, 'sine', .12, -50, 0, musicGain); } step++; setTimeout(next, beat * 1000); }; next(); return { stop() { stopped = true; } }; }
 export const SONGS = {
   bright: { bpm: 112, root: 392, lead: [0, null, 4, 7, 9, null, 7, 4, 2, null, 4, null, 0, 2, 4, null], bass: [0, null, null, null, 5, null, null, null, 7, null, null, null, 5, null, 4, null], hat: true, kick: true },
   chill: { bpm: 84, root: 330, lead: [0, null, null, 7, null, 4, null, null, 2, null, null, 9, null, 7, null, null], bass: [0, null, null, null, null, null, null, null, -3, null, null, null, null, null, null, null], leadWave: 'sine' },
@@ -177,14 +304,17 @@ export const SONGS = {
 };
 
 /* ---------------- speech ---------------- */
-export function say(text, { lang, interrupt = true } = {}) { const p = profile(); if (!('speechSynthesis' in window) || !p.voice || !text) return; try { if (interrupt) speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(String(text)); u.lang = (lang || p.lang) === 'es' ? 'es-US' : 'en-US'; u.rate = .97; const vs = speechSynthesis.getVoices(); const v = vs.find(x => x.lang === u.lang) || vs.find(x => x.lang.startsWith(u.lang.slice(0, 2))); if (v) u.voice = v; speechSynthesis.speak(u); } catch (e) { } }
+const _said = new Set();
+// say(text, {lang, interrupt, once}) — once: true speaks a line only the first time this page asks for it.
+export function say(text, { lang, interrupt = true, once = false } = {}) { const p = profile(); if (!('speechSynthesis' in window) || !p.voice || !text) return; if (once) { if (_said.has(text)) return; _said.add(text); } try { if (interrupt) speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(String(text)); u.lang = (lang || p.lang) === 'es' ? 'es-US' : 'en-US'; u.rate = .97; const vs = speechSynthesis.getVoices(); const v = vs.find(x => x.lang === u.lang) || vs.find(x => x.lang.startsWith(u.lang.slice(0, 2))); if (v) u.voice = v; speechSynthesis.speak(u); } catch (e) { } }
 
 /* ---------------- input ---------------- */
 // Unified input: keyboard, gamepad, touch buttons/stick, swipe. Read input.state each frame.
 export function createInput(opts = {}) {
   const keys = {}; const state = { x: 0, y: 0, a: false, b: false, c: false, pause: false, aPressed: false, bPressed: false, cPressed: false, pausePressed: false, swipe: null, pointer: null };
   const prev = { a: false, b: false, c: false, pause: false };
-  addEventListener('keydown', e => { keys[e.code] = true; if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault(); audio(); });
+  const typing = e => { const t = e.target; return t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable); };
+  addEventListener('keydown', e => { if (typing(e)) return; keys[e.code] = true; if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault(); audio(); });
   addEventListener('keyup', e => { keys[e.code] = false; });
   const touch = { x: 0, y: 0, a: false, b: false, c: false };
   let sw = null;
@@ -215,36 +345,57 @@ export function createInput(opts = {}) {
 }
 
 /* ---------------- UI helpers ---------------- */
-export function loading(title, sub = 'Loading…') { const d = document.createElement('div'); d.className = 'ig-loading'; d.innerHTML = `<div><div class="ig-brand">INOA<span>GAMES</span></div><h1>${title}</h1><div class="ig-bar"><i></i></div><p>${sub}</p></div>`; document.body.appendChild(d); return { set(p, txt) { d.querySelector('i').style.width = Math.round(p * 100) + '%'; if (txt) d.querySelector('p').textContent = txt; }, done() { d.classList.add('out'); setTimeout(() => d.remove(), 500); } }; }
+export function loading(title, sub = t('loading')) { const d = document.createElement('div'); d.className = 'ig-loading'; d.innerHTML = `<div><div class="ig-brand">INOA<span>GAMES</span></div><h1>${title}</h1><div class="ig-bar"><i></i></div><p>${sub}</p></div>`; document.body.appendChild(d); return { set(p, txt) { d.querySelector('i').style.width = Math.round(p * 100) + '%'; if (txt) d.querySelector('p').textContent = txt; }, done() { d.classList.add('out'); setTimeout(() => d.remove(), 500); } }; }
 let toastTO = 0;
 export function toast(text, ms = 1800, speak = false) { let t = document.querySelector('.ig-toast'); if (!t) { t = document.createElement('div'); t.className = 'ig-toast'; document.body.appendChild(t); } t.textContent = text; t.classList.add('show'); clearTimeout(toastTO); toastTO = setTimeout(() => t.classList.remove('show'), ms); if (speak) say(text); }
-export function floatText(text, x, y, cls = '') { const d = document.createElement('div'); d.className = 'ig-float ' + cls; d.textContent = text; d.style.left = x + 'px'; d.style.top = y + 'px'; document.body.appendChild(d); setTimeout(() => d.remove(), 1000); }
+export function floatText(text, x, y, cls = '') { const d = document.createElement('div'); d.className = 'ig-float ' + cls; d.textContent = text; d.style.left = x + 'px'; d.style.top = y + 'px'; document.body.appendChild(d); setTimeout(() => d.remove(), 1000); return d; }
 // Results card shared by every game: grants XP/coins to the shared profile and shows hero level.
-export function results({ gameId, title, stats = [], xp = 0, coins = 0, best = null, bestLower = false, bestLabel = 'Best', onAgain, onHub = () => location.href = '../index.html', share }) {
+export function results({ gameId, title, stats = [], xp = 0, coins = 0, best = null, bestLower = false, bestLabel = t('best'), onAgain, onHub = () => location.href = '../index.html', share, won }) {
   const r = reward(gameId, { xp, coins, best, bestLower }); const lv = heroLevel(profile().xp);
+  _pf.then(P => P && P.enabled && P.finishRound(gameId, { score: best, bestLower, xp, coins })).then(sr => { if (!sr || !sr.ok || sr.duplicate) return; const rw = d.querySelector('.ig-reward'); if (rw) { const sp = rw.querySelectorAll('span'); if (sp[0]) sp[0].textContent = `+${sr.xp} XP`; if (sp[1]) sp[1].textContent = `+${sr.coins} 🪙`; if (sp[2]) sp[2].textContent = `${t('heroLv')} ${sr.level}`; } (sr.achievements || []).forEach((a, i) => setTimeout(() => toast('🏅 ' + a.replace(/_/g, ' '), 2400), 600 + i * 2500)); }).catch(() => { });
   const d = document.createElement('div'); d.className = 'ig-screen ig-results';
-  d.innerHTML = `<div class="ig-card"><div class="ig-kicker">${r.newBest ? 'NEW BEST' : 'ROUND OVER'}</div><h2>${title}</h2><div class="ig-stats">${stats.map(s => `<div><b>${s[1]}</b><small>${s[0]}</small></div>`).join('')}</div>${r.best != null ? `<p class="ig-sub">${bestLabel}: <b>${r.best}</b></p>` : ''}<div class="ig-reward"><span>+${r.xp} XP</span><span>+${r.coins} 🪙</span><span>Hero lv ${lv.lv}${r.levelUp ? ' ⬆' : ''}</span></div><div class="ig-xpbar"><i style="width:${Math.round(lv.into / lv.need * 100)}%"></i></div><div class="ig-row"><button class="ig-btn ghost" data-a="hub">Hub</button><button class="ig-btn" data-a="again">Play again</button></div>${share ? '<button class="ig-btn sun" data-a="share">📣 Share</button>' : ''}</div>`;
+  d.innerHTML = `<div class="ig-card"><div class="ig-kicker">${r.newBest ? t('newBest') : t('roundOver')}</div><h2>${title}</h2><div class="ig-stats">${stats.map(s => `<div><b>${s[1]}</b><small>${s[0]}</small></div>`).join('')}</div>${r.best != null && best != null ? `<p class="ig-sub">${bestLabel}: <b>${r.best}</b></p>` : ''}<div class="ig-reward"><span>+${r.xp} XP</span><span>+${r.coins} 🪙</span><span>${t('heroLv')} ${lv.lv}${r.levelUp ? ' ⬆' : ''}</span></div><div class="ig-xpbar"><i style="width:${Math.round(lv.into / lv.need * 100)}%"></i></div><div class="ig-row"><button class="ig-btn ghost" data-a="hub">${t('hub')}</button><button class="ig-btn" data-a="again">${t('again')}</button></div>${share ? `<button class="ig-btn sun" data-a="share">📣 ${t('share')}</button>` : ''}${(won ?? r.newBest) && installAvailable() ? `<button class="ig-btn ghost" data-a="install">📲 ${t('install')}</button>` : ''}${_fbOK ? `<button class="ig-chipbtn ig-fbchip" data-a="feedback">💬 ${t('fbOpen')}</button>` : ''}</div>`;
   document.body.appendChild(d); if (r.levelUp) SFX.level();
-  d.querySelector('[data-a=again]').onclick = () => { d.remove(); onAgain && onAgain(); }; d.querySelector('[data-a=hub]').onclick = () => onHub();
-  const sh = d.querySelector('[data-a=share]'); if (sh) sh.onclick = async () => { try { if (navigator.share) await navigator.share({ text: share }); else { await navigator.clipboard.writeText(share); toast('Copied! Paste it anywhere.'); } } catch (e) { } };
+  d.querySelector('[data-a=again]').onclick = async () => { if (!(await platformStart(gameId))) return; d.remove(); onAgain && onAgain(); }; d.querySelector('[data-a=hub]').onclick = () => onHub();
+  const ib = d.querySelector('[data-a=install]'); if (ib) ib.onclick = async () => { ib.remove(); await promptInstall(); };
+  const fbb = d.querySelector('[data-a=feedback]'); if (fbb) fbb.onclick = () => feedbackForm({ game: gameId });
+  const sh = d.querySelector('[data-a=share]'); if (sh) sh.onclick = async () => { try { if (navigator.share) await navigator.share({ text: share }); else { await navigator.clipboard.writeText(share); toast(t('copied')); } } catch (e) { } };
   return d;
 }
 export function hudChip(html, cls = '') { const d = document.createElement('div'); d.className = 'ig-chip ' + cls; d.innerHTML = html; return d; }
 // The standard game shell: back-to-hub, pause, touch controls container.
 export function shell({ title, onPause, buttons = [], stick = false, help = '', party }) {
-  const top = document.createElement('div'); top.className = 'ig-top'; top.innerHTML = `<a class="ig-chip ig-home" href="../index.html" aria-label="Back to Inoa Games">⌂</a><div class="ig-hud" id="igHud"></div><button class="ig-chip ig-pause" aria-label="Pause">⏸</button>`; document.body.appendChild(top);
+  const top = document.createElement('div'); top.className = 'ig-top'; top.innerHTML = `<a class="ig-chip ig-home" href="../index.html" aria-label="${t('back')}">⌂</a><div class="ig-hud" id="igHud"></div><button class="ig-chip ig-pause" aria-label="${t('paused')}">⏸</button>`; document.body.appendChild(top);
   top.querySelector('.ig-pause').onclick = () => onPause && onPause();
   if (party !== false) try { NET.partyWidget(typeof party === 'object' ? party : {}); } catch (e) { }
   const pad = document.createElement('div'); pad.className = 'ig-pad'; pad.innerHTML = `${stick ? '<div class="ig-stick" id="igStick"><div class="ig-knob" id="igKnob"></div></div>' : '<div></div>'}<div class="ig-btns">${buttons.map(b => `<button class="ig-tbtn ${b.cls || ''}" id="${b.id}" aria-label="${b.label}">${b.icon}</button>`).join('')}</div>`; document.body.appendChild(pad);
   return { hud: top.querySelector('#igHud'), pad };
 }
-export function pauseMenu({ onResume, onRestart, extra = '' }) { const d = document.createElement('div'); d.className = 'ig-screen'; d.innerHTML = `<div class="ig-card"><h2>Paused</h2>${extra}<div class="ig-row"><button class="ig-btn ghost" data-a="hub">Hub</button><button class="ig-btn ghost" data-a="restart">Restart</button><button class="ig-btn" data-a="resume">Resume</button></div><div class="ig-row"><button class="ig-chipbtn" data-a="phones">📱 Phones${net.pads().length ? ' · ' + net.pads().length : ''}</button><button class="ig-chipbtn" data-a="sound">🔊 Sound ${profile().sound ? 'on' : 'off'}</button><button class="ig-chipbtn" data-a="voice">🗣️ Read aloud ${profile().voice ? 'on' : 'off'}</button></div></div>`; document.body.appendChild(d); d.querySelector('[data-a=resume]').onclick = () => { d.remove(); onResume(); }; d.querySelector('[data-a=restart]').onclick = () => { d.remove(); onRestart(); }; d.querySelector('[data-a=hub]').onclick = () => location.href = '../index.html'; d.querySelector('[data-a=phones]').onclick = () => NET.partyPanel({}); d.querySelector('[data-a=sound]').onclick = e => { const p = profile(); setProfile({ sound: !p.sound }); e.target.textContent = `🔊 Sound ${!p.sound ? 'on' : 'off'}`; }; d.querySelector('[data-a=voice]').onclick = e => { const p = profile(); setProfile({ voice: !p.voice }); e.target.textContent = `🗣️ Read aloud ${!p.voice ? 'on' : 'off'}`; }; return d; }
-export function titleScreen({ title, kicker, lead, how = [], onPlay, extra = '', party }) { const d = document.createElement('div'); d.className = 'ig-screen ig-title'; d.innerHTML = `<div class="ig-card"><div class="ig-kicker">${kicker}</div><h1>${title}</h1><p class="ig-sub">${lead}</p>${how.length ? `<div class="ig-how">${how.map(h => `<div><span>${h[0]}</span>${h[1]}</div>`).join('')}</div>` : ''}${extra}${party !== false ? `<button class="ig-chipbtn ig-phones" data-a="phones">📱 ${(party && party.label) || 'Use phones as controllers'}${net.pads().length ? ` · ${net.pads().length} connected` : ''}</button>` : ''}<div class="ig-row"><a class="ig-btn ghost" href="../index.html">Hub</a><button class="ig-btn" data-a="play">Play</button></div></div>`; document.body.appendChild(d); d.querySelector('[data-a=play]').onclick = () => { audio(); d.remove(); onPlay(); }; const ph = d.querySelector('[data-a=phones]'); if (ph) ph.onclick = () => NET.partyPanel(typeof party === 'object' ? party : {}); return d; }
+export function pauseMenu({ onResume, onRestart, extra = '' }) { const d = document.createElement('div'); d.className = 'ig-screen'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true'); d.innerHTML = `<div class="ig-card"><h2>${t('paused')}</h2>${extra}<div class="ig-row"><button class="ig-btn ghost" data-a="hub">${t('hub')}</button><button class="ig-btn ghost" data-a="restart">${t('restart')}</button><button class="ig-btn" data-a="resume">${t('resume')}</button></div><div class="ig-row"><button class="ig-chipbtn" data-a="phones">📱 ${t('phones')}${net.pads().length ? ' · ' + net.pads().length : ''}</button><button class="ig-chipbtn" data-a="sound">🔊 ${t('sound')} ${profile().sound ? t('on') : t('off')}</button><button class="ig-chipbtn" data-a="voice">🗣️ ${t('voice')} ${profile().voice ? t('on') : t('off')}</button><button class="ig-chipbtn" data-a="settings">⚙️ ${t('settings')}</button></div></div>`; document.body.appendChild(d); d.querySelector('[data-a=resume]').onclick = () => { d.remove(); onResume(); }; d.querySelector('[data-a=restart]').onclick = () => { d.remove(); onRestart(); }; d.querySelector('[data-a=hub]').onclick = () => location.href = '../index.html'; d.querySelector('[data-a=sound]').onclick = e => { const v = !profile().sound; setSetting('sound', v); e.target.textContent = `🔊 ${t('sound')} ${v ? t('on') : t('off')}`; }; d.querySelector('[data-a=voice]').onclick = e => { const v = !profile().voice; setSetting('voice', v); e.target.textContent = `🗣️ ${t('voice')} ${v ? t('on') : t('off')}`; }; d.querySelector('[data-a=settings]').onclick = () => settingsPanel(); d.querySelector('[data-a=phones]').onclick = () => NET.partyPanel({}); setTimeout(() => d.querySelector('[data-a=resume]')?.focus({ preventScroll: true }), 30); return d; }
+// Shared settings panel (sound, music, read-aloud, language, reduced motion, graphics). Saved in the profile, used by every game + the hub.
+export function settingsPanel({ onClose } = {}) {
+  const d = document.createElement('div'); d.className = 'ig-screen ig-settings'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true'); d.setAttribute('aria-label', t('settings'));
+  const seg = (k, opts) => `<div class="ig-seg" role="group" aria-label="${t(k === 'lang' ? 'language' : k)}" data-k="${k}">${opts.map(([v, lbl]) => `<button class="ig-chipbtn" data-v="${v}" aria-pressed="false">${lbl}</button>`).join('')}</div>`;
+  const draw = () => { d.innerHTML = `<div class="ig-card"><h2>⚙️ ${t('settings')}</h2>
+    <div class="ig-set"><span>🔊 ${t('sound')}</span>${seg('sound', [[1, t('on')], [0, t('off')]])}</div>
+    <div class="ig-set"><span>🎵 ${t('music')}</span>${seg('music', [[1, t('on')], [0, t('off')]])}</div>
+    <div class="ig-set"><span>🗣️ ${t('voice')}</span>${seg('voice', [[1, t('on')], [0, t('off')]])}</div>
+    <div class="ig-set"><span>🌎 ${t('language')}</span>${seg('lang', [['en', 'English'], ['es', 'Español']])}</div>
+    <div class="ig-set"><span>🌀 ${t('motion')}</span>${seg('motion', [['auto', t('auto')], ['reduced', t('on')], ['full', t('off')]])}</div>
+    <div class="ig-set"><span>✨ ${t('quality')}</span>${seg('quality', [['auto', t('auto')], ['high', t('high')], ['low', t('low')]])}</div>
+    <div class="ig-row">${_fbOK ? `<button class="ig-btn ghost" data-a="feedback">💬 ${t('fbOpen')}</button>` : ''}<button class="ig-btn" data-a="done">${t('done')}</button></div></div>`;
+    const S = settings(); d.querySelectorAll('.ig-seg').forEach(g => { const k = g.dataset.k; g.querySelectorAll('button').forEach(b => { const v = typeof S[k] === 'boolean' ? (S[k] ? '1' : '0') : String(S[k]); const on = b.dataset.v === v; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); b.onclick = () => { const raw = b.dataset.v; setSetting(k, typeof S[k] === 'boolean' ? raw === '1' : raw); SFX.click(); draw(); }; }); });
+    d.querySelector('[data-a=done]').onclick = () => { d.remove(); onClose && onClose(); }; const fb = d.querySelector('[data-a=feedback]'); if (fb) fb.onclick = () => feedbackForm(); setTimeout(() => d.querySelector('[data-a=done]')?.focus({ preventScroll: true }), 30); };
+  draw(); document.body.appendChild(d); return d;
+}
+export function titleScreen({ title, kicker, lead, how = [], onPlay, extra = '', party }) { const d = document.createElement('div'); d.className = 'ig-screen ig-title'; d.innerHTML = `<div class="ig-card"><div class="ig-kicker">${kicker}</div><h1>${title}</h1><p class="ig-sub">${lead}</p>${how.length ? `<div class="ig-how">${how.map(h => `<div><span>${h[0]}</span>${h[1]}</div>`).join('')}</div>` : ''}${extra}${party !== false ? `<button class="ig-chipbtn ig-phones" data-a="phones">📱 ${(party && party.label) || t('usePhones')}${net.pads().length ? ` · ${net.pads().length} ${t('connected')}` : ''}</button>` : ''}<div class="ig-row"><a class="ig-btn ghost" href="../index.html">${t('hub')}</a><button class="ig-btn" data-a="play">${t('play')}</button></div><button class="ig-chipbtn ig-setbtn" data-a="settings">⚙️ ${t('settings')}</button></div>`; document.body.appendChild(d); d.querySelector('[data-a=play]').onclick = async e => { audio(); const b = e.currentTarget; b.disabled = true; const ok = await platformStart(); b.disabled = false; if (!ok) return; d.remove(); onPlay(); }; d.querySelector('[data-a=settings]').onclick = () => settingsPanel(); const ph = d.querySelector('[data-a=phones]'); if (ph) ph.onclick = () => NET.partyPanel(typeof party === 'object' ? party : {}); return d; }
+addStrings({ en: { phones: 'Phones', usePhones: 'Use phones as controllers', connected: 'connected' }, es: { phones: 'Teléfonos', usePhones: 'Usa teléfonos como controles', connected: 'conectados' } });
 
 /* ---------------- menu navigation with a gamepad or phone controller ---------------- */
 // When a menu card (.ig-screen) is open, the stick/d-pad moves a focus ring between its buttons and A presses it.
 { let prev = { a: false, x: 0, y: 0 }, focus = null;
   setInterval(() => {
+    if (_menuNavActive > 0) { focus = null; return; }
     const scr = [...document.querySelectorAll('.ig-screen, .inoa-pp')].filter(e => e.getClientRects().length > 0).pop();
     let x = 0, y = 0, a = false;
     const gps = navigator.getGamepads ? navigator.getGamepads() : []; for (const p of gps) { if (!p) continue; x = x || (Math.abs(p.axes[0]) > .5 ? Math.sign(p.axes[0]) : p.buttons[14]?.pressed ? -1 : p.buttons[15]?.pressed ? 1 : 0); y = y || (Math.abs(p.axes[1]) > .5 ? Math.sign(p.axes[1]) : p.buttons[12]?.pressed ? -1 : p.buttons[13]?.pressed ? 1 : 0); a = a || !!p.buttons[0]?.pressed; }
@@ -265,7 +416,7 @@ export function titleScreen({ title, kicker, lead, how = [], onPlay, extra = '',
 /* ---------------- loop ---------------- */
 export function loop(fn) { let last = performance.now(); const f = now => { requestAnimationFrame(f); const dt = Math.min(.05, (now - last) / 1000); last = now; fn(dt, now / 1000); }; requestAnimationFrame(f); }
 // Screen position of a 3D point (for floating text)
-export function toScreen(v, camera) { const p = v.clone().project(camera); return { x: (p.x * .5 + .5) * innerWidth, y: (-p.y * .5 + .5) * innerHeight }; }
+export function toScreen(v, camera) { camera.updateMatrixWorld(); const p = v.clone().project(camera); return { x: (p.x * .5 + .5) * innerWidth, y: (-p.y * .5 + .5) * innerHeight }; }
 
 /* ---------------- procedural PBR surfaces (no texture files) ---------------- */
 // Generates albedo + normal + roughness maps on canvas. kinds: asphalt, sand, grass, wood, metal, rust, tile, fabric, stone, snow, paint, plastic
@@ -296,3 +447,101 @@ export function pbr(kind, color = 0x888888, repeat = [4, 4], opts = {}) {
 }
 // Give a loaded model real surface detail: adds a subtle normal + roughness micro-texture to every material.
 export function detail(root, kind = 'paint', strength = .5) { const p = pbr(kind, 0xffffff, [3, 3]); root.traverse(o => { if (o.isMesh && !o.userData.outline && o.material && !o.material.normalMap) { o.material = o.material.clone(); o.material.normalMap = p.normalMap; o.material.normalScale = new THREE.Vector2(strength, strength); o.material.roughnessMap = p.roughnessMap; } }); return root; }
+
+applySettings();
+
+/* ---------------- platform (accounts, free-start gate, server rewards) ---------------- */
+// Off unless /platform.json enables it; then the server decides starts and rewards (engine/platform.js, docs/PLATFORM_ARCHITECTURE.md).
+const _pf = import('./platform.js').then(m => m.default.init().then(() => m.default)).catch(() => null);
+let _fbOK = false, _billing = false; _pf.then(P => { if (P) { _fbOK = P.feedbackAvailable; _billing = P.billing; } });
+
+/* ---------------- beta feedback (rating + note; guest or signed in) — form lives in feedback.js (shared with the hub) ---------------- */
+export async function feedbackForm({ game = gameIdFromUrl(), onClose } = {}) {
+  const { openFeedback } = await import('./feedback.js');
+  return openFeedback({ lang: lang() === 'es' ? 'es' : 'en', game, onClose, click: () => SFX.click(), done: txt => { toast('💬 ' + txt, 2200); say(txt, { once: true }); } });
+}
+addStrings({ en: { fbOpen: 'Send feedback' }, es: { fbOpen: 'Enviar opinión' } });
+export const platform = () => _pf;
+const gameIdFromUrl = () => (location.pathname.match(/games\/([a-z]+)\.html/) || [])[1] || null;
+addStrings({
+  en: { gSignin: 'Sign in to play', gSigninP: 'A free account saves your hero and progress. Free accounts get 3 game starts a day.', gVerify: 'Check your email', gVerifyP: 'Confirm your email address to start playing.', gLimit: 'That’s today’s 3 free starts', gLimitP: 'Your free starts come back at {t}. Premium has no daily limit.', gPremium: 'Premium game', gPremiumP: 'This game is part of Premium.', gSusp: 'Account paused', gSuspP: 'This account can’t start games right now. Contact support if this is a mistake.', gOffline: 'You’re offline', gOfflineP: 'Connect to the internet to start a game with your account.', gError: 'Something went wrong', gErrorP: 'We couldn’t start the game. Please try again.', gBtnSignin: 'Sign in or create account', gBtnPremium: 'See Premium', gBtnRetry: 'Try again', gLeft: '{n} free starts left today', gResend: 'Resend email' },
+  es: { gSignin: 'Inicia sesión para jugar', gSigninP: 'Una cuenta gratis guarda tu héroe y tu progreso. Las cuentas gratis tienen 3 partidas al día.', gVerify: 'Revisa tu correo', gVerifyP: 'Confirma tu correo para empezar a jugar.', gLimit: 'Ya usaste tus 3 partidas gratis de hoy', gLimitP: 'Vuelven a las {t}. Premium no tiene límite diario.', gPremium: 'Juego Premium', gPremiumP: 'Este juego es parte de Premium.', gSusp: 'Cuenta en pausa', gSuspP: 'Esta cuenta no puede iniciar partidas ahora. Escríbenos si es un error.', gOffline: 'Sin conexión', gOfflineP: 'Conéctate a internet para empezar una partida con tu cuenta.', gError: 'Algo salió mal', gErrorP: 'No pudimos iniciar la partida. Inténtalo otra vez.', gBtnSignin: 'Entrar o crear cuenta', gBtnPremium: 'Ver Premium', gBtnRetry: 'Reintentar', gLeft: 'Te quedan {n} partidas gratis hoy', gResend: 'Reenviar correo' }
+});
+function gateCard(r, retry) {
+  const at = r.resets_at ? new Date(r.resets_at).toLocaleTimeString(lang() === 'es' ? 'es' : 'en', { hour: 'numeric', minute: '2-digit' }) : '';
+  const M = { signin: ['gSignin', 'gSigninP', 'signin'], not_authenticated: ['gSignin', 'gSigninP', 'signin'], unverified: ['gVerify', 'gVerifyP', 'verify'], limit: ['gLimit', 'gLimitP', 'premium'], offline_limit: ['gLimit', 'gLimitP', 'premium'], premium_only: ['gPremium', 'gPremiumP', 'premium'], suspended: ['gSusp', 'gSuspP', null], offline: ['gOffline', 'gOfflineP', 'retry'] }[r.reason] || ['gError', 'gErrorP', 'retry'];
+  const back = encodeURIComponent(location.pathname.split('/').slice(-2).join('/'));
+  if (M[2] === 'premium' && !_billing) M[2] = null;
+  const btn = M[2] === 'signin' ? `<a class="ig-btn" href="../account.html?next=${back}">${t('gBtnSignin')}</a>` : M[2] === 'premium' ? `<a class="ig-btn sun" href="../pricing.html?next=${back}">${t('gBtnPremium')}</a>` : M[2] === 'verify' ? `<a class="ig-btn" href="../account.html?next=${back}">${t('gResend')}</a>` : M[2] === 'retry' ? `<button class="ig-btn" data-a="retry">${t('gBtnRetry')}</button>` : '';
+  const d = document.createElement('div'); d.className = 'ig-screen ig-gate'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true');
+  d.innerHTML = `<div class="ig-card"><div class="ig-kicker">INOA GAMES</div><h2>${t(M[0])}</h2><p class="ig-sub">${t(M[1]).replace('{t}', at)}</p><div class="ig-row"><a class="ig-btn ghost" href="../index.html">${t('hub')}</a>${btn}</div></div>`;
+  document.body.appendChild(d); const rb = d.querySelector('[data-a=retry]'); if (rb) rb.onclick = () => { d.remove(); retry && retry(); };
+  if (r.reason) say(t(M[0]), { once: true }); setTimeout(() => d.querySelector('.ig-btn:not(.ghost)')?.focus({ preventScroll: true }), 30);
+  return d;
+}
+// Ask the server for a qualifying start before a round begins. Resolves true when play may start (always true when the platform is off).
+export async function platformStart(gameId = gameIdFromUrl()) {
+  const P = await _pf; if (!P || !P.enabled || !gameId) return true;
+  if (P.sessionValid(gameId)) return true;
+  const r = await P.startGame(gameId);
+  if (r.allowed) { if (r.starts_left != null && !r.reused) toast(t('gLeft').replace('{n}', r.starts_left), 2200); return true; }
+  return new Promise(res => gateCard(r, () => platformStart(gameId).then(res)));
+}
+
+/* ---------------- PWA: service worker, manifest link, install offer ---------------- */
+// Every page that imports the engine joins the app: offline cache (sw.js at the site root) and an install offer
+// shown on the results card after a win (never mid-game, never again once dismissed). Tests block service workers.
+const ROOT_URL = new URL('../', import.meta.url);
+let _installEvt = null;
+export function installAvailable() { return !!_installEvt && !store.get('inoa.installDismissed', false); }
+export async function promptInstall() { if (!_installEvt) return false; const e = _installEvt; _installEvt = null; e.prompt(); try { const c = await e.userChoice; if (c.outcome !== 'accepted') store.set('inoa.installDismissed', true); return c.outcome === 'accepted'; } catch (err) { return false; } }
+(function pwa() {
+  try {
+    if (!document.querySelector('link[rel=manifest]')) { const l = document.createElement('link'); l.rel = 'manifest'; l.href = new URL('manifest.webmanifest', ROOT_URL).href; document.head.appendChild(l); }
+    if (!document.querySelector('link[rel=icon]')) { const l = document.createElement('link'); l.rel = 'icon'; l.href = new URL('favicon.png', ROOT_URL).href; document.head.appendChild(l); }
+    addEventListener('beforeinstallprompt', e => { e.preventDefault(); _installEvt = e; });
+    if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register(new URL('sw.js', ROOT_URL).href, { scope: ROOT_URL.pathname }).catch(() => { }));
+  } catch (e) { }
+})();
+
+/* ---------------- menu navigation (gamepad d-pad/stick + arrow keys) ---------------- */
+// Opt-in: E.menuNav() moves a focus ring over the buttons of the top-most .ig-screen card (or opts.root()), A/Enter clicks,
+// B/Escape clicks the element marked [data-back] (or the card's "Hub"/"Back" button). Returns {stop()}. Skips while typing.
+let _menuNavActive = 0;
+export function menuNav(opts = {}) {
+  _menuNavActive++; let stopped = false, prev = {}; const sel = opts.selector || 'button:not([disabled]), a.ig-btn, [role=button], input[type=range]';
+  const root = () => opts.root ? opts.root() : [...document.querySelectorAll('.ig-screen')].pop();
+  const items = r => [...r.querySelectorAll(sel)].filter(el => el.offsetParent !== null);
+  function move(dir) { const r = root(); if (!r) return; const L = items(r); if (!L.length) return; const a = document.activeElement; let i = L.indexOf(a);
+    if (i < 0) { L[0].focus({ preventScroll: false }); return; }
+    // spatial pick: nearest item in the pressed direction
+    const ra = a.getBoundingClientRect(), cx = ra.left + ra.width / 2, cy = ra.top + ra.height / 2; let best = null, bd = 1e9;
+    for (const el of L) { if (el === a) continue; const rb = el.getBoundingClientRect(), dx = rb.left + rb.width / 2 - cx, dy = rb.top + rb.height / 2 - cy;
+      const ok = dir === 'l' ? dx < -4 : dir === 'r' ? dx > 4 : dir === 'u' ? dy < -4 : dy > 4; if (!ok) continue; const d = (dir === 'l' || dir === 'r') ? Math.abs(dx) + Math.abs(dy) * 2.5 : Math.abs(dy) + Math.abs(dx) * 2.5; if (d < bd) { bd = d; best = el; } }
+    (best || L[(i + ((dir === 'r' || dir === 'd') ? 1 : -1) + L.length) % L.length]).focus(); SFX.click(); }
+  function back() { const r = root(); if (!r) return; const b = r.querySelector('[data-back]') || [...items(r)].find(el => /^(hub|back|inicio|volver|resume|seguir)$/i.test((el.dataset.a || el.textContent || '').trim().replace(/^[^\w]+/, ''))); if (b) b.click(); }
+  const key = e => { if (stopped || !root() || (e.target && /INPUT|TEXTAREA/.test(e.target.tagName))) return; const m = { ArrowLeft: 'l', ArrowRight: 'r', ArrowUp: 'u', ArrowDown: 'd' }[e.code]; if (m) { e.preventDefault(); move(m); } else if (e.code === 'Escape' && opts.escBack) back(); };
+  addEventListener('keydown', key);
+  (function poll() { if (stopped) return; requestAnimationFrame(poll); const pads = navigator.getGamepads ? navigator.getGamepads() : []; const st = {};
+    for (const p of pads) { if (!p) continue; const ax = p.axes[0] || 0, ay = p.axes[1] || 0; st.l ||= ax < -.5 || p.buttons[14]?.pressed; st.r ||= ax > .5 || p.buttons[15]?.pressed; st.u ||= ay < -.5 || p.buttons[12]?.pressed; st.d ||= ay > .5 || p.buttons[13]?.pressed; st.a ||= p.buttons[0]?.pressed; st.b ||= p.buttons[1]?.pressed; }
+    if (root()) { for (const k of ['l', 'r', 'u', 'd']) if (st[k] && !prev[k]) move(k); if (st.a && !prev.a) { const a = document.activeElement; if (a && root().contains(a)) a.click(); else move('d'); } if (st.b && !prev.b) back(); }
+    prev = st; })();
+  return { stop() { if (!stopped) _menuNavActive--; stopped = true; removeEventListener('keydown', key); } };
+}
+
+/* ---------------- occluder fading (camera → target) ---------------- */
+// E.occluders(list) registers props (Object3D) that may hide the player; each frame call occ.update(camera, targetVec3[, radius]).
+// Props whose bounding box the camera→target segment passes through (or that contain the camera) fade to `alpha`, then fade back.
+// Materials are cloned once per prop so shared materials stay untouched. Shadows are kept.
+export function occluders(list = [], { alpha = .22, speed = 8 } = {}) {
+  const items = []; const box = new THREE.Box3(), ray = new THREE.Ray(), hit = new THREE.Vector3(), dir = new THREE.Vector3();
+  const add = o => { if (!o || o.userData._occ) return; const mats = []; o.traverse(m => { if (m.isMesh && !m.userData.outline) { m.material = Array.isArray(m.material) ? m.material.map(x => x.clone()) : m.material.clone(); (Array.isArray(m.material) ? m.material : [m.material]).forEach(x => { x.userData.baseOpacity = x.opacity; mats.push(x); }); } }); const outl = []; o.traverse(m => { if (m.userData.outline) outl.push(m); }); const it = { o, mats, outl, k: 1, box: new THREE.Box3() }; o.userData._occ = it; items.push(it); };
+  list.forEach(add);
+  return { add, items,
+    update(camera, target, dt = 1 / 60, radius = .4) {
+      dir.subVectors(target, camera.position); const len = dir.length(); if (len < 1e-4) return; dir.divideScalar(len); ray.set(camera.position, dir);
+      for (const it of items) { if (!it.o.visible) continue; it.box.setFromObject(it.o).expandByScalar(radius); const inside = it.box.containsPoint(camera.position); const p = !inside && ray.intersectBox(it.box, hit); const block = inside || (p && hit.distanceTo(camera.position) < len - radius * 2);
+        const want = block ? alpha : 1; if (Math.abs(it.k - want) < .001) continue; it.k = damp(it.k, want, Math.pow(.5, speed), dt); if (Math.abs(it.k - want) < .02) it.k = want;
+        for (const m of it.mats) { m.transparent = it.k < .999 || m.userData.baseOpacity < 1; m.opacity = m.userData.baseOpacity * it.k; m.depthWrite = it.k > .9; } for (const ol of it.outl) ol.visible = it.k > .9; }
+    } };
+}

@@ -9,7 +9,7 @@ FILES = {'pact': 'pixelpact', 'match': 'pixelpact', 'tide': 'tidelines'}
 head = open(f'{HUB}/head.html').read()
 head = head.replace('/*BASE*/', open(f'{HUB}/base.css').read().replace('<style>', '').replace('</style>', ''))
 head = head.replace('/*RIG*/', open(f'{HUB}/rig.js').read() + '\n' + open(f'{HUB}/bg.js').read())
-js = open(f'{HUB}/hub.js').read()
+js = open(f'{HUB}/hub.js').read().replace('/*EXTRAS*/', open(f'{HUB}/extras.js').read())
 
 live = {}
 for gid in re.findall(r"\{ id: '([a-z]+)'", js):
@@ -37,7 +37,7 @@ js = js.replace("/* ---------- Hero maker", """/* ---------- Shared hero profile
 function readProfile() { try { return Object.assign({ name: '', xp: 0, coins: 0, games: {} }, JSON.parse(localStorage.getItem('inoa.profile') || '{}')); } catch (e) { return { name: '', xp: 0, coins: 0, games: {} }; } }
 function writeProfile(p) { try { localStorage.setItem('inoa.profile', JSON.stringify(p)); } catch (e) { } }
 function heroLv(xp) { let lv = 1, need = 100, x = xp; while (x >= need && lv < 50) { x -= need; lv++; need = Math.round(need * 1.12); } return { lv, into: x, need }; }
-function renderProfile() { const p = readProfile(), L = heroLv(p.xp); const el = document.getElementById('heroStats'); if (!el) return; const played = Object.keys(p.games || {}).length; el.innerHTML = `<div class="hp-lv"><b>${L.lv}</b><small>Hero level</small></div><div class="hp-main"><div class="hp-name">${p.name || 'New hero'}</div><div class="bar"><i style="width:${Math.round(L.into / L.need * 100)}%"></i></div><div class="hp-row"><span>${L.into}/${L.need} XP</span><span>🪙 ${p.coins}</span><span>🎮 ${played} game${played === 1 ? '' : 's'} played</span></div></div>`; }
+function renderProfile() { const p = readProfile(), L = heroLv(p.xp); const el = document.getElementById('heroStats'); if (!el) return; const played = Object.keys(p.games || {}).length; el.innerHTML = `<div class="hp-lv"><b>${L.lv}</b><small>Hero level</small></div><div class="hp-main"><div class="hp-name">${String(p.name || 'New hero').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]))}</div><div class="bar"><i style="width:${Math.round(L.into / L.need * 100)}%"></i></div><div class="hp-row"><span>${L.into}/${L.need} XP</span><span>🪙 ${p.coins}</span><span>🎮 ${played} game${played === 1 ? '' : 's'} played</span></div></div>`; const ml = document.getElementById('mkLv'), mx = document.getElementById('mkXp'), mb = document.querySelector('.stage .bar i'); if (ml) ml.textContent = 'Level ' + L.lv; if (mx) mx.textContent = (L.need - L.into) + ' XP to ' + (L.lv + 1); if (mb) mb.style.width = Math.round(L.into / L.need * 100) + '%'; }
 renderProfile(); addEventListener('focus', renderProfile); document.addEventListener('visibilitychange', () => { if (!document.hidden) renderProfile(); });
 /* ---------- Hero maker""")
 js = js.replace("const say = () => { mkName.textContent = maker.name; };", "const say = () => { mkName.textContent = maker.name; const p = readProfile(); p.name = maker.name; writeProfile(p); renderProfile(); };")
@@ -58,6 +58,8 @@ head = head.replace('</style>', '''.heropanel{padding-block:18px 0;background:va
 </style>''', 1)
 head = head.replace('href="https://claude.ai/artifact/R39Es5YCcbYnxRhuoDboVg" target="_blank" rel="noopener"', 'href="games/pixelpact.html"')
 head = head.replace('<!--', '<!--')
+# beta strip + optional account + feedback (ES module: engine/platform.js, engine/feedback.js; no three.js)
+js = js + '\n<script type="module">\n' + open(f'{HUB}/account.js').read() + '</script>'
 out = '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n' + head.replace('<nav>', '</head><body>\n<nav>', 1) + js + '\n<script type="module">\n' + open(f'{HUB}/party.js').read() + '</script>\n</body></html>\n'
 open(f'{HERE}/index.html', 'w').write(out)
 print('index.html', len(out), 'bytes;', ', '.join(f"{k}:{'LIVE' if v['live'] else 'soon'}{'+thumb' if v['thumb'] else ''}" for k, v in live.items()))

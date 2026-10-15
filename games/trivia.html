@@ -30,7 +30,7 @@
 .tv-card .q{font-family:var(--f-d);font-size:clamp(18px,3.4vw,26px);line-height:1.2}
 .tv-card .opts{display:grid;gap:8px}
 .tv-card .opts .tv-ch{box-shadow:0 4px 0 rgba(0,0,0,.15);border:2px solid var(--line)}
-.wg{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.wg button{min-height:56px;border-radius:14px;border:2px solid var(--line);background:#fff;font-weight:800;cursor:pointer;font-size:14px;color:var(--ink)}.wg button b{display:block;font-family:var(--f-d);font-size:15px}.wg button.all{background:var(--coral);color:#fff;border-color:transparent}
+.wg{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.wg button{min-height:56px;border-radius:14px;border:2px solid var(--line);background:#fff;font-weight:800;cursor:pointer;font-size:14px;color:var(--ink)}.wg button b{display:block;font-family:var(--f-d);font-size:15px}.wg button.all{background:var(--coral);color:#fff;border-color:transparent}.wg button.sel{outline:4px solid var(--ink);outline-offset:2px}
 .pk{display:flex;gap:6px;flex-wrap:wrap}.pk button{flex:1 1 70px;min-height:46px;border-radius:14px;border:2px solid var(--line);background:#fff;font-weight:800;cursor:pointer;color:var(--ink);padding:4px 6px}.pk button.on{border-color:var(--mint-ink);background:var(--mint)}
 .pk button small{display:block;font-weight:600;font-size:11px;color:#4c5868}
 .names{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:6px}.names input{min-height:42px;border-radius:12px;border:2px solid var(--line);padding:0 10px;font:inherit;font-weight:800;box-sizing:border-box;width:100%;user-select:text;-webkit-user-select:text}
@@ -41,7 +41,10 @@
 .tv-bubble:after{content:"";position:absolute;left:50%;bottom:-8px;margin-left:-8px;border:8px solid transparent;border-top-color:#fff;border-bottom:0}
 @keyframes pop{from{transform:translate(-50%,-80%) scale(.6);opacity:0}}
 @media (max-width:640px){.tv-choices{grid-template-columns:1fr 1fr;gap:6px;padding:8px}.tv-ch{min-height:52px;grid-template-columns:36px 1fr;font-size:14px}.tv-ch b{width:36px;height:36px;font-size:17px}.tv-scores{max-width:60vw}.tv-scores span{font-size:12px;padding:5px 8px}}
-@media (orientation:portrait){.tv-buz[data-c="0"],.tv-buz[data-c="1"]{top:auto;bottom:128px}.tv-scores{bottom:auto;top:58px;max-width:70vw}}
+@media (orientation:landscape) and (max-height:640px){.tv-choices{gap:6px;padding:8px;width:min(760px,calc(100vw - 20px))}.tv-ch{min-height:44px;grid-template-columns:36px 1fr;font-size:15px}.tv-ch b{width:34px;height:34px;font-size:16px}}
+/* toasts sit low (over the stage floor) instead of on top of the question board */
+.ig-toast{top:auto;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 52px)}
+@media (orientation:portrait){.tv-buz[data-c="0"],.tv-buz[data-c="1"]{top:auto;bottom:128px}.tv-scores{bottom:auto;top:max(56px,calc(env(safe-area-inset-top) + 50px));left:8px;right:8px;transform:none;max-width:none;gap:4px}.ig-toast{bottom:max(30px,env(safe-area-inset-bottom));max-width:calc(100vw - 2 * clamp(78px,15vmin,112px) - 40px)}.tv-scores span{font-size:12px;padding:4px 8px;gap:4px}}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
 </head><body>
@@ -243,8 +246,8 @@ const CATS = { sci: ['🔬', 'Science', 'Ciencia', '#5bb8ff'], ani: ['🐾', 'An
 
 /* ======================= strings ======================= */
 const STR = {
-  en: { welcome: 'Welcome to Pact Trivia! Buzz in when you know the answer.', round1: 'Round one: buzz in!', final: 'Final round: All in!', wager: n => `${n}, how much will you wager?`, look: n => `${n}, everyone else look away!`, ready: "I'm ready", locked: 'Locked in!', pass: n => `Pass to ${n}`, steal: 'Steal! Anyone else?', nobody: "Time's up! The answer was", correct: 'Correct!', wrong: 'Not quite!', answering: 'answering', buzz: 'BUZZ', q: 'Question', of: 'of', wins: n => `${n} wins!`, tie: 'It’s a tie!', answer: 'The answer is', allin: 'ALL IN', score: 'Score', go: 'Go!', reveal: 'Reveal!', cat: 'Category', yourWager: 'Wager', kids: 'Kids mode', choose: 'Pick your answer', timeout: 'Out of time' },
-  es: { welcome: '¡Bienvenidos a Pact Trivia! Presiona tu botón cuando sepas la respuesta.', round1: 'Primera ronda: ¡a pulsar!', final: 'Ronda final: ¡Todo o nada!', wager: n => `${n}, ¿cuánto vas a apostar?`, look: n => `${n}, ¡los demás no miren!`, ready: 'Estoy listo', locked: '¡Respuesta guardada!', pass: n => `Pásale a ${n}`, steal: '¡Robo! ¿Alguien más?', nobody: '¡Se acabó el tiempo! La respuesta era', correct: '¡Correcto!', wrong: '¡Casi!', answering: 'responde', buzz: '¡YA!', q: 'Pregunta', of: 'de', wins: n => `¡Gana ${n}!`, tie: '¡Empate!', answer: 'La respuesta es', allin: 'TODO', score: 'Puntos', go: '¡Vamos!', reveal: '¡A revelar!', cat: 'Categoría', yourWager: 'Apuesta', kids: 'Modo niños', choose: 'Elige tu respuesta', timeout: 'Sin tiempo' }
+  en: { welcome: 'Welcome to Pact Trivia! Buzz in when you know the answer.', round1: 'Round one: buzz in!', final: 'Final round: All in!', wager: n => `${n}, how much will you wager?`, look: n => `${n}, everyone else look away!`, ready: "I'm ready", locked: 'Locked in!', pass: n => `Pass to ${n}`, steal: 'Steal! Anyone else?', nobody: "Time's up! The answer was", correct: 'Correct!', wrong: 'Not quite!', answering: 'answering', buzz: 'BUZZ', q: 'Question', of: 'of', wins: n => `${n} wins!`, tie: 'It’s a tie!', answer: 'The answer is', allin: 'ALL IN', score: 'Score', go: 'Go!', reveal: 'Reveal!', cat: 'Category', yourWager: 'Wager', kids: 'Kids mode', choose: 'Pick your answer', timeout: 'Out of time', bestSolo: 'Best solo score', share: (n, s) => `${n} won Pact Trivia with ${s} points!`, space: 'Space', player: 'Player' },
+  es: { welcome: '¡Bienvenidos a Pact Trivia! Presiona tu botón cuando sepas la respuesta.', round1: 'Primera ronda: ¡a pulsar!', final: 'Ronda final: ¡Todo o nada!', wager: n => `${n}, ¿cuánto vas a apostar?`, look: n => `${n}, ¡los demás no miren!`, ready: 'Estoy listo', locked: '¡Respuesta guardada!', pass: n => `Pásale a ${n}`, steal: '¡Robo! ¿Alguien más?', nobody: '¡Se acabó el tiempo! La respuesta era', correct: '¡Correcto!', wrong: '¡Casi!', answering: 'responde', buzz: '¡YA!', q: 'Pregunta', of: 'de', wins: n => `¡Gana ${n}!`, tie: '¡Empate!', answer: 'La respuesta es', allin: 'TODO', score: 'Puntos', go: '¡Vamos!', reveal: '¡A revelar!', cat: 'Categoría', yourWager: 'Apuesta', kids: 'Modo niños', choose: 'Elige tu respuesta', timeout: 'Sin tiempo', bestSolo: 'Mejor puntaje en solitario', share: (n, s) => `¡${n} ganó Pact Trivia con ${s} puntos!`, space: 'Espacio', player: 'Jugador' }
 };
 const BOTS = [
   { name: 'Profe Pip', e: '🦉', acc: [.95, .85, .7], react: [2.4, 4.6], bluff: .05, wager: .5, lines: { en: ['Elementary!', 'Let me think…', 'Hmm, fascinating.'], es: ['¡Elemental!', 'Déjame pensar…', 'Mmm, fascinante.'] } },
@@ -261,15 +264,19 @@ const ld = E.loading('Pact Trivia', 'Warming up the studio lights…');
 const R = E.createRenderer($('gl'), { fov: 42, portraitFov: 62, shadowSize: 12, far: 200 });
 const { scene, camera, sun, hemi } = R;
 await E.loadPack('../packs/trivia.json', R, p => ld.set(p));
-R.setLook({ background: 0x0b0d22, fog: 0x0b0d22, fogNear: 30, fogFar: 70, sun: 1.1, sunColor: 0xfff1de, hemi: .32, skyHor: 0x8fa4ff, ground: 0x241a3a, exposure: .95, env: .22, bloom: .22, bloomThreshold: .82 });
+R.setLook({ background: 0x0b0d22, fog: 0x0b0d22, fogNear: 30, fogFar: 70, sun: 1.1, sunColor: 0xfff1de, hemi: .32, skyHor: 0x8fa4ff, ground: 0x241a3a, exposure: .95, env: .22, bloom: .2, bloomThreshold: .82 });
 R.setEnv(E.ASSETS.hdri.studio);
 sun.position.set(2, 14, 12); sun.target.position.set(0, 1, 0); sun.target.updateMatrixWorld();
 const input = E.createInput({ surface: $('gl') });
 const P = new E.Particles(scene);
-const S = Object.assign({ lang: E.profile().lang === 'es' ? 'es' : 'en', humans: 1, bots: true, kids: false, names: ['Ana', 'Leo', 'Mia', 'Rafa'] }, E.store.get('inoa.trivia', {}));
+const S = Object.assign({ humans: 1, bots: true, kids: false, names: ['Ana', 'Leo', 'Mia', 'Rafa'] }, E.store.get('inoa.trivia', {}));
+const profLang = () => ((E.lang ? E.lang() : E.profile().lang) === 'es' ? 'es' : 'en');
+S.lang = profLang(); // the shared profile (hub / settings panel) owns the language
 const save = () => E.store.set('inoa.trivia', S);
+// one language for game text, spoken lines AND the engine cards (title / pause / results / settings)
+function setLang(l) { l = l === 'es' ? 'es' : 'en'; S.lang = l; save(); if (E.setSetting && profLang() !== l) E.setSetting('lang', l); applyLang(); }
 const T = () => STR[S.lang];
-let G = null, music = null, hudEl = null;
+let G = null, music = null, hudEl = null, resultsCount = 0;
 
 /* ======================= helpers ======================= */
 function canvasTex(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return { c, g: c.getContext('2d'), t }; }
@@ -361,7 +368,7 @@ function drawScreen() {
   const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#1d1650'); bg.addColorStop(1, '#0c0f2e'); g.fillStyle = bg; g.fillRect(0, 0, W, H);
   g.globalAlpha = .08; for (let i = 0; i < 18; i++) { g.fillStyle = i % 2 ? '#8c6cff' : '#6fe3ff'; g.beginPath(); g.moveTo(W / 2, H * 1.2); g.arc(W / 2, H * 1.2, H * 1.6, -Math.PI + i / 18 * Math.PI, -Math.PI + (i + .5) / 18 * Math.PI); g.fill(); } g.globalAlpha = 1;
   const pad = W * .04; g.textBaseline = 'middle';
-  if (!G || !G.cur) { g.textAlign = 'center'; g.fillStyle = '#fff'; g.font = `900 ${portrait ? 120 : 150}px Unbounded, Manrope, sans-serif`; g.fillText('PACT', W / 2, H * .38); g.fillStyle = '#ffd166'; g.fillText('TRIVIA', W / 2, H * .38 + (portrait ? 130 : 160)); g.font = `800 ${portrait ? 40 : 44}px Manrope, sans-serif`; g.fillStyle = '#c9d4ff'; g.fillText(G && G.banner ? G.banner : '★ ★ ★', W / 2, H * .82); t.needsUpdate = true; return; }
+  if (!G || !G.cur) { g.textAlign = 'center'; g.fillStyle = '#fff'; g.font = `900 ${portrait ? 120 : 150}px Unbounded, Manrope, sans-serif`; g.fillText('PACT', W / 2, H * .38); g.fillStyle = '#ffd166'; g.fillText('TRIVIA', W / 2, H * .38 + (portrait ? 130 : 160)); g.font = `800 ${portrait ? 40 : 44}px Manrope, sans-serif`; g.fillStyle = '#c9d4ff'; g.fillText(G && G.banner ? T()[G.banner] : '★ ★ ★', W / 2, H * .82); t.needsUpdate = true; return; }
   const q = G.cur, cat = CATS[q.cat], L = S.lang;
   // header: category pill + counter + timer ring
   g.font = `800 ${portrait ? 40 : 42}px Manrope, sans-serif`; const label = `${cat[0]} ${L === 'es' ? cat[2] : cat[1]}`; const lw = g.measureText(label).width + 50;
@@ -409,16 +416,56 @@ for (let i = 0; i < 4; i++) { podiums.push(makePodium(i)); spotAt(0, 1.2, [0xffe
 
 /* ======================= camera ======================= */
 const cam = { pos: new THREE.Vector3(0, 4, 18), look: new THREE.Vector3(0, 3, 0), shake: 0 };
+// Shot fitting: back the camera off along a direction until the question board and the contestants that matter
+// all project inside the part of the screen the HTML UI leaves free (HUD + scores on top, answer panel below).
+const _fc = new THREE.PerspectiveCamera(42, 1, .1, 200), _fv = new THREE.Vector3(), _fr = new THREE.Vector3(), _fu = new THREE.Vector3();
+function uiBox() {
+  const W = innerWidth, H = innerHeight; let top = 8, bot = 8;
+  const vis = el => el && !el.hidden && el.style.visibility !== 'hidden' && el.offsetParent !== null;
+  const tp = document.querySelector('.ig-top'); if (vis(tp)) top = Math.max(top, tp.getBoundingClientRect().bottom + 4);
+  const sc = $('tvScores'); if (vis(sc)) { const r = sc.getBoundingClientRect(); if (r.top < H / 2) top = Math.max(top, r.bottom + 6); else bot = Math.max(bot, H - r.top + 6); }
+  const ch = $('tvChoices'); if (vis(ch)) bot = Math.max(bot, H - ch.getBoundingClientRect().top + 8);
+  const side = Math.min(14, W * .03);
+  return { l: -1 + 2 * side / W, r: 1 - 2 * side / W, t: 1 - 2 * top / H, b: -1 + 2 * bot / H };
+}
+function frameShot(pts, dir, box, minD = 3) {
+  _fc.fov = camera.fov; _fc.aspect = camera.aspect; _fc.updateProjectionMatrix();
+  const ty = Math.tan(THREE.MathUtils.degToRad(_fc.fov / 2)), tx = ty * _fc.aspect;
+  const look = new THREE.Vector3(); pts.forEach(p => look.add(p)); look.multiplyScalar(1 / pts.length);
+  const place = d => { _fc.position.copy(look).addScaledVector(dir, d); _fc.lookAt(look); _fc.updateMatrixWorld(); };
+  const ext = () => { let a = 9, b = -9, c = 9, e = -9, behind = false; for (const p of pts) { _fv.copy(p).project(_fc); if (_fv.z > 1) behind = true; a = Math.min(a, _fv.x); b = Math.max(b, _fv.x); c = Math.min(c, _fv.y); e = Math.max(e, _fv.y); } return { a, b, c, e, behind }; };
+  const fit = () => { let d = minD; for (let k = 0; k < 90; k++) { place(d); const x = ext(); if (!x.behind && x.a >= box.l && x.b <= box.r && x.c >= box.b && x.e <= box.t) break; d *= 1.03; } return d; };
+  let d = fit();
+  for (let it = 0; it < 3; it++) { // re-centre the points in the free box, then refit
+    const x = ext(); const cx = (x.a + x.b) / 2 - (box.l + box.r) / 2, cy = (x.c + x.e) / 2 - (box.b + box.t) / 2;
+    _fr.setFromMatrixColumn(_fc.matrixWorld, 0); _fu.setFromMatrixColumn(_fc.matrixWorld, 1);
+    look.addScaledVector(_fr, cx * tx * d).addScaledVector(_fu, cy * ty * d); d = fit();
+  }
+  return [_fc.position.clone(), look];
+}
+function boardPts() { const g = SCR.group, mx = SCR.w / 2 + .3, my = SCR.h / 2 + .3, z = g.position.z + .16; return [[-mx, my], [mx, my], [-mx, -my], [mx, -my]].map(([x, y]) => new THREE.Vector3(g.position.x + x, g.position.y + y, z)); }
+function podiumPts(i) { const x = podiums[i].x, s = podiums[i].grp.scale.x; return [new THREE.Vector3(x - .75 * s, .05, 1.6 + .75 * s), new THREE.Vector3(x + .75 * s, .05, 1.6 + .75 * s), new THREE.Vector3(x, 2.85 * chars[i].g.scale.y, .9)]; }
+let _shotKey = '', _shot = null;
 function camTarget() {
   const portrait = innerHeight > innerWidth; const a = innerWidth / innerHeight;
-  if (G && G.focus != null && G.focusT > 0) { const x = podiums[G.focus].x; return [new THREE.Vector3(x * .85, 2.4, portrait ? 7.4 : 6.0), new THREE.Vector3(x, 1.95, .8)]; }
-  if (portrait) { const d = 13.4 * clamp(.46 / a, .8, 1.4); return [new THREE.Vector3(0, 4.3, d), new THREE.Vector3(0, 3.55, 0)]; }
+  const focus = G && G.focus != null && G.focusT > 0 ? G.focus : null;
+  if (portrait || focus != null) { // portrait shots + every focus shot keep the full board readable, leaning toward the contestant
+    const n = G ? G.players.length : 4, choices = !$('tvChoices').hidden;
+    const key = [innerWidth, innerHeight, focus, n, choices, camera.fov, !!G].join();
+    if (key !== _shotKey) {
+      _shotKey = key; const box = uiBox(); let pts = boardPts(), dir;
+      if (focus != null) { podiumPts(focus).forEach(p => pts.push(p)); const x = podiums[focus].x; dir = new THREE.Vector3(x * (portrait ? .09 : .07), portrait ? .12 : .1, 1).normalize(); }
+      else { for (let i = 0; i < n; i++) podiumPts(i).forEach(p => pts.push(p)); dir = new THREE.Vector3(0, .07, 1).normalize(); }
+      _shot = frameShot(pts, dir, box);
+    }
+    return [_shot[0].clone(), _shot[1].clone()];
+  }
   const d = 11.2 * clamp(1.79 / a, .85, 1.5); return [new THREE.Vector3(0, 3.3, d), new THREE.Vector3(0, 3.05, 0)];
 }
 function updateCamera(dt) {
   const [p, l] = camTarget(); cam.pos.lerp(p, 1 - Math.pow(.05, dt)); cam.look.lerp(l, 1 - Math.pow(.03, dt));
   cam.shake = Math.max(0, cam.shake - dt * 2); const sh = cam.shake * .05; const t = performance.now() / 1000;
-  camera.position.copy(cam.pos).add(new THREE.Vector3(Math.sin(t * .3) * .25 + rnd(-sh, sh), Math.sin(t * .23) * .08 + rnd(-sh, sh), 0)); camera.lookAt(cam.look);
+  const sw = innerHeight > innerWidth ? .08 : .25; camera.position.copy(cam.pos).add(new THREE.Vector3(Math.sin(t * .3) * sw + rnd(-sh, sh), Math.sin(t * .23) * sw * .32 + rnd(-sh, sh), 0)); camera.lookAt(cam.look);
 }
 
 /* ======================= character animation ======================= */
@@ -458,9 +505,10 @@ function buildDeck() {
   [...picked, fin].forEach(o => seen.add(o.i)); E.store.set('inoa.trivia.seen', [...seen].slice(-140));
   return { qs: picked.map(o => mkQ(o)), fin: mkQ(fin) };
 }
-function mkQ(o) { const r = o.r, es = S.lang === 'es'; const q = es ? r[4] : r[2], ch0 = es ? r[5] : r[3]; const order = [0, 1, 2, 3].sort(() => Math.random() - .5); return { id: o.i, cat: r[0], d: r[1], q, ch: order.map(k => ch0[k]), correct: order.indexOf(0) }; }
+function mkQ(o) { const r = o.r; const order = [0, 1, 2, 3].sort(() => Math.random() - .5); return relang({ id: o.i, r, order, cat: r[0], d: r[1], correct: order.indexOf(0) }); }
+function relang(q) { if (!q) return q; const es = S.lang === 'es', r = q.r; q.q = es ? r[4] : r[2]; const ch0 = es ? r[5] : r[3]; q.ch = q.order.map(k => ch0[k]); return q; }
 function start(opts = {}) {
-  Object.assign(S, opts); save();
+  const lang = opts.lang; delete opts.lang; Object.assign(S, opts); if (lang) { S.lang = lang === 'es' ? 'es' : 'en'; if (E.setSetting && profLang() !== S.lang) E.setSetting('lang', S.lang); } save();
   // Phones in the party room (engine/net.js) become the players: each phone buzzes and answers privately.
   const phones = E.net.role === 'host' ? E.net.pads().slice(0, 4) : [];
   const humans = phones.length || clamp(S.humans, 1, 4); const nb = humans === 1 ? 3 : S.bots ? 4 - humans : 0;
@@ -468,10 +516,10 @@ function start(opts = {}) {
   for (let i = 0; i < nb; i++) players.push({ name: BOTS[i].name, bot: BOTS[i], score: 0 });
   const deck = buildDeck();
   G = { time: 0, sched: [], players, deck, qi: -1, cur: null, phase: 'intro', timer: null, out: [], tried: new Set(), buzzer: null, revealed: false, focus: null, focusT: 0, hype: 0, paused: false, auto: !!window.__AUTO, finalPicks: [], banner: '' };
-  LAY = null; layout(); players.forEach((p, i) => drawPodium(i)); chars.forEach((c, i) => { c.state = 'idle'; c.react = 0; });
+  conf.forEach(c => c.on = false); LAY = null; layout(); players.forEach((p, i) => drawPodium(i)); chars.forEach((c, i) => { c.state = 'idle'; c.react = 0; });
   ensureHud(); buildBuzzers(); scores(); $('tvScores').hidden = false;
   if (music) music.stop(); music = E.music(E.SONGS.bright);
-  G.banner = T().round1; SCR.dirty = true; hostTalk(2.5); E.say(T().welcome, { lang: S.lang }); big(T().round1);
+  G.banner = 'round1'; SCR.dirty = true; hostTalk(2.5); E.say(T().welcome, { lang: S.lang }); big(T().round1);
   later(3.2, nextQuestion);
 }
 function nextQuestion() {
@@ -520,7 +568,7 @@ function timeUp() {
 
 /* ---------- final round ---------- */
 function finalRound() {
-  G.phase = 'finalIntro'; G.final = true; G.cur = null; G.banner = T().final; SCR.dirty = true; showChoices(false); setBuzzers(false);
+  G.phase = 'finalIntro'; G.final = true; G.cur = null; G.banner = 'final'; SCR.dirty = true; showChoices(false); setBuzzers(false);
   if (music) music.stop(); music = E.music(E.SONGS.tense);
   big(T().allin + '!'); E.say(T().final, { lang: S.lang }); hostTalk(3); G.wagers = []; G.finalPicks = [];
   later(3, () => wagerNext(0));
@@ -530,9 +578,11 @@ function wagerNext(i) {
   const pl = G.players[i], maxW = Math.max(pl.score, 100);
   if (!pl.human || G.auto) { const b = pl.bot || BOTS[i % 3]; const f = b.wager < 0 ? pick([.25, .5, .75, 1]) : b.wager; G.wagers[i] = Math.round(maxW * f / 10) * 10; bubble(i, `${T().yourWager}: ${G.wagers[i]}`); later(G.auto ? .3 : 1.1, () => wagerNext(i + 1)); return; }
   const cat = CATS[G.deck.fin.cat]; const card = overlay(`<div class="ig-kicker" style="color:${PCSS[i]}">${T().allin} · ${T().cat}: ${cat[0]} ${S.lang === 'es' ? cat[2] : cat[1]}</div><h2>${esc(T().wager(pl.name))}</h2><p class="ig-sub">${T().score}: <b>${pl.score}</b></p><div class="wg">${[0, .25, .5, .75, 1].map(f => `<button data-f="${f}" class="${f === 1 ? 'all' : ''}"><b>${Math.round(maxW * f / 10) * 10}</b>${f === 1 ? T().allin : Math.round(f * 100) + '%'}</button>`).join('')}</div>`);
-  E.say(T().wager(pl.name), { lang: S.lang }); G.wagerCard = { card, i, maxW }; if (pl.slot) card.querySelector('.ig-sub').insertAdjacentHTML('beforeend', `<br>📱 ${esc(pl.name)}: ${S.lang === 'es' ? 'elige en tu teléfono' : 'choose on your phone'}`);
+  E.say(T().wager(pl.name), { lang: S.lang }); G.wagerCard = { card, i, maxW, sel: 2 }; if (pl.slot) card.querySelector('.ig-sub').insertAdjacentHTML('beforeend', `<br>📱 ${esc(pl.name)}: ${S.lang === 'es' ? 'elige en tu teléfono' : 'choose on your phone'}`); wagerNav(0);
   card.querySelectorAll('.wg button').forEach(b => b.onclick = () => setWager(+b.dataset.f));
 }
+const WF = [0, .25, .5, .75, 1];
+function wagerNav(d) { const wc = G.wagerCard; if (!wc) return; wc.sel = clamp(wc.sel + d, 0, 4); wc.card.querySelectorAll('.wg button').forEach((b, k) => b.classList.toggle('sel', k === wc.sel)); }
 function setWager(f) { const wc = G.wagerCard; if (!wc) return; G.wagerCard = null; wc.card.remove(); G.wagers[wc.i] = Math.round(wc.maxW * f / 10) * 10; SFX.coin(); wagerNext(wc.i + 1); }
 function finalQuestion() { G.cur = G.deck.fin; G.out = []; G.revealed = false; G.pickedShow = null; G.phase = 'fread'; SCR.dirty = true; readAloud(G.cur); hostTalk(3); later(2, () => finalPickNext(0)); }
 function finalPickNext(i) {
@@ -552,22 +602,22 @@ function showFinalChoices(i) {
 function finalPick(k) { if (G.phase !== 'fpick') return; const i = G.fi; G.finalPicks[i] = k; G.phase = 'fwait'; G.timer = null; SFX.snap(); const card = G.fcard; if (!card) { bubble(i, T().locked); finalPickNext(i + 1); return; } const nxt = G.players.findIndex((p, j) => j > i && p.human); card.querySelector('.ig-card').innerHTML = `<h2>🔒 ${T().locked}</h2>${nxt >= 0 ? `<p class="ig-sub">${esc(T().pass(G.players[nxt].name))}</p>` : ''}<button class="ig-btn" data-a="ok">OK</button>`; card.querySelector('[data-a=ok]').onclick = () => { card.remove(); G.fcard = null; finalPickNext(i + 1); }; if (G.auto) { card.remove(); G.fcard = null; finalPickNext(i + 1); } }
 function finalReveal() {
   G.phase = 'freveal'; G.timer = null; SCR.dirty = true; big(T().reveal); E.tone(220, .8, 'sawtooth', .06, 200);
-  G.players.forEach((pl, i) => later(1.4 + i * 1.3, () => { const ok = G.finalPicks[i] === G.cur.correct; const w = G.wagers[i] || 0; pl.score += ok ? w : -w; G.pickedShow = G.finalPicks[i]; SCR.dirty = true; drawPodium(i); scores(); react(i, ok ? 'cheer' : 'slump', 2.2); floatAt(i, (ok ? '+' : '−') + w, ok ? 'gold' : 'bad'); ok ? SFX.good() : SFX.bad(); G.focus = i; G.focusT = 1.1; }));
+  G.players.forEach((pl, i) => later(1.4 + i * 1.3, () => { const ok = G.finalPicks[i] === G.cur.correct; const w = G.wagers[i] || 0; pl.score += ok ? w : S.kids ? 0 : -w; /* kids mode: never minus points */ G.pickedShow = G.finalPicks[i]; SCR.dirty = true; drawPodium(i); scores(); react(i, ok ? 'cheer' : 'slump', 2.2); floatAt(i, ok ? '+' + w : S.kids ? '✗' : '−' + w, ok ? 'gold' : 'bad'); ok ? SFX.good() : SFX.bad(); G.focus = i; G.focusT = 1.1; }));
   later(1.6 + G.players.length * 1.3, () => { G.revealed = true; G.pickedShow = null; SCR.dirty = true; E.say(`${T().answer} ${G.cur.ch[G.cur.correct]}`, { lang: S.lang }); later(2.6, endGame); });
 }
 function endGame() {
   G.phase = 'end'; const rows = G.players.map((p, i) => ({ ...p, i })).sort((a, b) => b.score - a.score); const tie = rows.length > 1 && rows[0].score === rows[1].score;
   const w = rows[0]; react(w.i, 'cheer', 99); G.players.forEach((p, i) => { if (i !== w.i && !(tie && p.score === w.score)) react(i, 'idle', 0); }); confetti(podiums[w.i].x, 240); SFX.win(); G.hype = 1.5; G.focus = w.i; G.focusT = 3;
   E.say(tie ? T().tie : T().wins(w.name), { lang: S.lang }); big(tie ? T().tie : '🏆 ' + w.name);
-  later(3.4, () => { music && music.stop(); if (E.net.role === 'host') E.NET.setLayout({ type: 'gamepad' }); const me = G.players[0]; const place = rows.findIndex(r => r.i === 0) + 1; const correct = G.correctCount || 0;
-    E.results({ gameId: 'trivia', title: tie ? T().tie : T().wins(w.name), stats: rows.map((r, k) => [`${k + 1}. ${r.bot ? r.bot.e + ' ' : ''}${r.name}`, r.score]), xp: 40 + Math.max(0, me.score) / 10 + (place === 1 ? 40 : 0), coins: 8 + (place === 1 ? 20 : 6), best: G.players.filter(p => p.human).length === 1 ? me.score : null, bestLabel: 'Best solo score', onAgain: () => title(), share: `${w.name} won Pact Trivia with ${w.score} points! (Inoa Games) ${location.href}` }); });
+  later(3.4, () => { if (G.resultsShown) return; G.resultsShown = true; resultsCount++; music && music.stop(); if (E.net.role === 'host') E.NET.setLayout({ type: 'gamepad' }); const me = G.players[0]; const place = rows.findIndex(r => r.i === 0) + 1; const correct = G.correctCount || 0;
+    E.results({ gameId: 'trivia', title: tie ? T().tie : T().wins(w.name), stats: rows.map((r, k) => [`${k + 1}. ${r.bot ? r.bot.e + ' ' : ''}${r.name}`, r.score]), xp: 40 + Math.max(0, me.score) / 10 + (place === 1 ? 40 : 0), coins: 8 + (place === 1 ? 20 : 6), best: G.players.filter(p => p.human).length === 1 ? me.score : null, bestLabel: T().bestSolo, won: place === 1 && !tie, onAgain: () => title(), share: T().share(w.name, w.score) + ` (Inoa Games) ${location.href}` }); });
 }
 
 /* ======================= UI ======================= */
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 function ensureHud() { if (hudEl) { document.querySelector('.ig-top').hidden = false; return; } hudEl = E.shell({ title: 'Pact Trivia', onPause: pause, buttons: [] }); }
 function scores() { if (!G) return; $('tvScores').innerHTML = G.players.map((p, i) => `<span class="${G.buzzer === i && G.phase === 'answer' ? 'on' : ''}"><i style="background:${PCSS[i]}"></i>${esc(p.bot ? p.bot.e + ' ' + p.name : p.name)} <b>${p.score}</b></span>`).join(''); }
-function buildBuzzers() { const box = $('tvBuzzers'); box.innerHTML = ''; G.players.forEach((p, i) => { if (!p.human || p.slot) return; const b = document.createElement('button'); b.className = 'tv-buz off'; b.dataset.c = i; b.style.background = PCSS[i]; b.innerHTML = `${T().buzz}<small>${esc(p.name)} · ${G.players.filter(x => x.human).length === 1 ? 'Space' : KEYN[i]}</small>`; b.addEventListener('pointerdown', e => { e.preventDefault(); E.audio(); b.classList.add('hit'); setTimeout(() => b.classList.remove('hit'), 150); buzz(i); }); box.appendChild(b); }); }
+function buildBuzzers() { const box = $('tvBuzzers'); box.innerHTML = ''; G.players.forEach((p, i) => { if (!p.human || p.slot) return; const b = document.createElement('button'); b.className = 'tv-buz off'; b.dataset.c = i; b.style.background = PCSS[i]; b.innerHTML = `${T().buzz}<small>${esc(p.name)} · ${G.players.filter(x => x.human).length === 1 ? T().space : KEYN[i]}</small>`; b.addEventListener('pointerdown', e => { e.preventDefault(); E.audio(); b.classList.add('hit'); setTimeout(() => b.classList.remove('hit'), 150); buzz(i); }); box.appendChild(b); }); }
 function setBuzzers(on) { document.querySelectorAll('.tv-buz').forEach(b => b.classList.toggle('off', !on || G.tried.has(+b.dataset.c))); }
 function showChoices(on, i) {
   const el = $('tvChoices'); $('tvScores').style.visibility = on ? 'hidden' : ''; if (!on) { el.hidden = true; return; } const q = G.cur, pl = G.players[i];
@@ -588,7 +638,8 @@ addEventListener('keydown', e => {
   const humans = G.players.filter(p => p.human).length;
   if (G.phase === 'buzz' || G.phase === 'steal') { const k = KEYS.indexOf(e.code); if (k >= 0 && G.players[k]?.human) buzz(k); if ((e.code === 'Space' || e.code === 'Enter') && humans === 1) buzz(0); }
   const n = ['Digit1', 'Digit2', 'Digit3', 'Digit4'].indexOf(e.code); const n2 = ['Numpad1', 'Numpad2', 'Numpad3', 'Numpad4'].indexOf(e.code); const ci = n >= 0 ? n : n2;
-  if (ci >= 0) { if (G.phase === 'answer' && G.players[G.buzzer].human && !G.out.includes(ci)) answer(ci); else if (G.phase === 'fpick') finalPick(ci); else if (G.wagerCard) setWager([0, .25, .5, 1][ci]); }
+  if (ci >= 0) { if (G.phase === 'answer' && G.players[G.buzzer].human && !G.out.includes(ci)) answer(ci); else if (G.phase === 'fpick') finalPick(ci); }
+  if (G.wagerCard) { const w = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5'].indexOf(e.code); if (w >= 0) setWager(WF[w]); else if (e.code === 'ArrowLeft') wagerNav(-1); else if (e.code === 'ArrowRight') wagerNav(1); else if (e.code === 'Enter' || e.code === 'Space') setWager(WF[G.wagerCard.sel]); return; }
   if (G.phase === 'fwait' && (e.code === 'Enter' || e.code === 'Space') && G.fcard) G.fcard.querySelector('[data-a=ok]')?.click();
   if (G.fcard && G.phase !== 'fpick' && G.phase !== 'fwait' && (e.code === 'Enter' || e.code === 'Space')) G.fcard.querySelector('[data-a=ready]')?.click();
 });
@@ -600,6 +651,8 @@ function pollPads() {
     if ((G.phase === 'buzz' || G.phase === 'steal') && [0, 1, 2, 3].some(pressed)) buzz(pi);
     else if (G.phase === 'answer' && G.buzzer === pi) { const k = [0, 1, 2, 3].find(pressed); if (k != null && !G.out.includes(k)) answer(k); }
     else if (G.phase === 'fpick' && G.fi === pi) { const k = [0, 1, 2, 3].find(pressed); if (k != null) finalPick(k); }
+    else if (G.wagerCard && (G.wagerCard.i === pi || G.players.filter(x => x.human).length === 1)) { if (pressed(14)) wagerNav(-1); if (pressed(15)) wagerNav(1); if (pressed(0)) setWager(WF[G.wagerCard.sel]); }
+    else if (G.fcard && G.phase !== 'fpick' && pressed(0)) G.fcard.querySelector('[data-a=ready],[data-a=ok]')?.click();
     if (pressed(9)) pause(); }
 }
 
@@ -652,13 +705,25 @@ function pause() { if (!G || G.paused || G.phase === 'end') return; G.paused = t
 document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
 function cleanup() { document.querySelectorAll('.tv-card,.tv-bubble').forEach(e => e.remove()); showChoices(false); $('tvBuzzers').innerHTML = ''; }
 
+/* ======================= language sync ======================= */
+// Re-localise everything when the language changes (title buttons, pause > settings, or another tab/hub).
+function applyLang() {
+  const t = document.querySelector('.ig-title'); if (t && !G) { t.remove(); title(); return; }
+  if (!G) return;
+  G.deck.qs.forEach(relang); relang(G.deck.fin); SCR.dirty = true; buildBuzzers(); setBuzzers(G.phase === 'buzz' || G.phase === 'steal');
+  if (G.phase === 'answer' && G.players[G.buzzer]?.human && !G.auto) showChoices(true, G.buzzer);
+  if (G.phase === 'fpick' && G.fcard) showFinalChoices(G.fi);
+}
+addEventListener('inoa:settings', e => { const v = e.detail && e.detail.settings && e.detail.settings.lang; if (!v) return; const l = v === 'es' ? 'es' : 'en'; if (l === S.lang) return; S.lang = l; save(); applyLang(); });
+addEventListener('storage', e => { if (e.key === 'inoa.profile' && profLang() !== S.lang) { S.lang = profLang(); applyLang(); } });
+
 /* ======================= title ======================= */
 function title() {
   cleanup(); if (G) G = null; $('tvScores').hidden = true; if (hudEl) document.querySelector('.ig-top').hidden = true; if (music) music.stop(); music = E.music(E.SONGS.chill); LAY = null; layout(); SCR.dirty = true;
   const L = S.lang === 'es';
   const extra = `<div><p class="ig-sub" style="margin-bottom:6px">${L ? 'Idioma' : 'Language'}</p><div class="pk" id="pL"><button data-l="en" class="${!L ? 'on' : ''}">🇬🇧 English</button><button data-l="es" class="${L ? 'on' : ''}">🇪🇸 Español</button></div></div>
   <div><p class="ig-sub" style="margin-bottom:6px">${L ? 'Jugadores en este aparato' : 'Players on this device'}</p><div class="pk" id="pH">${[1, 2, 3, 4].map(n => `<button data-n="${n}" class="${n === S.humans ? 'on' : ''}">${n === 1 ? '🙂 Solo' : '👥 ' + n}<small>${n === 1 ? (L ? 'contra 3 bots' : 'vs 3 bots') : (L ? 'teclas ' : 'keys ') + KEYN.slice(0, n).join(' ')}</small></button>`).join('')}</div></div>
-  <div id="pN" ${S.humans > 1 ? '' : 'hidden'}><div class="names">${[0, 1, 2, 3].map(i => `<input data-i="${i}" maxlength="10" value="${esc(S.names[i])}" style="border-left:6px solid ${PCSS[i]}" ${i < S.humans ? '' : 'hidden'} aria-label="Player ${i + 1}">`).join('')}</div><div class="pk" style="margin-top:6px"><button id="pB" class="${S.bots ? 'on' : ''}">🤖 ${L ? 'Llenar con bots' : 'Fill empty podiums with bots'}</button></div></div>
+  <div id="pN" ${S.humans > 1 ? '' : 'hidden'}><div class="names">${[0, 1, 2, 3].map(i => `<input data-i="${i}" maxlength="10" value="${esc(S.names[i])}" style="border-left:6px solid ${PCSS[i]}" ${i < S.humans ? '' : 'hidden'} aria-label="${T().player} ${i + 1}">`).join('')}</div><div class="pk" style="margin-top:6px"><button id="pB" class="${S.bots ? 'on' : ''}">🤖 ${L ? 'Llenar con bots' : 'Fill empty podiums with bots'}</button></div></div>
   <div class="pk"><button id="pK" class="${S.kids ? 'on' : ''}">🧸 ${T().kids}<small>${L ? 'preguntas fáciles, más tiempo, sin restar' : 'easy questions, more time, no minus points'}</small></button></div>`;
   const how = L ? [['🔔', 'Pulsa tu botón: J1 A · J2 L · J3 Z · J4 M, un control cada uno, o toca tu botón de color'], ['1️⃣', 'Responde con 1–4 o tocando la opción. ¡Si fallas, los demás pueden robar!'], ['🎲', 'Ronda final: apuesta tus puntos y responde en secreto']] : [['🔔', 'Buzz: P1 A · P2 L · P3 Z · P4 M, one gamepad each, or tap your colored buzzer'], ['1️⃣', 'Answer with 1–4 or tap a choice. Miss it and the others can steal!'], ['🎲', 'Final round: wager your points and answer in secret']];
   const nPh = E.net.role === 'host' ? E.net.pads().length : 0;
@@ -667,7 +732,7 @@ function title() {
   const d = E.titleScreen({ party: PARTY, title: 'Pact Trivia', kicker: L ? 'Inoa Games · Concurso' : 'Inoa Games · Game show', lead: L ? 'Un concurso de preguntas para 1–4 jugadores en el mismo aparato. Cada pregunta se lee en voz alta.' : 'A family quiz show for 1–4 players on one device. Every question is read aloud.', how, extra: extra + phoneLine, onPlay: () => { save(); start(); } });
   const upd = () => { const el = document.getElementById('tvPhones'); if (!el) return; const n = E.net.role === 'host' ? E.net.pads().length : 0; el.textContent = n ? `📱 ${n} ${L ? 'teléfonos conectados: cada uno es un jugador' : 'phones connected: each phone is a player'}` : ''; }; E.net.on('change', upd);
   wideTitle(d);
-  d.querySelectorAll('#pL button').forEach(b => b.onclick = () => { S.lang = b.dataset.l; save(); d.remove(); title(); });
+  d.querySelectorAll('#pL button').forEach(b => b.onclick = () => { SFX.click(); setLang(b.dataset.l); if (document.body.contains(d)) { d.remove(); title(); } });
   d.querySelectorAll('#pH button').forEach(b => b.onclick = () => { S.humans = +b.dataset.n; d.querySelectorAll('#pH button').forEach(x => x.classList.toggle('on', x === b)); $('pN').hidden = S.humans < 2; d.querySelectorAll('.names input').forEach(inp => inp.hidden = +inp.dataset.i >= S.humans); SFX.click(); });
   d.querySelectorAll('.names input').forEach(inp => { inp.addEventListener('input', () => { S.names[+inp.dataset.i] = inp.value.trim() || `P${+inp.dataset.i + 1}`; }); inp.addEventListener('keydown', e => e.stopPropagation()); });
   $('pB').onclick = () => { S.bots = !S.bots; $('pB').classList.toggle('on', S.bots); };
@@ -680,6 +745,6 @@ function wideTitle(d) { const card = d.querySelector('.ig-card'); card.classList
 G = null; LAY = null; layout(); podiums.forEach((pd, i) => { pd.grp.visible = true; });
 title(); if (new URLSearchParams(location.search).get('online')) setTimeout(() => document.querySelector('[data-a=phones]')?.click(), 300); ld.done(); window.__READY = true;
 E.loop((dt) => { if (!window.__HOLD) update(dt); R.render(dt); });
-window.__GAME = { get G() { return G; }, S, Q, start, update, buzz, answer, title, warm: () => { R.render(1 / 60); R.renderer.getContext().finish(); }, setAuto: v => { window.__AUTO = v; if (G) G.auto = v; } };
+window.__GAME = { get G() { return G; }, get resultsCount() { return resultsCount; }, S, Q, setLang, start, update, buzz, answer, title, warm: () => { R.render(1 / 60); R.renderer.getContext().finish(); }, setAuto: v => { window.__AUTO = v; if (G) G.auto = v; } };
 </script>
 </body></html>

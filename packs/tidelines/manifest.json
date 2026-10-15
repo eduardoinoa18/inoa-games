@@ -1,0 +1,26 @@
+{
+ "v": 1,
+ "game": "tidelines",
+ "base": "../assets/",
+ "models": {
+  "skater-female": "models/skater-female.glb?h=fb0e1605",
+  "skater-male": "models/skater-male.glb?h=849a827d",
+  "survivor-female": "models/survivor-female.glb?h=9157aa20",
+  "survivor-male": "models/survivor-male.glb?h=69d38b39",
+  "cyborg-female": "models/cyborg-female.glb?h=86c5fb7b",
+  "male": "models/male.glb?h=37b571ee",
+  "blaster-a": "models/blaster-a.glb?h=b088eaec",
+  "palm-long": "models/palm-long.glb?h=2e5329d5",
+  "palm-detailed-short": "models/palm-detailed-short.glb?h=5a24b027",
+  "house-4": "models/house-4.glb?h=4badf838",
+  "house-5": "models/house-5.glb?h=77ff96ef",
+  "house-7": "models/house-7.glb?h=65bf1f71",
+  "boat-small": "models/boat-small.glb?h=95a1addc",
+  "ship-light": "models/ship-light.glb?h=701cb38e"
+ },
+ "hdri": {
+  "dawn": "hdri/dawn.hdr?h=b48993a4"
+ },
+ "lazy": [],
+ "bytes": 1085128
+}

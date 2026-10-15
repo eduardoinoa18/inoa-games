@@ -318,7 +318,7 @@ kbd{font-family:var(--f-pixel);font-size:8px;padding:3px 6px;background:rgba(239
     </div>
   </div>
 </div>
-<script>window.__inoaReward = function (gameId, xp, coins) { try { const p = Object.assign({ xp: 0, coins: 0, games: {} }, JSON.parse(localStorage.getItem('inoa.profile') || '{}')); p.xp += Math.round(xp); p.coins += Math.round(coins); const g = p.games[gameId] || { plays: 0, best: null }; g.plays++; p.games[gameId] = g; localStorage.setItem('inoa.profile', JSON.stringify(p)); } catch (e) { } };</script>
+<script>window.__inoaReward = function (gameId, xp, coins, best) { try { const p = Object.assign({ xp: 0, coins: 0, games: {} }, JSON.parse(localStorage.getItem('inoa.profile') || '{}')); p.games = p.games || {}; p.xp += Math.round(xp); p.coins += Math.round(coins); const g = p.games[gameId] || { plays: 0, best: null }; g.plays++; g.last = Date.now(); if (best != null && (g.best == null || best > g.best)) { g.best = best; g.newBest = true; } else g.newBest = false; p.games[gameId] = g; localStorage.setItem('inoa.profile', JSON.stringify(p)); } catch (e) { } };</script>
 <script>
 (() => {
 'use strict';
@@ -2541,7 +2541,7 @@ function pauseGame() {
 function resumeGame() { show(null); G.scene = 'play'; setPlayUI(true); Sound.init(); for (const key in tch) tch[key] = 0; }
 const STAR = '<svg viewBox="0 0 24 24"><path fill="#ffc65c" stroke="#2b0a02" stroke-width="1.2" stroke-linejoin="round" d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z"/></svg>';
 let shareText = '';
-function showResults(won) { try { window.__inoaReward('pixelpact', won ? 80 : 40, won ? 25 : 10); } catch (e) { }
+function showResults(won) { if (G.scene === 'results') return; try { window.__inoaReward('pixelpact', won ? 80 : 40, won ? 25 : 10, G.mode === 'match' ? null : (won ? G.level + 1 : null)); } catch (e) { } try { window.__inoaRound && window.__inoaRound(won); } catch (e) { }
   G.scene = 'results'; setPlayUI(false); Sound.stop();
   const match = G.mode === 'match';
   $('resRankWrap').hidden = match; $('resGrid').hidden = match; $('resBoard').hidden = !match; $('btnResNext').hidden = match || !won || G.level >= LEVELS.length - 1;
@@ -2597,15 +2597,20 @@ on('btnHowBack', () => { Sound.sfx.back(); goTitle(); });
 on('btnSettings', () => { Sound.init(); Sound.sfx.select(); settingsReturn = 'scrTitle'; show('scrSettings'); });
 on('btnSettingsBack', () => { saveSettings(); Sound.vol(); Sound.sfx.back(); resize(); if (settingsReturn === 'scrPause') { G.scene = 'pause'; show('scrPause'); } else goTitle(); });
 on('btnLobbyBack', () => { Sound.sfx.back(); openPicks(G.mode); });
-on('btnStart', () => { if ($('btnStart').disabled) return; Sound.init(); Sound.sfx.go(); startPlay(); });
+// account platform (engine/platform.js): a qualifying start before play; when accounts are off this resolves immediately
+const PF = import('../engine/platform.js').then(m => m.default.init().then(() => m.default)).catch(() => null);
+async function gate() { const P = await PF; if (!P || !P.enabled || P.sessionValid('pixelpact')) return true; const r = await P.startGame('pixelpact'); if (r.allowed) return true;
+  const next = encodeURIComponent('games/pixelpact.html'); location.href = (r.reason === 'signin' || r.reason === 'unverified' || r.reason === 'not_authenticated') ? '../account.html?next=' + next : (r.reason === 'limit' || r.reason === 'premium_only' || r.reason === 'offline_limit') ? '../pricing.html?next=' + next : '../index.html'; return false; }
+window.__inoaRound = (won) => PF.then(P => P && P.enabled && P.finishRound('pixelpact', { score: G.mode === 'match' ? null : (won ? G.level + 1 : null), xp: won ? 80 : 40, coins: won ? 25 : 10 })).catch(() => { });
+on('btnStart', async () => { if ($('btnStart').disabled) return; Sound.init(); if (!(await gate())) return; Sound.sfx.go(); startPlay(); });
 on('btnAddBot', addBot);
 on('btnResume', resumeGame);
 on('btnRestartCp', () => { show(null); G.scene = 'play'; setPlayUI(true); startLevel(true); });
 on('btnRestart', () => { show(null); G.scene = 'play'; setPlayUI(true); players = lobby.slots.map(s => makePlayer(s, 0, 0)); if (G.mode === 'match') startMatch(); else startLevel(false); });
 on('btnPauseSettings', () => { settingsReturn = 'scrPause'; G.scene = 'settings'; show('scrSettings'); });
 on('btnQuit', goTitle);
-on('btnAgain', () => { Sound.init(); startPlay(); });
-on('btnResNext', () => { Sound.init(); G.level = Math.min(LEVELS.length - 1, G.level + 1); startPlay(); });
+on('btnAgain', async () => { Sound.init(); if (!(await gate())) return; startPlay(); });
+on('btnResNext', async () => { Sound.init(); if (!(await gate())) return; G.level = Math.min(LEVELS.length - 1, G.level + 1); startPlay(); });
 on('btnResLobby', () => { Sound.sfx.select(); openLobby(); });
 on('btnPause', () => { if (G.scene === 'play') pauseGame(); });
 document.addEventListener('visibilitychange', () => { if (document.hidden && G.scene === 'play') pauseGame(); });
@@ -2631,6 +2636,9 @@ function boot() {
   buildSprites(); resize(); goTitle();
   try { if (window.claude && window.claude.hot && window.claude.hot.snapshot) window.claude.hot.snapshot(() => ({ heroes: settings.heroes })); } catch (e) {}
   requestAnimationFrame(t => { last = t; loop(t); });
+  // headless test hooks (test/pixelpact.js): drive the fixed-step sim without real-time waits
+  window.__GAME = { G, get players() { return players; }, get lobby() { return lobby; }, start(mode, level = 0) { G.mode = mode; G.level = level; openLobby(); if (mode === 'match') { while (lobby.slots.length < 2) addBot(); } startPlay(); }, update(n = 1) { for (let i = 0; i < n; i++) { if (G.scene === 'play') pollPlayers(); step(); } if (G.world) drawPlay(); }, results: showResults };
+  window.__READY = true;
 }
 const fontsReady = document.fonts && document.fonts.load ? Promise.all([document.fonts.load('900 20px "Unbounded"'), document.fonts.load('800 12px "Manrope"'), document.fonts.load('10px "Press Start 2P"')]).catch(() => {}) : Promise.resolve();
 Promise.race([fontsReady, new Promise(r => setTimeout(r, 1500))]).then(() => { if (window.claude && window.claude.hot && window.claude.hot.ready) window.claude.hot.ready(boot); else boot(); });

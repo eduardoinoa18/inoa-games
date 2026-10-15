@@ -1,27 +1,27 @@
 /* ---------- The shelf: nine games, each with a tiny live illustration ---------- */
 const PASTEL = { mint: '#9fe3cf', butter: '#ffe59a', pink: '#ffb7c5', lav: '#c9b8ff', peach: '#ffc9a3', cream: '#fff4e3', wood: '#c48a5a' };
 const GAMES = [
-  { id: 'pact', kind: 'FLAGSHIP · CO-OP ADVENTURE', name: 'Pixel Pact', desc: 'Four heroes, one exit. Clear the Emberwood Isles together, revive your friends, beat Big Claw. Ten levels in World 1.', meta: ['1–4 players', '3–5 min', 'Playable now'], st: 'LIVE', live: true, flag: true, href: 'https://claude.ai/artifact/R39Es5YCcbYnxRhuoDboVg' },
-  { id: 'match', kind: 'VERSUS · PLATFORM BRAWLER', name: 'Pixel Pact: Match', desc: 'Damage, knockback, ring-outs. Last hero standing on Driftwood Docks, Canopy Clash or Molten Crown.', meta: ['2–4 players', '2–3 min', 'Playable now'], st: 'LIVE', live: true, href: 'https://claude.ai/artifact/R39Es5YCcbYnxRhuoDboVg' },
-  { id: 'safari', kind: 'KIDS + GROWN-UPS · ALLERGY SAFE SAFARI', name: 'Snack Squad Safari', desc: 'A real 3D safari trail where you feed your buddy only what is safe for you. Labels read aloud for kids who can\u2019t read yet, a grown-up Scanner role, and an animated Buddy Rescue that teaches the auto-injector and 9-1-1 step by step. English and Spanish.', meta: ['1–2 players', '5 levels', 'Playable now'], st: 'LIVE', live: true, href: 'https://claude.ai/artifact/81SkGPPqcqm2k5cGnhjPRV' },
-  { id: 'depths', kind: 'SIGNATURE 3D · CO-OP ROGUELITE', name: 'Pixel Pact: Depths', desc: 'Dive under the islands with up to three friends. Every run builds a different hero; bosses demand teamwork; a weekly seeded run with a friends leaderboard.', meta: ['1–4 players', '15–25 min', 'Ages 10+'], st: 'PHASE 2' },
-  { id: 'builders', kind: 'SIGNATURE 3D · SURVIVAL BUILD', name: 'Driftwood Builders', desc: 'A shared island that grows for months. Farms, boats, blueprints and tide raids with up to eight friends.', meta: ['1–8 players', '10–40 min', 'Ages 10+'], st: 'PHASE 3' },
-  { id: 'tide', kind: 'SIGNATURE 3D · 4V4 TERRITORY', name: 'Tide Lines', desc: 'Paint the arena with water cannons, hold the most ground when the horn sounds. Ranked seasons, four-minute matches, built to stream.', meta: ['8 players', '4 min', 'Ages 10+'], st: 'PHASE 3' },
-  { id: 'drift', kind: 'SIGNATURE 3D · KART RACER', name: 'Island Drift', desc: 'Eight karts, phone tilt or gamepad, items with counterplay and your friends\u2019 ghosts on every track.', meta: ['2–8 players', '3 min'], st: 'PHASE 4' },
-  { id: 'fit', kind: 'COZY · ASMR', name: 'Perfect Fit', desc: 'A messy drawer, perfectly shaped slots, and a bass-boosted snap every time something lands. Race a friend or zone out alone.', meta: ['1–4 players', '60–90 s'], st: 'PHASE 1' },
-  { id: 'tray', kind: 'PARTY · PHYSICS', name: 'Fail Tray', desc: 'Carry a wobbling tower of jelly, ice and an anvil through an obstacle course. Falling is the funny part.', meta: ['1–8 players', '45 s'], st: 'PHASE 2' },
-  { id: 'junk', kind: 'COZY · RESTORATION', name: 'Junkyard to Jewel', desc: 'Wipe the rust away with your finger and watch the shine come back. Day 1 to Day 30 on a single wreck.', meta: ['Solo', '2–4 min'], st: 'PHASE 2' },
-  { id: 'brew', kind: 'COZY · IDLE CAFE', name: 'Brew and Bloom', desc: 'Grow magical tea plants while you are away, brew for woodland regulars when you are back. Nobody ever gets angry.', meta: ['Solo', '30–90 s check-ins'], st: 'SEASONS' },
-  { id: 'trivia', kind: 'PARTY · PHONES AS BUZZERS', name: 'Pact Trivia', desc: 'Questions on the big screen, buzzers in every hand. English and Spanish packs, family rounds, spicy rounds for adults.', meta: ['2–20 players', '5 min'], st: 'PHASE 2' },
-  { id: 'draw', kind: 'PARTY · DRAW AND GUESS', name: 'Draw the Pact', desc: 'Draw on your phone, the room guesses on the TV. The worst drawing wins the clip.', meta: ['3–12 players', '4 min'], st: 'SEASONS' },
-  { id: 'runner', kind: 'RACE · GHOSTS', name: 'Tide Runner', desc: 'A 60-second runner with the same seed for everyone today. Race your friends’ ghosts and post a time to beat.', meta: ['1–8 players', '60 s'], st: 'PHASE 1' }
+  { id: 'pact', kind: 'FLAGSHIP · CO-OP ADVENTURE', name: 'Pixel Pact', desc: 'Four heroes, one exit. Clear the Emberwood Isles together, revive your friends and beat Big Claw.', meta: ['1–4 players', '3–5 min', 'Play now'], st: 'LIVE', live: true, flag: true, href: 'https://claude.ai/artifact/R39Es5YCcbYnxRhuoDboVg' },
+  { id: 'match', kind: 'VERSUS · PLATFORM BRAWLER', name: 'Pixel Pact: Match', desc: 'Damage, knockback, ring-outs. Last hero standing on Driftwood Docks, Canopy Clash or Molten Crown. Bots fill empty slots.', meta: ['1–4 players', '2–3 min', 'Play now'], st: 'LIVE', live: true, href: 'https://claude.ai/artifact/R39Es5YCcbYnxRhuoDboVg' },
+  { id: 'safari', kind: 'KIDS + GROWN-UPS · ALLERGY SAFE SAFARI', name: 'Snack Squad Safari', desc: 'A 3D safari trail where you feed your buddy only what is safe for you. Labels read aloud, a grown-up Scanner role and a step-by-step Buddy Rescue practice. English and Spanish.', meta: ['1–2 players', '5 levels', 'Play now'], st: 'LIVE', live: true, href: 'https://claude.ai/artifact/81SkGPPqcqm2k5cGnhjPRV' },
+  { id: 'depths', kind: '3D · CO-OP ROGUELITE', name: 'Pixel Pact: Depths', desc: 'Dive under the islands with AI allies or a second player. Eight rooms, boons that change every run, and a drowned captain to defeat.', meta: ['1–2 players', '10–15 min', 'Ages 10+'], st: 'PHASE 2' },
+  { id: 'builders', kind: '3D · ISLAND SANDBOX', name: 'Driftwood Builders', desc: 'Gather driftwood, build a cozy island home, plant crops, sail a boat and share your island with a code.', meta: ['Solo', '10–30 min', 'Ages 8+'], st: 'PHASE 3' },
+  { id: 'tide', kind: '3D · 4V4 TURF', name: 'Tide Lines', desc: 'Paint the pier with water cannons alongside three bots. Most ground when the horn sounds wins.', meta: ['Solo vs bots', '2.5 min', 'Ages 8+'], st: 'PHASE 3' },
+  { id: 'drift', kind: '3D · KART RACER', name: 'Island Drift', desc: 'Drift for mini-turbos, grab items and race five rivals on two island tracks, or chase your best lap.', meta: ['Solo vs 5 bots', '3 min'], st: 'PHASE 4' },
+  { id: 'fit', kind: 'COZY · ASMR', name: 'Perfect Fit', desc: 'A messy drawer, perfectly shaped slots, and a satisfying snap every time something lands. Zen mode for zoning out.', meta: ['Solo', '1–2 min'], st: 'PHASE 1' },
+  { id: 'tray', kind: 'PARTY · PHYSICS', name: 'Fail Tray', desc: 'Carry a wobbling tower of food through an obstacle course. Falling is the funny part. Take turns with friends.', meta: ['1–4 players', '45 s'], st: 'PHASE 2' },
+  { id: 'junk', kind: 'COZY · RESTORATION', name: 'Junkyard to Jewel', desc: 'Wash, sand, paint and polish rusty old rides with your finger and watch the shine come back.', meta: ['Solo', '2–4 min'], st: 'PHASE 2' },
+  { id: 'brew', kind: 'COZY · IDLE CAFE', name: 'Brew and Bloom', desc: 'Grow tea plants in real time, even while you are away, then brew for woodland regulars. Nobody ever gets angry.', meta: ['Solo', 'Short check-ins'], st: 'SEASONS' },
+  { id: 'trivia', kind: 'PARTY · GAME SHOW', name: 'Pact Trivia', desc: 'A 3D game-show studio with buzzers for up to four players on one device, or play solo against bots. English and Spanish.', meta: ['1–4 players', '5 min'], st: 'PHASE 2' },
+  { id: 'draw', kind: 'PARTY · DRAW AND GUESS', name: 'Draw the Pact', desc: 'Pass the device, draw the secret word, and let the room guess. Speed Sketch and Telephone modes too.', meta: ['2–8 players', '5 min'], st: 'SEASONS' },
+  { id: 'runner', kind: 'RACE · GHOSTS', name: 'Tide Runner', desc: 'A boardwalk runner with a daily course that is the same for everyone. Race the ghost of your best run.', meta: ['Solo', '1–2 min'], st: 'PHASE 1' },
 ];
 const grid = document.getElementById('shelfGrid'), tiles = [];
 GAMES.forEach(g => {
   const d = document.createElement(g.href ? 'a' : 'div'); d.className = 'game' + (g.flag ? ' flag' : ''); if (g.href) { d.href = g.href; d.target = '_blank'; d.rel = 'noopener'; d.style.textDecoration = 'none'; d.style.color = 'inherit'; }
   const cn = document.createElement('canvas'); d.appendChild(cn);
   d.insertAdjacentHTML('beforeend', `<span class="st${g.live ? ' live' : ''}">${g.st}</span><div class="body"><span class="kind">${g.kind}</span><b>${g.name}</b><p>${g.desc}</p><div class="meta">${g.meta.map(m => `<span>${m}</span>`).join('')}</div></div>`);
-  grid.appendChild(d); tiles.push({ g, cn });
+  grid.appendChild(d); tiles.push({ g, cn, el: d });
 });
 function slotRect(c, x, y, w, h, col) { c.fillStyle = col; c.beginPath(); rr(c, x, y, w, h, 5); c.fill(); }
 const ILLO = {
@@ -71,7 +71,9 @@ function drawMaker() {
   c.fillStyle = 'rgba(255,255,255,.55)'; c.font = '800 10px Manrope, sans-serif'; c.textAlign = 'center'; c.fillText('tap to attack', w / 2, h - 10);
   c.fillStyle = hero.c.accent; c.font = '900 11px Unbounded, sans-serif'; c.textAlign = 'left'; c.fillText(maker.title.toUpperCase(), 14, 22); c.restore();
 }
+/*EXTRAS*/
 buildSun();
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => { }));
 let last = performance.now();
 function loop(now) { requestAnimationFrame(loop); last = now; if (!reduce || frame < 3) { frame++; drawBg(now / 1000); drawTiles(); drawMaker(); } }
 drawBg(0); drawTiles(); drawMaker(); requestAnimationFrame(loop);

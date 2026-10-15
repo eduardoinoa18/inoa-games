@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Owner dashboard · Inoa Games</title>
+<meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#0b2a3a"><link rel="icon" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;800&family=Unbounded:wght@700;900&display=swap">
+<style>
+:root{--bg:#061821;--panel:#0d2a37;--panel2:#123747;--line:rgba(255,255,255,.12);--ink:#eaf6f8;--ink2:#b8d0d8;--mute:#86a3ad;--accent:#2de2c3;--sun:#ffc65c;--bad:#ff8a7a;--f-d:"Unbounded","Manrope",system-ui,sans-serif;--f-b:"Manrope",system-ui,-apple-system,sans-serif;color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-b)}
+header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(6,24,33,.95);z-index:5}
+.brand{font-family:var(--f-d);font-weight:900;letter-spacing:.08em}.brand span{color:var(--sun)}
+main{max-width:1180px;margin:0 auto;padding:16px;display:grid;gap:18px}
+h2{font-family:var(--f-d);font-size:18px;margin:0}h3{margin:0;font-size:15px}
+.seg{display:flex;gap:4px;flex-wrap:wrap}.seg button,.btn{font:800 13px var(--f-b);color:var(--ink);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 12px;min-height:38px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--accent);color:#04211b;border-color:transparent}.btn.warn{color:var(--bad)}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:grid;gap:2px}
+.tile b{font-family:var(--f-d);font-size:26px;font-weight:900}.tile span{font-size:12px;font-weight:800;color:var(--ink2);text-transform:uppercase;letter-spacing:.04em}.tile small{font-size:11px;color:var(--mute)}
+.tile.alert{border-color:var(--bad)}.tile.alert b{color:var(--bad)}
+section{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;gap:10px;overflow:hidden}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:middle}th{color:var(--ink2);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+td.num{text-align:right;font-variant-numeric:tabular-nums}.barcell{width:38%}.bar{height:12px;background:var(--accent);border-radius:0 4px 4px 0;min-width:2px}
+.wrapx{overflow-x:auto}input[type=search]{font:700 14px var(--f-b);background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:9px 12px;min-height:40px;width:min(320px,100%)}
+.pill{display:inline-block;border-radius:8px;padding:2px 7px;font-size:11px;font-weight:800;background:var(--panel2)}.pill.prem{background:var(--sun);color:#2b1f00}.pill.sus{background:#5a1f18;color:#ffd6cf}.pill.adm{background:var(--accent);color:#04211b}
+dialog{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:16px;width:min(720px,94vw);max-height:88vh;padding:16px}dialog::backdrop{background:rgba(0,0,0,.55)}
+.gate{max-width:520px;margin:12vh auto;text-align:center;display:grid;gap:12px}.gate a{color:var(--sun)}
+.note{font-size:12px;color:var(--mute)}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+[hidden]{display:none!important}
+</style></head><body>
+<header><div class="brand">INOA<span>GAMES</span> · Owner</div>
+  <div class="seg" role="group" aria-label="Date range" id="range"><button data-d="1">Today</button><button data-d="7">7 days</button><button data-d="30" aria-pressed="true">30 days</button><button data-d="90">90 days</button><button data-d="3650">All time</button></div>
+  <div class="row"><a class="btn" href="index.html">Hub</a><button class="btn" id="bOut">Sign out</button></div></header>
+<div class="gate" id="gate" hidden><h2 id="gateT">Owner access only</h2><p id="gateP" class="note"></p><a href="account.html?next=index.html">Sign in</a></div>
+<main id="app" hidden>
+  <div class="note" id="asof"></div>
+  <div><h2>Health</h2></div><div class="tiles" id="health"></div>
+  <div><h2>Players</h2></div><div class="tiles" id="players"></div>
+  <div><h2>Revenue</h2></div><div class="tiles" id="revenue"></div>
+  <p class="note">MRR / ARR are estimates (active Stripe subscriptions × price), not cash. Gross receipts and refunds come from Stripe invoice/refund events in the selected range and are shown <b>before Stripe fees</b>; use the Stripe dashboard for payouts and tax. Definitions: docs/PLATFORM_ARCHITECTURE.md §10.</p>
+  <section aria-labelledby="gTitle"><h2 id="gTitle">Games</h2><div class="wrapx"><table id="games"><caption class="note" style="text-align:left">Game starts in range (bar), rounds, unique and repeat players, completion = rounds ÷ starts.</caption><thead><tr><th scope="col">Game</th><th scope="col" class="barcell">Starts</th><th scope="col" class="num">Starts</th><th scope="col" class="num">Rounds</th><th scope="col" class="num">Players</th><th scope="col" class="num">Repeat</th><th scope="col" class="num">Completion</th></tr></thead><tbody></tbody></table></div></section>
+  <section aria-labelledby="uTitle"><div class="row" style="justify-content:space-between"><h2 id="uTitle">Users</h2><input type="search" id="q" placeholder="Search email or name" aria-label="Search users"></div>
+    <div class="wrapx"><table id="users"><thead><tr><th scope="col">Name</th><th scope="col">Email</th><th scope="col">Joined</th><th scope="col">Plan</th><th scope="col" class="num">Level</th><th scope="col">Last played</th><th scope="col"><span class="note">Open</span></th></tr></thead><tbody></tbody></table></div>
+    <div class="row"><button class="btn" id="prev">← Prev</button><span class="note" id="pageInfo"></span><button class="btn" id="next">Next →</button></div></section>
+  <section aria-labelledby="fTitle"><div class="row" style="justify-content:space-between"><h2 id="fTitle">Player feedback</h2><div class="row" id="fFilter" role="group" aria-label="Feedback filter"><button class="btn" data-s="new" aria-pressed="true">New</button><button class="btn" data-s="" aria-pressed="false">All</button></div></div>
+    <p class="note" id="fSum"></p><div class="wrapx"><table id="feedback"><thead><tr><th scope="col">When</th><th scope="col">Rating</th><th scope="col">Kind</th><th scope="col">Game</th><th scope="col">Note</th><th scope="col">From</th><th scope="col">Device</th><th scope="col"><span class="note">Status</span></th></tr></thead><tbody></tbody></table></div></section>
+  <section aria-labelledby="aTitle"><h2 id="aTitle">Admin audit log</h2><div class="wrapx"><table id="audit"><thead><tr><th>When</th><th>Action</th><th>Target</th><th>Details</th></tr></thead><tbody></tbody></table></div></section>
+  <p class="note">Payment operations (refunds, disputes, payouts) are done in the Stripe dashboard. This page never shows card details or passwords.</p>
+</main>
+<dialog id="dlg" aria-labelledby="dTitle"><div class="row" style="justify-content:space-between"><h2 id="dTitle"></h2><button class="btn" id="dClose">Close</button></div><div id="dBody"></div></dialog>
+<script type="module">
+import P from './engine/platform.js';
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const money = c => '$' + (Number(c || 0) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const num = n => Number(n || 0).toLocaleString('en-US');
+const day = d => d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+let days = 30, page = 0, q = '', timer = 0; const PER = 25;
+const tile = (label, value, note = '', alert = false) => `<div class="tile${alert ? ' alert' : ''}"><span>${esc(label)}</span><b>${esc(value)}</b>${note ? `<small>${esc(note)}</small>` : ''}</div>`;
+async function loadKpis() {
+  const k = await P.rpc('ig_admin_kpis', { p_days: days });
+  const rangeLbl = days >= 3650 ? 'all time' : days === 1 ? 'today' : `last ${days} days`;
+  $('asof').textContent = `Updated ${new Date().toLocaleString()} · range: ${rangeLbl}`;
+  $('health').innerHTML = tile('Webhook errors', num(k.webhook_errors), rangeLbl, k.webhook_errors > 0) + tile('Webhooks stuck', num(k.webhook_pending), 'received >10 min ago, not processed', k.webhook_pending > 0) + tile('Failed payments', num(k.failed_payments), rangeLbl, k.failed_payments > 0) + tile('Free-limit hits', num(k.limit_hits), 'starts refused (limit)');
+  $('players').innerHTML = tile('Registered', num(k.users_total)) + tile('Verified', num(k.users_verified), k.users_total ? Math.round(k.users_verified / k.users_total * 100) + '% of registered' : '') + tile('New today', num(k.signups_today)) + tile('New 7 d', num(k.signups_7d)) + tile('New 30 d', num(k.signups_30d)) + tile('DAU', num(k.dau), 'played in last 24 h') + tile('WAU', num(k.wau), 'played in last 7 d') + tile('MAU', num(k.mau), 'played in last 30 d') + tile('Game starts', num(k.game_starts), rangeLbl) + tile('Rounds finished', num(k.rounds_completed), rangeLbl) + tile('Starts per active player', k.mau ? (k.game_starts / Math.max(1, k.mau)).toFixed(1) : '—', 'starts in range ÷ MAU');
+  const conv = k.signups_range ? (k.activations_range / k.signups_range * 100).toFixed(1) + '%' : '—';
+  $('revenue').innerHTML = tile('Premium active', num(k.premium_active), 'entitled Stripe subscriptions') + tile('Canceling', num(k.premium_canceling), 'active, ends at period end') + tile('Past due', num(k.premium_past_due), 'Stripe retrying', k.premium_past_due > 0) + tile('MRR (estimate)', money(k.mrr_estimate_cents)) + tile('ARR (estimate)', money(k.arr_estimate_cents)) + tile('Gross receipts', money(k.gross_receipts_cents), rangeLbl + ', before fees') + tile('Refunds', money(k.refunds_cents), rangeLbl) + tile('Net receipts', money(k.gross_receipts_cents - k.refunds_cents), 'gross − refunds, before fees') + tile('Upgrades', num(k.activations_range), rangeLbl) + tile('Signup → Premium', conv, 'upgrades ÷ signups in range') + tile('Ended subscriptions', num(k.subscriptions_ended_range), rangeLbl);
+  const max = Math.max(1, ...k.per_game.map(g => g.starts));
+  $('games').tBodies[0].innerHTML = k.per_game.map(g => `<tr><th scope="row">${esc(g.name)}</th><td class="barcell"><div class="bar" style="width:${(g.starts / max * 100).toFixed(1)}%" title="${esc(g.name)}: ${num(g.starts)} starts"></div></td><td class="num">${num(g.starts)}</td><td class="num">${num(g.rounds)}</td><td class="num">${num(g.players)}</td><td class="num">${num(g.repeat_players)}</td><td class="num">${g.starts ? Math.round(g.rounds / g.starts * 100) + '%' : '—'}</td></tr>`).join('');
+}
+async function loadUsers() {
+  const r = await P.rpc('ig_admin_list_users', { p_search: q || null, p_limit: PER, p_offset: page * PER });
+  $('users').tBodies[0].innerHTML = r.users.map(u => `<tr><td>${esc(u.display_name)}</td><td>${esc(u.email)}</td><td>${day(u.created_at)}</td><td><span class="pill ${u.plan === 'premium' ? 'prem' : u.plan === 'admin' ? 'adm' : ''}">${esc(u.plan)}</span>${u.suspended ? ' <span class="pill sus">suspended</span>' : ''}${u.verified ? '' : ' <span class="pill">unverified</span>'}</td><td class="num">${num(u.level)}</td><td>${day(u.last_played)}</td><td><button class="btn" data-u="${esc(u.id)}">View</button></td></tr>`).join('') || '<tr><td colspan="7" class="note">No users match.</td></tr>';
+  $('pageInfo').textContent = r.total ? `${page * PER + 1}–${Math.min(r.total, (page + 1) * PER)} of ${num(r.total)}` : '0';
+  $('prev').disabled = page === 0; $('next').disabled = (page + 1) * PER >= r.total;
+}
+let fStatus = 'new';
+const FACE = ['', '😞', '😕', '🙂', '😀', '🤩'];
+async function loadFeedback() {
+  const f = await P.rpc('ig_admin_feedback', { p_limit: 100, p_offset: 0, p_status: fStatus || null });
+  $('fSum').textContent = `${num(f.new)} new · ${num(f.total)} shown in this filter · average rating (30 d): ${f.avg_rating_30d ?? '—'} / 5`;
+  $('feedback').tBodies[0].innerHTML = f.items.map(x => `<tr><td>${new Date(x.created_at).toLocaleString()}</td><td>${x.rating ? FACE[x.rating] + ' ' + x.rating : '—'}</td><td>${esc(x.kind)}</td><td>${esc(x.game_id || 'hub')}</td><td>${esc(x.body || '')}</td><td>${x.email ? esc(x.display_name || '') + '<br><span class="note">' + esc(x.email) + '</span>' : '<span class="note">guest</span>'}</td><td class="note">${esc([x.context.platform, x.context.version, x.context.lang, x.context.screen].filter(Boolean).join(' · '))}</td><td><select data-f="${x.id}" aria-label="Status">${['new', 'read', 'done'].map(v => `<option${v === x.status ? ' selected' : ''}>${v}</option>`).join('')}</select></td></tr>`).join('') || '<tr><td colspan="8" class="note">No feedback here yet.</td></tr>';
+}
+async function loadAudit() { const a = await P.rpc('ig_admin_recent_audit', { p_limit: 30 }); $('audit').tBodies[0].innerHTML = a.map(x => `<tr><td>${new Date(x.created_at).toLocaleString()}</td><td>${esc(x.action)}</td><td>${esc(x.target_type)} ${esc(String(x.target_id || '').slice(0, 8))}</td><td class="note">${esc(JSON.stringify(x.metadata))}</td></tr>`).join('') || '<tr><td colspan="4" class="note">No admin actions yet.</td></tr>'; }
+async function openUser(id) {
+  const d = await P.rpc('ig_admin_user_detail', { p_user: id }); const u = d.user || {}, p = d.profile || {}, st = d.status || {};
+  $('dTitle').textContent = p.display_name || u.email;
+  $('dBody').innerHTML = `<p class="note">${esc(u.email)} · joined ${day(u.created_at)} · last sign-in ${day(u.last_sign_in_at)} · ${u.verified ? 'verified' : 'unverified'}</p>
+    <div class="tiles">${tile('Plan', d.plan)}${tile('XP', num(p.xp))}${tile('Coins', num(p.coins))}${tile('Achievements', num(d.achievements))}</div>
+    <h3 style="margin-top:12px">Subscriptions</h3><table><tbody>${(d.subscriptions || []).map(s => `<tr><td>${esc(s.provider)}</td><td>${esc(s.status)}</td><td>until ${day(s.current_period_end)}</td><td>${s.cancel_at_period_end ? 'canceling' : ''}</td></tr>`).join('') || '<tr><td class="note">none</td></tr>'}</tbody></table>
+    <h3 style="margin-top:12px">Progress</h3><table><tbody>${(d.progress || []).map(g => `<tr><td>${esc(g.game_id)}</td><td class="num">${num(g.play_count)} starts</td><td class="num">${num(g.completed_rounds)} rounds</td><td class="num">best ${esc(g.best_score ?? '—')}</td></tr>`).join('') || '<tr><td class="note">no games yet</td></tr>'}</tbody></table>
+    <h3 style="margin-top:12px">Daily usage (last 14 days)</h3><p class="note">${(d.usage || []).map(x => `${esc(x.usage_date)}: ${num(x.starts)} starts`).join(' · ') || 'none'}</p>
+    <h3 style="margin-top:12px">Actions</h3><div class="row">
+      <button class="btn warn" id="aSusp">${st.suspended ? 'Restore access' : 'Suspend access'}</button>
+      <button class="btn" id="aComp">Give 30 days Premium (comp)</button><button class="btn" id="aRevoke">Revoke comp Premium</button></div>
+    <p class="note">Suspending blocks game starts but keeps all data. Comp Premium never touches Stripe. Every action is written to the audit log. To refund or cancel a paid subscription use the Stripe dashboard.</p>
+    <h3 style="margin-top:12px">Audit for this user</h3><p class="note">${(d.audit || []).map(a => `${new Date(a.created_at).toLocaleString()} ${esc(a.action)}`).join('<br>') || 'none'}</p>`;
+  $('aSusp').onclick = async () => { const reason = st.suspended ? null : prompt('Reason for suspension (stored in the audit log):'); if (!st.suspended && reason == null) return; await P.rpc('ig_admin_set_suspended', { p_user: id, p_suspended: !st.suspended, p_reason: reason }); await openUser(id); loadUsers(); loadAudit(); };
+  $('aComp').onclick = async () => { const note = prompt('Note for the audit log (why comp Premium):'); if (note == null) return; await P.rpc('ig_admin_grant_premium', { p_user: id, p_until: new Date(Date.now() + 30 * 864e5).toISOString(), p_note: note }); await openUser(id); loadUsers(); loadAudit(); };
+  $('aRevoke').onclick = async () => { if (!confirm('Revoke manual (comp) Premium for this user?')) return; await P.rpc('ig_admin_revoke_manual_premium', { p_user: id }); await openUser(id); loadUsers(); loadAudit(); };
+  if (!$('dlg').open) $('dlg').showModal();
+}
+$('range').onclick = e => { const b = e.target.closest('button'); if (!b) return; days = +b.dataset.d; $('range').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); loadKpis().catch(fail); };
+$('q').oninput = () => { clearTimeout(timer); timer = setTimeout(() => { q = $('q').value.trim(); page = 0; loadUsers().catch(fail); }, 300); };
+$('prev').onclick = () => { page = Math.max(0, page - 1); loadUsers().catch(fail); }; $('next').onclick = () => { page++; loadUsers().catch(fail); };
+$('users').onclick = e => { const b = e.target.closest('[data-u]'); if (b) openUser(b.dataset.u).catch(fail); };
+$('fFilter').onclick = e => { const b = e.target.closest('button'); if (!b) return; fStatus = b.dataset.s; $('fFilter').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); loadFeedback().catch(fail); };
+$('feedback').onchange = e => { const sel = e.target.closest('[data-f]'); if (sel) P.rpc('ig_admin_feedback_set_status', { p_id: +sel.dataset.f, p_status: sel.value }).then(loadFeedback).catch(fail); };
+$('dClose').onclick = () => $('dlg').close();
+$('bOut').onclick = async () => { await P.signOut(); location.href = 'index.html'; };
+function fail(e) { console.warn(e); $('asof').textContent = 'Could not load: ' + (e.code === 'offline' ? 'offline' : e.message); }
+(async () => { try {
+  await P.init();
+  const deny = (t, msg) => { $('gate').hidden = false; $('gateT').textContent = t; $('gateP').textContent = msg; };
+  if (!P.enabled) return deny('Accounts are not switched on', 'Enable the platform in platform.json first (docs/PLATFORM_ARCHITECTURE.md §11).');
+  if (!P.state().signedIn) return deny('Owner access only', 'Sign in with the owner account.');
+  const st = await P.refreshStatus().catch(() => null);
+  if (!st || !st.is_admin) return deny('Owner access only', 'This account is not an owner account. (Access is checked by the database on every request; this page cannot grant it.)');
+  $('app').hidden = false; if (st.access_mode === 'beta_free') $('asof').insertAdjacentHTML('beforebegin', '<p class="note" id="betaNote"><b>Free beta mode:</b> every player has full access and nobody is charged (switch with <code>ig_app_config.access_mode</code>; see docs §13).</p>');
+  await Promise.all([loadKpis(), loadUsers(), loadAudit(), loadFeedback()]);
+} catch (e) { fail(e); } finally { window.__READY = true; } })();
+</script>
+</body></html>

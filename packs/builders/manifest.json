@@ -1,0 +1,40 @@
+{
+ "v": 1,
+ "game": "builders",
+ "base": "../assets/",
+ "models": {
+  "survivor-male": "models/survivor-male.glb?h=69d38b39",
+  "survivor-female": "models/survivor-female.glb?h=9157aa20",
+  "skater-male": "models/skater-male.glb?h=849a827d",
+  "skater-female": "models/skater-female.glb?h=fb0e1605",
+  "palm-detailed-short": "models/palm-detailed-short.glb?h=5a24b027",
+  "palm-long": "models/palm-long.glb?h=2e5329d5",
+  "tree-big": "models/tree-big.glb?h=d1beaf82",
+  "low-poly-tree": "models/low-poly-tree.glb?h=0a0be3f1",
+  "formation-rock": "models/formation-rock.glb?h=dca30313",
+  "formation-stone": "models/formation-stone.glb?h=cf993936",
+  "formation-large-rock": "models/formation-large-rock.glb?h=1f0f1b0e",
+  "plant": "models/plant.glb?h=eb44ede4",
+  "chest": "models/chest.glb?h=3cd5506f",
+  "barrel": "models/barrel.glb?h=2b75ee0a",
+  "bed": "models/bed.glb?h=db883fd5",
+  "bench": "models/bench.glb?h=e6f3b898",
+  "boat-small": "models/boat-small.glb?h=95a1addc",
+  "axe": "models/axe.glb?h=a1f3bdbf",
+  "shovel": "models/shovel.glb?h=5ee442b0",
+  "apple": "models/apple.glb?h=27433d2a",
+  "banana": "models/banana.glb?h=44ecd745",
+  "coconut": "models/coconut.glb?h=12d8a615",
+  "cabbage": "models/cabbage.glb?h=43953c02",
+  "carrot": "models/carrot.glb?h=a3e6e2cf",
+  "corn": "models/corn.glb?h=453a6a2a",
+  "pumpkin": "models/pumpkin.glb?h=a6512cf9",
+  "mushroom": "models/mushroom.glb?h=ab63ca7d",
+  "strawberry": "models/strawberry.glb?h=15ba46c2"
+ },
+ "hdri": {
+  "dawn": "hdri/dawn.hdr?h=b48993a4"
+ },
+ "lazy": [],
+ "bytes": 1820624
+}

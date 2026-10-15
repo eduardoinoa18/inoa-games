@@ -8,3 +8,8 @@ node_modules
 *.md
 package.json
 package-lock.json
+supabase
+
+# native app wrappers + store material (not part of the web deploy)
+app/
+store/

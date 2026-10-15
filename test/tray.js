@@ -1,6 +1,6 @@
 // Fail Tray headless test: title → solo run (with a forced collapse) → slow-mo replay → results → hot-seat board → party final.
 module.exports = async (p, rawShot) => {
-  const shot = async (n) => { await p.evaluate(() => { window.__HOLD = true; window.__GAME.warm(); }); await p.screenshot({ path: __dirname + '/out/tray_' + n + '.png', timeout: 0 }); await p.evaluate(() => { window.__HOLD = false; }); };
+  const shot = async (n) => { await p.evaluate(() => { window.__HOLD = true; window.__GAME.warm(); }); await p.screenshot({ path: __dirname + '/out/tray_' + n + (p.viewportSize().width < p.viewportSize().height ? '_p' : '') + '.png', timeout: 0 }); await p.evaluate(() => { window.__HOLD = false; }); };
   const sim = (sec, opts = {}) => p.evaluate(async ({ sec, opts }) => { const g = window.__GAME; window.__AUTO = !!opts.auto; window.__INPUT = opts.input || null; for (let i = 0; i < sec * 60; i++) { g.update(1 / 60); if (opts.until && g.G && g.G.mode === opts.until) break; if (i % 20 === 0) await new Promise(r => setTimeout(r, 0)); } return g.G ? { mode: g.G.mode, s: +g.G.s.toFixed(1), stack: g.G.stack.length, items: g.G.items.length } : null; }, { sec, opts });
   await shot('title');
   await p.evaluate(() => document.querySelector('.ig-title [data-a=play]').click());

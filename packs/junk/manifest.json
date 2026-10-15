@@ -1,0 +1,22 @@
+{
+ "v": 1,
+ "game": "junk",
+ "base": "../assets/",
+ "models": {
+  "hatchback": "models/hatchback.glb?h=a81be07b",
+  "taxi": "models/taxi.glb?h=70fc2165",
+  "sports-sedan": "models/sports-sedan.glb?h=7d6064d5",
+  "van": "models/van.glb?h=f77d5e2f",
+  "police-car": "models/police-car.glb?h=6568d0e4",
+  "truck": "models/truck.glb?h=0ec2e428",
+  "tractor": "models/tractor.glb?h=4ff7a9a1",
+  "ice-cream-truck": "models/ice-cream-truck.glb?h=253f340c",
+  "barrel": "models/barrel.glb?h=2b75ee0a",
+  "shovel": "models/shovel.glb?h=5ee442b0"
+ },
+ "hdri": {
+  "studio": "hdri/studio.hdr?h=b583ab9f"
+ },
+ "lazy": [],
+ "bytes": 851706
+}
