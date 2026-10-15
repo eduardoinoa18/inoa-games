@@ -24,7 +24,8 @@ server.listen(PORT, async () => {
   const shot = async (name) => { await p.screenshot({ path: path.join(outDir, `${game}_${name}${SUF}.png`) }); };
   try {
     await p.goto(`http://localhost:${PORT}/${game === 'index' ? 'index.html' : 'games/' + game + '.html'}`);
-    for (let i = 0; i < 60; i++) { await p.waitForTimeout(500); const ready = await p.evaluate(() => window.__READY === true || (document.getElementById('loading') ? document.getElementById('loading').hidden : !document.querySelector('.ig-loading'))); if (ready) break; }
+    const tNav = Date.now(); for (let i = 0; i < 60; i++) { await p.waitForTimeout(500); const ready = await p.evaluate(() => window.__READY === true || (document.getElementById('loading') ? document.getElementById('loading').hidden : !document.querySelector('.ig-loading'))); if (ready) break; }
+    await p.evaluate(ms => { window.__T_READY = ms; }, Date.now() - tNav).catch(() => { }); // load-to-ready (500 ms poll granularity)
     await p.waitForTimeout(600);
     if (scriptPath) { const fn = require(path.resolve(scriptPath)); await fn(p, shot); } else await shot('default');
   } catch (e) { errs.push('HARNESS ' + e.message.split('\n')[0]); }
