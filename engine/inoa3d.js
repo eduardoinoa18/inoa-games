@@ -12,6 +12,7 @@ import { SMAAPass } from 'three/addons/postprocessing/SMAAPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { clone as skClone } from 'three/addons/utils/SkeletonUtils.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 export { THREE };
 
 /* ---------------- math ---------------- */
@@ -84,9 +85,30 @@ export function skyDome(L) {
 export const ASSETS = { models: {}, hdri: {} };
 const gltfLoader = new GLTFLoader(), rgbeLoader = new RGBELoader();
 const b64 = str => { const bin = atob(str); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u.buffer; };
-// pack.json = { models: {name: base64 glb}, hdri: {name: base64 hdr} }
-export async function loadPack(url, eng, onProgress = () => { }) {
-  onProgress(.03); const res = await fetch(url); const total = Number(res.headers.get('content-length')) || 4e6; const reader = res.body.getReader(); const chunks = []; let got = 0;
+gltfLoader.setMeshoptDecoder(MeshoptDecoder);
+function finishHdri(name, t, eng) { t.mapping = THREE.EquirectangularReflectionMapping; t.colorSpace = THREE.LinearSRGBColorSpace; t.needsUpdate = true; ASSETS.hdri[name] = eng ? eng.pmrem.fromEquirectangular(t).texture : t; }
+// Preferred format: packs/<game>/manifest.json = { v, models: {name: url}, hdri: {name: url}, lazy: [names], base } (real .glb/.hdr files,
+// cacheable and shared between games; built by tools/build_packs.mjs). loadPack('../packs/<game>.json') tries that manifest first and falls back
+// to the legacy base64 pack.json = { models: {name: base64 glb}, hdri: {name: base64 hdr} }. opts.manifest=false forces the legacy pack.
+let _eng = null;
+async function loadManifest(man, manUrl, eng, onProgress) {
+  const base = new URL(man.base || './', manUrl); ASSETS.manifest = { man, base };
+  const lazy = new Set(man.lazy || []), names = Object.keys(man.models || {}).filter(n => !lazy.has(n)), hn = Object.keys(man.hdri || {});
+  let n = 0; const total = Math.max(1, names.length + hn.length), tick = () => onProgress(.05 + .95 * (++n / total));
+  await Promise.all([...names.map(name => loadModelFile(name, new URL(man.models[name], base).href).then(tick)),
+    ...hn.map(name => rgbeLoader.loadAsync(new URL(man.hdri[name], base).href).then(t => finishHdri(name, t, eng), e => console.warn('hdri', name, e)).then(tick))]);
+  return ASSETS;
+}
+const _modelLoads = {};
+function loadModelFile(name, href) { return _modelLoads[name] ||= gltfLoader.loadAsync(href).then(g => { ASSETS.models[name] = g.scene; g.scene.userData.animations = g.animations; }, e => { console.warn('model', name, e); }); }
+// Load models listed as lazy in the manifest (or any manifest model) after the game has started. Resolves when all are in ASSETS.models.
+export async function ensureModels(names) { const m = ASSETS.manifest; if (!m) return ASSETS; await Promise.all(names.filter(n => !ASSETS.models[n] && m.man.models[n]).map(n => loadModelFile(n, new URL(m.man.models[n], m.base).href))); return ASSETS; }
+export async function loadPack(url, eng, onProgress = () => { }, opts = {}) {
+  _eng = eng; onProgress(.03);
+  if (opts.manifest !== false && /\.json$/.test(url) && !/manifest\.json$/.test(url)) {
+    const mu = new URL(url.replace(/\.json$/, '/manifest.json'), location.href);
+    try { const r = await fetch(mu); if (r.ok) { const man = await r.json(); if (man && man.models) return await loadManifest(man, mu, eng, onProgress); } } catch (e) { console.warn('manifest failed, using pack', e); }
+  } else if (/manifest\.json$/.test(url)) { const mu = new URL(url, location.href); const man = await (await fetch(mu)).json(); return loadManifest(man, mu, eng, onProgress); } const res = await fetch(url); const total = Number(res.headers.get('content-length')) || 4e6; const reader = res.body.getReader(); const chunks = []; let got = 0;
   while (true) { const { done, value } = await reader.read(); if (done) break; chunks.push(value); got += value.length; onProgress(.03 + .6 * Math.min(1, got / total)); }
   const pack = JSON.parse(new TextDecoder().decode(await new Blob(chunks).arrayBuffer()));
   const names = Object.keys(pack.models || {}), hn = Object.keys(pack.hdri || {}); let n = 0; const tick = () => onProgress(.63 + .37 * (++n / Math.max(1, names.length + hn.length)));
@@ -128,8 +150,18 @@ export const POSES = {
 let _grain = null;
 export function grainTex(repeat = [6, 28]) { if (!_grain) { const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'); const d = g.createImageData(256, 256); for (let i = 0; i < d.data.length; i += 4) { const n = 215 + Math.random() * 40; d.data[i] = d.data[i + 1] = d.data[i + 2] = n; d.data[i + 3] = 255; } g.putImageData(d, 0, 0); for (let i = 0; i < 160; i++) { g.fillStyle = `rgba(0,0,0,${.04 + Math.random() * .06})`; g.beginPath(); g.ellipse(Math.random() * 256, Math.random() * 256, 2 + Math.random() * 6, 1 + Math.random() * 3, Math.random() * 3, 0, 6.3); g.fill(); } _grain = c; } const t = new THREE.CanvasTexture(_grain); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(...repeat); t.colorSpace = THREE.SRGBColorSpace; return t; }
 const TAGS = {};
-export function tagMaterial(emoji, text, bg = '#ffffff', fg = '#1b2430') { const k = emoji + text + bg + fg; if (TAGS[k]) return TAGS[k]; const c = document.createElement('canvas'); c.width = 512; c.height = 160; const g = c.getContext('2d'); g.fillStyle = bg; g.beginPath(); g.roundRect(8, 8, 496, 144, 40); g.fill(); g.lineWidth = 8; g.strokeStyle = '#1b2430'; g.stroke(); let x = 40; if (emoji) { g.font = '96px serif'; g.textBaseline = 'middle'; g.fillText(emoji, 28, 86); x = 140; } g.fillStyle = fg; let f = 54; g.font = `900 ${f}px Unbounded, Manrope, sans-serif`; while (g.measureText(text).width > 512 - x - 36 && f > 26) { f -= 4; g.font = `900 ${f}px Unbounded, Manrope, sans-serif`; } g.textBaseline = 'middle'; g.fillText(text, x, 86); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; const m = new THREE.SpriteMaterial({ map: t, depthTest: false, transparent: true, toneMapped: false, fog: false }); TAGS[k] = m; return m; }
-export function tag(emoji, text, opts = {}) { const s = new THREE.Sprite(tagMaterial(emoji, text, opts.bg, opts.fg)); const w = opts.width || 3.2; s.scale.set(w, w * .3125, 1); s.renderOrder = 6; return s; }
+// fit=true sizes the pill to its content (used by tag()); the default keeps the fixed 512x160 canvas for callers that set their own scale.
+export function tagMaterial(emoji, text, bg = '#ffffff', fg = '#1b2430', fit = false) {
+  const k = emoji + text + bg + fg + (fit ? '|fit' : ''); if (TAGS[k]) return TAGS[k];
+  const c = document.createElement('canvas'); c.height = 160; let g = c.getContext('2d'); let f = 54; const font = () => `900 ${f}px Unbounded, Manrope, sans-serif`;
+  let W = 512; if (fit) { g.font = font(); W = clamp(Math.ceil(g.measureText(text).width + (emoji ? 140 : 40) + 44), 200, 512); }
+  c.width = W; g = c.getContext('2d'); g.fillStyle = bg; g.beginPath(); g.roundRect(8, 8, W - 16, 144, 40); g.fill(); g.lineWidth = 8; g.strokeStyle = '#1b2430'; g.stroke();
+  let x = 40; if (emoji) { g.font = '96px serif'; g.textBaseline = 'middle'; g.fillText(emoji, 28, 86); x = 140; }
+  g.fillStyle = fg; g.font = font(); while (g.measureText(text).width > W - x - 36 && f > 26) { f -= 4; g.font = font(); }
+  g.textBaseline = 'middle'; if (fit && !emoji) { g.textAlign = 'center'; g.fillText(text, W / 2, 86); } else g.fillText(text, x, 86);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; const m = new THREE.SpriteMaterial({ map: t, depthTest: false, transparent: true, toneMapped: false, fog: false }); m.userData.aspect = W / 160; TAGS[k] = m; return m;
+}
+export function tag(emoji, text, opts = {}) { const m = tagMaterial(emoji, text, opts.bg, opts.fg, opts.fit !== false); const s = new THREE.Sprite(m); const w = opts.width || 3.2, h = w * .3125; s.scale.set(opts.fit === false ? w : h * m.userData.aspect, h, 1); s.renderOrder = 6; return s; }
 
 /* ---------------- particles ---------------- */
 let _spark = null; function sparkTex() { if (_spark) return _spark; const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); const r = g.createRadialGradient(32, 32, 0, 32, 32, 32); r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(.4, 'rgba(255,255,255,.7)'); r.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = r; g.fillRect(0, 0, 64, 64); _spark = new THREE.CanvasTexture(c); _spark.colorSpace = THREE.SRGBColorSpace; return _spark; }
@@ -208,12 +240,13 @@ let toastTO = 0;
 export function toast(text, ms = 1800, speak = false) { let t = document.querySelector('.ig-toast'); if (!t) { t = document.createElement('div'); t.className = 'ig-toast'; document.body.appendChild(t); } t.textContent = text; t.classList.add('show'); clearTimeout(toastTO); toastTO = setTimeout(() => t.classList.remove('show'), ms); if (speak) say(text); }
 export function floatText(text, x, y, cls = '') { const d = document.createElement('div'); d.className = 'ig-float ' + cls; d.textContent = text; d.style.left = x + 'px'; d.style.top = y + 'px'; document.body.appendChild(d); setTimeout(() => d.remove(), 1000); }
 // Results card shared by every game: grants XP/coins to the shared profile and shows hero level.
-export function results({ gameId, title, stats = [], xp = 0, coins = 0, best = null, bestLower = false, bestLabel = 'Best', onAgain, onHub = () => location.href = '../index.html', share }) {
+export function results({ gameId, title, stats = [], xp = 0, coins = 0, best = null, bestLower = false, bestLabel = 'Best', onAgain, onHub = () => location.href = '../index.html', share, won }) {
   const r = reward(gameId, { xp, coins, best, bestLower }); const lv = heroLevel(profile().xp);
   const d = document.createElement('div'); d.className = 'ig-screen ig-results';
-  d.innerHTML = `<div class="ig-card"><div class="ig-kicker">${r.newBest ? 'NEW BEST' : 'ROUND OVER'}</div><h2>${title}</h2><div class="ig-stats">${stats.map(s => `<div><b>${s[1]}</b><small>${s[0]}</small></div>`).join('')}</div>${r.best != null ? `<p class="ig-sub">${bestLabel}: <b>${r.best}</b></p>` : ''}<div class="ig-reward"><span>+${r.xp} XP</span><span>+${r.coins} 🪙</span><span>Hero lv ${lv.lv}${r.levelUp ? ' ⬆' : ''}</span></div><div class="ig-xpbar"><i style="width:${Math.round(lv.into / lv.need * 100)}%"></i></div><div class="ig-row"><button class="ig-btn ghost" data-a="hub">Hub</button><button class="ig-btn" data-a="again">Play again</button></div>${share ? '<button class="ig-btn sun" data-a="share">📣 Share</button>' : ''}</div>`;
+  d.innerHTML = `<div class="ig-card"><div class="ig-kicker">${r.newBest ? 'NEW BEST' : 'ROUND OVER'}</div><h2>${title}</h2><div class="ig-stats">${stats.map(s => `<div><b>${s[1]}</b><small>${s[0]}</small></div>`).join('')}</div>${r.best != null ? `<p class="ig-sub">${bestLabel}: <b>${r.best}</b></p>` : ''}<div class="ig-reward"><span>+${r.xp} XP</span><span>+${r.coins} 🪙</span><span>Hero lv ${lv.lv}${r.levelUp ? ' ⬆' : ''}</span></div><div class="ig-xpbar"><i style="width:${Math.round(lv.into / lv.need * 100)}%"></i></div><div class="ig-row"><button class="ig-btn ghost" data-a="hub">Hub</button><button class="ig-btn" data-a="again">Play again</button></div>${share ? '<button class="ig-btn sun" data-a="share">📣 Share</button>' : ''}${(won ?? r.newBest) && installAvailable() ? '<button class="ig-btn ghost" data-a="install">📲 Install Inoa Games (plays offline)</button>' : ''}</div>`;
   document.body.appendChild(d); if (r.levelUp) SFX.level();
   d.querySelector('[data-a=again]').onclick = () => { d.remove(); onAgain && onAgain(); }; d.querySelector('[data-a=hub]').onclick = () => onHub();
+  const ib = d.querySelector('[data-a=install]'); if (ib) ib.onclick = async () => { ib.remove(); await promptInstall(); };
   const sh = d.querySelector('[data-a=share]'); if (sh) sh.onclick = async () => { try { if (navigator.share) await navigator.share({ text: share }); else { await navigator.clipboard.writeText(share); toast('Copied! Paste it anywhere.'); } } catch (e) { } };
   return d;
 }
@@ -262,3 +295,19 @@ export function pbr(kind, color = 0x888888, repeat = [4, 4], opts = {}) {
 }
 // Give a loaded model real surface detail: adds a subtle normal + roughness micro-texture to every material.
 export function detail(root, kind = 'paint', strength = .5) { const p = pbr(kind, 0xffffff, [3, 3]); root.traverse(o => { if (o.isMesh && !o.userData.outline && o.material && !o.material.normalMap) { o.material = o.material.clone(); o.material.normalMap = p.normalMap; o.material.normalScale = new THREE.Vector2(strength, strength); o.material.roughnessMap = p.roughnessMap; } }); return root; }
+
+/* ---------------- PWA: service worker, manifest link, install offer ---------------- */
+// Every page that imports the engine joins the app: offline cache (sw.js at the site root) and an install offer
+// shown on the results card after a win (never mid-game, never again once dismissed). Tests block service workers.
+const ROOT_URL = new URL('../', import.meta.url);
+let _installEvt = null;
+export function installAvailable() { return !!_installEvt && !store.get('inoa.installDismissed', false); }
+export async function promptInstall() { if (!_installEvt) return false; const e = _installEvt; _installEvt = null; e.prompt(); try { const c = await e.userChoice; if (c.outcome !== 'accepted') store.set('inoa.installDismissed', true); return c.outcome === 'accepted'; } catch (err) { return false; } }
+(function pwa() {
+  try {
+    if (!document.querySelector('link[rel=manifest]')) { const l = document.createElement('link'); l.rel = 'manifest'; l.href = new URL('manifest.webmanifest', ROOT_URL).href; document.head.appendChild(l); }
+    if (!document.querySelector('link[rel=icon]')) { const l = document.createElement('link'); l.rel = 'icon'; l.href = new URL('favicon.png', ROOT_URL).href; document.head.appendChild(l); }
+    addEventListener('beforeinstallprompt', e => { e.preventDefault(); _installEvt = e; });
+    if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register(new URL('sw.js', ROOT_URL).href, { scope: ROOT_URL.pathname }).catch(() => { }));
+  } catch (e) { }
+})();

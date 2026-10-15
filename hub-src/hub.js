@@ -72,6 +72,7 @@ function drawMaker() {
   c.fillStyle = hero.c.accent; c.font = '900 11px Unbounded, sans-serif'; c.textAlign = 'left'; c.fillText(maker.title.toUpperCase(), 14, 22); c.restore();
 }
 buildSun();
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => { }));
 let last = performance.now();
 function loop(now) { requestAnimationFrame(loop); last = now; if (!reduce || frame < 3) { frame++; drawBg(now / 1000); drawTiles(); drawMaker(); } }
 drawBg(0); drawTiles(); drawMaker(); requestAnimationFrame(loop);

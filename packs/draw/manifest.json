@@ -1,0 +1,25 @@
+{
+ "v": 1,
+ "game": "draw",
+ "base": "../assets/",
+ "models": {
+  "plant": "models/plant.glb?h=eb44ede4",
+  "mug": "models/mug.glb?h=c4a08f7b",
+  "pillow": "models/pillow.glb?h=e95b39d7",
+  "guitar": "models/guitar.glb?h=44b555ba",
+  "bunny": "models/bunny.glb?h=7f149829",
+  "lucy": "models/lucy.glb?h=9b65f658",
+  "bottle": "models/bottle.glb?h=9686e7fa",
+  "cup": "models/cup.glb?h=430c9fa3",
+  "glass": "models/glass.glb?h=22816fab",
+  "frappe": "models/frappe.glb?h=eb16fa19",
+  "expresso-cup": "models/expresso-cup.glb?h=8b51b646",
+  "bowl": "models/bowl.glb?h=675cbb92",
+  "cupcake": "models/cupcake.glb?h=954e4d1a"
+ },
+ "hdri": {
+  "interior": "hdri/interior.hdr?h=dd54c722"
+ },
+ "lazy": [],
+ "bytes": 2318841
+}

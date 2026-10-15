@@ -13,7 +13,8 @@ p{margin:0;line-height:1.5}
 .ig-brand{font-family:var(--f-d);font-weight:900;font-size:13px;letter-spacing:.12em;opacity:.8}.ig-brand span{color:var(--sun)}
 .ig-bar{width:240px;height:8px;background:rgba(255,255,255,.15);border-radius:6px;overflow:hidden;margin:0 auto}.ig-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--mint),var(--sun));transition:width .2s}
 .ig-loading p{opacity:.7;font-weight:600}
-.ig-screen{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom));box-sizing:border-box;overflow:auto;background:rgba(13,27,38,.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.ig-screen{position:fixed;inset:0;z-index:30;display:flex;align-items:flex-start;justify-content:center;padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom));box-sizing:border-box;overflow:auto;background:rgba(13,27,38,.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.ig-screen>.ig-card{margin:auto 0}
 .ig-card{width:min(540px,100%);background:var(--paper);border-radius:28px;padding:26px 22px;box-shadow:0 24px 70px rgba(0,0,0,.3),inset 0 0 0 1px rgba(255,255,255,.7);display:grid;gap:14px;box-sizing:border-box}
 .ig-card h1{font-size:clamp(32px,7vw,50px);line-height:.95}.ig-card h2{font-size:24px}
 .ig-kicker{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mint-ink)}

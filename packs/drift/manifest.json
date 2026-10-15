@@ -1,0 +1,39 @@
+{
+ "v": 1,
+ "game": "drift",
+ "base": "../assets/",
+ "models": {
+  "race-car": "models/race-car.glb?h=42b88dc0",
+  "race-futrure": "models/race-futrure.glb?h=e544efa0",
+  "skater-female": "models/skater-female.glb?h=fb0e1605",
+  "skater-male": "models/skater-male.glb?h=849a827d",
+  "survivor-female": "models/survivor-female.glb?h=5a31364b",
+  "survivor-male": "models/survivor-male.glb?h=81ca4969",
+  "cyborg-female": "models/cyborg-female.glb?h=86c5fb7b",
+  "male": "models/male.glb?h=37b571ee",
+  "coconut": "models/coconut.glb?h=12d8a615",
+  "palm-detailed-short": "models/palm-detailed-short.glb?h=5a24b027",
+  "palm-long": "models/palm-long.glb?h=2e5329d5",
+  "formation-rock": "models/formation-rock.glb?h=dca30313",
+  "formation-large-rock": "models/formation-large-rock.glb?h=1f0f1b0e",
+  "house1": "models/house1.glb?h=c7610680",
+  "house-4": "models/house-4.glb?h=4badf838",
+  "house-5": "models/house-5.glb?h=77ff96ef",
+  "house-6": "models/house-6.glb?h=bdd98a98",
+  "house-7": "models/house-7.glb?h=65bf1f71",
+  "wind-turbine": "models/wind-turbine.glb?h=b1286809",
+  "tree-big": "models/tree-big.glb?h=d1beaf82",
+  "plant": "models/plant.glb?h=eb44ede4",
+  "ferris-wheel": "models/ferris-wheel.glb?h=154929f1",
+  "tower": "models/tower.glb?h=9952debe",
+  "barrel": "models/barrel.glb?h=2b75ee0a",
+  "ship-light": "models/ship-light.glb?h=701cb38e",
+  "ship-dark": "models/ship-dark.glb?h=e5230eab"
+ },
+ "hdri": {
+  "dawn": "hdri/dawn.hdr?h=b48993a4",
+  "sunset": "hdri/sunset.hdr?h=0c90676a"
+ },
+ "lazy": [],
+ "bytes": 1911447
+}

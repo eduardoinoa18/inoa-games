@@ -1,0 +1,38 @@
+{
+ "v": 1,
+ "game": "brew",
+ "base": "../assets/",
+ "models": {
+  "skater-female": "models/skater-female.glb?h=fb0e1605",
+  "skater-male": "models/skater-male.glb?h=849a827d",
+  "survivor-female": "models/survivor-female.glb?h=5a31364b",
+  "survivor-male": "models/survivor-male.glb?h=81ca4969",
+  "male": "models/male.glb?h=37b571ee",
+  "bunny": "models/bunny.glb?h=7f149829",
+  "dogue": "models/dogue.glb?h=d5be2c15",
+  "plant": "models/plant.glb?h=eb44ede4",
+  "pot": "models/pot.glb?h=c691d1e0",
+  "cup-tea": "models/cup-tea.glb?h=4388b878",
+  "cup-saucer": "models/cup-saucer.glb?h=1363c9fc",
+  "expresso-cup": "models/expresso-cup.glb?h=8b51b646",
+  "mug": "models/mug.glb?h=c4a08f7b",
+  "cup": "models/cup.glb?h=430c9fa3",
+  "honey": "models/honey.glb?h=caa01739",
+  "lemon": "models/lemon.glb?h=73bd4ec2",
+  "croissant": "models/croissant.glb?h=87f4731a",
+  "muffin": "models/muffin.glb?h=7472c4c0",
+  "cupcake": "models/cupcake.glb?h=954e4d1a",
+  "cake": "models/cake.glb?h=e9782007",
+  "pillow": "models/pillow.glb?h=e95b39d7",
+  "bench": "models/bench.glb?h=e6f3b898",
+  "strawberry": "models/strawberry.glb?h=15ba46c2",
+  "glass": "models/glass.glb?h=22816fab",
+  "bowl": "models/bowl.glb?h=675cbb92",
+  "plate": "models/plate.glb?h=1c8b79a1"
+ },
+ "hdri": {
+  "interior": "hdri/interior.hdr?h=dd54c722"
+ },
+ "lazy": [],
+ "bytes": 1308125
+}
