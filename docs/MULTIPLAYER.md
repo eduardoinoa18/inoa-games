@@ -42,11 +42,11 @@ navigation), `party_drift` (online race to the finish), `party_trivia`, `party_g
 Lines, Draw), `party_pact`.
 
 ## Limits and upgrade path
-- No TURN relay is configured: on a few strict networks (some schools/offices, symmetric NAT) devices
+- TURN: PeerJS's free relay (`turn:eu-0/us-0.turn.peerjs.com`) is configured (2026-10-15; before that only STUN was set, so phones on mobile data or isolating Wi-Fi could not join). It is shared and best-effort; for launch use a dedicated TURN service. Previously: no TURN relay was configured: on a few strict networks (some schools/offices, symmetric NAT) devices
   cannot connect directly. Home Wi-Fi + mobile data generally work. Fix: add a TURN service (e.g. a paid
   TURN provider or a self-hosted coturn) via `INOA_NET.config.iceServers`.
 - The PeerJS cloud signaling server is free and shared; for launch, self-host `peer` (any Node host)
   or move rooms to a Cloudflare Worker + Durable Object (also enables room browsing, reconnect tokens,
   server-side validation).
 - Host tab must stay in front: browsers slow down hidden tabs, which pauses the host's simulation.
-- All ages: there is no chat; names are 14 characters max and only shown inside the room.
+- All ages: every new phone must be approved on the big screen (Allow/Deny; approved phones rejoin silently when the host changes games; a denied phone stops trying). There is no chat; names are 14 characters max and only shown inside the room.

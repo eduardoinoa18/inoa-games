@@ -1,7 +1,7 @@
 // Live party console on the hub (#party): host a phone-controller room, join one, start an online game.
 import { net, partyPanel, resume, endParty } from './engine/net.js';
 const $ = id => document.getElementById(id);
-const render = () => { const on = net.role === 'host' && net.code; $('pcLive').hidden = !on; $('pcShow').hidden = !on; $('pcHost').textContent = on ? '✖ End party' : '📱 Start a party'; if (on) { $('pcCode').textContent = net.code; $('pcDots').innerHTML = net.pads().map(p => `<i title="${p.name}" style="background:${p.color}"></i>`).join(''); } };
+const render = () => { const on = net.role === 'host' && net.code; $('pcLive').hidden = !on; $('pcShow').hidden = !on; $('pcHost').textContent = on ? '✖ End party' : '📱 Start a party'; if (on) { $('pcCode').textContent = net.status === 'ready' ? net.code : net.status === 'error' ? 'Offline — tap End party, then start again' : 'Connecting…'; $('pcDots').innerHTML = net.pads().map(p => `<i title="${p.name}" style="background:${p.color}"></i>`).join(''); } };
 net.on('change', render); net.on('status', render);
 $('pcHost').onclick = () => { if (net.role === 'host') endParty(); else partyPanel({ hint: 'Scan with each phone, then pick any game: the room follows you.' }); };
 $('pcShow').onclick = () => partyPanel({});

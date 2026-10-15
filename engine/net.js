@@ -69,20 +69,51 @@ export async function host(code) {
   net.role = 'host'; net.code = code || ss('inoa.room')?.code || makeCode(); net.status = 'connecting'; emit('status', net.status);
   const saved = ss('inoa.room'); if (saved && saved.code === net.code && saved.players) net.players = saved.players.map(p => ({ ...p, connected: false, input: blankInput() }));
   ss('inoa.room', { code: net.code, role: 'host', players: net.players.map(({ slot, id, kind, name, color }) => ({ slot, id, kind, name, color })) });
-  for (let attempt = 0; attempt < 15; attempt++) {
+  // Claim the room id on the signaling server. After a page change the server can still hold the previous page's claim for a
+  // while ('unavailable-id'); network hiccups also happen. Keep trying for ~30 s; if the old code stays stuck, switch to a fresh
+  // code (phones will need the new one). The code is only shown to players once status is 'ready'.
+  const t0 = Date.now(); let switched = false;
+  for (;;) {
     try { peer = await openPeer(PREFIX + net.code); break; }
-    catch (e) { if (e && e.type === 'unavailable-id' && attempt < 14) { await new Promise(r => setTimeout(r, 900)); continue; } net.status = 'error'; net.error = e && (e.type || e.message); emit('status', net.status); throw e; }
+    catch (e) {
+      const type = e && (e.type || e.message); net.error = type;
+      if (type === 'unavailable-id' && !switched && Date.now() - t0 > 15000 && !code) { switched = true; net.code = makeCode(); ss('inoa.room', { code: net.code, role: 'host', players: [] }); net.players = []; emit('change'); }
+      if (Date.now() - t0 < 30000) { await new Promise(r => setTimeout(r, 1200)); continue; }
+      net.status = 'error'; emit('status', net.status); emit('change'); throw e;
+    }
   }
   peer.on('connection', conn => acceptConn(conn));
-  peer.on('disconnected', () => { try { peer.reconnect(); } catch (e) { } });
+  // lost the signaling server (sleep, network change): new phones can't find the room until we're back, so say so and reconnect
+  peer.on('disconnected', () => { net.status = 'reconnecting'; emit('status', net.status); try { peer.reconnect(); } catch (e) { } });
+  peer.on('open', () => { if (net.status !== 'ready') { net.status = 'ready'; emit('status', net.status); emit('change'); } });
   net.status = 'ready'; emit('status', net.status); emit('change');
   addEventListener('pagehide', () => { try { for (const c of hostConns.values()) c.send({ t: 'bye', reason: 'nav' }); peer.destroy(); } catch (e) { } });
   return net.code;
 }
+// Host approval ("no strangers"): a phone that is new to this room must be let in on the big screen. Phones already in the
+// room (same device id, e.g. reconnecting after the host switched games) rejoin silently. Tests can set INOA_NET.autoApprove.
+const _L = (en, es) => (document.documentElement.lang === 'es' ? es : en);
+const _esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+let _approvals = Promise.resolve();
+function askApproval(name, kind) {
+  if (cfg().autoApprove) return Promise.resolve(true);
+  const run = () => new Promise(res => {
+    if (!document.getElementById('inoa-approve-css')) { const st = document.createElement('style'); st.id = 'inoa-approve-css'; st.textContent = '.inoa-approve{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:10000;background:#fffaf0;color:#132a36;border-radius:20px;padding:14px 16px;box-shadow:0 18px 50px rgba(0,0,0,.35);display:grid;gap:10px;width:min(380px,calc(100vw - 24px));font:600 16px system-ui,sans-serif}.inoa-approve b{font-size:18px}.inoa-approve div{display:flex;gap:8px;justify-content:flex-end}.inoa-approve button{font:inherit;font-weight:800;min-height:46px;padding:0 18px;border-radius:14px;border:2px solid rgba(19,42,54,.25);background:#fff;cursor:pointer}.inoa-approve button.ok{background:#2de2c3;border-color:#2de2c3}'; document.head.appendChild(st); }
+    const d = document.createElement('div'); d.className = 'inoa-approve'; d.setAttribute('role', 'alertdialog'); d.setAttribute('aria-live', 'assertive');
+    d.innerHTML = `<b>📱 ${_esc(name)} ${_L(kind === 'player' ? 'wants to join online' : 'wants to join', kind === 'player' ? 'quiere unirse en línea' : 'quiere unirse')}</b><span>${_L('Only let in people you know.', 'Deja entrar solo a personas que conoces.')}</span><div><button data-v="0">${_L('Deny', 'No')}</button><button class="ok" data-v="1">${_L('Allow', 'Permitir')}</button></div>`;
+    document.body.appendChild(d); let done = false;
+    const finish = v => { if (done) return; done = true; clearTimeout(to); d.remove(); res(v); };
+    d.querySelectorAll('button').forEach(b => b.onclick = () => finish(b.dataset.v === '1'));
+    const to = setTimeout(() => finish(false), 60000);
+    setTimeout(() => d.querySelector('.ok')?.focus({ preventScroll: true }), 30);
+  });
+  const p = _approvals.then(run); _approvals = p.catch(() => false); return p;
+}
 function acceptConn(conn) {
   const meta = conn.metadata || {}; const id = meta.id || conn.peer;
-  conn.on('open', () => {
+  conn.on('open', async () => {
     let p = net.players.find(x => x.id === id);
+    if (!p) { try { conn.send({ t: 'wait' }); } catch (e) { } const ok = await askApproval(String(meta.name || _L('A phone', 'Un teléfono')).slice(0, 14), meta.kind); if (!ok || !conn.open) { try { conn.send({ t: 'denied' }); } catch (e) { } setTimeout(() => { try { conn.close(); } catch (e) { } }, 300); return; } p = net.players.find(x => x.id === id); }
     if (!p) { const used = new Set(net.players.map(x => x.slot)); let slot = 1; while (used.has(slot)) slot++; if (slot > 8) { conn.send({ t: 'full' }); setTimeout(() => conn.close(), 300); return; } p = { slot, id, kind: meta.kind || 'pad', name: (meta.name || NAMES[slot - 1]).slice(0, 14), color: COLORS[slot - 1], connected: true, input: blankInput() }; net.players.push(p); net.players.sort((a, b) => a.slot - b.slot); }
     p.connected = true; p.kind = meta.kind || p.kind; if (meta.name) p.name = String(meta.name).slice(0, 14); p.input = blankInput(); hostConns.set(id, conn);
     conn.send({ t: 'welcome', slot: p.slot, color: p.color, name: p.name, game: document.title, layout: net.layout, online: net.online });
@@ -108,20 +139,27 @@ export function resume() { const s = ss('inoa.room'); if (new URLSearchParams(lo
 /* ---------------- client (phone pad / online player) ---------------- */
 export async function join(code, { kind = 'pad', name = '' } = {}) {
   code = String(code || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4); if (code.length !== 4) throw new Error('Enter the 4-letter code');
-  net.role = 'client'; net.code = code; net.status = 'connecting'; emit('status', net.status);
+  net.role = 'client'; net.code = code; net.status = 'connecting'; emit('status', net.status); let denied = false; // a host that said no is never re-asked
   if (!peer || peer.destroyed) peer = await openPeer();
   const connect = () => new Promise((resolve, reject) => {
     const conn = peer.connect(PREFIX + code, { reliable: true, metadata: { kind, name, id: clientId() } }); let opened = false;
     // no host with that code → PeerJS reports 'peer-unavailable' on the peer right away: fail fast instead of waiting for the timeout
     const onPeerErr = e => { if (e && e.type === 'peer-unavailable' && !opened) { try { peer.off('error', onPeerErr); } catch (x) { } reject(new Error('Room not found')); } }; try { peer.on('error', onPeerErr); } catch (x) { }
     conn.on('open', () => { opened = true; clientConn = conn; try { peer.off('error', onPeerErr); } catch (x) { } });
-    conn.on('data', m => { if (!m) return; if (m.t === 'welcome') { net.me = { slot: m.slot, color: m.color, name: m.name }; net.layout = m.layout || net.layout; net.online = m.online || null; net.status = 'ready'; emit('status', 'ready'); emit('welcome', m); emit('layout', net.layout); emit('online', net.online); resolve(conn); } else if (m.t === 'online') { net.online = m.online || null; emit('online', net.online); } else if (m.t === 'layout') { net.layout = m.layout; emit('layout', m.layout); } else if (m.t === 'rumble') { try { navigator.vibrate && navigator.vibrate(m.ms); } catch (e) { } } else if (m.t === 'full') { net.status = 'error'; net.error = 'Room is full'; emit('status', 'error'); } else if (m.t === 'bye' && m.reason === 'end') { net.status = 'ended'; emit('status', 'ended'); } else emit('msg', m); });
-    conn.on('close', () => { if (clientConn === conn) clientConn = null; if (net.status !== 'ended') { net.status = 'reconnecting'; emit('status', 'reconnecting'); scheduleReconnect(); } });
+    conn.on('data', m => { if (!m) return; if (m.t === 'wait') { net.status = 'waiting'; emit('status', 'waiting'); } else if (m.t === 'denied') { denied = true; clearTimeout(retryTimer); net.status = 'ended'; emit('status', 'denied'); reject(new Error('Not allowed in')); } else if (m.t === 'welcome') { net.me = { slot: m.slot, color: m.color, name: m.name }; net.layout = m.layout || net.layout; net.online = m.online || null; net.status = 'ready'; emit('status', 'ready'); emit('welcome', m); emit('layout', net.layout); emit('online', net.online); resolve(conn); } else if (m.t === 'online') { net.online = m.online || null; emit('online', net.online); } else if (m.t === 'layout') { net.layout = m.layout; emit('layout', m.layout); } else if (m.t === 'rumble') { try { navigator.vibrate && navigator.vibrate(m.ms); } catch (e) { } } else if (m.t === 'full') { net.status = 'error'; net.error = 'Room is full'; emit('status', 'error'); } else if (m.t === 'bye' && m.reason === 'end') { net.status = 'ended'; emit('status', 'ended'); } else emit('msg', m); });
+    conn.on('close', () => { if (clientConn === conn) clientConn = null; if (net.status !== 'ended' && !denied) { net.status = 'reconnecting'; emit('status', 'reconnecting'); scheduleReconnect(); } });
     conn.on('error', () => { if (!opened) reject(new Error('Could not reach the room')); });
     setTimeout(() => { if (!net.me || clientConn !== conn) { if (!opened) { try { conn.close(); } catch (e) { } reject(new Error('Room not found')); } } }, 15000);
   });
-  let tries = 0; const scheduleReconnect = () => { clearTimeout(retryTimer); if (tries++ > 90) { net.status = 'error'; net.error = 'Lost the room'; emit('status', 'error'); return; } retryTimer = setTimeout(() => connect().then(() => { tries = 0; }).catch(scheduleReconnect), 1200); };
-  try { await connect(); } catch (e) { net.status = 'error'; net.error = e.message; emit('status', 'error'); throw e; }
+  let tries = 0; const scheduleReconnect = () => { clearTimeout(retryTimer); if (denied) return; if (tries++ > 90) { net.status = 'error'; net.error = 'Lost the room'; emit('status', 'error'); return; } retryTimer = setTimeout(() => connect().then(() => { tries = 0; }).catch(scheduleReconnect), 1200); };
+  const deadline = Date.now() + 25000;
+  for (;;) {
+    try { await connect(); break; }
+    catch (e) {
+      if (!denied && e.message === 'Room not found' && Date.now() < deadline) { net.status = 'looking'; emit('status', 'looking'); await new Promise(r => setTimeout(r, 2500)); continue; }
+      net.status = 'error'; net.error = e.message; emit('status', 'error'); throw e;
+    }
+  }
   return net.me;
 }
 // Throttled input sender for pads: call every frame or on change.
@@ -173,7 +211,7 @@ export async function partyPanel({ hint = '', online = null } = {}) {
   d.addEventListener('click', e => { if (e.target === d) d.remove(); });
   try { await host(); } catch (e) { d.querySelector('.card').innerHTML = `<div class="st">Party room</div><h2>Couldn't open a room</h2><p>The connection service didn't answer (${net.error || e.message}). Check the internet connection and try again.</p><div class="row"><button class="ghost" data-x>Close</button><button class="go" data-r>Try again</button></div>`; d.querySelector('[data-x]').onclick = () => d.remove(); d.querySelector('[data-r]').onclick = () => { d.remove(); net.role = null; partyPanel({ hint }); }; return d; }
   const svg = await qrSvg(net.joinUrl).catch(() => '');
-  const render = () => { if (!d.isConnected) return; const card = d.querySelector('.card'); card.innerHTML = `<div class="st">Party room · ${net.pads().length} connected</div><h2>Scan to play</h2><p>${hint || 'Point a phone camera at the code. The phone becomes a controller with vibration.'}</p><div class="qr">${svg}</div><div class="code">${net.code}</div><div class="url">or open <b>${net.joinUrl.replace(/^https?:\/\//, '').replace(/pad\.html\?r=.*/, 'pad.html')}</b> and type the code</div>${online ? `<div class="online"><div class="st">Online · from another home</div><p>${online.text || 'Friends far away can join on their own screen with this link:'}</p><div class="url"><b>${net.onlineUrl(online.page)}</b></div><div class="row"><button class="ghost" data-share>📣 Share link</button></div></div>` : ''}<div class="list">${net.players.map(p => `<div class="pl"><i style="background:${p.color}"></i>P${p.slot} · ${p.name}<small>${p.connected ? (p.kind === 'player' ? 'online' : 'phone') : 'reconnecting…'}</small></div>`).join('') || '<p>No phones yet.</p>'}</div><div class="row"><button class="ghost" data-end>End party</button><button class="go" data-x>Done</button></div>`; card.querySelector('[data-x]').onclick = () => d.remove(); card.querySelector('[data-end]').onclick = () => { endParty(); d.remove(); }; const sh = card.querySelector('[data-share]'); if (sh) sh.onclick = async () => { const url = net.onlineUrl(online.page); try { if (navigator.share) await navigator.share({ title: 'Join my Inoa Games room', text: `Join my room ${net.code} on Inoa Games!`, url }); else { await navigator.clipboard.writeText(url); sh.textContent = '✅ Link copied'; } } catch (e) { } }; };
-  on('change', render); render(); return d;
+  const render = () => { if (!d.isConnected) return; const card = d.querySelector('.card'); card.innerHTML = `<div class="st">Party room · ${net.status === 'ready' ? '● online' : '○ reconnecting…'} · ${net.pads().length} connected</div><h2>Scan to play</h2><p>${hint || 'Point a phone camera at the code. The phone becomes a controller with vibration.'}</p><div class="qr">${svg}</div><div class="code">${net.code}</div><div class="url">or open <b>${net.joinUrl.replace(/^https?:\/\//, '').replace(/pad\.html\?r=.*/, 'pad.html')}</b> and type the code</div>${online ? `<div class="online"><div class="st">Online · from another home</div><p>${online.text || 'Friends far away can join on their own screen with this link:'}</p><div class="url"><b>${net.onlineUrl(online.page)}</b></div><div class="row"><button class="ghost" data-share>📣 Share link</button></div></div>` : ''}<div class="list">${net.players.map(p => `<div class="pl"><i style="background:${p.color}"></i>P${p.slot} · ${p.name}<small>${p.connected ? (p.kind === 'player' ? 'online' : 'phone') : 'reconnecting…'}</small></div>`).join('') || '<p>No phones yet.</p>'}</div><div class="row"><button class="ghost" data-end>End party</button><button class="go" data-x>Done</button></div>`; card.querySelector('[data-x]').onclick = () => d.remove(); card.querySelector('[data-end]').onclick = () => { endParty(); d.remove(); }; const sh = card.querySelector('[data-share]'); if (sh) sh.onclick = async () => { const url = net.onlineUrl(online.page); try { if (navigator.share) await navigator.share({ title: 'Join my Inoa Games room', text: `Join my room ${net.code} on Inoa Games!`, url }); else { await navigator.clipboard.writeText(url); sh.textContent = '✅ Link copied'; } } catch (e) { } }; };
+  on('change', render); on('status', render); render(); return d;
 }
 export default net;

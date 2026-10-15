@@ -17,7 +17,7 @@
     "app:sync": "node tools/build_app_www.mjs && cd app && npx cap sync",
     "store:shots": "PORT=8890 node test/run.js index tools/store_shots.js",
     "test:beta": "node test/run.js junk test/beta.js",
-    "test:party": "for s in pad hub drift trivia games pact; do node test/party.js test/party_$s.js; done"
+    "test:party": "for s in pad hub drift trivia games pact approve; do node test/party.js test/party_$s.js; done"
   },
   "devDependencies": {
     "@gltf-transform/core": "4.1.1",
