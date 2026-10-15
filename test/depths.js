@@ -1,9 +1,10 @@
 // Pixel Pact: Depths — headless test. Autopilot plays full runs: title → rooms → boons → boss → results,
 // first Act I (Captain Brinehollow), then Act II (Glowroot Hollow → Grumblestone the colossus).
-// DEPTHS_MODE=quick stops after the first room. DEPTHS_ACT=1|2 runs only that act (default: both).
+// DEPTHS_MODE=quick stops after the first room. DEPTHS_ACT=1|2 runs only that act (default: both). DEPTHS_DIFF=hard etc.
 // Rendering is held (window.__HOLD) and done once per screenshot, because SwiftShader frames are slow; the simulation is stepped with __GAME.update().
 const MODE = process.env.DEPTHS_MODE || 'full';
 const ACTS = process.env.DEPTHS_ACT ? [+process.env.DEPTHS_ACT] : [1, 2];
+const DIFF = process.env.DEPTHS_DIFF || 'story'; // story | normal | hard
 module.exports = async (p, shot0) => {
   await p.evaluate(() => addEventListener('error', e => console.error('STACK ' + String(e.error && e.error.stack).replace(/http:..localhost:[0-9]+/g, '').slice(0, 300))));
   const shot = async n => { await p.evaluate(() => { window.__HOLD = true; window.__GAME.render(); }); await shot0(n); };
@@ -16,7 +17,7 @@ module.exports = async (p, shot0) => {
   const sim = (sec, until) => p.evaluate(async ({ sec, until }) => { const g = window.__GAME; g.autopilot = true; const M = window.__M || (window.__M = { big: 0, flt: 0, types: {}, phase: 0, rings: 0, zones: 0, weak: 0 }); for (let i = 0; i < sec * 60; i++) { g.update(1 / 60); if (i % 20 === 0) { M.big = Math.max(M.big, [...document.querySelectorAll('.ig-big')].filter(e => +getComputedStyle(e).opacity > .05).length); M.flt = Math.max(M.flt, document.querySelectorAll('.ig-float').length); const G = g.G; if (G && G.foes) { for (const f of G.foes) { M.types[f.type] = 1; if (f.type === 'boss') { M.phase = Math.max(M.phase, f.phase || 0); if (f.weak) M.weak = 1; } } M.rings = Math.max(M.rings, (G.rings || []).length); M.zones = Math.max(M.zones, (G.zones || []).length); } } if (until && eval(until)) break; if (i % 600 === 599) await new Promise(r => setTimeout(r, 0)); } return g.state(); }, { sec, until });
   for (const act of ACTS) {
     const P = act === 2 ? 'a2_' : '';
-    await p.evaluate(act => { const g = window.__GAME; window.__M = null; if (act === 2) { g.S.wins = Math.max(1, g.S.wins); } g.S.act = act; g.S.allies = 2; g.S.diff = 'story'; g.S.cls = act === 2 ? 'mage' : 'knight'; if (!document.querySelector('.ig-title')) g.title(); else g.title(); document.querySelector('.ig-title [data-a=play]').click(); window.__HOLD = true; }, act);
+    await p.evaluate(({ act, diff }) => { const g = window.__GAME; window.__M = null; if (act === 2) { g.S.wins = Math.max(1, g.S.wins); } g.S.act = act; g.S.allies = 2; g.S.diff = diff; g.S.cls = act === 2 ? 'mage' : 'knight'; g.title(); document.querySelector('.ig-title [data-a=play]').click(); window.__HOLD = true; }, { act, diff: DIFF });
     let s = await sim(2.2); log(P + 'room1', JSON.stringify(s)); await shot(P + 'room1');
     if (s.act !== act) console.error(`expected act ${act}, got ${s.act}`);
     s = await sim(1.5); await p.evaluate(() => { window.__GAME.zoom = 8; for (let i = 0; i < 45; i++) window.__GAME.update(1 / 60); }); await shot(P + 'close'); await p.evaluate(() => { window.__GAME.zoom = null; });
@@ -27,6 +28,10 @@ module.exports = async (p, shot0) => {
       await p.goto(p.url().split('?')[0] + '?touch=1'); await p.waitForFunction(() => window.__READY === true, null, { timeout: 120000 });
       await p.evaluate(() => { const g = window.__GAME; g.S.allies = 1; document.querySelector('.ig-title [data-a=play]').click(); window.__HOLD = true; });
       s = await sim(2.5); await shot('touch');
+      // the fail path: the whole party goes down (no feathers left) → FALLEN → exactly one results card, gold kept
+      await p.evaluate(() => window.__GAME.wipe()); s = await sim(5, 'window.__GAME.G && window.__GAME.G.ended'); await p.waitForTimeout(400); await shot('fallen');
+      const fall = await p.evaluate(() => ({ ended: !!window.__GAME.G?.ended, over: !!window.__GAME.G?.over, results: document.querySelectorAll('.ig-results').length, title: document.querySelector('.ig-results h2, .ig-results .ig-title, .ig-results h1')?.innerText }));
+      log('fallen', JSON.stringify(fall)); if (!fall.ended || fall.results !== 1) console.error('fail path broken: ' + JSON.stringify(fall));
       return;
     }
     const seen = {}; let bossT0 = null;

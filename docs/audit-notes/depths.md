@@ -19,9 +19,12 @@
 ## Known issues
 - In portrait at the very start of a room (party at the south door), the front ~30% of the screen is apron floor. That is inherent to a 17-deep room on a tall screen, and on phones it sits mostly behind the touch pad.
 - One of 5 runs reported "results shown 0 times" (the autopilot run did not reach results inside the test window). It did not happen again; watch for it.
-- Class, boon and meta names and descriptions are still English only.
+- ~~Class, boon and meta names and descriptions are still English only.~~ Fixed in the elevation pass (all EN/ES).
 - The local limb aiming and `orientTo` were kept (not switched to `E.aimLimbs` / `E.orientTo`).
 
 ## Engine requests
 - `E.floatText` could return its element (or support a merge key) so games can update a number instead of spawning a new one.
 - An optional `E.bigText` queue in the engine (game-time driven, one at a time), since several games hand-roll this.
+
+## Elevation pass (2026-10-15)
+Act II (Glowroot Hollow: 4 room themes, Sporecap / Burrower / Crystal Sentry, boss Grumblestone with phase gates), 5 new boons, boss flash and banner fixes, full EN/ES, bot unstick, perfect dodge. Details, test commands and open items: `docs/AUDIT.md` → "Depths elevation pass".

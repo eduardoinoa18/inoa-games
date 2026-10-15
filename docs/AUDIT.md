@@ -207,3 +207,30 @@ Island Drift (`games/drift.html`) re-audited and extended by one game agent. Tes
 - Bridge ends are plain slab abutments; no jump/air physics (height simply follows the road).
 - Autopilot is a weak stand-in for a human; difficulty numbers need a real play test with kids and adults.
 - Engine: none changed. `tag()` with an emoji is still drawn at 96 px serif, so on systems without a colour-emoji font the tag shows text only.
+
+## Depths elevation pass (2026-10-15)
+Pixel Pact: Depths (`games/depths.html`) re-audited and extended by one game agent. Tested with `test/depths.js` (now plays Act I and Act II end to end) at 1000×560 and 390×844 (both `NO_ERRORS`, screenshots reviewed), `DEPTHS_DIFF=hard DEPTHS_ACT=2` (`NO_ERRORS`), `DEPTHS_MODE=quick` portrait/touch (camp, cards, P2 drop-in, touch pad, fail path, `NO_ERRORS`), `test/party.js test/party_games.js` (phone 2 takes over an ally, custom buttons, `NO_ERRORS`) and hub `test/index.js` (`NO_ERRORS`).
+
+**Bugs fixed**
+- Boss blew out to white during the fight (`depths_bossfight.png` before): constant ally hits kept the hit-flash emissive at 1.0 under bloom. Bosses now flash at 0.28 and their wind-up flicker is damped; the colossus' rock body no longer floods red while winding up.
+- Phase toasts collided with banners ("The captain is enraged!" under "BLADE STORM"): banners now carry a subtitle line (`bigText(t, {sub})`), phase hints moved into it and are read aloud. Banner moved to 42 % and capped at 64 px, so it clears the toast row on phones.
+- Bosses melted in ~20 s and burst damage skipped phases: phase gates (damage stops at the 66 %/33 % thresholds, the boss roars into the next phase), AI allies deal 60 % to bosses, captain HP 4400 → 6500. Autopilot boss fights are now 45–55 s on Story, ~105 s on Hard; every run reaches phase 3 (test-checked).
+- "dodged" text precedence bug (`a && !b || c`) showed it for bots too; replaced by human-only **Perfect dodge!** feedback.
+- Floating damage numbers carried over into the next room (seen in the boss intro); cleared on room change. Ally-only hits under 15 are hidden (less clutter).
+- AI allies could stall on obstacles: they sidestep after 0.8 s without progress and regroup next to the leader after repeated stalls (`unstuck` counter in `state()`; 0–1 per full run).
+- English-only text: classes, boons, camp/meta upgrades, difficulty, party picker, room names, ultimates, toasts (P2/phone join/leave, phoenix, lucky deck, revive), HUD labels and pause line now EN/ES (`loc()` + `E.L`). The test switches the shared setting to Spanish and checks the title has no English leaks.
+
+**Added**
+- **Act II: The Glowroot Hollow** (unlocks after beating Captain Brinehollow; `?act2` opens it for previews): Glowroot Grove (giant trees, glowing caps, fireflies), Coral Grotto (tide pools, coral, mussels, a circling school of fish, rising bubbles), Old Crystal Mine (timber supports, rail line with ore carts, lanterns), Amethyst Halls (crystal pillars), Colossus Hollow. Title has an Expedition picker (EN/ES, lock reason shown, NEW badge); results show the act; best depth tracked per act. Pack adds `tree-big`, `fish`, `mussel` (all CC0, already in `packs/assets`; pack 2.04 MB).
+- New foes with readable, distinct attacks: **Sporecap** (swells inside a red circle, bursts, leaves a purple cloud that slows), **Burrower** (digs in, a dirt trail chases you, a red circle marks where it pops out, then it is dizzy and open), **Crystal Sentry** (shows three red lanes, fires three shards).
+- **Boss 2: Grumblestone, the crystal colossus** (built from CC0 rocks + a glowing core, arms animate separately). Phase 1: fist smash (fist gets stuck → "Weak spot!", +60 % damage on the glowing core) and boulder toss. Phase 2: crystal spike lanes toward each hero + summons sentries/burrowers. Phase 3: shock rings that roll outward; a dodge roll passes through (Hard: double rings). Intro is read aloud with the weak-spot tip.
+- 5 new boons (19 total, all EN/ES): Frost Touch, Field Medic, Rally Cry, Finishing Blow, Bubble Guard (visible bubble while ready).
+- Juice: perfect-dodge chime + brief slow-mo (skipped with reduced motion) + ult charge; boon pick bursts a golden ring on every hero; spike eruptions; shock rings. Gate nudge if nobody walks through after 12 s.
+- Test: both acts, new foe types must spawn, boss phase 3, shock rings, results once per act, Spanish title, Hard run, fail path (`wipe()` hook → "Fallen in the Depths", one results card), act II close-up (`depths_a2_lab.png`). New tile art `thumbs/depths.jpg`; hub copy EN/ES (two acts, 19 boons, 1–4 players).
+
+**Still open**
+- Real-device feel/FPS: the grove/reef add ~10 tree and 12 mussel instances plus 9 animated fish per room (cheap, but unmeasured on a 2021 phone).
+- Portrait: at the start of a room the bottom ~30 % is apron floor (inherent to a 17-deep room on a tall screen; mostly behind the touch pad).
+- The autopilot is a sharp stand-in; Story balance (boss HP, Act II foe density) needs a play test with kids.
+- Online (separate-screen) play is still Drift-only; Depths phones are controllers for the big screen.
+- Engine: none changed. Requests: an engine `bigText` queue with subtitles (several games hand-roll it).
