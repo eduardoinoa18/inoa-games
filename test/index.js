@@ -18,4 +18,9 @@ module.exports = async (p, shot) => {
   await p.evaluate(() => document.getElementById('heroShare').click()); const d = await dl;
   if (d) { const out = require('path').join(__dirname, 'out', 'hero_card.png'); await d.saveAs(out); console.log('hero card saved', out); } else console.log('hero card: no download event');
   await p.evaluate(() => document.querySelector('#langToggle [data-l=en]').click());
+  // 3D hero picker → profile.hero, read back through the engine's E.hero()
+  await p.evaluate(() => { document.querySelector('#h3Models [data-m=cyborg-female]').click(); document.querySelector('#h3Colors [data-c="#2fbf8a"]').click(); const n = document.getElementById('h3Name'); n.value = '<b>Zoe</b>'; n.dispatchEvent(new Event('input')); });
+  const h = await p.evaluate(() => { const P = JSON.parse(localStorage.getItem('inoa.profile')); return { hero: P.hero, name: P.name, panel: document.querySelector('.hp-name')?.innerHTML }; });
+  console.log('hero', JSON.stringify(h));
+  const box = await p.evaluate(() => { const r = document.getElementById('hero').getBoundingClientRect(); return { x: 0, y: r.top + scrollY, width: innerWidth, height: Math.min(r.height, 1400) }; }); await p.screenshot({ path: require('path').join(__dirname, 'out', 'index_hero' + (p.viewportSize().width < p.viewportSize().height ? '_p' : '') + '.png'), fullPage: true, clip: box });
 };

@@ -60,6 +60,14 @@
 #langToggle{display:flex;gap:2px;margin-left:auto;margin-right:10px}#langToggle button{font:800 12px var(--f-body);background:var(--glass-2);color:var(--foam);border:1px solid var(--line);padding:8px 10px;min-height:36px;cursor:pointer}
 #langToggle button.on{background:var(--lagoon);color:var(--coral-ink);border-color:transparent}
 #langToggle button:focus-visible,.chip:focus-visible,.cont:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.hero3d{display:grid;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.h3-k{font-family:var(--f-pixel);font-size:8px;letter-spacing:.06em;color:var(--sun);text-transform:uppercase}
+.h3-models{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}.h3-models button{padding:0;border:2px solid var(--line);background:#16394a;cursor:pointer;aspect-ratio:4/5;overflow:hidden;min-height:44px}
+.h3-models button img{width:100%;height:100%;object-fit:cover;display:block}.h3-models button.on{border-color:var(--sun);box-shadow:0 0 0 2px var(--sun)}
+.h3-colors{display:flex;gap:6px;flex-wrap:wrap}.h3-colors button{width:36px;height:36px;border-radius:50%;border:2px solid rgba(255,255,255,.4);cursor:pointer}.h3-colors button.on{border-color:#fff;box-shadow:0 0 0 3px var(--sun)}
+.h3-name{display:flex;gap:8px;align-items:center;font-size:12px;font-weight:800;color:var(--mist);text-transform:uppercase;letter-spacing:.04em}
+.h3-name input{flex:1;min-width:0;font:800 15px var(--f-body);background:var(--glass-2);color:var(--foam);border:1px solid var(--line);padding:9px 10px;min-height:40px}
+.h3-models button:focus-visible,.h3-colors button:focus-visible,.h3-name input:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 </style>
 
 <nav><div class="wrap"><div class="logo">INOA<span>GAMES</span></div><ul><li><a href="#shelf">Games</a></li><li><a href="#hero">Your hero</a></li><li><a href="#party">Party</a></li><li><a href="#faq">FAQ</a></li></ul><a class="btn" href="#shelf">Play</a></div></nav>
@@ -100,6 +108,12 @@
         <div class="nm"><span id="mkName">Rook Ironhide</span><small id="mkClass">TANK · SHIELD KNIGHT</small></div>
         <div class="row" id="mkClasses"></div>
         <div class="row"><button class="chip" id="mkColors">New colors</button><button class="chip" id="mkName2">New name</button><button class="chip" id="mkSurprise">Surprise me</button></div>
+        <div class="hero3d" aria-label="Your hero in the 3D games">
+          <div class="h3-k" id="h3Head">Your hero in the 3D games</div>
+          <div class="h3-models" id="h3Models" role="radiogroup" aria-label="Character"></div>
+          <div class="h3-colors" id="h3Colors" role="radiogroup" aria-label="Colour"></div>
+          <label class="h3-name"><span id="h3NameL">Name</span><input id="h3Name" maxlength="18" autocomplete="off" spellcheck="false"></label>
+        </div>
         <div class="row"><button class="chip" id="heroShare">Share hero card</button></div>
         <div><div style="display:flex;justify-content:space-between;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mist);margin-bottom:6px"><span id="mkLv">Level 1</span><span id="mkXp">XP to 2</span></div><div class="bar"><i></i></div></div>
       </div>

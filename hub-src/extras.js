@@ -45,6 +45,7 @@ const HUB_ES = { // static page text: English source → Spanish (applied by set
   'Play together': 'Jugar juntos', 'One screen, a few friends, no setup.': 'Una pantalla, unos amigos, sin configurar nada.',
   'What is here, what is next': 'Lo que hay y lo que viene', 'Questions people ask': 'Preguntas frecuentes',
   'games on the shelf': 'juegos en la estantería', 'hero everywhere': 'héroe en todos', 'players on one screen': 'jugadores en una pantalla', 'downloads ·': 'descargas ·', 'forced ads': 'anuncios',
+  'Your hero in the 3D games': 'Tu héroe en los juegos 3D', 'Name': 'Nombre',
   'Continue playing': 'Seguir jugando', 'Daily challenge': 'Reto del día', 'Share hero card': 'Compartir tarjeta de héroe'
 };
 const isES = () => readProfile().lang === 'es';
@@ -88,14 +89,14 @@ function renderDaily() {
 function setLang(l) { const P = readProfile(); P.lang = l; writeProfile(P); applyLang(); }
 function applyLang() {
   const es = isES(); document.documentElement.lang = es ? 'es' : 'en';
-  document.querySelectorAll('nav a, nav .btn, header .eyebrow, header .lead, header .cta a, .band span, .proof span, .sec-head .eyebrow, .sec-head h2, .sec-head p, .stage .row .chip, #contHead, #heroShare').forEach(el => {
+  document.querySelectorAll('nav a, nav .btn, header .eyebrow, header .lead, header .cta a, .band span, .proof span, .sec-head .eyebrow, .sec-head h2, .sec-head p, .stage .row .chip, #contHead, #heroShare, #h3Head, #h3NameL').forEach(el => {
     if (el.children.length && !el.matches('.band span, .proof span')) return;
     if (el.matches('.proof span')) { [...el.childNodes].filter(n => n.nodeType === 3 && n.textContent.trim()).forEach(tn => { tn.en ??= tn.textContent; const k = tn.en.trim(); tn.textContent = es && HUB_ES[k] ? tn.en.replace(k, HUB_ES[k]) : tn.en; }); return; }
     if (el.matches('.band span')) { const b = el.querySelector('b'); const tn = [...el.childNodes].find(n => n.nodeType === 3); if (b) { b.dataset.en ??= b.textContent; b.textContent = es ? (HUB_ES[b.dataset.en] || b.dataset.en) : b.dataset.en; } if (tn) { tn.en ??= tn.textContent; tn.textContent = es ? (HUB_ES[tn.en] || tn.en) : tn.en; } return; }
     el.dataset.en ??= el.textContent.trim(); const tr = HUB_ES[el.dataset.en]; el.textContent = es && tr ? tr : el.dataset.en; });
   tiles.forEach(tl => { const g = tl.g, el = tl.cn.parentNode, e2 = ES_GAMES[g.id]; if (!el || !e2) return; const p = el.querySelector('.body p'), m = el.querySelector('.meta'); p.dataset.en ??= p.textContent; m.dataset.en ??= m.innerHTML; p.textContent = es ? e2[0] : p.dataset.en; m.innerHTML = es ? e2[1].map(x => `<span>${x}</span>`).join('') : m.dataset.en; });
   document.querySelectorAll('#langToggle button').forEach(b => b.classList.toggle('on', b.dataset.l === (es ? 'es' : 'en')));
-  renderTileStats(); renderContinue(); renderDaily(); if (typeof renderProfile === 'function') renderProfile();
+  renderTileStats(); renderContinue(); renderDaily(); renderHero3d(); if (typeof renderProfile === 'function') renderProfile();
 }
 /* hero card share image (1080x1350 PNG drawn locally; no server) */
 async function heroCard() {
@@ -115,6 +116,27 @@ async function heroCard() {
   try { if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'Inoa Games' }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'inoa-hero.png'; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
 }
+
+/* 3D hero picker: one of the six friendly rigged models + an accent colour + a name, stored in the profile (profile.hero / profile.name).
+   3D games read it through E.hero() to pick the player's character. */
+const HERO_MODELS = [['skater-female', 'Isla'], ['skater-male', 'Rafa'], ['survivor-female', 'Yara'], ['survivor-male', 'Mateo'], ['cyborg-female', 'Nova'], ['male', 'Dante']];
+const HERO_COLORS = ['#ff6b6b', '#ffd166', '#2fbf8a', '#5bb8ff', '#c9b8ff', '#ff9a3c', '#ff8ad8', '#e8eef4'];
+function renderHero3d() {
+  const P = readProfile(), H = Object.assign({ model: 'skater-female', color: '#5bb8ff' }, P.hero || {});
+  const mb = document.getElementById('h3Models'), cb = document.getElementById('h3Colors'), nm = document.getElementById('h3Name'); if (!mb) return;
+  mb.innerHTML = HERO_MODELS.map(([m, n]) => `<button role="radio" aria-checked="${m === H.model}" class="${m === H.model ? 'on' : ''}" data-m="${m}" aria-label="${n}" title="${n}"><img src="thumbs/heroes/${m}.png" alt=""></button>`).join('');
+  cb.innerHTML = HERO_COLORS.map(c => `<button role="radio" aria-checked="${c === H.color}" class="${c === H.color ? 'on' : ''}" data-c="${c}" style="background:${c}" aria-label="${c}"></button>`).join('');
+  if (document.activeElement !== nm) nm.value = P.name || '';
+}
+function saveHero(patch) { const P = readProfile(); P.hero = Object.assign({ model: 'skater-female', color: '#5bb8ff' }, P.hero || {}, patch); writeProfile(P); renderHero3d(); }
+(function initHero3d() {
+  const mb = document.getElementById('h3Models'); if (!mb) return;
+  mb.addEventListener('click', e => { const b = e.target.closest('button'); if (b) saveHero({ model: b.dataset.m }); });
+  document.getElementById('h3Colors').addEventListener('click', e => { const b = e.target.closest('button'); if (b) saveHero({ color: b.dataset.c }); });
+  const nm = document.getElementById('h3Name'); nm.addEventListener('input', () => { const P = readProfile(); P.name = nm.value.replace(/[<>]/g, '').slice(0, 18); writeProfile(P); maker.name = P.name || maker.name; mkName.textContent = maker.name; if (typeof renderProfile === 'function') renderProfile(); });
+  nm.addEventListener('keydown', e => e.stopPropagation());
+  renderHero3d();
+})();
 (function initExtras() {
   const nav = document.querySelector('nav .wrap'); if (nav && !document.getElementById('langToggle')) { const t = document.createElement('div'); t.id = 'langToggle'; t.setAttribute('role', 'group'); t.setAttribute('aria-label', 'Language / Idioma'); t.innerHTML = '<button data-l="en" aria-label="English">EN</button><button data-l="es" aria-label="Español">ES</button>'; nav.insertBefore(t, nav.querySelector('.btn')); t.addEventListener('click', e => { const b = e.target.closest('button'); if (b) setLang(b.dataset.l); }); }
   const hs = document.getElementById('heroShare'); if (hs) hs.addEventListener('click', heroCard);

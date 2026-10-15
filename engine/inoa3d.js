@@ -50,6 +50,9 @@ export function reward(gameId, { xp = 0, coins = 0, best = null, bestLower = fal
   p.recent = [gameId, ...p.recent.filter(x => x !== gameId)].slice(0, 8); store.set(PROFILE_KEY, p);
   const after = heroLevel(p.xp); const r = { xp: Math.round(xp), coins: Math.round(coins), levelUp: after.lv > before, level: after.lv, best: g.best, newBest: g.newBest }; _lastReward = { gameId, t: now, r }; return r;
 }
+// The player's chosen hero (picked on the hub): {model, color, name}. model is one of HERO_MODELS; falls back safely.
+export const HERO_MODELS = ['skater-female', 'skater-male', 'survivor-female', 'survivor-male', 'cyborg-female', 'male'];
+export function hero(fallbackModel = 'skater-female') { const p = profile(), h = p.hero || {}; const model = HERO_MODELS.includes(h.model) ? h.model : fallbackModel; const color = /^#[0-9a-f]{6}$/i.test(h.color || '') ? h.color : '#5bb8ff'; return { model, color, colorHex: parseInt(color.slice(1), 16), name: String(p.name || '').replace(/[<>]/g, '').slice(0, 18), chosen: !!p.hero }; }
 export function setProfile(patch) { store.set(PROFILE_KEY, Object.assign(profile(), patch)); }
 // Shared settings (live in the profile so every game and the hub agree). Changing one fires 'inoa:settings' on window.
 export function settings() { const p = profile(); return { sound: p.sound, music: p.music, voice: p.voice, lang: p.lang, motion: p.motion, quality: p.quality }; }
