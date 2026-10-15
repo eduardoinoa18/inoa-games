@@ -57,6 +57,8 @@ module.exports = async (p) => {
   await p.evaluate(() => { window.__GAME.setAuto(false); });
   console.log('wager', JSON.stringify(await sim(8, ['card'])));
   await shot('es_wager');
+  await p.keyboard.press('ArrowRight'); await p.keyboard.press('Enter'); // P1 wagers 75% with the keyboard
+  console.log('kbd wager', await p.evaluate(() => { const G = window.__GAME.G; return [G.wagers[0], G.players[0].score]; }));
   await p.evaluate(() => { for (let i = 0; i < 4; i++) document.querySelector('.tv-card .wg button[data-f="0.5"]')?.click(); });
   console.log('pick', JSON.stringify(await sim(8, ['card'])));
   await p.evaluate(() => document.querySelector('.tv-card [data-a=ready]')?.click()); await sim(.2);

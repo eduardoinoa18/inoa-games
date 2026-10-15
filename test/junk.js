@@ -54,7 +54,7 @@ module.exports = async (p, _shot) => {
   // 4) resize mid-game, then a touch scrub: paint still lands under the finger
   {
     await p.setViewportSize({ width: vp.width + 30, height: vp.height + 20 }); await p.waitForTimeout(250); await sim(1.2);
-    const pts = await carPoints(); const a = pts[Math.floor(pts.length / 3)]; const v0 = await maskAt(a.x, a.y);
+    const pts = await carPoints(); let a = pts[Math.floor(pts.length / 3)]; for (const q of pts) if (await maskAt(q.x, q.y) === 0) { a = q; break; } const v0 = await maskAt(a.x, a.y);
     await touch('pointerdown', a.x, a.y); await sim(.25); await touch('pointerup', a.x, a.y); await sim(.05); const v1 = await maskAt(a.x, a.y);
     out('resizeTouch', { a, v0, v1 }); check(v1 > v0 + 40, 'touch brushing after resize lands under the finger');
     await p.setViewportSize(vp); await p.waitForTimeout(250); await sim(1.2);

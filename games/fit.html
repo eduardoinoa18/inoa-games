@@ -221,9 +221,10 @@ function layout(reshuffle = true) {
   const area = G.items.reduce((a, i) => a + (i.size.x + .4) * (i.size.z + .4), 0) * 1.3 + 2;
   let RW, RD;
   if (port) {
+    // (widest first: on ties the wider, shallower mat wins, so items spread across the phone)
     // pick the placemat shape so box + mat together match the tall phone screen (fills the width instead of leaving side bands)
     const avail = Math.max(1, (innerHeight - 180) / (innerWidth * .95)), lidD = C.lidH ? (C.lidH - C.H) * .5 : 0, sq = Math.sqrt(area); let best = 1e9;
-    for (let w = Math.max(C.W, sq) * 2.2; w >= Math.max(3, sq * .7); w -= .05) { // widest first: on ties the wider, shallower mat wins (items spread across the phone) const d = Math.max(3, area / w), sc = Math.max(Math.max(C.W, w) + .8, (C.D + GAP + d + lidD + .8) * .92 / avail); if (sc < best - 1e-6) { best = sc; RW = w; RD = d; } }
+    for (let w = Math.max(C.W, sq) * 2.2; w >= Math.max(3, sq * .7); w -= .05) { const d = Math.max(3, area / w), sc = Math.max(Math.max(C.W, w) + .8, (C.D + GAP + d + lidD + .8) * .92 / avail); if (sc < best - 1e-6) { best = sc; RW = w; RD = d; } }
   } else { RD = Math.max(C.D, Math.sqrt(area * .8)); RW = Math.max(3, area / RD); }
   let cx, cz, rx, rz; if (port) { cx = 0; cz = -(C.D / 2) - GAP / 2; rx = 0; rz = RD / 2 + GAP / 2; } else { cx = -(C.W / 2) - GAP / 2; cz = 0; rx = RW / 2 + GAP / 2; rz = 0; }
   C.g.position.set(cx, 0, cz); C.g.updateMatrixWorld(true);

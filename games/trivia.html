@@ -263,7 +263,7 @@ const ld = E.loading('Pact Trivia', 'Warming up the studio lights…');
 const R = E.createRenderer($('gl'), { fov: 42, portraitFov: 62, shadowSize: 12, far: 200 });
 const { scene, camera, sun, hemi } = R;
 await E.loadPack('../packs/trivia.json', R, p => ld.set(p));
-R.setLook({ background: 0x0b0d22, fog: 0x0b0d22, fogNear: 30, fogFar: 70, sun: 1.1, sunColor: 0xfff1de, hemi: .32, skyHor: 0x8fa4ff, ground: 0x241a3a, exposure: .95, env: .22, bloom: .22, bloomThreshold: .82 });
+R.setLook({ background: 0x0b0d22, fog: 0x0b0d22, fogNear: 30, fogFar: 70, sun: 1.1, sunColor: 0xfff1de, hemi: .32, skyHor: 0x8fa4ff, ground: 0x241a3a, exposure: .95, env: .22, bloom: .2, bloomThreshold: .82 });
 R.setEnv(E.ASSETS.hdri.studio);
 sun.position.set(2, 14, 12); sun.target.position.set(0, 1, 0); sun.target.updateMatrixWorld();
 const input = E.createInput({ surface: $('gl') });
@@ -598,7 +598,7 @@ function showFinalChoices(i) {
 function finalPick(k) { if (G.phase !== 'fpick') return; const i = G.fi; G.finalPicks[i] = k; G.phase = 'fwait'; G.timer = null; SFX.snap(); const card = G.fcard; const nxt = G.players.findIndex((p, j) => j > i && p.human); card.querySelector('.ig-card').innerHTML = `<h2>🔒 ${T().locked}</h2>${nxt >= 0 ? `<p class="ig-sub">${esc(T().pass(G.players[nxt].name))}</p>` : ''}<button class="ig-btn" data-a="ok">OK</button>`; card.querySelector('[data-a=ok]').onclick = () => { card.remove(); G.fcard = null; finalPickNext(i + 1); }; if (G.auto) { card.remove(); G.fcard = null; finalPickNext(i + 1); } }
 function finalReveal() {
   G.phase = 'freveal'; G.timer = null; SCR.dirty = true; big(T().reveal); E.tone(220, .8, 'sawtooth', .06, 200);
-  G.players.forEach((pl, i) => later(1.4 + i * 1.3, () => { const ok = G.finalPicks[i] === G.cur.correct; const w = G.wagers[i] || 0; pl.score += ok ? w : S.kids ? 0 : -w; // kids mode: never minus points G.pickedShow = G.finalPicks[i]; SCR.dirty = true; drawPodium(i); scores(); react(i, ok ? 'cheer' : 'slump', 2.2); floatAt(i, ok ? '+' + w : S.kids ? '✗' : '−' + w, ok ? 'gold' : 'bad'); ok ? SFX.good() : SFX.bad(); G.focus = i; G.focusT = 1.1; }));
+  G.players.forEach((pl, i) => later(1.4 + i * 1.3, () => { const ok = G.finalPicks[i] === G.cur.correct; const w = G.wagers[i] || 0; pl.score += ok ? w : S.kids ? 0 : -w; /* kids mode: never minus points */ G.pickedShow = G.finalPicks[i]; SCR.dirty = true; drawPodium(i); scores(); react(i, ok ? 'cheer' : 'slump', 2.2); floatAt(i, ok ? '+' + w : S.kids ? '✗' : '−' + w, ok ? 'gold' : 'bad'); ok ? SFX.good() : SFX.bad(); G.focus = i; G.focusT = 1.1; }));
   later(1.6 + G.players.length * 1.3, () => { G.revealed = true; G.pickedShow = null; SCR.dirty = true; E.say(`${T().answer} ${G.cur.ch[G.cur.correct]}`, { lang: S.lang }); later(2.6, endGame); });
 }
 function endGame() {
