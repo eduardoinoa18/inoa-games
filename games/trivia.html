@@ -41,6 +41,7 @@
 .tv-bubble:after{content:"";position:absolute;left:50%;bottom:-8px;margin-left:-8px;border:8px solid transparent;border-top-color:#fff;border-bottom:0}
 @keyframes pop{from{transform:translate(-50%,-80%) scale(.6);opacity:0}}
 @media (max-width:640px){.tv-choices{grid-template-columns:1fr 1fr;gap:6px;padding:8px}.tv-ch{min-height:52px;grid-template-columns:36px 1fr;font-size:14px}.tv-ch b{width:36px;height:36px;font-size:17px}.tv-scores{max-width:60vw}.tv-scores span{font-size:12px;padding:5px 8px}}
+@media (orientation:landscape) and (max-height:640px){.tv-choices{gap:6px;padding:8px;width:min(760px,calc(100vw - 20px))}.tv-ch{min-height:44px;grid-template-columns:36px 1fr;font-size:15px}.tv-ch b{width:34px;height:34px;font-size:16px}}
 /* toasts sit low (over the stage floor) instead of on top of the question board */
 .ig-toast{top:auto;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 52px)}
 @media (orientation:portrait){.tv-buz[data-c="0"],.tv-buz[data-c="1"]{top:auto;bottom:128px}.tv-scores{bottom:auto;top:max(56px,calc(env(safe-area-inset-top) + 50px));left:8px;right:8px;transform:none;max-width:none;gap:4px}.ig-toast{bottom:max(30px,env(safe-area-inset-bottom));max-width:calc(100vw - 2 * clamp(78px,15vmin,112px) - 40px)}.tv-scores span{font-size:12px;padding:4px 8px;gap:4px}}

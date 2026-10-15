@@ -383,6 +383,8 @@ function update(dt) {
   if (!ptr || ptr.mode !== 'spin') G.yaw += G.yawV * dt;
   if (Math.abs(s.y) > .15) G.pitchT = clamp(G.pitchT + s.y * dt * .9, .06, 1.05);
   if (G.phase === 'gallery') G.yaw += dt * .3;
+  // phones: while the Day 1 / Day 30 wipe plays, ease the car side-on so the comparison uses the full width
+  if (G.phase === 'slider' && G.sliderAnim >= 0 && innerHeight > innerWidth && !ptr) { const tY = G.az + 1.32, k = Math.round((G.yaw - tY) / (Math.PI * 2)); G.yaw = damp(G.yaw, tY + k * Math.PI * 2, .05, dt); G.yawV = 0; }
   table.rotation.y = G.yaw; table.updateMatrixWorld(true); U.uW2C.value.copy(G.car.matrixWorld).invert();
   // keyboard / gamepad brushing: a reticle sweeps a Lissajous path over the visible side
   let bx = null, by = null;
