@@ -5,8 +5,8 @@
  "models": {
   "skater-female": "models/skater-female.glb?h=fb0e1605",
   "skater-male": "models/skater-male.glb?h=849a827d",
-  "survivor-female": "models/survivor-female.glb?h=5a31364b",
-  "survivor-male": "models/survivor-male.glb?h=81ca4969",
+  "survivor-female": "models/survivor-female.glb?h=9157aa20",
+  "survivor-male": "models/survivor-male.glb?h=69d38b39",
   "cyborg-female": "models/cyborg-female.glb?h=86c5fb7b",
   "male": "models/male.glb?h=37b571ee",
   "blaster-a": "models/blaster-a.glb?h=b088eaec",
@@ -22,5 +22,5 @@
   "dawn": "hdri/dawn.hdr?h=b48993a4"
  },
  "lazy": [],
- "bytes": 1040044
+ "bytes": 1085128
 }

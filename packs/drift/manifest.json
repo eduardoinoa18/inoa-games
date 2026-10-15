@@ -7,8 +7,8 @@
   "race-futrure": "models/race-futrure.glb?h=e544efa0",
   "skater-female": "models/skater-female.glb?h=fb0e1605",
   "skater-male": "models/skater-male.glb?h=849a827d",
-  "survivor-female": "models/survivor-female.glb?h=5a31364b",
-  "survivor-male": "models/survivor-male.glb?h=81ca4969",
+  "survivor-female": "models/survivor-female.glb?h=9157aa20",
+  "survivor-male": "models/survivor-male.glb?h=69d38b39",
   "cyborg-female": "models/cyborg-female.glb?h=86c5fb7b",
   "male": "models/male.glb?h=37b571ee",
   "coconut": "models/coconut.glb?h=12d8a615",
@@ -35,5 +35,5 @@
   "sunset": "hdri/sunset.hdr?h=0c90676a"
  },
  "lazy": [],
- "bytes": 1911447
+ "bytes": 1956531
 }
