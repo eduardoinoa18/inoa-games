@@ -22,7 +22,7 @@ const ES_GAMES = {
   depths: ['Bajo las islas con aliados o un segundo jugador. Ocho salas, mejoras distintas en cada partida y un capitán ahogado.', ['1–2 jugadores', '10–15 min', '10+ años']],
   builders: ['Recoge madera, construye un hogar en tu isla, siembra, navega y comparte tu isla con un código.', ['Solo', '10–30 min', '8+ años']],
   tide: ['Pinta el muelle con cañones de agua junto a tres bots. Gana quien tenga más terreno al sonar la bocina.', ['Solo vs bots', '2,5 min', '8+ años']],
-  drift: ['Derrapa para turbos, usa objetos y compite contra cinco rivales en dos pistas, o persigue tu mejor vuelta.', ['Solo vs 5 bots', '3 min']],
+  drift: ['Derrapa para turbos, usa objetos y compite contra cinco rivales en cuatro pistas, gana la Copa Isla o corre contra el fantasma de tu mejor vuelta.', ['Solo vs 5 bots', '3 min']],
   fit: ['Un cajón desordenado, huecos perfectos y un clic satisfactorio cada vez que algo encaja. Modo Zen para relajarte.', ['Solo', '1–2 min']],
   tray: ['Lleva una torre tambaleante de comida por una pista de obstáculos. Caerse es lo divertido. Turnos con amigos.', ['1–4 jugadores', '45 s']],
   junk: ['Lava, lija, pinta y pule coches viejos con el dedo y mira cómo vuelve el brillo.', ['Solo', '2–4 min']],
