@@ -40,7 +40,7 @@ html,body{background:#1d1915}
 .pick i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:middle;box-shadow:0 0 0 1px rgba(0,0,0,.25)}
 .jk-lbl{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#4c5868;margin:0 0 6px}
 .jk-extra{display:grid;gap:12px}
-.jk-photo .ig-card{width:min(720px,100%)}.jk-photo img{width:100%;border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.25);display:block;margin:6px 0 4px}
+.jk-photo .ig-card{width:min(720px,100%)}.jk-photo img{width:auto;max-width:100%;max-height:calc(100vh - 190px);border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.25);display:block;margin:6px auto 4px}
 .jk-orders{display:grid;gap:6px}
 .jk-orders button{display:flex;gap:10px;align-items:center;text-align:left;border-radius:16px;border:2px dashed #e0b25a;background:#fff8e6;padding:7px 10px;font-weight:700;font-size:13px;color:var(--ink);cursor:pointer;line-height:1.25}
 .jk-orders button .who{font-size:24px}.jk-orders button small{display:block;font-weight:600;color:#4c5868;font-size:12px}
@@ -662,7 +662,7 @@ function photoCard() {
 function showCard(url) {
   document.querySelectorAll('.jk-photo').forEach(e => e.remove()); const d = document.createElement('div'); d.className = 'ig-screen jk-photo';
   d.innerHTML = `<div class="ig-card"><div class="ig-kicker">📷 ${T('Photo card', 'Tarjeta con foto')}</div><img alt="${vn(G.V)}" src="${url}"><div class="ig-row"><button class="ig-btn ghost" data-a="close">${T('Close', 'Cerrar')}</button><a class="ig-btn" data-a="save" download="junkyard-${G.V.id}.png" href="${url}">${T('Save', 'Guardar')}</a>${navigator.share ? `<button class="ig-btn sun" data-a="share">${T('Share', 'Compartir')}</button>` : ''}</div></div>`;
-  document.body.appendChild(d); const close = () => d.remove(); setTimeout(() => d.querySelector('[data-a=save]')?.focus(), 50);
+  document.body.appendChild(d); const close = () => d.remove(); setTimeout(() => d.querySelector('[data-a=save]')?.focus({ preventScroll: true }), 50);
   d.querySelector('[data-a=close]').onclick = close; d.querySelector('[data-a=save]').addEventListener('click', () => E.toast(T('Saved!', '¡Guardada!'), 1200));
   const sh = d.querySelector('[data-a=share]'); if (sh) sh.onclick = async () => { try { const blob = await (await fetch(url)).blob(); const file = new File([blob], `junkyard-${G.V.id}.png`, { type: 'image/png' }); const data = { title: 'Junkyard to Jewel', text: T(`My restored ${G.V.name}!`, `¡Mi ${G.V.es} restaurado!`) }; if (navigator.canShare && navigator.canShare({ files: [file] })) data.files = [file]; await navigator.share(data); } catch (e) { } };
   E.say(T('Here is your photo card. Save it or share it!', '¡Aquí está tu tarjeta con foto! Guárdala o compártela.'), { once: true });
@@ -729,7 +729,7 @@ function title() {
   d.querySelectorAll('#pV button').forEach(b => b.onclick = () => { S.sel = +b.dataset.i; save(); d.querySelectorAll('#pV button').forEach(x => x.classList.toggle('on', x === b)); startVehicle(S.sel, 'attract'); G.phase = 'gallery'; hideHud(); lampLevel(.3); });
   d.querySelector('#gal').onclick = () => gallery(S.sel);
   d.querySelectorAll('#pO button').forEach(b => b.onclick = async () => { const o = ords[+b.dataset.o]; if (!o || o.done) return; E.audio(); if (E.platformStart && !(await E.platformStart())) return; d.remove(); startVehicle(o.vi, 'play', o); });
-  setTimeout(() => d.querySelector('[data-a=play]')?.focus(), 50);
+  setTimeout(() => { d.querySelector('[data-a=play]')?.focus({ preventScroll: true }); const c = d.querySelector('.ig-card'); if (c) c.scrollTop = 0; d.scrollTop = 0; }, 50); // keep today's orders in view
 }
 
 

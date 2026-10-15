@@ -323,3 +323,76 @@ Driftwood Builders (`games/builders.html`) re-audited and extended by one game a
 - Headless Chromium has no colour-emoji font, so some emoji (🐚, 🌷) render blank in screenshots only.
 - Visiting shows a friend's pieces but not their islanders/postcards (codes carry pieces only).
 - Engine: none changed.
+
+## Junkyard to Jewel elevation pass (2026-10-15)
+One game agent re-audited and extended Junkyard to Jewel (`games/junk.html`). Tested with `test/junk.js` at 1000×560 and 390×844 (both `NO_ERRORS`, `ALL CHECKS PASSED`, every screenshot reviewed). Also run: the engine contract (`node test/run.js junk test/engine.js`) and the hub (`test/index.js`).
+
+**Bugs fixed**
+- **Portrait framing shrank when the vehicle turned.** The fit used the footprint diagonal, so a nose-on or 3/4 vehicle covered only about 45–60% of a phone's width.
+  - Fix: `fitCam()` now runs every frame. It projects the 8 corners of the vehicle box at the current turntable angle (±0.1 rad, so spinning doesn't pump) and bisects the closest distance where every corner fits sideways. The vertical span must fit the free band left by the HUD, step chip, palette, spin and garage buttons, and the span is centred in that band.
+  - Phones: 0.69–0.87 of the width over a full turn (`junk_start_p` 0.85).
+  - Landscape: no longer uses the loose bounding sphere. Height fill went from 0.46 to 0.57 at the start, width is 0.35–0.71 by angle, and the palette and garage buttons no longer cover the vehicle.
+  - The reveal orbit eases out slightly instead of pushing in, so the tight fit never clips.
+- **Progress could stall below the 92% auto-finish.** It counted voxels the brush can never reach: wheel wells, the cab floor, gaps behind the wheels, under the sail ship's deck.
+  - Fix: at build time each exterior voxel is tested for a line of sight along 36 orbit directions through the voxel grid, and hidden voxels weigh 0 in every stage.
+  - Test: rays swept from 8 angles × 2 tilts reach ≥ 92% wash on the hatchback, the fire engine and the sail ship.
+- **Fast curved strokes were drawn as one straight segment per frame.** Every coalesced pointer sample now joins the stroke path. The path is re-cast at about 10 px steps, up to 80 rays a frame. Rays that miss the vehicle paint nothing, so paint still never bridges across air.
+- **Spinning on a phone needed empty floor**, and there is almost none once the vehicle fills the screen. A second finger anywhere now turns the gesture into a two-finger spin/tilt and ends the stroke. Test: `twoFinger` with `mode spin2`, yaw changes, not brushing.
+- **Brush size was invisible.** A surface-aligned ring in the tool's colour now shows where the tool works and how big it is. It also follows the mouse on hover, before you click. Test: `brush ring visible while working`.
+- **Restarting from the pause menu dropped a shop order.** The order is now kept on restart.
+- **Rust showing through the paint (known item):** re-checked in `junk_paint_done(_p)`. The orange patches in the portrait shot are the hatchback's tail and side lamps, not rust. Sanded rust is fully cleared before painting, so no change was needed.
+
+**Added**
+- **16 vehicles (was 8)**, all CC0 Kenney models already in `assets/models`:
+  - Rowboat and Little Sail Ship: boats, with wood words for stage 2 ("Sand old varnish").
+  - Trail Wagon, Track Racer, Box Truck, Rescue Van, Fire Engine, Rocket Racer.
+  - Every vehicle has an EN/ES name and story.
+  - Pack: 10 → 18 models, 0.85 → 1.20 MB, every manifest file present in `packs/assets`.
+  - No scooter, plane or train: no CC0 model exists for them. `bike.glb` is 4.7 MB. `citroen-old-van` is skipped (brand name).
+- **Paint customisation.** Tabs under the palette: Colour, Accent, Design, Wheels.
+  - Designs are original simple shapes: Solid, Two-tone, Stripes, Band, Wave, Dots, Stars.
+  - The grime shader draws them in the vehicle's own space, so no UVs are needed. They appear exactly where you spray.
+  - The accent colour also paints the secondary paint material on two-colour models (racers, box truck, rescue van, fire engine, sail ship).
+  - Wheels: Steel, Chrome, Gold, Black, White.
+  - Keyboard/pad: Shift/B = next swatch, E/X = next tab.
+  - The design tip is read aloud once.
+- **Shop orders.** Three friendly customer wishes a day, from a date seed, using unlocked vehicles only.
+  - Each wish has a vehicle, a colour and, for two of the three, a design with an accent colour.
+  - Starting one loads the wish into the spray gun at the paint stage. You can still change it: the customer is happy either way.
+  - A match pays a ⭐ plus bonus coins and XP. Any result still pays something, and nothing can fail.
+  - Shown on the title (`junk_title_orders`), in the HUD (🧾) and in the results ("⭐ Perfect match" / "😊 Happy"). The wish is read aloud.
+- **Garage photo card** (📷 in the garage; Y on a gamepad). A 1200×800 PNG with:
+  - the restored vehicle, rendered live
+  - a Day 1 inset, the same camera with the junk mask
+  - the name, paint and design, plus "Restored by <hero name>"
+  - Save (download) and Share (Web Share with the file when supported) buttons.
+  - The garage also shows a counter (n/total), and LB/RB browse.
+- **Feedback:**
+  - suds that cling and slide when washing
+  - a paint-mist hiss
+  - a polish glow
+  - the brush ring in the tool's colour
+- **Gamepad:** the engine's `menuNav()` focus ring covers the title (orders, junkers), results and photo card.
+- **Save v2 with migration.** Garage entries keep `{colorIdx, accent, style, rim}`, and there are orders and stars. Every field is sanitised.
+  - A v1 player who finished the old last vehicle unlocks the new ones; old colour names map back to palette indexes.
+  - Garbage saves (a string, an array, null) are ignored.
+- Hub tile copy (EN/ES) updated. `thumbs/junk.jpg` refreshed.
+
+**Tests** (`test/junk.js`). Everything from Phase 1, plus:
+- two-finger spin
+- brush ring
+- paint tabs (design, accent, wheels by tap; tab and swatch by keyboard)
+- the garage keeps the look
+- photo card PNG and save link
+- three orders, wish preloaded, a match pays a star and is ticked off
+- v1 → v2 migration and garbage saves
+- reachability on 3 vehicles
+- 16 vehicles, with junk-state shots `v1`–`v15`
+
+**Still open**
+- Real-phone feel and FPS are not measured (headless only). A vehicle builds in 80–600 ms headless, mostly voxelising plus the reach pass, and only when a vehicle is picked.
+- A design edge is about 6 cm soft on the 5 m vehicles: the voxel grid has 76 cells on the long axis.
+- Dots and stars stretch slightly where the box projection switches faces on curved panels.
+- On some Kenney models `_defaultMat` covers a small grille part as well as the hubs, so the wheel finish tints that part too.
+- Orders use local midnight. There is no streak or weekly order yet.
+- Engine: unchanged.
