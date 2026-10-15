@@ -20,7 +20,7 @@ const ES_GAMES = {
   match: ['Daño, empujones y fuera del ring. Gana el último héroe en pie. Los bots llenan los huecos.', ['1–4 jugadores', '2–3 min', 'Jugar']],
   safari: ['Un safari 3D donde alimentas a tu mascota solo con lo que es seguro para ti. Etiquetas leídas en voz alta, rol de Escáner para adultos y práctica de rescate paso a paso.', ['1–2 jugadores', '5 niveles', 'Jugar']],
   depths: ['Bajo las islas con aliados IA, un segundo jugador o teléfonos. Dos actos de ocho salas, 19 dones distintos en cada partida, un capitán ahogado y un coloso de cristal.', ['1–4 jugadores', '10–15 min', '10+ años']],
-  builders: ['Recoge madera, construye un hogar en tu isla, siembra, navega y comparte tu isla con un código.', ['Solo', '10–30 min', '8+ años']],
+  builders: ['Construye un hogar en tu isla, navega a dos islas nuevas, recibe vecinos en casitas, cumple sus deseos y completa tus postales. 21 misiones, compártela con un código.', ['Solo', '10–30 min', '8+ años']],
   tide: ['Batallas de pintura con cañones de agua en tres arenas: un muelle soleado, un jardín en la azotea y un mercado isleño. Cubre más suelo o domina las tres pozas de marea. Bots o hasta 8 teléfonos.', ['1–8 jugadores', '2,5 min', '8+ años']],
   drift: ['Derrapa para turbos, usa objetos y compite contra cinco rivales en cuatro pistas, gana la Copa Isla o corre contra el fantasma de tu mejor vuelta.', ['Solo vs 5 bots', '3 min']],
   fit: ['Un cajón desordenado, huecos perfectos y un clic satisfactorio cada vez que algo encaja. Modo Zen para relajarte.', ['Solo', '1–2 min']],

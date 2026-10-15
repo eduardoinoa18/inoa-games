@@ -85,4 +85,79 @@ module.exports = async (p, _shot) => {
   // undo works
   const und = await ev(() => { const g = window.__GAME; const n0 = g.PLIST.length; g.toggleBuild(true); g.G.sel = 'floor'; const f = g.findFlat(1); g.G.plan = null; const r = g.build('floor', f[0], f[1]); g.G.undo.push({ op: 'add', p: g.PLIST[g.PLIST.length - 1] }); const n1 = g.PLIST.length; g.undo(); g.toggleBuild(false); return [n0, n1, g.PLIST.length]; });
   console.log('undo', JSON.stringify(und));
+
+  // ================= chapter 2: islands, islanders, trades, postcards =================
+  const nodes = await ev(() => { const g = window.__GAME; const c = {}; for (const n of g.NODES) c[n.type] = (c[n.type] || 0) + 1; return { c, isles: g.ISLES.map(I => [I.id, !!g.isleSpot(I.id)]) }; });
+  console.log('ch2 nodes', JSON.stringify(nodes));
+  // gamepad A places in build mode; touch taps pick the cell + edge under the finger
+  const padPlace = await ev(() => { const g = window.__GAME; g.give({ wood: 400, stone: 200, fibre: 200, food: 60 }); const f = g.findFlat(3); const c = g.cellC(f[0], f[1]); g.teleport(c.x, c.z + 3.2, Math.PI); g.cam.yaw = 0; g.cam.dist = 9; g.cam.pitch = .6; g.frame(); g.toggleBuild(true); g.G.sel = 'floor'; g.update(1 / 60);
+    const pad = { buttons: Array.from({ length: 17 }, () => ({ pressed: false, value: 0 })), axes: [0, 0, 0, 0] }; const orig = navigator.getGamepads; navigator.getGamepads = () => [pad]; const n0 = g.PLIST.length; pad.buttons[0].pressed = true; g.update(1 / 60); pad.buttons[0].pressed = false; g.update(1 / 60); navigator.getGamepads = orig; return { n0, n1: g.PLIST.length, f }; });
+  console.log('gamepad A places', JSON.stringify(padPlace), padPlace.n1 === padPlace.n0 + 1 ? 'ok' : 'FAIL');
+  const tapRes = await ev(() => { const g = window.__GAME; const [i, j] = g.findFlat(2); const c = g.cellC(i, j); g.teleport(c.x, c.z + 4, Math.PI); g.cam.yaw = 0; g.cam.dist = 9; g.cam.pitch = .7; g.frame(); g.G.sel = 'wall'; g.G.target = null; const y = g.H(c.x, c.z + .8); const s1 = g.tapWorld(c.x, y, c.z + .85); const t1 = g.target && { i: g.target.i, j: g.target.j, side: g.target.side }; g.update(1 / 60); g.tapWorld(c.x, y, c.z + .85); const placed = g.PLIST.find(p => p.t === 'wall' && p.i === i && p.j === j && p.r === 2);
+    // tap the top of that wall with Roof selected: the target must be the cell behind the wall (where a roof would go), not the ground in front
+    for (let k = 0; k < 30; k++) g.update(1 / 60); g.frame(); g.G.sel = 'roof'; g.G.target = null; g.tapWorld(c.x, y + 1.6, c.z + 1.06); const t2 = g.target && { i: g.target.i, j: g.target.j }; g.toggleBuild(false); return { cell: [i, j], s1, t1, placed: !!placed, roofTarget: t2 }; });
+  console.log('touch tap', JSON.stringify(tapRes), tapRes.placed && tapRes.t1 && tapRes.t1.side === 2 && tapRes.roofTarget && tapRes.roofTarget.j === tapRes.cell[1] ? 'ok' : 'FAIL');
+  // quest 11: flowers (the garden set unlocks at quest index 10)
+  const q10 = await ev(() => { const g = window.__GAME; g.setQ(10); const pal = g.palKeys(); const f = g.findFlat(3); const out = []; for (let k = 0; k < 4; k++) out.push(g.build('flowers', f[0] + (k % 2), f[1] + (k >> 1))); out.push(g.build('sapling', f[0] + 2, f[1])); return { pal: pal.includes('flowers') && pal.includes('sapling') && !pal.includes('cottage'), out, q: g.S.q }; });
+  console.log('flowers', JSON.stringify(q10));
+  // quest 12: sail to Shell Cay — board the boat, put it just off the island's beach, hop off
+  const sail2 = await ev(() => { const g = window.__GAME; const b = g.PLIST.find(p => p.t === 'boat'); g.teleport(b.g.position.x, b.g.position.z); g.interact(); const I = g.ISLES[1]; let wp = null; const a = Math.atan2(-I.z, -I.x); for (let r = I.r - 4; r < I.r + 14; r += .5) { const x = I.x + Math.cos(a) * r, z = I.z + Math.sin(a) * r; if (g.H(x, z) < -.6) { wp = [x, z, a]; break; } } g.G.boat.pos.set(wp[0], 0, wp[1]); g.G.boat.yaw = wp[2] + Math.PI / 2; g.cam.dist = 14; g.cam.pitch = .4; g.cam.yaw = wp[2] + .5; return { boat: !!g.G.boat, wp }; });
+  await sim(1); await shot(tag + 'shell_sail');
+  const land = await ev(() => { const g = window.__GAME; g.interact(); return { off: !g.G.boat, at: g.isleAt(g.player.pos.x, g.player.pos.z), visited: g.S.visited, q: g.S.q }; });
+  console.log('shell cay', JSON.stringify(sail2), JSON.stringify(land));
+  // quest 13: shells; quest 14: fish from the beach through the real ✋ action
+  const shells = await ev(() => { const g = window.__GAME; let n = 0; for (let k = 0; k < 4; k++) n += g.autoGather('shell'); return { n, shell: g.S.inv.shell, q: g.S.q }; });
+  console.log('shells', JSON.stringify(shells));
+  const fishing = await ev(() => { const g = window.__GAME; const spots = g.NODES.filter(n => n.type === 'fish' && n.alive); let best = null; for (const n of spots) { for (let a = 0; a < 24 && !best; a++) for (let r = 1.8; r < 3.8; r += .25) { const x = n.x + Math.cos(a / 24 * 6.283) * r, z = n.z + Math.sin(a / 24 * 6.283) * r; if (g.H(x, z) > .08 && g.walkable(x, z)) { best = { n, x, z }; break; } } if (best) break; } if (!best) return 'no shore spot'; g.teleport(best.x, best.z, Math.atan2(best.n.x - best.x, best.n.z - best.z)); g.cam.yaw = Math.atan2(best.x - best.n.x, best.z - best.n.z) + .6; g.cam.dist = 7; g.cam.pitch = .4; const f0 = g.S.stat.fish; g.interact(); return { f0, swing: !!g.G.swing, spot: [+best.n.x.toFixed(1), +best.n.z.toFixed(1)] }; });
+  await sim(.45); await shot(tag + 'fish');
+  const fished = await ev(() => { const g = window.__GAME; const f1 = g.S.stat.fish; let k = 0; while (g.S.stat.fish < 3 && k++ < 6) g.autoGather('fish'); return { f1, fish: g.S.stat.fish, q: g.S.q }; });
+  console.log('fishing', JSON.stringify(fishing), JSON.stringify(fished), fished.f1 > fishing.f0 ? 'real ✋ catch ok' : 'FAIL no catch');
+  // quest 15: market stall on Shell Cay + a trade through the sheet
+  const stall = await ev(() => { const g = window.__GAME; const sp = g.isleSpot('shell', 3); g.teleport(sp[0], sp[1]); const f = g.findFlat(1); const r = g.build('stall', f[0], f[1]); const c = g.cellC(f[0], f[1]); g.teleport(c.x, c.z + 1.6, Math.PI); g.cam.yaw = .3; g.cam.dist = 7; g.cam.pitch = .4; g.interact(); return { r, sheet: !!document.querySelector('.db-multi .db-trades'), on: g.isleAt(c.x, c.z) }; });
+  await sim(.3); await shot(tag + 'trade');
+  const traded = await ev(() => { const b = [...document.querySelectorAll('.db-trades button')].find(b => !b.disabled); b.click(); const g = window.__GAME; const r = { trades: g.S.trades, q: g.S.q }; document.querySelector('.db-multi [data-a=close]').click(); r.closed = !document.querySelector('.db-multi'); r.modal = g.G.modal; return r; });
+  console.log('stall', JSON.stringify(stall), JSON.stringify(traded));
+  // quest 16: cottage → an islander moves in
+  const cot = await ev(() => { const g = window.__GAME; const fl = g.PLIST.find(p => p.t === 'floor'); const c0 = g.cellC(fl.i, fl.j); g.teleport(c0.x, c0.z + 6); const f = g.findFlat(2); const r = g.build('cottage', f[0], f[1], 2); const c = g.cellC(f[0], f[1]); g.teleport(c.x + 1.5, c.z - 4.5, 0); g.cam.yaw = Math.PI + .5; g.cam.dist = 8; g.cam.pitch = .38; return { r, folk: g.S.folk.length, q: g.S.q }; });
+  await sim(2.5); await shot(tag + 'folk');
+  console.log('cottage', JSON.stringify(cot));
+  // quest 17: a wish (force the first one now)
+  const wish = await ev(() => { const g = window.__GAME; const f = g.S.folk[0]; f.next = 0; g.update(1 / 60); return { wish: f.wish, bubble: g.FOLKM[0].bub.visible }; });
+  await sim(.3); await shot(tag + 'wish');
+  const granted = await ev(() => { const g = window.__GAME; const fm = g.FOLKM[0]; const f = fm.s; const W = f.wish; g.give({ shell: 5, fish: 5, crystal: 2, food: 10, wood: 10 }); g.teleport(fm.pos.x + 1, fm.pos.z); g.interact(); return { W, wishes: g.S.wishes, hearts: f.hearts, q: g.S.q }; });
+  if (!granted.wishes) { const res = await ev(() => { const g = window.__GAME; const tgt = { 0: 'flowers', 2: 'bench', 4: 'lamp', 6: 'sapling', 8: 'path' }[g.S.folk[0].wish]; const out = []; for (let k = 0; k < 3 && !g.S.wishes; k++) { const ff = g.findFlat(1); out.push(g.build(tgt, ff[0], ff[1])); g.update(1 / 60); } return { tgt, out, wishes: g.S.wishes, q: g.S.q }; }); console.log('build wish', JSON.stringify(res)); }
+  console.log('wish', JSON.stringify(wish), JSON.stringify(granted));
+  // quest 18: four bridge pieces out from the dock
+  const bridge = await ev(() => { const g = window.__GAME; const docks = g.PLIST.filter(p => p.t === 'dock'); const end = docks[docks.length - 1], prev = docks[docks.length - 2]; const di = end.i - prev.i, dj = end.j - prev.j; const out = []; let cur = [end.i, end.j]; for (let k = 0; k < 8 && g.countOf('bridge') < 4; k++) { const ni = cur[0] + di, nj = cur[1] + dj; const r = g.build('bridge', ni, nj); out.push(r); cur = [ni, nj]; } const c = g.cellC(cur[0], cur[1]); const e = g.cellC(end.i, end.j); g.teleport(e.x, e.z); g.cam.dist = 11; g.cam.pitch = .55; g.cam.yaw = Math.atan2(-di, -dj) + .9; return { out, n: g.countOf('bridge'), q: g.S.q, walk: g.walkable(c.x, c.z), y: +g.groundAt(c.x, c.z).toFixed(2) }; });
+  await sim(.6); await shot(tag + 'bridge');
+  console.log('bridge', JSON.stringify(bridge));
+  // quest 19: Glowmoss crystals (walking onto the island counts as arriving), at dusk so they glow
+  await ev(() => { const g = window.__GAME; const sp = g.isleSpot('moss', 4); g.teleport(sp[0], sp[1]); });
+  await sim(.7);
+  const crystals = await ev(() => { const g = window.__GAME; const v = g.S.visited.moss; let n = 0; for (let k = 0; k < 3; k++) n += g.autoGather('crystal'); g.setDayT(.45); g.cam.dist = 9; g.cam.pitch = .35; return { v, n, crystal: g.S.stat.crystal, q: g.S.q, glowPal: g.palKeys().includes('glowlamp') }; });
+  await sim(1); await shot(tag + 'moss');
+  console.log('glowmoss', JSON.stringify(crystals));
+  // quest 20: lighthouse on Shell Cay, seen at night; quest 21: three islanders (cottages on Glowmoss + home)
+  const lh = await ev(() => { const g = window.__GAME; const ff = g.findFlat(1); const camp = g.build('campfire', ff[0], ff[1]); const f2 = g.findFlat(1); const cm = g.build('cottage', f2[0], f2[1]); const sp = g.isleSpot('shell', 4); g.teleport(sp[0], sp[1]); const f = g.findFlat(1); const r = g.build('lighthouse', f[0], f[1]); const c = g.cellC(f[0], f[1]); g.teleport(c.x + 3, c.z + 6); g.cam.yaw = Math.atan2(3, 6); g.cam.dist = 13; g.cam.pitch = .22; g.setDayT(.8); return { camp, cm, r, q: g.S.q }; });
+  await sim(1.5); await shot(tag + 'lighthouse');
+  const three = await ev(() => { const g = window.__GAME; const sp = g.isleSpot('home', 6); g.teleport(sp[0], sp[1]); const f = g.findFlat(1); const r = g.build('cottage', f[0], f[1]); g.setDayT(.3); return { r, folk: g.S.folk.length, q: g.S.q, total: 21, stamps: g.stampTotal() }; });
+  console.log('lighthouse', JSON.stringify(lh), 'three islanders', JSON.stringify(three));
+  await sim(.5); await layout('ch2');
+  await ev(() => window.__GAME.openPostcards()); await sim(.2); await shot(tag + 'postcards');
+  console.log('postcards', JSON.stringify(await ev(() => { const g = window.__GAME; const r = g.ISLES.map(I => I.id + ':' + g.stampsDone(I.id)); document.querySelector('.db-multi [data-a=close]').click(); return r; })));
+  // wrap up = results without waiting for night (XP reaches the profile)
+  const wrap = await ev(() => { const g = window.__GAME; const n0 = g.G.results; g.wrapUp(); return { n0, n1: g.G.results, card: !!document.querySelector('.ig-results'), xp: document.querySelector('.ig-results .ig-reward span')?.textContent }; });
+  await sim(.2); await shot(tag + 'wrap'); console.log('wrap up', JSON.stringify(wrap));
+  await ev(() => document.querySelector('.ig-results [data-a=again]')?.click()); await sim(.3);
+  // robustness: v1 save migration, tolerant + strict share codes, visiting twice keeps one banner
+  const rob = await ev(() => { const g = window.__GAME; const m = g.loadSave({ v: 1, q: 10, seed: 77, inv: { wood: 5, stone: 'x' }, stat: { wood: 9 }, pieces: [[0, 1, 1, 0], [99, 0, 0, 0], 'junk', [1, 2, 2, 1]], dayT: 3.25 });
+    const code = g.exportCode(); const wrapped = code.replace(/(.{20})/g, '$1\n '); const a = g.parseCode(wrapped), b = g.parseCode(code);
+    const odd = g.parseCode('DWB1.' + btoa('12|0,1,1,9;77,0,0,0;0,999,0,0;2,3,3,1'));
+    const r = { mig: { v: m.v, q: m.q, inv: m.inv, pieces: m.pieces.length, folk: m.folk.length, dayT: m.dayT }, wrappedOK: !!a && a.pieces.length === b.pieces.length, garbage: g.parseCode('hello world!') === null, empty: g.parseCode('') === null, odd: odd && odd.pieces };
+    g.visitCode(code); g.visitCode(code); r.banners = document.querySelectorAll('.db-visit').length; r.folkVisiting = g.FOLKM.length; g.goHome(); r.folkHome = g.FOLKM.length; r.bannersHome = document.querySelectorAll('.db-visit').length; return r; });
+  console.log('robustness', JSON.stringify(rob));
+  // Spanish: switching the shared language setting re-labels the quest card live
+  const es = await ev(() => { const p = JSON.parse(localStorage.getItem('inoa.profile') || '{}'); p.lang = 'es'; localStorage.setItem('inoa.profile', JSON.stringify(p)); dispatchEvent(new CustomEvent('inoa:settings', { detail: { key: 'lang', value: 'es' } })); const q = document.querySelector('.db-quest').textContent; p.lang = 'en'; localStorage.setItem('inoa.profile', JSON.stringify(p)); return q.slice(0, 90); });
+  console.log('spanish quest card', es);
+  await ev(() => dispatchEvent(new CustomEvent('inoa:settings', { detail: { key: 'lang', value: 'en' } })));
 };
