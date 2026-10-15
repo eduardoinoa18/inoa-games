@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Your account · Inoa Games</title>
+<meta name="description" content="Sign in to Inoa Games to save your hero, XP and progress across devices.">
+<meta name="robots" content="noindex"><meta name="theme-color" content="#0b2a3a">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;800&family=Unbounded:wght@700;900&display=swap">
+<link rel="stylesheet" href="engine/ui.css">
+<style>
+html,body{overflow:auto;touch-action:auto;-webkit-user-select:text;user-select:text;background:radial-gradient(120% 80% at 50% 100%,#1f5b6e,#0b2a3a 60%,#061821);min-height:100%}
+main{min-height:100vh;display:grid;justify-items:center;align-content:start;padding:max(18px,env(safe-area-inset-top)) 16px 40px;box-sizing:border-box;gap:14px}
+.top{width:min(540px,100%);display:flex;justify-content:space-between;align-items:center;color:#fff}
+.top a{color:#fff;text-decoration:none;font-weight:800}.brand{font-family:var(--f-d);font-weight:900;letter-spacing:.08em}.brand span{color:var(--sun)}
+.lang button{background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:10px;padding:6px 10px;font-weight:800;cursor:pointer;min-height:36px}.lang button.on{background:var(--sun);color:var(--ink);border-color:transparent}
+form{display:grid;gap:10px}label{display:grid;gap:4px;font-weight:800;font-size:14px}
+input[type=email],input[type=password],input[type=text]{font:inherit;font-weight:700;font-size:16px;padding:12px 14px;border-radius:14px;border:2px solid var(--line);background:#fff;min-height:48px;box-sizing:border-box;width:100%}
+input:focus-visible{outline:3px solid var(--berry);outline-offset:1px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px}.tabs button{min-height:46px;border-radius:14px;border:2px solid var(--line);background:#fff;font-weight:800;cursor:pointer}.tabs button.on{background:var(--mint);border-color:var(--mint-ink)}
+.msg{border-radius:14px;padding:10px 12px;font-weight:700;font-size:14px}.msg.err{background:#ffe1dc;color:#7a1d10}.msg.ok{background:#dff6ea;color:#0f5c48}.msg:empty{display:none}
+.link{background:none;border:0;color:var(--mint-ink);font-weight:800;text-decoration:underline;cursor:pointer;padding:6px 0;justify-self:start;min-height:36px}
+.plan{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;background:#fff;border:2px solid var(--line);border-radius:16px;padding:12px}
+.plan b{font-family:var(--f-d)}.badge{display:inline-block;border-radius:10px;padding:3px 8px;font-size:12px;font-weight:800;background:var(--ink);color:#fff}.badge.prem{background:var(--sun);color:var(--ink)}
+.ach{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}.ach div{background:#fff;border:2px solid var(--line);border-radius:14px;padding:8px;font-size:12px;font-weight:700;opacity:.45}.ach div.on{opacity:1;border-color:var(--mint-ink)}.ach b{display:block;font-size:13px}
+.small{font-size:12px;color:#4c5868;font-weight:600}.danger{background:#fff;color:#a2261a;box-shadow:inset 0 0 0 2px #f2b8ae}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}@media (max-width:420px){.row2{grid-template-columns:1fr}}
+[hidden]{display:none!important}
+</style>
+</head><body>
+<main>
+  <div class="top"><a href="index.html" class="brand" aria-label="Inoa Games home">INOA<span>GAMES</span></a><div class="lang" role="group" aria-label="Language / Idioma"><button data-l="en">EN</button> <button data-l="es">ES</button></div></div>
+
+  <section class="ig-card" id="vOff" hidden><h1 data-t="offTitle"></h1><p class="ig-sub" data-t="offText"></p><a class="ig-btn" href="index.html" data-t="toHub"></a></section>
+
+  <section class="ig-card" id="vAuth" hidden aria-labelledby="authTitle">
+    <h1 id="authTitle" data-t="authTitle"></h1>
+    <p class="ig-sub" data-t="authLead"></p>
+    <div class="tabs" role="tablist"><button role="tab" id="tIn" data-mode="in" data-t="signIn"></button><button role="tab" id="tUp" data-mode="up" data-t="signUp"></button></div>
+    <form id="fAuth" novalidate>
+      <label id="lName" hidden><span data-t="name"></span><input id="iName" type="text" maxlength="24" autocomplete="nickname"></label>
+      <label><span data-t="email"></span><input id="iEmail" type="email" autocomplete="email" required></label>
+      <label><span data-t="password"></span><input id="iPass" type="password" autocomplete="current-password" minlength="8" required></label>
+      <p class="small" id="legal" hidden data-t="legal" data-html></p>
+      <div class="msg" id="mAuth" role="status" aria-live="polite"></div>
+      <button class="ig-btn" id="bAuth" type="submit"></button>
+      <button class="link" id="bForgot" type="button" data-t="forgot"></button>
+    </form>
+  </section>
+
+  <section class="ig-card" id="vCheck" hidden><h2 data-t="checkTitle"></h2><p class="ig-sub" id="checkText"></p><div class="msg" id="mCheck" role="status" aria-live="polite"></div><div class="ig-row"><button class="ig-btn ghost" id="bResend" data-t="resend"></button><button class="ig-btn" id="bBackIn" data-t="signIn"></button></div></section>
+
+  <section class="ig-card" id="vForgot" hidden><h2 data-t="forgotTitle"></h2><p class="ig-sub" data-t="forgotText"></p>
+    <form id="fForgot"><label><span data-t="email"></span><input id="iEmail2" type="email" autocomplete="email" required></label><div class="msg" id="mForgot" role="status" aria-live="polite"></div><button class="ig-btn" type="submit" data-t="sendLink"></button><button class="link" type="button" id="bBack2" data-t="back"></button></form></section>
+
+  <section class="ig-card" id="vReset" hidden><h2 data-t="resetTitle"></h2>
+    <form id="fReset"><label><span data-t="newPass"></span><input id="iNew" type="password" autocomplete="new-password" minlength="8" required></label><div class="msg" id="mReset" role="status" aria-live="polite"></div><button class="ig-btn" type="submit" data-t="save"></button></form></section>
+
+  <section class="ig-card" id="vMe" hidden>
+    <div class="ig-kicker" data-t="yourAccount"></div>
+    <h1 id="meName"></h1>
+    <p class="small" id="meEmail"></p>
+    <div class="msg" id="mMe" role="status" aria-live="polite"></div>
+    <div class="plan"><div><b id="planName"></b><div class="small" id="planInfo"></div></div><span class="badge" id="planBadge"></span></div>
+    <div class="ig-row"><a class="ig-btn sun" id="bUpgrade" href="pricing.html" data-t="seePremium"></a><button class="ig-btn ghost" id="bPortal" hidden data-t="manageBilling"></button></div>
+    <div class="ig-stats"><div><b id="sLv">1</b><small data-t="level"></small></div><div><b id="sXp">0</b><small>XP</small></div><div><b id="sCoins">0</b><small data-t="coins"></small></div></div>
+    <button class="ig-btn ghost" id="bImport" hidden></button>
+    <form id="fProfile" class="row2"><label><span data-t="name"></span><input id="iMeName" type="text" maxlength="24" autocomplete="nickname"></label><label style="align-self:end"><button class="ig-btn ghost" type="submit" data-t="save"></button></label></form>
+    <h2 data-t="achievements"></h2><div class="ach" id="ach"></div>
+    <div class="ig-row"><a class="ig-btn" id="bPlay" href="index.html" data-t="play"></a><a class="ig-btn ghost" id="bAdmin" href="admin.html" hidden>Admin</a><button class="ig-btn ghost" id="bOut" data-t="signOut"></button></div>
+    <details><summary class="small" data-t="danger"></summary>
+      <p class="small" data-t="deleteText"></p>
+      <form id="fDelete"><label><span data-t="confirmPass"></span><input id="iDelPass" type="password" autocomplete="current-password"></label><label><span data-t="typeDelete"></span><input id="iDelWord" type="text" autocomplete="off"></label><div class="msg" id="mDel" role="status" aria-live="polite"></div><button class="ig-btn danger" type="submit" data-t="deleteBtn"></button></form>
+    </details>
+  </section>
+  <p class="small" style="color:#cfe;max-width:540px;text-align:center"><a href="privacy.html" style="color:#fff" data-t="privacy"></a> · <a href="terms.html" style="color:#fff" data-t="terms"></a></p>
+</main>
+<script type="module">
+import P from './engine/platform.js';
+const $ = id => document.getElementById(id);
+const STR = {
+  en: { offTitle: 'Accounts are coming soon', offText: 'Inoa Games accounts are not switched on yet. You can play every game as a guest; your hero is saved on this device.', toHub: 'Back to the games', authTitle: 'Your Inoa hero', authLead: 'Sign in to save your hero, XP and coins across devices. Free accounts get 3 game starts a day.', signIn: 'Sign in', signUp: 'Create account', name: 'Display name', email: 'Email', password: 'Password (8+ characters)', legal: 'By creating an account you agree to the <a href="terms.html">terms</a> and the <a href="privacy.html">privacy policy</a>. We only ask for what we need: an email, a password and a display name.', forgot: 'Forgot your password?', checkTitle: 'Check your email', checkSent: 'We sent a link to {e}. Open it on this device to finish creating your account.', resend: 'Resend email', resent: 'If that address can receive mail, a new link is on its way.', forgotTitle: 'Reset your password', forgotText: 'Enter your email and we will send a reset link if there is an account for it.', sendLink: 'Send reset link', back: 'Back', resetTitle: 'Choose a new password', newPass: 'New password (8+ characters)', save: 'Save', saved: 'Saved.', yourAccount: 'Your account', level: 'Hero level', coins: 'Coins', achievements: 'Achievements', play: 'Play', signOut: 'Sign out', danger: 'Delete account', deleteText: 'This removes your account, profile, progress and achievements. If you have Premium it is cancelled first. Payment records required for accounting are kept without your profile.', confirmPass: 'Confirm your password', typeDelete: 'Type DELETE', deleteBtn: 'Delete my account', seePremium: 'See Premium', manageBilling: 'Manage billing', free: 'Free', premium: 'Premium', admin: 'Owner', startsLeft: '{n} of {m} free starts left today · resets at {t}', premiumUntil: 'Renews {d}', premiumEnds: 'Ends {d} (cancelled)', pastDue: 'Payment problem — update your card in billing', importBtn: 'Bring my on-device progress into this account ({x} XP)', imported: 'Progress added: +{x} XP, +{c} coins.', verified: 'Email verified — welcome!', errEmail: 'Enter a valid email address.', errPass: 'Use at least 8 characters.', errName: 'Choose a display name (no < or >).', errLogin: 'That email and password don’t match, or the email isn’t verified yet.', errOffline: 'You’re offline. Connect to sign in.', errGeneric: 'Something went wrong. Please try again.', delWord: 'Type DELETE to confirm.', deleted: 'Your account was deleted.', privacy: 'Privacy', terms: 'Terms', unverified: 'Verify your email to start playing.' },
+  es: { offTitle: 'Las cuentas llegan pronto', offText: 'Las cuentas de Inoa Games aún no están activas. Puedes jugar todo como invitado; tu héroe se guarda en este dispositivo.', toHub: 'Volver a los juegos', authTitle: 'Tu héroe Inoa', authLead: 'Inicia sesión para guardar tu héroe, XP y monedas en todos tus dispositivos. Las cuentas gratis tienen 3 partidas al día.', signIn: 'Entrar', signUp: 'Crear cuenta', name: 'Nombre visible', email: 'Correo', password: 'Contraseña (8+ caracteres)', legal: 'Al crear una cuenta aceptas los <a href="terms.html">términos</a> y la <a href="privacy.html">política de privacidad</a>. Solo pedimos lo necesario: correo, contraseña y un nombre visible.', forgot: '¿Olvidaste tu contraseña?', checkTitle: 'Revisa tu correo', checkSent: 'Enviamos un enlace a {e}. Ábrelo en este dispositivo para terminar tu cuenta.', resend: 'Reenviar correo', resent: 'Si esa dirección puede recibir correo, va un enlace nuevo.', forgotTitle: 'Restablecer contraseña', forgotText: 'Escribe tu correo y te enviaremos un enlace si existe una cuenta.', sendLink: 'Enviar enlace', back: 'Atrás', resetTitle: 'Elige una contraseña nueva', newPass: 'Contraseña nueva (8+ caracteres)', save: 'Guardar', saved: 'Guardado.', yourAccount: 'Tu cuenta', level: 'Nivel de héroe', coins: 'Monedas', achievements: 'Logros', play: 'Jugar', signOut: 'Cerrar sesión', danger: 'Eliminar cuenta', deleteText: 'Esto elimina tu cuenta, perfil, progreso y logros. Si tienes Premium, primero se cancela. Los registros de pago que exige la contabilidad se conservan sin tu perfil.', confirmPass: 'Confirma tu contraseña', typeDelete: 'Escribe DELETE', deleteBtn: 'Eliminar mi cuenta', seePremium: 'Ver Premium', manageBilling: 'Gestionar pago', free: 'Gratis', premium: 'Premium', admin: 'Dueño', startsLeft: 'Te quedan {n} de {m} partidas gratis hoy · se renuevan a las {t}', premiumUntil: 'Se renueva el {d}', premiumEnds: 'Termina el {d} (cancelado)', pastDue: 'Problema con el pago: actualiza tu tarjeta', importBtn: 'Traer mi progreso de este dispositivo ({x} XP)', imported: 'Progreso añadido: +{x} XP, +{c} monedas.', verified: '¡Correo verificado! Bienvenido.', errEmail: 'Escribe un correo válido.', errPass: 'Usa al menos 8 caracteres.', errName: 'Elige un nombre (sin < ni >).', errLogin: 'El correo y la contraseña no coinciden, o el correo aún no está verificado.', errOffline: 'Sin conexión. Conéctate para entrar.', errGeneric: 'Algo salió mal. Inténtalo otra vez.', delWord: 'Escribe DELETE para confirmar.', deleted: 'Tu cuenta fue eliminada.', privacy: 'Privacidad', terms: 'Términos', unverified: 'Verifica tu correo para empezar a jugar.' }
+};
+let lang = (() => { try { const k = JSON.parse(localStorage.getItem('inoa.activeProfile') || 'null') || 'inoa.profile'; return (JSON.parse(localStorage.getItem(k) || '{}').lang) || (navigator.language || '').startsWith('es') && 'es' || 'en'; } catch (e) { return 'en'; } })();
+const T = (k, v = {}) => String(STR[lang][k] ?? STR.en[k] ?? k).replace(/\{(\w+)\}/g, (_, x) => v[x] ?? '');
+function applyLang() { document.documentElement.lang = lang; document.querySelectorAll('[data-t]').forEach(el => { if (el.hasAttribute('data-html')) el.innerHTML = T(el.dataset.t); else el.textContent = T(el.dataset.t); }); document.querySelectorAll('.lang button').forEach(b => b.classList.toggle('on', b.dataset.l === lang)); setMode(mode); if (P.state().signedIn && !$('vMe').hidden) renderMe(); }
+document.querySelectorAll('.lang button').forEach(b => b.onclick = () => { lang = b.dataset.l; try { const k = JSON.parse(localStorage.getItem('inoa.activeProfile') || 'null') || 'inoa.profile'; const p = JSON.parse(localStorage.getItem(k) || '{}'); p.lang = lang; localStorage.setItem(k, JSON.stringify(p)); } catch (e) { } if (P.state().signedIn) P.updateProfile({ lang }).catch(() => { }); applyLang(); });
+const views = ['vOff', 'vAuth', 'vCheck', 'vForgot', 'vReset', 'vMe']; const show = v => views.forEach(x => $(x).hidden = x !== v);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const msg = (id, text, ok) => { const m = $(id); m.textContent = text || ''; m.className = 'msg' + (text ? (ok ? ' ok' : ' err') : ''); };
+const errText = e => e && e.code === 'offline' ? T('errOffline') : e && e.code === 'weak_password' ? T('errPass') : T('errGeneric');
+// only same-site relative destinations (no open redirects)
+const nextUrl = (() => { const n = new URLSearchParams(location.search).get('next') || ''; return /^(games\/[a-z]+\.html|index\.html|pricing\.html)$/.test(n) ? n : 'index.html'; })();
+const here = location.origin + location.pathname + (location.search.includes('next=') ? '?next=' + encodeURIComponent(nextUrl) : '');
+let mode = 'in', lastEmail = '';
+function setMode(m) { mode = m; $('tIn').classList.toggle('on', m === 'in'); $('tUp').classList.toggle('on', m === 'up'); $('tIn').setAttribute('aria-selected', m === 'in'); $('tUp').setAttribute('aria-selected', m === 'up'); $('lName').hidden = m !== 'up'; $('legal').hidden = m !== 'up'; $('bAuth').textContent = T(m === 'up' ? 'signUp' : 'signIn'); $('iPass').autocomplete = m === 'up' ? 'new-password' : 'current-password'; }
+$('tIn').onclick = () => { setMode('in'); msg('mAuth'); }; $('tUp').onclick = () => { setMode('up'); msg('mAuth'); };
+$('fAuth').onsubmit = async e => { e.preventDefault(); msg('mAuth');
+  const email = $('iEmail').value.trim(), pass = $('iPass').value, name = $('iName').value.trim();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return msg('mAuth', T('errEmail'));
+  if (pass.length < 8) return msg('mAuth', T('errPass'));
+  if (mode === 'up' && (!name || /[<>]/.test(name))) return msg('mAuth', T('errName'));
+  $('bAuth').disabled = true;
+  try {
+    if (mode === 'up') { const r = await P.signUp(email, pass, name, here); lastEmail = email; if (r.needsVerify) { $('checkText').textContent = T('checkSent', { e: email }); msg('mCheck'); show('vCheck'); } else await afterSignIn(); }
+    else { await P.signIn(email, pass); await afterSignIn(); }
+  } catch (err) { msg('mAuth', err.code === 'offline' ? T('errOffline') : mode === 'in' ? T('errLogin') : errText(err)); }
+  $('bAuth').disabled = false; };
+$('bForgot').onclick = () => { $('iEmail2').value = $('iEmail').value; msg('mForgot'); show('vForgot'); };
+$('bBack2').onclick = () => show('vAuth'); $('bBackIn').onclick = () => { setMode('in'); show('vAuth'); };
+$('bResend').onclick = async () => { try { await P.resendVerification(lastEmail || $('iEmail').value.trim(), here); } catch (e) { } msg('mCheck', T('resent'), true); };
+$('fForgot').onsubmit = async e => { e.preventDefault(); const email = $('iEmail2').value.trim(); if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return msg('mForgot', T('errEmail'));
+  try { await P.requestPasswordReset(email, location.origin + location.pathname); msg('mForgot', T('resent'), true); } catch (err) { msg('mForgot', errText(err)); } };
+$('fReset').onsubmit = async e => { e.preventDefault(); try { await P.updatePassword($('iNew').value); msg('mReset', T('saved'), true); setTimeout(afterSignIn, 700); } catch (err) { msg('mReset', errText(err)); } };
+$('fProfile').onsubmit = async e => { e.preventDefault(); const n = $('iMeName').value.trim(); if (!n || /[<>]/.test(n)) return msg('mMe', T('errName')); try { await P.updateProfile({ display_name: n }); msg('mMe', T('saved'), true); renderMe(); } catch (err) { msg('mMe', errText(err)); } };
+$('bOut').onclick = async () => { await P.signOut(); setMode('in'); show('vAuth'); };
+$('bImport').onclick = async () => { try { const r = await P.importLocal(); if (r && r.ok) msg('mMe', T('imported', { x: r.xp, c: r.coins }), true); renderMe(); } catch (err) { msg('mMe', errText(err)); } };
+$('bPortal').onclick = async () => { try { const tok = JSON.parse(localStorage.getItem('inoa.auth')).access_token; const r = await fetch('api/portal', { method: 'POST', headers: { Authorization: 'Bearer ' + tok } }); const d = await r.json(); if (d.url) location.href = d.url; else msg('mMe', T('errGeneric')); } catch (e) { msg('mMe', T('errOffline')); } };
+$('fDelete').onsubmit = async e => { e.preventDefault(); msg('mDel'); if ($('iDelWord').value.trim() !== 'DELETE') return msg('mDel', T('delWord'));
+  try { await P.signIn(P.state().user.email, $('iDelPass').value); } catch (err) { return msg('mDel', T('errLogin')); } // re-authentication
+  try { const tok = JSON.parse(localStorage.getItem('inoa.auth')).access_token; const r = await fetch('api/account-delete', { method: 'POST', headers: { Authorization: 'Bearer ' + tok } }); if (!r.ok) throw new Error(); await P.signOut(); show('vAuth'); msg('mAuth', T('deleted'), true); } catch (err) { msg('mDel', T('errGeneric')); } };
+async function renderMe() {
+  const st = P.state().status || await P.refreshStatus().catch(() => null); if (!st) return;
+  $('meName').textContent = st.display_name; $('meEmail').textContent = P.state().user.email; if (document.activeElement !== $('iMeName')) $('iMeName').value = st.display_name;
+  $('sLv').textContent = st.level; $('sXp').textContent = st.xp; $('sCoins').textContent = st.coins; $('bAdmin').hidden = !st.is_admin;
+  const s = st.subscription, dt = d => new Date(d).toLocaleDateString(lang, { month: 'short', day: 'numeric', year: 'numeric' });
+  $('planName').textContent = T(st.plan === 'free' ? 'free' : st.plan === 'admin' ? 'admin' : 'premium'); $('planBadge').textContent = $('planName').textContent; $('planBadge').className = 'badge' + (st.plan === 'free' ? '' : ' prem');
+  $('planInfo').textContent = !st.verified ? T('unverified') : st.plan === 'free' ? T('startsLeft', { n: st.starts_left, m: st.starts_limit, t: new Date(st.resets_at).toLocaleTimeString(lang, { hour: 'numeric', minute: '2-digit' }) })
+    : s && s.status === 'past_due' ? T('pastDue') : s && s.cancel_at_period_end ? T('premiumEnds', { d: dt(s.current_period_end) }) : s ? T('premiumUntil', { d: dt(s.current_period_end) }) : '';
+  $('bUpgrade').hidden = st.plan !== 'free'; $('bPortal').hidden = !(s && s.provider === 'stripe');
+  let local = null; try { local = JSON.parse(localStorage.getItem('inoa.profile') || 'null'); } catch (e) { }
+  $('bImport').hidden = !!st.imported_local || !local || !(local.xp > 0); if (!$('bImport').hidden) $('bImport').textContent = T('importBtn', { x: Math.min(local.xp, 5000) });
+  try { const a = await P.achievements(); $('ach').innerHTML = a.map(x => `<div class="${x.earned_at ? 'on' : ''}"><b>${esc(x.icon)} ${esc(lang === 'es' ? x.title_es : x.title_en)}</b>${esc(lang === 'es' ? x.desc_es : x.desc_en)}</div>`).join(''); } catch (e) { }
+}
+async function afterSignIn() { show('vMe'); await renderMe(); if (new URLSearchParams(location.search).get('next')) { const st = P.state().status; if (st && st.verified) setTimeout(() => location.href = nextUrl, 900); } }
+(async () => { try {
+  await P.init(); applyLang();
+  if (!P.enabled) return show('vOff');
+  try { const r = await P.handleRedirect(); if (r && r.type === 'recovery') return show('vReset'); if (r && r.type === 'error') { show('vAuth'); return msg('mAuth', r.error); } if (r) { show('vMe'); msg('mMe', T('verified'), true); await renderMe(); return; } } catch (e) { }
+  if (P.state().signedIn) { show('vMe'); await renderMe(); } else { setMode(new URLSearchParams(location.search).get('mode') === 'up' ? 'up' : 'in'); show('vAuth'); }
+} finally { window.__READY = true; } })();
+</script>
+</body></html>

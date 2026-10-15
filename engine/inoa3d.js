@@ -30,12 +30,14 @@ export const store = {
   get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } }
 };
-const PROFILE_KEY = 'inoa.profile';
+const PROFILE_KEY_GUEST = 'inoa.profile';
+// Signed-in players get a per-user profile cache (written by engine/platform.js from the server); guests use the device profile.
+const pkey = () => { const k = store.get('inoa.activeProfile', null); return typeof k === 'string' && k.startsWith('inoa.profile.u.') ? k : PROFILE_KEY_GUEST; };
 // Profile v2 (localStorage 'inoa.profile'): older saves are upgraded in place, never reset.
 // { v, name, xp, coins, games: {id: {plays, best, last, newBest}}, recent: [ids], lang, voice, sound, music, motion, quality, hero }
 const PDEF = { v: 2, name: '', xp: 0, coins: 0, games: {}, recent: [], lang: 'en', voice: true, sound: true, music: true, motion: 'auto', quality: 'auto', hero: null };
 export function profile() {
-  const raw = store.get(PROFILE_KEY, {}); const p = Object.assign({}, PDEF, raw && typeof raw === 'object' ? raw : {});
+  const raw = store.get(pkey(), {}); const p = Object.assign({}, PDEF, raw && typeof raw === 'object' ? raw : {});
   p.xp = Number.isFinite(+p.xp) ? Math.max(0, +p.xp) : 0; p.coins = Number.isFinite(+p.coins) ? Math.max(0, +p.coins) : 0;
   if (!p.games || typeof p.games !== 'object') p.games = {}; if (!Array.isArray(p.recent)) p.recent = []; if (p.lang !== 'es') p.lang = 'en'; p.v = 2; return p;
 }
@@ -47,13 +49,13 @@ export function reward(gameId, { xp = 0, coins = 0, best = null, bestLower = fal
   const now = Date.now(); if (_lastReward && _lastReward.gameId === gameId && now - _lastReward.t < 3000) return _lastReward.r;
   const p = profile(); const before = heroLevel(p.xp).lv; xp = Math.max(0, Math.min(5000, +xp || 0)); coins = Math.max(0, Math.min(5000, +coins || 0)); p.xp += Math.round(xp); p.coins += Math.round(coins);
   const g = p.games[gameId] || { plays: 0, best: null }; g.plays = (g.plays || 0) + 1; g.last = now; if (best != null && Number.isFinite(+best) && (g.best == null || (bestLower ? best < g.best : best > g.best))) { g.best = best; g.newBest = true; } else g.newBest = false; p.games[gameId] = g;
-  p.recent = [gameId, ...p.recent.filter(x => x !== gameId)].slice(0, 8); store.set(PROFILE_KEY, p);
+  p.recent = [gameId, ...p.recent.filter(x => x !== gameId)].slice(0, 8); store.set(pkey(), p);
   const after = heroLevel(p.xp); const r = { xp: Math.round(xp), coins: Math.round(coins), levelUp: after.lv > before, level: after.lv, best: g.best, newBest: g.newBest }; _lastReward = { gameId, t: now, r }; return r;
 }
 // The player's chosen hero (picked on the hub): {model, color, name}. model is one of HERO_MODELS; falls back safely.
 export const HERO_MODELS = ['skater-female', 'skater-male', 'survivor-female', 'survivor-male', 'cyborg-female', 'male'];
 export function hero(fallbackModel = 'skater-female') { const p = profile(), h = p.hero || {}; const model = HERO_MODELS.includes(h.model) ? h.model : fallbackModel; const color = /^#[0-9a-f]{6}$/i.test(h.color || '') ? h.color : '#5bb8ff'; return { model, color, colorHex: parseInt(color.slice(1), 16), name: String(p.name || '').replace(/[<>]/g, '').slice(0, 18), chosen: !!p.hero }; }
-export function setProfile(patch) { store.set(PROFILE_KEY, Object.assign(profile(), patch)); }
+export function setProfile(patch) { store.set(pkey(), Object.assign(profile(), patch)); }
 // Shared settings (live in the profile so every game and the hub agree). Changing one fires 'inoa:settings' on window.
 export function settings() { const p = profile(); return { sound: p.sound, music: p.music, voice: p.voice, lang: p.lang, motion: p.motion, quality: p.quality }; }
 export function setSetting(k, v) { setProfile({ [k]: v }); applySettings(); dispatchEvent(new CustomEvent('inoa:settings', { detail: { key: k, value: v, settings: settings() } })); }
@@ -338,10 +340,11 @@ export function floatText(text, x, y, cls = '') { const d = document.createEleme
 // Results card shared by every game: grants XP/coins to the shared profile and shows hero level.
 export function results({ gameId, title, stats = [], xp = 0, coins = 0, best = null, bestLower = false, bestLabel = t('best'), onAgain, onHub = () => location.href = '../index.html', share, won }) {
   const r = reward(gameId, { xp, coins, best, bestLower }); const lv = heroLevel(profile().xp);
+  _pf.then(P => P && P.enabled && P.finishRound(gameId, { score: best, bestLower, xp, coins })).then(sr => { if (!sr || !sr.ok || sr.duplicate) return; const rw = d.querySelector('.ig-reward'); if (rw) { const sp = rw.querySelectorAll('span'); if (sp[0]) sp[0].textContent = `+${sr.xp} XP`; if (sp[1]) sp[1].textContent = `+${sr.coins} 🪙`; if (sp[2]) sp[2].textContent = `${t('heroLv')} ${sr.level}`; } (sr.achievements || []).forEach((a, i) => setTimeout(() => toast('🏅 ' + a.replace(/_/g, ' '), 2400), 600 + i * 2500)); }).catch(() => { });
   const d = document.createElement('div'); d.className = 'ig-screen ig-results';
   d.innerHTML = `<div class="ig-card"><div class="ig-kicker">${r.newBest ? t('newBest') : t('roundOver')}</div><h2>${title}</h2><div class="ig-stats">${stats.map(s => `<div><b>${s[1]}</b><small>${s[0]}</small></div>`).join('')}</div>${r.best != null && best != null ? `<p class="ig-sub">${bestLabel}: <b>${r.best}</b></p>` : ''}<div class="ig-reward"><span>+${r.xp} XP</span><span>+${r.coins} 🪙</span><span>${t('heroLv')} ${lv.lv}${r.levelUp ? ' ⬆' : ''}</span></div><div class="ig-xpbar"><i style="width:${Math.round(lv.into / lv.need * 100)}%"></i></div><div class="ig-row"><button class="ig-btn ghost" data-a="hub">${t('hub')}</button><button class="ig-btn" data-a="again">${t('again')}</button></div>${share ? `<button class="ig-btn sun" data-a="share">📣 ${t('share')}</button>` : ''}${(won ?? r.newBest) && installAvailable() ? `<button class="ig-btn ghost" data-a="install">📲 ${t('install')}</button>` : ''}</div>`;
   document.body.appendChild(d); if (r.levelUp) SFX.level();
-  d.querySelector('[data-a=again]').onclick = () => { d.remove(); onAgain && onAgain(); }; d.querySelector('[data-a=hub]').onclick = () => onHub();
+  d.querySelector('[data-a=again]').onclick = async () => { if (!(await platformStart(gameId))) return; d.remove(); onAgain && onAgain(); }; d.querySelector('[data-a=hub]').onclick = () => onHub();
   const ib = d.querySelector('[data-a=install]'); if (ib) ib.onclick = async () => { ib.remove(); await promptInstall(); };
   const sh = d.querySelector('[data-a=share]'); if (sh) sh.onclick = async () => { try { if (navigator.share) await navigator.share({ text: share }); else { await navigator.clipboard.writeText(share); toast(t('copied')); } } catch (e) { } };
   return d;
@@ -371,7 +374,7 @@ export function settingsPanel({ onClose } = {}) {
     d.querySelector('[data-a=done]').onclick = () => { d.remove(); onClose && onClose(); }; setTimeout(() => d.querySelector('[data-a=done]')?.focus({ preventScroll: true }), 30); };
   draw(); document.body.appendChild(d); return d;
 }
-export function titleScreen({ title, kicker, lead, how = [], onPlay, extra = '' }) { const d = document.createElement('div'); d.className = 'ig-screen ig-title'; d.innerHTML = `<div class="ig-card"><div class="ig-kicker">${kicker}</div><h1>${title}</h1><p class="ig-sub">${lead}</p>${how.length ? `<div class="ig-how">${how.map(h => `<div><span>${h[0]}</span>${h[1]}</div>`).join('')}</div>` : ''}${extra}<div class="ig-row"><a class="ig-btn ghost" href="../index.html">${t('hub')}</a><button class="ig-btn" data-a="play">${t('play')}</button></div><button class="ig-chipbtn ig-setbtn" data-a="settings">⚙️ ${t('settings')}</button></div>`; document.body.appendChild(d); d.querySelector('[data-a=play]').onclick = () => { audio(); d.remove(); onPlay(); }; d.querySelector('[data-a=settings]').onclick = () => settingsPanel(); return d; }
+export function titleScreen({ title, kicker, lead, how = [], onPlay, extra = '' }) { const d = document.createElement('div'); d.className = 'ig-screen ig-title'; d.innerHTML = `<div class="ig-card"><div class="ig-kicker">${kicker}</div><h1>${title}</h1><p class="ig-sub">${lead}</p>${how.length ? `<div class="ig-how">${how.map(h => `<div><span>${h[0]}</span>${h[1]}</div>`).join('')}</div>` : ''}${extra}<div class="ig-row"><a class="ig-btn ghost" href="../index.html">${t('hub')}</a><button class="ig-btn" data-a="play">${t('play')}</button></div><button class="ig-chipbtn ig-setbtn" data-a="settings">⚙️ ${t('settings')}</button></div>`; document.body.appendChild(d); d.querySelector('[data-a=play]').onclick = async e => { audio(); const b = e.currentTarget; b.disabled = true; const ok = await platformStart(); b.disabled = false; if (!ok) return; d.remove(); onPlay(); }; d.querySelector('[data-a=settings]').onclick = () => settingsPanel(); return d; }
 
 /* ---------------- loop ---------------- */
 export function loop(fn) { let last = performance.now(); const f = now => { requestAnimationFrame(f); const dt = Math.min(.05, (now - last) / 1000); last = now; fn(dt, now / 1000); }; requestAnimationFrame(f); }
@@ -409,6 +412,35 @@ export function pbr(kind, color = 0x888888, repeat = [4, 4], opts = {}) {
 export function detail(root, kind = 'paint', strength = .5) { const p = pbr(kind, 0xffffff, [3, 3]); root.traverse(o => { if (o.isMesh && !o.userData.outline && o.material && !o.material.normalMap) { o.material = o.material.clone(); o.material.normalMap = p.normalMap; o.material.normalScale = new THREE.Vector2(strength, strength); o.material.roughnessMap = p.roughnessMap; } }); return root; }
 
 applySettings();
+
+/* ---------------- platform (accounts, free-start gate, server rewards) ---------------- */
+// Off unless /platform.json enables it; then the server decides starts and rewards (engine/platform.js, docs/PLATFORM_ARCHITECTURE.md).
+const _pf = import('./platform.js').then(m => m.default.init().then(() => m.default)).catch(() => null);
+export const platform = () => _pf;
+const gameIdFromUrl = () => (location.pathname.match(/games\/([a-z]+)\.html/) || [])[1] || null;
+addStrings({
+  en: { gSignin: 'Sign in to play', gSigninP: 'A free account saves your hero and progress. Free accounts get 3 game starts a day.', gVerify: 'Check your email', gVerifyP: 'Confirm your email address to start playing.', gLimit: 'That’s today’s 3 free starts', gLimitP: 'Your free starts come back at {t}. Premium has no daily limit.', gPremium: 'Premium game', gPremiumP: 'This game is part of Premium.', gSusp: 'Account paused', gSuspP: 'This account can’t start games right now. Contact support if this is a mistake.', gOffline: 'You’re offline', gOfflineP: 'Connect to the internet to start a game with your account.', gError: 'Something went wrong', gErrorP: 'We couldn’t start the game. Please try again.', gBtnSignin: 'Sign in or create account', gBtnPremium: 'See Premium', gBtnRetry: 'Try again', gLeft: '{n} free starts left today', gResend: 'Resend email' },
+  es: { gSignin: 'Inicia sesión para jugar', gSigninP: 'Una cuenta gratis guarda tu héroe y tu progreso. Las cuentas gratis tienen 3 partidas al día.', gVerify: 'Revisa tu correo', gVerifyP: 'Confirma tu correo para empezar a jugar.', gLimit: 'Ya usaste tus 3 partidas gratis de hoy', gLimitP: 'Vuelven a las {t}. Premium no tiene límite diario.', gPremium: 'Juego Premium', gPremiumP: 'Este juego es parte de Premium.', gSusp: 'Cuenta en pausa', gSuspP: 'Esta cuenta no puede iniciar partidas ahora. Escríbenos si es un error.', gOffline: 'Sin conexión', gOfflineP: 'Conéctate a internet para empezar una partida con tu cuenta.', gError: 'Algo salió mal', gErrorP: 'No pudimos iniciar la partida. Inténtalo otra vez.', gBtnSignin: 'Entrar o crear cuenta', gBtnPremium: 'Ver Premium', gBtnRetry: 'Reintentar', gLeft: 'Te quedan {n} partidas gratis hoy', gResend: 'Reenviar correo' }
+});
+function gateCard(r, retry) {
+  const at = r.resets_at ? new Date(r.resets_at).toLocaleTimeString(lang() === 'es' ? 'es' : 'en', { hour: 'numeric', minute: '2-digit' }) : '';
+  const M = { signin: ['gSignin', 'gSigninP', 'signin'], not_authenticated: ['gSignin', 'gSigninP', 'signin'], unverified: ['gVerify', 'gVerifyP', 'verify'], limit: ['gLimit', 'gLimitP', 'premium'], offline_limit: ['gLimit', 'gLimitP', 'premium'], premium_only: ['gPremium', 'gPremiumP', 'premium'], suspended: ['gSusp', 'gSuspP', null], offline: ['gOffline', 'gOfflineP', 'retry'] }[r.reason] || ['gError', 'gErrorP', 'retry'];
+  const back = encodeURIComponent(location.pathname.split('/').slice(-2).join('/'));
+  const btn = M[2] === 'signin' ? `<a class="ig-btn" href="../account.html?next=${back}">${t('gBtnSignin')}</a>` : M[2] === 'premium' ? `<a class="ig-btn sun" href="../pricing.html?next=${back}">${t('gBtnPremium')}</a>` : M[2] === 'verify' ? `<a class="ig-btn" href="../account.html?next=${back}">${t('gResend')}</a>` : M[2] === 'retry' ? `<button class="ig-btn" data-a="retry">${t('gBtnRetry')}</button>` : '';
+  const d = document.createElement('div'); d.className = 'ig-screen ig-gate'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true');
+  d.innerHTML = `<div class="ig-card"><div class="ig-kicker">INOA GAMES</div><h2>${t(M[0])}</h2><p class="ig-sub">${t(M[1]).replace('{t}', at)}</p><div class="ig-row"><a class="ig-btn ghost" href="../index.html">${t('hub')}</a>${btn}</div></div>`;
+  document.body.appendChild(d); const rb = d.querySelector('[data-a=retry]'); if (rb) rb.onclick = () => { d.remove(); retry && retry(); };
+  if (r.reason) say(t(M[0]), { once: true }); setTimeout(() => d.querySelector('.ig-btn:not(.ghost)')?.focus({ preventScroll: true }), 30);
+  return d;
+}
+// Ask the server for a qualifying start before a round begins. Resolves true when play may start (always true when the platform is off).
+export async function platformStart(gameId = gameIdFromUrl()) {
+  const P = await _pf; if (!P || !P.enabled || !gameId) return true;
+  if (P.sessionValid(gameId)) return true;
+  const r = await P.startGame(gameId);
+  if (r.allowed) { if (r.starts_left != null && !r.reused) toast(t('gLeft').replace('{n}', r.starts_left), 2200); return true; }
+  return new Promise(res => gateCard(r, () => platformStart(gameId).then(res)));
+}
 
 /* ---------------- PWA: service worker, manifest link, install offer ---------------- */
 // Every page that imports the engine joins the app: offline cache (sw.js at the site root) and an install offer

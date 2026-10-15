@@ -1,0 +1,8 @@
+{
+  "enabled": false,
+  "supabaseUrl": "",
+  "supabaseAnonKey": "",
+  "stripeMode": "test",
+  "freeDailyStarts": 3,
+  "note": "Public config only. Set enabled:true with the Supabase project URL + anon (publishable) key. Secrets go in Vercel env vars, never here. See docs/PLATFORM_ARCHITECTURE.md §3."
+}
