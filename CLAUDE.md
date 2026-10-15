@@ -43,7 +43,7 @@ It is a **static site**: `index.html` (hub) + `games/*.html` (one page per game)
 | `games/fit.html` | **Perfect Fit** — ASMR organizing, 8+ levels, Zen mode | Phase 1 done (drop under pointer, portrait framing, EN/ES). Real-phone feel unverified |
 | `games/junk.html` | **Junkyard to Jewel** — wash/sand/paint/polish, 8 vehicles | Phase 1 done (stroke tracing, portrait framing, EN/ES). Real-phone feel unverified |
 | `games/brew.html` | **Brew and Bloom** — cozy idle café + greenhouse: café levels 1–10, 16 teas, regulars' daily requests + story chapters, café journal (collection book), seasonal plants, decor | Elevation pass done 2026-10-15 (docs/AUDIT.md). Open: real-phone feel, native ES read-through of stories |
-| `games/builders.html` | **Driftwood Builders** — island sandbox | Phase 1 done (occluder fade, phone palette, boats, EN/ES) |
+| `games/builders.html` | **Driftwood Builders** — island sandbox, 3 islands, islanders, postcards | Elevation pass done: 21-quest chain unlocking 7 new pieces (flowers, tree, market stall, cottage, bridge, glow lamp, lighthouse), Shell Cay + Glowmoss Isle by boat, fishing/shells/crystals, islanders with wishes, postcards, wrap-up results; v1 saves migrate. Real-phone feel unverified |
 | `games/tray.html` | **Fail Tray** — wobble physics courses, slow-mo replay, hot-seat | Passing; P3 polish deferred |
 | `games/trivia.html` | **Pact Trivia** — 3D game show, 160+ EN/ES questions | Phase 1 done (portrait board framing, kids mode never subtracts). Fact-check in Phase 5 |
 | `games/draw.html` | **Draw the Pact** — pass-and-play draw & guess, Speed Sketch, Telephone | Phase 1 done (pointer accuracy, gamepad, consistent language) |

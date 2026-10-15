@@ -30,11 +30,16 @@
   "corn": "models/corn.glb?h=453a6a2a",
   "pumpkin": "models/pumpkin.glb?h=a6512cf9",
   "mushroom": "models/mushroom.glb?h=ab63ca7d",
-  "strawberry": "models/strawberry.glb?h=15ba46c2"
+  "strawberry": "models/strawberry.glb?h=15ba46c2",
+  "male": "models/male.glb?h=37b571ee",
+  "cyborg-female": "models/cyborg-female.glb?h=86c5fb7b",
+  "bunny": "models/bunny.glb?h=7f149829",
+  "fish": "models/fish.glb?h=54b308d3",
+  "mussel": "models/mussel.glb?h=4a4c1cba"
  },
  "hdri": {
   "dawn": "hdri/dawn.hdr?h=b48993a4"
  },
  "lazy": [],
- "bytes": 1820624
+ "bytes": 2073724
 }
