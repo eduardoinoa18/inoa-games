@@ -13,3 +13,4 @@
 # native app wrappers + store material (not part of the web deploy)
 /app/
 /store/
+/.claude

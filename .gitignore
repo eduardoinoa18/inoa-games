@@ -3,3 +3,6 @@ test/out/
 .DS_Store
 .vercel
 node_modules
+
+# agent worktrees (local only)
+.claude/worktrees/
