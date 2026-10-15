@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Premium · Inoa Games</title>
+<meta name="description" content="Inoa Games is free to play with 3 game starts a day. Premium is $4.99 a month for unlimited play across every game.">
+<meta name="theme-color" content="#0b2a3a"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;800&family=Unbounded:wght@700;900&display=swap">
+<link rel="stylesheet" href="engine/ui.css">
+<style>
+html,body{overflow:auto;touch-action:auto;-webkit-user-select:text;user-select:text;background:radial-gradient(120% 80% at 50% 100%,#1f5b6e,#0b2a3a 60%,#061821);min-height:100%}
+main{min-height:100vh;display:grid;justify-items:center;align-content:start;padding:max(18px,env(safe-area-inset-top)) 16px 40px;box-sizing:border-box;gap:16px}
+.top{width:min(860px,100%);display:flex;justify-content:space-between;align-items:center;color:#fff}.top a{color:#fff;text-decoration:none;font-weight:800}.brand{font-family:var(--f-d);font-weight:900;letter-spacing:.08em}.brand span{color:var(--sun)}
+.lang button{background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:10px;padding:6px 10px;font-weight:800;cursor:pointer;min-height:36px}.lang button.on{background:var(--sun);color:var(--ink);border-color:transparent}
+h1.hero{color:#fff;font-family:var(--f-d);font-size:clamp(30px,6vw,48px);text-align:center;margin:6px 0 0;max-width:760px}.lead{color:#cfe3ea;text-align:center;max-width:620px;font-weight:600}
+.plans{width:min(860px,100%);display:grid;grid-template-columns:1fr 1fr;gap:14px}@media (max-width:720px){.plans{grid-template-columns:1fr}}
+.plan{background:var(--paper);border-radius:28px;padding:22px;display:grid;gap:12px;align-content:start;box-shadow:0 24px 70px rgba(0,0,0,.3)}
+.plan.best{box-shadow:0 0 0 4px var(--sun),0 24px 70px rgba(0,0,0,.3)}
+.price{font-family:var(--f-d);font-size:40px;font-weight:900}.price small{font-size:15px;color:#4c5868}
+ul{margin:0;padding-left:20px;display:grid;gap:6px;font-weight:600}
+.msg{border-radius:14px;padding:10px 12px;font-weight:700;font-size:14px}.msg.err{background:#ffe1dc;color:#7a1d10}.msg.ok{background:#dff6ea;color:#0f5c48}.msg:empty{display:none}
+.testmode{background:#ffe9a8;color:#5a4300;border-radius:12px;padding:8px 12px;font-weight:800;font-size:13px;text-align:center}
+.faq{width:min(860px,100%);display:grid;gap:8px}.faq details{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:12px 16px;color:#e8f4f7}.faq summary{font-weight:800;cursor:pointer;min-height:28px}.faq p{margin-top:8px;color:#cfe3ea}
+[hidden]{display:none!important}
+</style>
+</head><body>
+<main>
+  <div class="top"><a href="index.html" class="brand" aria-label="Inoa Games home">INOA<span>GAMES</span></a><div class="lang" role="group" aria-label="Language / Idioma"><button data-l="en">EN</button> <button data-l="es">ES</button></div></div>
+  <h1 class="hero" data-t="title"></h1>
+  <p class="lead" data-t="lead"></p>
+  <div class="testmode" id="testmode" hidden data-t="testmode"></div>
+  <div class="msg" id="msg" role="status" aria-live="polite" style="width:min(860px,100%)"></div>
+  <div class="plans">
+    <section class="plan" aria-labelledby="pf"><div class="ig-kicker" data-t="freeKicker"></div><h2 id="pf" data-t="free"></h2><div class="price">$0</div>
+      <ul><li data-t="f1"></li><li data-t="f2"></li><li data-t="f3"></li><li data-t="f4"></li><li data-t="f5"></li></ul>
+      <a class="ig-btn ghost" id="bFree" href="account.html?mode=up" data-t="freeBtn"></a></section>
+    <section class="plan best" aria-labelledby="pp"><div class="ig-kicker" data-t="premKicker"></div><h2 id="pp">Premium</h2><div class="price">$4.99 <small data-t="perMonth"></small></div>
+      <ul><li data-t="p1"></li><li data-t="p2"></li><li data-t="p3"></li><li data-t="p4"></li><li data-t="p5"></li></ul>
+      <button class="ig-btn sun" id="bBuy" data-t="buy"></button><p class="small ig-sub" style="font-size:13px" data-t="terms" data-html></p></section>
+  </div>
+  <div class="faq">
+    <details><summary data-t="q1"></summary><p data-t="a1"></p></details>
+    <details><summary data-t="q2"></summary><p data-t="a2"></p></details>
+    <details><summary data-t="q3"></summary><p data-t="a3"></p></details>
+    <details><summary data-t="q4"></summary><p data-t="a4"></p></details>
+  </div>
+  <a class="ig-btn ghost" id="bBack" href="index.html" data-t="back"></a>
+</main>
+<script type="module">
+import P from './engine/platform.js';
+const $ = id => document.getElementById(id);
+const STR = {
+  en: { title: 'Play free. Go Premium when you’re ready.', lead: 'Every game is free to try with an account. Premium removes the daily limit across the whole collection.', testmode: 'Test mode — no real money is charged. Use Stripe test cards.', freeKicker: 'For discovering Inoa Games', free: 'Free', f1: '3 game starts every day (resets at midnight UTC)', f2: 'Every game on the shelf', f3: 'Your hero, XP, coins and achievements saved to your account', f4: 'Daily challenge and share cards', f5: 'No ads, ever', freeBtn: 'Create a free account', premKicker: 'Full access', perMonth: '/ month', p1: 'Unlimited game starts', p2: 'Every current and future game', p3: 'Same hero and progress, on every device', p4: 'No ads, no loot boxes, no pay-to-win', p5: 'Cancel anytime from your account', buy: 'Get Premium — $4.99/month', terms: 'Billed monthly by Stripe until you cancel. Cancel anytime: you keep Premium until the end of the period you paid for. See the <a href="terms.html">terms</a> and <a href="privacy.html">privacy policy</a>.', q1: 'What counts as a game start?', a1: 'Pressing Play on a game starts a 30-minute play session; replays of that game inside the session are free. Opening the hub or a game’s menu never counts, and a game that fails to load never uses a start.', q2: 'How do I cancel?', a2: 'Account → Manage billing opens Stripe’s secure page where you can cancel. You keep Premium until the end of the paid month; nothing else is charged.', q3: 'Is my card safe?', a3: 'Payments are handled on Stripe’s hosted checkout. Inoa Games never sees or stores your card number.', q4: 'Does Premium make me stronger in games?', a4: 'No. Premium is about access, not power: XP, coins and achievements are earned the same way on every plan.', back: 'Back to the games', signinFirst: 'Create a free account (or sign in) first, then come back to upgrade.', verifyFirst: 'Verify your email first — check your inbox.', already: 'You already have Premium. Thank you!', success: 'Payment received — Premium turns on as soon as Stripe confirms it (usually a few seconds).', cancel: 'Checkout cancelled. Nothing was charged.', off: 'Accounts and Premium are not switched on yet. Everything is free to play as a guest for now.', err: 'Could not open checkout. Please try again.', offline: 'You’re offline. Connect to upgrade.' },
+  es: { title: 'Juega gratis. Hazte Premium cuando quieras.', lead: 'Todos los juegos se pueden probar gratis con una cuenta. Premium quita el límite diario en toda la colección.', testmode: 'Modo de prueba: no se cobra dinero real. Usa tarjetas de prueba de Stripe.', freeKicker: 'Para descubrir Inoa Games', free: 'Gratis', f1: '3 partidas cada día (se renuevan a medianoche UTC)', f2: 'Todos los juegos de la estantería', f3: 'Tu héroe, XP, monedas y logros guardados en tu cuenta', f4: 'Reto diario y tarjetas para compartir', f5: 'Sin anuncios, nunca', freeBtn: 'Crear cuenta gratis', premKicker: 'Acceso completo', perMonth: '/ mes', p1: 'Partidas ilimitadas', p2: 'Todos los juegos actuales y futuros', p3: 'El mismo héroe y progreso en todos tus dispositivos', p4: 'Sin anuncios, sin cajas de botín, sin pagar para ganar', p5: 'Cancela cuando quieras desde tu cuenta', buy: 'Obtener Premium: $4.99/mes', terms: 'Cobro mensual por Stripe hasta que canceles. Puedes cancelar cuando quieras: mantienes Premium hasta el final del periodo pagado. Lee los <a href="terms.html">términos</a> y la <a href="privacy.html">privacidad</a>.', q1: '¿Qué cuenta como partida?', a1: 'Pulsar Jugar inicia una sesión de 30 minutos; repetir ese juego dentro de la sesión es gratis. Abrir el inicio o el menú de un juego nunca cuenta, y un juego que no carga no gasta partidas.', q2: '¿Cómo cancelo?', a2: 'Cuenta → Gestionar pago abre la página segura de Stripe donde puedes cancelar. Mantienes Premium hasta el final del mes pagado.', q3: '¿Mi tarjeta está segura?', a3: 'Los pagos se hacen en la página segura de Stripe. Inoa Games nunca ve ni guarda tu número de tarjeta.', q4: '¿Premium me hace más fuerte?', a4: 'No. Premium da acceso, no poder: XP, monedas y logros se ganan igual en todos los planes.', back: 'Volver a los juegos', signinFirst: 'Primero crea una cuenta gratis (o entra) y vuelve para mejorar.', verifyFirst: 'Primero verifica tu correo.', already: 'Ya tienes Premium. ¡Gracias!', success: 'Pago recibido: Premium se activa en cuanto Stripe lo confirme (unos segundos).', cancel: 'Pago cancelado. No se cobró nada.', off: 'Las cuentas y Premium aún no están activas. Por ahora todo es gratis como invitado.', err: 'No se pudo abrir el pago. Inténtalo otra vez.', offline: 'Sin conexión. Conéctate para mejorar.' }
+};
+let lang = (() => { try { const k = JSON.parse(localStorage.getItem('inoa.activeProfile') || 'null') || 'inoa.profile'; return JSON.parse(localStorage.getItem(k) || '{}').lang || ((navigator.language || '').startsWith('es') ? 'es' : 'en'); } catch (e) { return 'en'; } })();
+const T = k => STR[lang][k] ?? STR.en[k];
+function applyLang() { document.documentElement.lang = lang; document.querySelectorAll('[data-t]').forEach(el => { if (el.hasAttribute('data-html')) el.innerHTML = T(el.dataset.t); else el.textContent = T(el.dataset.t); }); document.querySelectorAll('.lang button').forEach(b => b.classList.toggle('on', b.dataset.l === lang)); }
+document.querySelectorAll('.lang button').forEach(b => b.onclick = () => { lang = b.dataset.l; applyLang(); });
+const msg = (k, good) => { $('msg').textContent = k ? T(k) : ''; $('msg').className = 'msg' + (k ? (good ? ' ok' : ' err') : ''); };
+const next = new URLSearchParams(location.search).get('next'); if (next && /^(games\/[a-z]+\.html|index\.html)$/.test(next)) $('bBack').href = next;
+$('bBuy').onclick = async () => {
+  if (!P.enabled) return msg('off');
+  if (!P.state().signedIn) { location.href = 'account.html?mode=up&next=pricing.html'; return; }
+  const st = P.state().status || await P.refreshStatus().catch(() => null);
+  if (st && !st.verified) return msg('verifyFirst'); if (st && st.plan !== 'free') return msg('already', true);
+  $('bBuy').disabled = true;
+  try { const tok = JSON.parse(localStorage.getItem('inoa.auth')).access_token; const r = await fetch('api/checkout', { method: 'POST', headers: { Authorization: 'Bearer ' + tok } }); const d = await r.json(); if (r.ok && d.url) { location.href = d.url; return; } msg(r.status === 409 ? 'already' : 'err', r.status === 409); }
+  catch (e) { msg(navigator.onLine === false ? 'offline' : 'err'); }
+  $('bBuy').disabled = false;
+};
+(async () => { try {
+  await P.init(); applyLang(); $('testmode').hidden = !(P.enabled && P.config.stripeMode !== 'live');
+  const c = new URLSearchParams(location.search).get('checkout'); if (c === 'success') { msg('success', true); if (P.state().signedIn) setTimeout(() => P.refreshStatus().catch(() => { }), 3000); } else if (c === 'cancel') msg('cancel');
+  if (!P.enabled) { msg('off'); $('bBuy').disabled = true; } else if (P.state().signedIn) { $('bFree').href = 'account.html'; const st = await P.refreshStatus().catch(() => null); if (st && st.plan !== 'free') { $('bBuy').disabled = true; msg('already', true); } }
+} finally { window.__READY = true; } })();
+</script>
+</body></html>

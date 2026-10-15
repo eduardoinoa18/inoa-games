@@ -36,7 +36,7 @@ test/db/                      local Postgres harness: Supabase auth shim + SQL t
 | Secrets | none | Vercel env (Preview) | Vercel env (Production) |
 
 Public values (safe in `platform.json`): Supabase project URL, Supabase **anon/publishable** key (designed to be public; RLS protects data), Stripe mode label.
-Secrets (Vercel environment variables only, never in the repo or browser): `SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID`, `SITE_URL`, `STRIPE_LIVE_ENABLED` (must be `"yes"` for `sk_live_` keys to be used — a second lock against accidental live charges).
+Server config (Vercel environment variables): `SUPABASE_URL`, `SUPABASE_ANON_KEY` (public, used to validate tokens). Secrets (Vercel environment variables only, never in the repo or browser): `SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID`, `SITE_URL`, `STRIPE_LIVE_ENABLED` (must be `"yes"` for `sk_live_` keys to be used — a second lock against accidental live charges).
 
 ## 4. Data model (see `supabase/migrations/`)
 | Table | Purpose | Client access (RLS) |
@@ -83,6 +83,9 @@ All writes to progression, usage, subscriptions, roles and status go through `SE
 - Every admin RPC starts with `if not is_admin() then raise exception 'forbidden'`. Admin UI navigation is shown only when `my_status().is_admin` is true, but hiding it is cosmetic — the database refuses non-admins.
 - Recovery: password reset by email; if the email account is lost, the owner (as Supabase project owner) can re-run the grant script for a new account and revoke the old one (`revoke_owner.sql`). No backdoor exists.
 - Recommend enabling MFA (TOTP) for the owner in Supabase Auth.
+
+## 9b. Children and accounts
+Accounts require ticking "13 or older, or a parent/guardian creating this account". Children under 13 can play everything as guests (no data leaves the device). **COPPA review by counsel is required before launch** (`privacy.html` is a draft with [OWNER TO CONFIRM] items).
 
 ## 10. KPI definitions (admin dashboard)
 - **Registered users**: rows in `auth.users`. **Verified**: `email_confirmed_at is not null`.

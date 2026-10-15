@@ -13,17 +13,18 @@ module.exports = function start({ port, db = 'inoa_test', host = '/tmp/pgt', pgp
   const session = (u) => { const exp = Math.floor(Date.now() / 1000) + accessTtl; const rt = crypto.randomBytes(16).toString('hex'); refresh.set(rt, u.id); return { access_token: sign({ sub: u.id, email: u.email, role: 'authenticated', exp }), refresh_token: rt, expires_in: accessTtl, expires_at: exp, token_type: 'bearer', user: { id: u.id, email: u.email } }; };
   const hash = (p, salt = crypto.randomBytes(8).toString('hex')) => salt + ':' + crypto.scryptSync(p, salt, 32).toString('hex');
   const check = (p, h) => { const [salt] = h.split(':'); return crypto.timingSafeEqual(Buffer.from(hash(p, salt)), Buffer.from(h)); };
-  async function asUser(claims, fn) {
+  async function asUser(claims, fn, role) {
     const c = await pool.connect();
-    try { await c.query('begin'); await c.query(`set local role ${claims ? 'authenticated' : 'anon'}`); await c.query(`select set_config('request.jwt.claims', $1, true)`, [JSON.stringify(claims || {})]); const r = await fn(c); await c.query('commit'); return r; }
+    try { await c.query('begin'); await c.query(`set local role ${role || (claims ? 'authenticated' : 'anon')}`); await c.query(`select set_config('request.jwt.claims', $1, true)`, [JSON.stringify(claims || {})]); const r = await fn(c); await c.query('commit'); return r; }
     catch (e) { await c.query('rollback').catch(() => { }); throw e; } finally { c.release(); }
   }
   const server = http.createServer(async (req, res) => {
     const send = (code, body) => { res.writeHead(code, { 'content-type': 'application/json', 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': '*' }); res.end(body == null ? '' : JSON.stringify(body)); };
     if (req.method === 'OPTIONS') return send(204);
     const url = new URL(req.url, 'http://x'); let raw = ''; for await (const ch of req) raw += ch; let body = {}; try { body = raw ? JSON.parse(raw) : {}; } catch (e) { return send(400, { message: 'bad json' }); }
-    const bearer = (req.headers.authorization || '').replace(/^Bearer /, ''); const claims = bearer ? verify(bearer) : null;
-    if (req.headers.apikey !== 'test-anon-key') return send(401, { message: 'No API key found in request' });
+    const bearer = (req.headers.authorization || '').replace(/^Bearer /, ''); const service = bearer === 'test-service-key' && req.headers.apikey === 'test-service-key';
+    const claims = service ? null : bearer ? verify(bearer) : null;
+    if (!['test-anon-key', 'test-service-key'].includes(req.headers.apikey)) return send(401, { message: 'No API key found in request' });
     try {
       const P = url.pathname;
       if (P === '/auth/v1/signup') {
@@ -43,15 +44,16 @@ module.exports = function start({ port, db = 'inoa_test', host = '/tmp/pgt', pgp
         if (gt === 'refresh_token') { const id = refresh.get(body.refresh_token); if (!id) return send(400, { error: 'invalid_grant', error_description: 'Invalid Refresh Token' }); refresh.delete(body.refresh_token); const r = await pool.query('select id, email from auth.users where id = $1', [id]); return send(200, session(r.rows[0])); }
         return send(400, { error: 'unsupported_grant_type' });
       }
-      if (P === '/auth/v1/user') { if (!claims) return send(401, { msg: 'invalid JWT' }); if (req.method === 'PUT' && body.password) { if (String(body.password).length < 8) return send(422, { msg: 'Password should be at least 8 characters' }); pw.set(claims.sub, hash(body.password)); } return send(200, { id: claims.sub, email: claims.email }); }
+      if (P === '/auth/v1/user') { if (!claims) return send(401, { msg: 'invalid JWT' }); if (req.method === 'PUT' && body.password) { if (String(body.password).length < 8) return send(422, { msg: 'Password should be at least 8 characters' }); pw.set(claims.sub, hash(body.password)); }
+        const r = await pool.query('select id, email, email_confirmed_at from auth.users where id = $1', [claims.sub]); if (!r.rowCount) return send(401, { msg: 'user not found' }); return send(200, r.rows[0]); }
       if (P === '/auth/v1/logout') return send(204);
       if (P === '/auth/v1/recover' || P === '/auth/v1/resend') { outbox.push({ type: P.endsWith('recover') ? 'recovery' : 'signup', email: String(body.email || '').toLowerCase(), redirect: url.searchParams.get('redirect_to') }); return send(200, {}); }
       const m = P.match(/^\/rest\/v1\/rpc\/([a-z_]+)$/);
       if (m && req.method === 'POST') {
-        const keys = Object.keys(body); if (keys.some(k => !/^p_[a-z_]+$/.test(k))) return send(400, { message: 'bad args' });
+        const keys = Object.keys(body); if (keys.some(k => !/^[a-z_]+$/.test(k))) return send(400, { message: 'bad args' });
         const sql = `select public.${m[1]}(${keys.map((k, i) => `${k} => $${i + 1}`).join(', ')}) as r`;
         const vals = keys.map(k => body[k] != null && typeof body[k] === 'object' ? JSON.stringify(body[k]) : body[k]);
-        const r = await asUser(claims ? { sub: claims.sub, role: 'authenticated' } : null, c => c.query(sql, vals)); return send(200, r.rows[0].r);
+        const r = await asUser(claims ? { sub: claims.sub, role: 'authenticated' } : null, c => c.query(sql, vals), service ? 'service_role' : null); return send(200, r.rows[0].r);
       }
       if (P === '/rest/v1/profiles' && req.method === 'PATCH') {
         if (!claims) return send(401, { message: 'JWT required' }); const id = (url.searchParams.get('id') || '').replace(/^eq\./, '');
@@ -59,6 +61,16 @@ module.exports = function start({ port, db = 'inoa_test', host = '/tmp/pgt', pgp
         await asUser({ sub: claims.sub }, c => c.query(`update public.profiles set ${cols.map((k, i) => `${k} = $${i + 2}`).join(', ')} where id = $1`, [id, ...cols.map(k => typeof body[k] === 'object' ? JSON.stringify(body[k]) : body[k])]));
         return send(204);
       }
+      // service-role table read with simple PostgREST filters (eq / in / gt) on whitelisted tables + columns
+      const tm = P.match(/^\/rest\/v1\/(subscriptions)$/);
+      if (tm && req.method === 'GET') {
+        if (!service) return send(401, { message: 'service role only in this mock' }); const where = [], vals = [];
+        for (const [k, v] of url.searchParams) { if (k === 'select') continue; if (!/^[a-z_]+$/.test(k)) return send(400, {}); const [op, ...rest] = v.split('.'); const val = rest.join('.');
+          if (op === 'eq') { vals.push(val); where.push(`${k} = $${vals.length}`); } else if (op === 'gt') { vals.push(val); where.push(`${k} > $${vals.length}`); } else if (op === 'in') { const list = val.replace(/^\(|\)$/g, '').split(','); vals.push(list); where.push(`${k}::text = any($${vals.length})`); } }
+        const r = await pool.query(`select * from public.${tm[1]}${where.length ? ' where ' + where.join(' and ') : ''}`, vals); return send(200, r.rows);
+      }
+      const du = P.match(/^\/auth\/v1\/admin\/users\/([0-9a-f-]{36})$/);
+      if (du && req.method === 'DELETE') { if (!service) return send(403, {}); await pool.query('delete from auth.users where id = $1', [du[1]]); return send(200, {}); }
       // ---- test-only helpers ----
       if (P === '/__test/confirm') { const email = url.searchParams.get('email'); const r = await pool.query('update auth.users set email_confirmed_at = now() where email = $1 returning id, email', [email]); if (!r.rowCount) return send(404, {}); const s = session(r.rows[0]); return send(200, { link: `${url.searchParams.get('redirect') || ''}#access_token=${s.access_token}&refresh_token=${s.refresh_token}&expires_in=${s.expires_in}&type=${url.searchParams.get('type') || 'signup'}` }); }
       if (P === '/__test/outbox') return send(200, outbox);

@@ -22,7 +22,8 @@ module.exports = async (p, shot) => {
     // ---- sign up ----
     await p.click('#tUp'); await p.fill('#iName', 'Ana <b>'); await p.fill('#iEmail', 'ana@example.test'); await p.fill('#iPass', 'short'); await p.click('#bAuth');
     ok((await p.textContent('#mAuth')).length > 0, 'validation message for a bad name/short password');
-    await p.fill('#iName', 'Ana'); await p.fill('#iPass', 'correct-horse-1'); await p.click('#bAuth'); await until(() => !document.getElementById('vCheck').hidden);
+    await p.fill('#iName', 'Ana'); await p.fill('#iPass', 'correct-horse-1'); await p.click('#bAuth'); await until(() => /13/.test(document.getElementById('mAuth').textContent));
+    ok(true, 'sign-up refused until the 13+/parent box is ticked'); await p.check('#iAge'); await p.click('#bAuth'); await until(() => !document.getElementById('vCheck').hidden);
     ok(true, 'sign-up → "check your email"'); await shot('check_email');
     // ---- unverified login is refused ----
     await p.click('#bBackIn'); await p.fill('#iEmail', 'ana@example.test'); await p.fill('#iPass', 'correct-horse-1'); await p.click('#bAuth'); await until(() => document.getElementById('mAuth').textContent.length > 0);
@@ -63,7 +64,7 @@ module.exports = async (p, shot) => {
     await p.goto(base + 'account.html'); await until(() => window.__READY === true); await p.click('#bOut'); await until(() => !document.getElementById('vAuth').hidden);
     const leftovers = await p.evaluate(() => Object.keys(localStorage).filter(k => (/\.u\./.test(k) && !/\.u\.x$/.test(k)) || k === 'inoa.auth' || k === 'inoa.queue'));
     ok(leftovers.length === 0, 'sign-out removes the per-user caches and session (' + leftovers.join(',') + ')');
-    await p.click('#tUp'); await p.fill('#iName', 'Ben'); await p.fill('#iEmail', 'ben@example.test'); await p.fill('#iPass', 'battery-staple-2'); await p.click('#bAuth'); await until(() => !document.getElementById('vCheck').hidden);
+    await p.click('#tUp'); await p.fill('#iName', 'Ben'); await p.fill('#iEmail', 'ben@example.test'); await p.fill('#iPass', 'battery-staple-2'); await p.check('#iAge'); await p.click('#bAuth'); await until(() => !document.getElementById('vCheck').hidden);
     await openLink((await api(`/__test/confirm?email=ben@example.test&redirect=${encodeURIComponent(base + 'account.html')}`)).link); await until(() => window.__READY === true && !document.getElementById('vMe').hidden);
     ok((await p.textContent('#meName')) === 'Ben' && (await p.textContent('#sXp')) === '0', "Ben sees his own fresh profile, not Ana's");
     // ---- password reset ----
