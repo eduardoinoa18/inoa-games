@@ -1,6 +1,6 @@
 // Inoa Games service worker: offline hub + engine, each game cached after its first play.
 // Bump VERSION whenever engine/ or the hub changes shape; old caches are deleted on activate.
-const VERSION = 'v1';
+const VERSION = 'v2';
 const CORE = `inoa-core-${VERSION}`, RUNTIME = `inoa-run-${VERSION}`, ASSETS = 'inoa-assets-v1';
 const PRECACHE = ['./', 'index.html', 'engine/inoa3d.js', 'engine/ui.css', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'favicon.png', '404.html'];
 const THREE_CDN = /^https:\/\/cdn\.jsdelivr\.net\/npm\/three@0\.170\.0\//;
@@ -21,6 +21,7 @@ self.addEventListener('fetch', e => {
   if (THREE_CDN.test(req.url)) return e.respondWith(cacheFirst(req, ASSETS));          // pinned version: immutable
   if (FONTS.test(req.url)) return e.respondWith(staleWhileRevalidate(req, RUNTIME));
   if (url.origin !== location.origin) return;
+  if (url.pathname.includes('/api/')) return;                                          // billing/account functions: never cached
   // content-addressed-ish game assets (models/hdri) rarely change: cache first; legacy JSON packs too
   if (/\/packs\/assets\//.test(url.pathname) || /\/packs\/[a-z]+\.json$/.test(url.pathname) || /\/thumbs\//.test(url.pathname)) return e.respondWith(cacheFirst(req, ASSETS));
   // pages, engine, manifests: fresh when online, cached when offline
