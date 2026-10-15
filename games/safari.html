@@ -4,6 +4,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;800&family=Unbounded:wght@700;900&display=swap">
+<link rel="stylesheet" href="../engine/ui.css">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
 <style>
 /* Snack Squad Safari v2: a 3D grocery-run for a kid and a grown-up. Bright, soft, never scary. */
 :root{
@@ -107,9 +109,16 @@ input[type=text]{font:inherit;font-weight:800;font-size:16px;padding:12px 14px;b
 .bigstars{font-size:40px;text-align:center;letter-spacing:4px;color:#d9a92e}
 .disc{font-size:12px;color:#4c5868;font-weight:600}
 @media (max-width:420px){.card{padding:20px 16px;border-radius:22px}.ctl button{width:58px;height:58px}}
+/* gamepad focus ring (menus are navigable with the d-pad / stick, A = press) */
+.gpf{outline:4px solid var(--berry)!important;outline-offset:3px}
+/* shared hub link (ui.css chip), centred so it never covers the HUD pills */
+.inoa-home{position:fixed;left:50%;transform:translateX(-50%);top:max(8px,env(safe-area-inset-top));z-index:60;opacity:.9}
+/* results: the shared engine card (E.results) with the Safari extras */
+.ig-results .ig-card{margin-top:30px;gap:9px;padding:18px 18px}.ig-results .bigstars{font-size:32px;margin-bottom:-4px}.ig-results .ig-stats div{padding:7px 6px}.ig-results .learn{gap:4px}.ig-results .learn div{font-size:13px;padding:5px 10px}.ig-results .ig-row .ig-btn{min-height:48px}.ig-results.wait{visibility:hidden}
+@media (max-height:640px){.ig-results .ig-card h2{font-size:20px}.ig-results .learn div:nth-child(n+4){display:none}.ig-results .ig-sub{display:none}}
 </style>
 </head><body>
-<a href="../index.html" aria-label="Back to Inoa Games" style="position:fixed;left:50%;transform:translateX(-50%);top:max(8px,env(safe-area-inset-top));z-index:60;opacity:.85;background:rgba(255,248,238,.9);color:#1b2430;border-radius:14px;padding:8px 12px;font:800 14px Manrope,system-ui,sans-serif;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.2)" class="inoa-home">⌂ Hub</a>
+<a href="../index.html" aria-label="Back to Inoa Games" class="ig-chip ig-home inoa-home">⌂ Hub</a>
 <div id="app">
   <canvas id="gl"></canvas>
   <div id="loading" style="position:absolute;inset:0;display:grid;place-items:center;background:linear-gradient(180deg,#ffd7b0,#bfe8ff);z-index:5"><div style="text-align:center;display:grid;gap:12px"><div style="font-size:54px" id="ldE">🥚</div><h1 style="font-size:32px">Snack Squad <span style="color:var(--mint-ink)">Safari</span></h1><div class="bar" style="width:220px;margin:0 auto"><i id="ldBar" style="width:0"></i></div><p class="sub" id="ldTxt">Packing the cart…</p></div></div>
@@ -221,33 +230,12 @@ input[type=text]{font:inherit;font-weight:800;font-size:16px;padding:12px 14px;b
     </div>
   </div>
 
-  <div class="screen" id="scrResults" hidden>
-    <div class="card">
-      <div class="bigstars" id="resStars">★★★</div>
-      <h2 id="resTitle">Level clear!</h2>
-      <div class="res"><div><b id="rSafe">0</b><small>snacks fed</small></div><div><b id="rLabels">0</b><small>labels read</small></div><div><b id="rDodge">0</b><small>allergens dodged</small></div></div>
-      <div><p class="sub" style="margin-bottom:6px">Things you learned</p><div class="learn" id="resLearn"></div></div>
-      <div class="row"><button class="btn ghost" id="btnAgain">Play again</button><button class="btn" id="btnNext">Next level</button></div>
-      <div id="resCollect" class="learn"></div><button class="btn sun" id="btnShare">📣 Share my run</button>
-    </div>
-  </div>
 </div>
-<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
-<script>window.__inoaReward = function (gameId, xp, coins) { try { const p = Object.assign({ xp: 0, coins: 0, games: {} }, JSON.parse(localStorage.getItem('inoa.profile') || '{}')); p.xp += Math.round(xp); p.coins += Math.round(coins); const g = p.games[gameId] || { plays: 0, best: null }; g.plays++; p.games[gameId] = g; localStorage.setItem('inoa.profile', JSON.stringify(p)); } catch (e) { } };</script>
 <script type="module">
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
-import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
-import { SMAAPass } from 'three/addons/postprocessing/SMAAPass.js';
-import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
-import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { clone as skClone } from 'three/addons/utils/SkeletonUtils.js';
-const $ = id => document.getElementById(id);
-const clamp = (v, a, b) => v < a ? a : v > b ? b : v, lerp = (a, b, t) => a + (b - a) * t, rnd = (a, b) => a + Math.random() * (b - a), pick = a => a[Math.floor(Math.random() * a.length)];
-const hash = (x, y) => { let h = (x * 374761393 + y * 668265263) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+// Snack Squad Safari runs on the shared Inoa Games engine (renderer + post, sky, pack loader, instance(), rig posing,
+// particles, synth SFX, speech, input incl. gamepad, results + shared hero profile). Game-specific helpers stay local.
+import * as E from '../engine/inoa3d.js';
+const { THREE, clamp, lerp, rnd, pick, hash, smooth, $ } = E;
 /* ---------------- Data ---------------- */
 const ALLERGENS = [
   { id: 'peanut', name: 'Peanut', e: '🥜', hidden: ['arachis oil', 'groundnut', 'mandelonas'] },
@@ -296,78 +284,32 @@ const OFFERS = [
   { t: 'Someone used the same knife for peanut butter and jelly', s: '"Here, I made you a jelly sandwich."', c: [['Eat it, there is no peanut butter on mine', 0, 'A shared knife carries traces. That is cross-contact.'], ['Say "Can you use a clean knife and a new jar?"', 1, 'Clean tools and fresh jars stop cross-contact.'], ['Ask for a grown-up to make it', 1, 'Good call: a grown-up can make it safely.']] }
 ];
 /* ---------------- Settings / progress ---------------- */
-const save = (() => { try { return JSON.parse(localStorage.getItem('snacksquad') || '{}'); } catch (e) { return {}; } })();
-const S = { name: save.name || '', allergens: save.allergens || ['peanut', 'milk'], duo: !!save.duo, sound: save.sound !== false, motion: save.motion !== false, stars: (save.stars && save.stars.length >= 5) ? save.stars : [...(save.stars || []), 0, 0, 0, 0, 0].slice(0, 5), collection: save.collection || [], lang: save.lang || 'en', voice: save.voice !== false };
-const persist = () => { try { localStorage.setItem('snacksquad', JSON.stringify(S)); } catch (e) { } };
-/* ---------------- Audio ---------------- */
-let AC = null;
-function ac() { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { } } if (AC && AC.state === 'suspended') AC.resume(); return AC; }
-function tone(f, d, type = 'sine', g = .18, slide = 0) { const c = ac(); if (!c || !S.sound) return; const o = c.createOscillator(), v = c.createGain(); o.type = type; o.frequency.setValueAtTime(f, c.currentTime); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(40, f + slide), c.currentTime + d); v.gain.setValueAtTime(g, c.currentTime); v.gain.exponentialRampToValueAtTime(.001, c.currentTime + d); o.connect(v); v.connect(c.destination); o.start(); o.stop(c.currentTime + d); }
-const SFX = { good: () => { tone(660, .12, 'triangle'); setTimeout(() => tone(990, .18, 'triangle'), 70); }, bad: () => { tone(220, .3, 'sawtooth', .12, -120); }, pop: () => tone(520, .08, 'square', .08), snap: () => { tone(140, .09, 'square', .2); tone(1800, .05, 'sine', .08); }, win: () => [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => tone(f, .25, 'triangle'), i * 110)), tick: () => tone(880, .05, 'sine', .06), scan: () => tone(1200, .06, 'sine', .05, 400), siren: () => { tone(620, .2, 'sine', .07, 280); setTimeout(() => tone(900, .2, 'sine', .07, -280), 200); } };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+const save = E.store.get('snacksquad', {}) || {};
+const S = { name: save.name || '', allergens: save.allergens || ['peanut', 'milk'], duo: !!save.duo, sound: save.sound !== false, motion: save.motion !== false, stars: (save.stars && save.stars.length >= 5) ? save.stars : [...(save.stars || []), 0, 0, 0, 0, 0].slice(0, 5), collection: save.collection || [], lang: save.lang || 'en', voice: save.voice !== false, v: 2 };
+// One-time move of this game's old sound / voice / language choices into the shared profile, then the profile is the source of truth
+// (every game and the hub read the same settings; engine audio + speech respect them).
+if (save.v !== 2) { const patch = {}; if (save.lang === 'es') patch.lang = 'es'; if (save.voice === false) patch.voice = false; if (save.sound === false) patch.sound = false; if (Object.keys(patch).length) E.setProfile(patch); }
+{ const pf = E.profile(); S.lang = pf.lang === 'es' ? 'es' : 'en'; S.voice = pf.voice !== false; S.sound = pf.sound !== false; }
+const persist = () => { E.store.set('snacksquad', S); E.setProfile({ lang: S.lang, voice: S.voice, sound: S.sound }); };
+/* ---------------- Audio (engine synth; Safari-only sounds built on E.tone) ---------------- */
+const ac = () => E.audio();
+const tone = (f, d, type = 'sine', g = .18, slide = 0, delay = 0) => { if (S.sound) E.tone(f, d, type, g, slide, delay); };
+const SFX = { good: () => S.sound && E.SFX.good(), bad: () => S.sound && E.SFX.bad(), pop: () => S.sound && E.SFX.pop(), win: () => S.sound && E.SFX.win(), tick: () => S.sound && E.SFX.tick(), snap: () => { tone(140, .09, 'square', .2); tone(1800, .05, 'sine', .08); }, scan: () => tone(1200, .06, 'sine', .05, 400), siren: () => { tone(620, .2, 'sine', .07, 280); tone(900, .2, 'sine', .07, -280, .2); } };
 /* ================= Engine: renderer, environment, post ================= */
 const canvas = $('gl');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
-const DPR = Math.min(devicePixelRatio || 1, 2);
-renderer.setPixelRatio(DPR); renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05; renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-const scene = new THREE.Scene(); scene.fog = new THREE.Fog(0xcfe9f5, 40, 110);
-const camera = new THREE.PerspectiveCamera(50, 1, .1, 300); camera.position.set(0, 5.2, 9.5);
-const hemi = new THREE.HemisphereLight(0xeaf6ff, 0x9a7b55, .35); scene.add(hemi);
-const sunL = new THREE.DirectionalLight(0xfff0d6, 2.2); sunL.position.set(8, 16, 6); sunL.castShadow = true; sunL.shadow.mapSize.set(2048, 2048); sunL.shadow.camera.left = -16; sunL.shadow.camera.right = 16; sunL.shadow.camera.top = 14; sunL.shadow.camera.bottom = -50; sunL.shadow.camera.near = 1; sunL.shadow.camera.far = 70; sunL.shadow.bias = -.0006; sunL.shadow.normalBias = .02; scene.add(sunL); scene.add(sunL.target);
-const pmrem = new THREE.PMREMGenerator(renderer); pmrem.compileEquirectangularShader();
-const composer = new EffectComposer(renderer); composer.addPass(new RenderPass(scene, camera));
-const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), .18, .4, .96); composer.addPass(bloom);
-const vignette = new ShaderPass({ uniforms: { tDiffuse: { value: null }, uAmt: { value: .28 } }, vertexShader: 'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}', fragmentShader: 'uniform sampler2D tDiffuse;uniform float uAmt;varying vec2 vUv;void main(){vec4 c=texture2D(tDiffuse,vUv);float d=distance(vUv,vec2(.5));c.rgb*=1.-smoothstep(.45,.95,d)*uAmt;gl_FragColor=c;}' }); composer.addPass(vignette);
-composer.addPass(new OutputPass()); const smaa = new SMAAPass(1, 1); composer.addPass(smaa);
-const MAT = {}; const mat = (col, extra) => { const k = col + JSON.stringify(extra || {}); if (!MAT[k]) MAT[k] = new THREE.MeshStandardMaterial(Object.assign({ color: col, roughness: .85, metalness: 0 }, extra || {})); return MAT[k]; };
+const ENG = E.createRenderer(canvas, { fov: 50, portraitFov: 62, far: 400, shadowSize: 16 });
+const { renderer, scene, camera, hemi, sun: sunL, composer, bloom } = ENG;
+camera.position.set(0, 5.2, 9.5); ENG.vignette.uniforms.uAmt.value = .28;
+// the trail runs away from the camera, so the shadow box reaches far down -z
+Object.assign(sunL.shadow.camera, { left: -16, right: 16, top: 14, bottom: -50, near: 1, far: 70 }); sunL.shadow.camera.updateProjectionMatrix();
+const mat = E.mat;
 const LANES = [-2.6, 0, 2.6];
-/* ---------- Assets ---------- */
-const ASSETS = { models: {}, hdri: {} };
-const MODEL_NAMES = ['ambulance', 'plant', 'low-poly-tree', 'bench', 'pumpkin', 'apple', 'banana', 'broccoli', 'carrot', 'cheese', 'egg', 'bread', 'loaf', 'cookie', 'cupcake', 'peanut-butter', 'soy', 'fish', 'carton', 'carton-small', 'bowl-cereal', 'candy-bar', 'grapes', 'bottle', 'can', 'cake-birthday', 'watermelon', 'pizza-box', 'bag', 'donut-sprinkles', 'muffin', 'sandwich', 'taco', 'strawberry', 'orange', 'pear', 'corn', 'mussel', 'sushi-salmon', 'chocolate', 'palm-detailed-short', 'palm-long', 'formation-rock', 'formation-stone', 'tree-big', 'house-3', 'pirate-crew', 'skater-female', 'skater-male', 'chest', 'barrel', 'boat-small'];
-const HDRIS = ['dawn', 'sunset'];
-const gltfLoader = new GLTFLoader(), rgbeLoader = new RGBELoader();
-async function loadAssets(onProgress) {
-  onProgress(.05);
-  const res = await fetch('../packs/safari.json'); const total = Number(res.headers.get('content-length')) || 7.2e6; const reader = res.body.getReader(); const chunks = []; let got = 0;
-  while (true) { const { done, value } = await reader.read(); if (done) break; chunks.push(value); got += value.length; onProgress(.05 + .6 * Math.min(1, got / total)); }
-  const text = new TextDecoder().decode(await new Blob(chunks).arrayBuffer()); const pack = JSON.parse(text);
-  const b64 = str => { const bin = atob(str); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u.buffer; };
-  const names = Object.keys(pack.models), hn = Object.keys(pack.hdri); let n = 0; const tick = () => onProgress(.65 + .35 * (++n / (names.length + hn.length)));
-  await Promise.all(names.map(name => new Promise(resolve => { try { gltfLoader.parse(b64(pack.models[name]), '', g => { ASSETS.models[name] = g.scene; tick(); resolve(); }, e => { console.warn('model failed', name, e); tick(); resolve(); }); } catch (e) { console.warn('model failed', name, e); tick(); resolve(); } })));
-  for (const name of hn) { try { const td = rgbeLoader.parse(b64(pack.hdri[name])); const t = new THREE.DataTexture(td.data, td.width, td.height, THREE.RGBAFormat, td.type); t.flipY = true; t.colorSpace = THREE.LinearSRGBColorSpace; t.mapping = THREE.EquirectangularReflectionMapping; t.needsUpdate = true; ASSETS.hdri[name] = { tex: t, env: pmrem.fromEquirectangular(t).texture }; } catch (e) { console.warn('hdri failed', name, e); } tick(); }
-}
-const OUTLINE = new THREE.MeshBasicMaterial({ color: 0x2b2420, side: THREE.BackSide });
-function addOutline(root, w = 1.03) { root.traverse(o => { if (o.isMesh && !o.isSkinnedMesh && !o.userData.outline) { const h = new THREE.Mesh(o.geometry, OUTLINE); h.scale.setScalar(w); h.userData.outline = true; h.renderOrder = -1; o.add(h); } }); }
-function instance(name, { scale = 1, shadow = true, outline = true, tint = null } = {}) {
-  const src = ASSETS.models[name]; const g = new THREE.Group();
-  if (!src) { const m = new THREE.Mesh(new THREE.SphereGeometry(.4, 12, 10), mat(0xffffff)); m.position.y = .4; g.add(m); return g; }
-  let skinned = false; src.traverse(o => { if (o.isSkinnedMesh) skinned = true; }); const c = skinned ? skClone(src) : src.clone(true); c.traverse(o => { if (o.isMesh) { o.castShadow = shadow; o.receiveShadow = shadow; if (o.isSkinnedMesh) o.frustumCulled = false; if (tint) { o.material = o.material.clone(); o.material.color.multiply(new THREE.Color(tint)); } } });
-  // normalize: feet at y=0, size by bounding box height
-  const box = new THREE.Box3().setFromObject(c); const size = box.getSize(new THREE.Vector3()); const s = scale / Math.max(size.x, size.y, size.z); c.scale.setScalar(s); c.position.y = -box.min.y * s; c.position.x = -(box.min.x + size.x / 2) * s; c.position.z = -(box.min.z + size.z / 2) * s;
-  if (outline) addOutline(c); g.add(c); return g;
-}
+/* ---------- Assets (packs/safari.json via E.loadPack) ---------- */
+const ASSETS = E.ASSETS;
+const addOutline = E.addOutline;
+const instance = (name, opts) => E.instance(name, opts);
 /* ---------- World: a safari trail ---------- */
-let _grain = null;
-function grainTex() { if (_grain) return _grain; const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, 256, 256); const d = g.getImageData(0, 0, 256, 256); for (let i = 0; i < d.data.length; i += 4) { const n = 215 + Math.random() * 40; d.data[i] = d.data[i + 1] = d.data[i + 2] = n; } g.putImageData(d, 0, 0); for (let i = 0; i < 160; i++) { g.fillStyle = `rgba(0,0,0,${.04 + Math.random() * .06})`; g.beginPath(); g.ellipse(Math.random() * 256, Math.random() * 256, 2 + Math.random() * 6, 1 + Math.random() * 3, Math.random() * 3, 0, 6.3); g.fill(); } const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(6, 28); t.colorSpace = THREE.SRGBColorSpace; _grain = t; return t; }
+let _grain = null; const grainTex = () => _grain || (_grain = E.grainTex([6, 28]));
 let tuftGroups = [], weather = null;
 function makeTufts(L, zBase) { const g = new THREE.Group(); const n = L.weather === 'snow' ? 220 : 520; const geo = new THREE.ConeGeometry(.09, .38, 5); const m = new THREE.InstancedMesh(geo, mat(L.grass2, { roughness: 1 }), n); const o = new THREE.Object3D(); for (let i = 0; i < n; i++) { const side = Math.random() < .5 ? -1 : 1; const x = side * (4.9 + Math.random() * (side < 0 ? 2.2 : 9)); const z = -64 + Math.random() * 128; o.position.set(x, .12, z); o.rotation.set((Math.random() - .5) * .5, Math.random() * 6.3, (Math.random() - .5) * .5); o.scale.setScalar(.7 + Math.random() * .9); o.updateMatrix(); m.setMatrixAt(i, o.matrix); } m.castShadow = true; g.add(m);
   if (!L.night && L.weather !== 'snow') { const fn = 110; const fg = new THREE.SphereGeometry(.09, 6, 5); const fm = new THREE.InstancedMesh(fg, mat(0xffffff), fn); const cols = [new THREE.Color(0xff6b7a), new THREE.Color(0xffd166), new THREE.Color(0xffffff), new THREE.Color(0xc9b8ff)]; for (let i = 0; i < fn; i++) { const side = Math.random() < .5 ? -1 : 1; o.position.set(side * (5.2 + Math.random() * 6), .28, -64 + Math.random() * 128); o.rotation.set(0, 0, 0); o.scale.setScalar(1); o.updateMatrix(); fm.setMatrixAt(i, o.matrix); fm.setColorAt(i, cols[i % 4]); } g.add(fm); }
@@ -384,12 +326,10 @@ const WATER_SHADER = {
 };
 function buildWorld(L) {
   while (world.children.length) world.remove(world.children[0]); scrollers = []; lanterns = [];
-  const H = ASSETS.hdri[L.hdri] || ASSETS.hdri.dawn; if (H) { scene.environment = H.env; scene.environmentIntensity = L.envI; } scene.background = null;
-  // sky dome: gradient + sun glow + stars at night
-  const sky = new THREE.Mesh(new THREE.SphereGeometry(160, 32, 16), new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false, fog: false, toneMapped: false, uniforms: { uTop: { value: new THREE.Color(L.skyTop) }, uHor: { value: new THREE.Color(L.skyHor) }, uSun: { value: new THREE.Color(L.skyGlow) }, uSunDir: { value: new THREE.Vector3(.35, .25, -.9).normalize() } }, vertexShader: 'varying vec3 vP;void main(){vP=normalize(position);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}', fragmentShader: 'uniform vec3 uTop,uHor,uSun,uSunDir;varying vec3 vP;void main(){float h=clamp(vP.y,0.,1.);vec3 c=mix(uHor,uTop,pow(h,.55));float d=max(0.,dot(vP,uSunDir));c+=uSun*(pow(d,90.)*.3+pow(d,10.)*.04);gl_FragColor=vec4(c,1.);\n#include <colorspace_fragment>\n}' })); sky.renderOrder = -10; world.add(sky);
+  ENG.setEnv(ASSETS.hdri[L.hdri] || ASSETS.hdri.dawn);
+  ENG.setLook({ skyTop: L.skyTop, skyHor: L.skyHor, skyGlow: L.skyGlow, sunDir: [.35, .25, -.9], fog: L.fog, fogNear: L.night ? 24 : (L.weather ? 30 : 70), fogFar: L.night ? 80 : (L.weather ? 95 : 150), sun: L.sun * .62, sunColor: L.sunColor, hemi: L.night ? .14 : .4, ground: L.sand, exposure: L.exposure * .92, env: L.envI, bloom: L.night ? .45 : .14, bloomThreshold: L.night ? .8 : .97, stars: false, clouds: false });
   if (L.night) { const n = 500, sp = new Float32Array(n * 3); for (let i = 0; i < n; i++) { const a = Math.random() * Math.PI * 2, e = Math.random() * .9 + .08, r = 150; sp[i * 3] = Math.cos(a) * Math.cos(e) * r; sp[i * 3 + 1] = Math.sin(e) * r; sp[i * 3 + 2] = Math.sin(a) * Math.cos(e) * r; } const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.BufferAttribute(sp, 3)); const stars = new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xfff6d8, size: 1.6, sizeAttenuation: true, transparent: true, opacity: .9, fog: false })); world.add(stars); const moon = new THREE.Mesh(new THREE.SphereGeometry(6, 20, 16), new THREE.MeshBasicMaterial({ color: 0xfff1c8, fog: false })); moon.position.set(50, 60, -120); world.add(moon); }
   else { for (let i = 0; i < 9; i++) { const cl = new THREE.Group(); const hh = hash(i, 7); for (let k = 0; k < 5; k++) { const puff = new THREE.Mesh(new THREE.SphereGeometry(4 + hash(i, k) * 4, 10, 8), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1, fog: false, transparent: true, opacity: .92 })); puff.position.set(k * 5 - 10, hash(k, i) * 2, hash(i + 3, k) * 3); puff.scale.y = .55; cl.add(puff); } cl.position.set(-70 + i * 18 + hh * 10, 34 + hh * 14, -110 - hash(i, 9) * 30); world.add(cl); } }
-  renderer.toneMappingExposure = L.exposure * .92; scene.fog.color.set(L.fog); scene.fog.near = L.night ? 24 : (L.weather ? 30 : 70); scene.fog.far = L.night ? 80 : (L.weather ? 95 : 150); sunL.intensity = L.sun * .62; sunL.color.set(L.sunColor); hemi.intensity = L.night ? .14 : .4; hemi.color.set(L.skyHor); hemi.groundColor.set(L.sand); bloom.strength = L.night ? .45 : .14; bloom.threshold = L.night ? .8 : .97;
   // ground: path + grass with vertex colors and gentle bumps
   const geo = new THREE.PlaneGeometry(40, 180, 60, 180); const pos = geo.attributes.position; const col = new Float32Array(pos.count * 3); const sand = new THREE.Color(L.sand), grass = new THREE.Color(L.grass), grass2 = new THREE.Color(L.grass2);
   for (let i = 0; i < pos.count; i++) { const x = pos.getX(i), y = pos.getY(i); const d = Math.abs(x); const onPath = d < 4.6; const bump = onPath ? 0 : (hash(Math.round(x * 2), Math.round(y)) - .5) * .5 + Math.max(0, d - 6) * .08; pos.setZ(i, bump); const c = onPath ? sand.clone().lerp(grass, smooth(3.6, 4.6, d)) : (hash(Math.round(x), Math.round(y * 2)) > .5 ? grass : grass2); col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b; }
@@ -418,11 +358,10 @@ function buildWorld(L) {
   // boat drifting on the water
   const boat = instance('boat-small', { scale: 4 }); boat.position.set(-12, .1, -30); boat.rotation.y = .4; world.add(boat); boat.userData.boat = true; scrollers.push(boat);
 }
-const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 /* ---------- Cart, kid, grown-up, buddy ---------- */
 const cart = new THREE.Group(); scene.add(cart);
 let kidRig = null, grownRig = null;
-function findBones(root) { const b = {}; root.traverse(o => { if (o.isBone) b[o.name] = o; }); for (const k in b) b[k].userData.rest = b[k].quaternion.clone(); return b; }
+const findBones = E.bones;
 function buildCart() {
   while (cart.children.length) cart.remove(cart.children[0]);
   const wood = mat(0xa0683a, { roughness: .8 }), wood2 = mat(0x7a4b26), iron = mat(0x3a3f47, { metalness: .4, roughness: .5 });
@@ -449,8 +388,7 @@ const beam = new THREE.Mesh(new THREE.CylinderGeometry(.08, 1.8, 18, 20, 1, true
 const FOOD_MODEL = { 'Apple': 'apple', 'Carrot': 'carrot', 'Broccoli': 'broccoli', 'Banana': 'banana', 'Rice bowl': 'bowl-cereal', 'Grapes': 'grapes', 'Water': 'bottle', 'Milk': 'carton', 'Cheese': 'cheese', 'Yogurt': 'carton-small', 'Egg': 'egg', 'Omelet': 'egg', 'Peanut butter': 'peanut-butter', 'Peanuts': 'bag', 'Almonds': 'bag', 'Cashew bar': 'candy-bar', 'Bread': 'bread', 'Pasta': 'bowl-cereal', 'Pretzel': 'loaf', 'Soy milk': 'soy', 'Tofu': 'cheese', 'Edamame': 'bag', 'Fish sticks': 'fish', 'Salmon': 'sushi-salmon', 'Shrimp': 'mussel', 'Crab cake': 'taco', 'Sesame bun': 'sandwich', 'Hummus': 'can', 'Cookie': 'cookie', 'Cupcake': 'cupcake', 'Strawberries': 'strawberry', 'Orange': 'orange', 'Pear': 'pear', 'Corn': 'corn', 'Watermelon': 'watermelon', 'Muffin': 'muffin', 'Donut': 'donut-sprinkles', 'Birthday cake': 'cake-birthday', 'Chocolate': 'chocolate' };
 const PACK_MODEL = { box: 'pizza-box', bag: 'bag', bar: 'candy-bar', can: 'can', bottle: 'bottle', carton: 'carton' };
 const qSprite = (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'); g.fillStyle = '#fff'; g.beginPath(); g.arc(64, 64, 56, 0, Math.PI * 2); g.fill(); g.lineWidth = 8; g.strokeStyle = '#1b2430'; g.stroke(); g.fillStyle = '#1b2430'; g.font = '900 78px Unbounded, Manrope, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('?', 64, 70); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return new THREE.SpriteMaterial({ map: t, depthTest: true }); })();
-const TAGS = {};
-function tagSprite(emoji, text, bg) { const k = emoji + text + bg; if (TAGS[k]) return TAGS[k]; const c = document.createElement('canvas'); c.width = 512; c.height = 160; const g = c.getContext('2d'); g.fillStyle = bg; g.beginPath(); g.roundRect(8, 8, 496, 144, 40); g.fill(); g.lineWidth = 8; g.strokeStyle = '#1b2430'; g.stroke(); g.font = '96px serif'; g.textAlign = 'left'; g.textBaseline = 'middle'; g.fillText(emoji, 28, 86); g.fillStyle = '#1b2430'; g.font = '900 54px Unbounded, Manrope, sans-serif'; g.textAlign = 'left'; let f = 54; while (g.measureText(text).width > 350 && f > 28) { f -= 4; g.font = `900 ${f}px Unbounded, Manrope, sans-serif`; } g.fillText(text, 140, 86); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; const m = new THREE.SpriteMaterial({ map: t, depthTest: false, transparent: true, toneMapped: false }); TAGS[k] = m; return m; }
+const tagSprite = (emoji, text, bg) => E.tagMaterial(emoji, text, bg);
 function foodMesh(kind, col, name, pack, emoji) {
   const model = pack ? (PACK_MODEL[kind] || 'pizza-box') : (FOOD_MODEL[name] || 'apple');
   const g = instance(model, { scale: pack ? 1.5 : 1.4, tint: pack && col ? col : null });
@@ -460,14 +398,14 @@ function foodMesh(kind, col, name, pack, emoji) {
   return g;
 }
 /* ---------- Speech (for kids who can't read yet) ---------- */
-let voiceOK = 'speechSynthesis' in window;
-function say(text, { interrupt = true } = {}) { if (!voiceOK || !S.voice || !text) return; try { if (interrupt) speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(String(text).replace(/[*_#]/g, '')); u.lang = S.lang === 'es' ? 'es-US' : 'en-US'; u.rate = .95; u.pitch = 1.05; const vs = speechSynthesis.getVoices(); const v = vs.find(x => x.lang === u.lang) || vs.find(x => x.lang.startsWith(S.lang === 'es' ? 'es' : 'en')); if (v) u.voice = v; speechSynthesis.speak(u); } catch (e) { } }
+const voiceOK = 'speechSynthesis' in window;
+// E.say speaks in the profile language and respects the shared read-aloud setting; S.voice mirrors it.
+function say(text, { interrupt = true } = {}) { if (!S.voice || !text) return; E.say(String(text).replace(/[*_#]/g, ''), { lang: S.lang, interrupt }); }
 if (voiceOK) speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
 /* ---------- Particles ---------- */
-const sparkTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); const r = g.createRadialGradient(32, 32, 0, 32, 32, 32); r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(.4, 'rgba(255,240,180,.8)'); r.addColorStop(1, 'rgba(255,200,80,0)'); g.fillStyle = r; g.fillRect(0, 0, 64, 64); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; })();
-const sparks = [];
-function burst(x, y, z, color, n = 18) { const geo = new THREE.BufferGeometry(); const p = new Float32Array(n * 3), v = []; for (let i = 0; i < n; i++) { p[i * 3] = x; p[i * 3 + 1] = y; p[i * 3 + 2] = z; v.push(new THREE.Vector3(rnd(-3, 3), rnd(2, 6), rnd(-3, 3))); } geo.setAttribute('position', new THREE.BufferAttribute(p, 3)); const m = new THREE.Points(geo, new THREE.PointsMaterial({ size: .5, map: sparkTex, color, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); scene.add(m); sparks.push({ m, v, t: 0 }); }
-function updateSparks(dt) { for (const s of sparks.slice()) { s.t += dt; const p = s.m.geometry.attributes.position; for (let i = 0; i < s.v.length; i++) { s.v[i].y -= 12 * dt; p.setXYZ(i, p.getX(i) + s.v[i].x * dt, p.getY(i) + s.v[i].y * dt, p.getZ(i) + s.v[i].z * dt); } p.needsUpdate = true; s.m.material.opacity = 1 - s.t / .9; if (s.t > .9) { scene.remove(s.m); s.m.geometry.dispose(); s.m.material.dispose(); sparks.splice(sparks.indexOf(s), 1); } } }
+const PARTS = new E.Particles(scene);
+function burst(x, y, z, color, n = 18) { PARTS.burst(new THREE.Vector3(x, y, z), { color, n, speed: 3, up: 6, size: .5, life: .9, gravity: 12 }); }
+const updateSparks = dt => PARTS.update(dt);
 /* ---------- Buddy Rescue cutscene (3D) ---------- */
 const R = { ring: null, amb: null, ambLights: [], sweat: [], capSnapped: false, lastTick: 0, active: false, phase: 'none', t: 0, kidPos: new THREE.Vector3(), grownPos: new THREE.Vector3(), pen: null, phone: null, hives: [], bubble: null, dialStep: 0, holdK: 0, camA: new THREE.Vector3(), camB: new THREE.Vector3(), lying: false };
 function makePen() { const g = new THREE.Group(); const body = new THREE.Mesh(new THREE.CylinderGeometry(.09, .09, .9, 16), mat(0xff8a3d, { roughness: .45 })); body.position.y = .45; g.add(body); const label = new THREE.Mesh(new THREE.CylinderGeometry(.092, .092, .3, 16), mat(0xffffff)); label.position.y = .5; g.add(label); const cap = new THREE.Mesh(new THREE.CylinderGeometry(.1, .1, .16, 16), mat(0x2b6fb0, { roughness: .4 })); cap.position.y = .98; cap.name = 'cap'; g.add(cap); const tip = new THREE.Mesh(new THREE.CylinderGeometry(.08, .1, .12, 16), mat(0xff5a1f)); tip.position.y = -.06; tip.name = 'tip'; g.add(tip); g.traverse(o => { if (o.isMesh) o.castShadow = true; }); addOutline(g, 1.08); g.scale.setScalar(1.3); return g; }
@@ -498,15 +436,16 @@ function rescueStep(step) { // called by the drill UI: 1 told adult, 2 injector 
 function endRescue() {
   R.active = false; R.phase = 'none'; const kid = scene.getObjectByName('kid'), grown = scene.getObjectByName('grown'); for (const h of R.hives) kid.remove(h); R.hives = []; for (const s of R.sweat) kid.remove(s); R.sweat = []; if (R.ring) R.ring.visible = false; if (R.amb) { R.amb.visible = false; for (const l of R.ambLights) l.intensity = 0; } kid.rotation.set(0, 0, 0); if (R.bubble && R.bubble.parent) R.bubble.parent.remove(R.bubble); R.bubble = null;
   scene.remove(kid); scene.remove(grown); cart.add(kid); cart.add(grown); kid.position.set(0, .7, .25); kid.rotation.set(0, Math.PI, 0); grown.position.set(-.55, 0, 2.5); grown.rotation.set(0, Math.PI, 0); grown.visible = !!S.duo; R.pen.visible = false; R.phone.visible = false;
-  for (const rig of [kidRig, grownRig]) for (const k in rig) rig[k].quaternion.copy(rig[k].userData.rest);
+  for (const rig of [kidRig, grownRig]) E.pose(rig, {});
 }
-function poseKid(rig, kind, t) { const set = (n, x, y, z) => { const b = rig[n]; if (!b) return; b.quaternion.copy(b.userData.rest); if (z) b.rotateZ(z); if (x) b.rotateX(x); if (y) b.rotateY(y); };
-  const sit = () => { set('LeftUpLeg', 1.4, 0, .12); set('RightUpLeg', 1.4, 0, -.12); set('LeftLeg', -1.3, 0, 0); set('RightLeg', -1.3, 0, 0); };
-  if (kind === 'sick') { const w = Math.sin(t * 7) * .08; sit(); set('Spine', .35 + w, 0, w); set('Head', .4, w * 2, 0); set('LeftArm', -.9, 0, -1.2); set('RightArm', -.9, 0, 1.2); set('LeftForeArm', -1.6, 0, 0); set('RightForeArm', -1.6, 0, 0); }
-  if (kind === 'arms-up') { sit(); set('LeftArm', 0, 0, 1.3 + Math.sin(t * 6) * .15); set('RightArm', 0, 0, -1.3 - Math.sin(t * 6) * .15); set('Head', -.25, 0, 0); }
-  if (kind === 'sit') { sit(); set('Spine', .12, 0, 0); set('LeftArm', -.2, 0, -1.25); set('RightArm', -.2, 0, 1.25); set('LeftForeArm', -.3, 0, 0); set('RightForeArm', -.3, 0, 0); set('Head', .05, Math.sin(t) * .2, 0); }
-  if (kind === 'lie') { set('LeftUpLeg', 0, 0, 1.15); set('RightUpLeg', 0, 0, 1.15); set('LeftLeg', -.3, 0, 0); set('RightLeg', -.3, 0, 0); set('LeftArm', -.1, 0, -1.3); set('RightArm', -.1, 0, 1.3); set('Head', .15, 0, 0); }
-  if (kind === 'kneel') { const br = Math.sin(t * 2) * .03; set('LeftUpLeg', 1.5, 0, .05); set('LeftLeg', -2.3, 0, 0); set('RightUpLeg', .1, 0, -.05); set('RightLeg', -2.2, 0, 0); set('Spine', .4 + br, 0, 0); set('LeftArm', -1.0, 0, -1.0); set('RightArm', -1.3 + br, 0, 1.0); set('RightForeArm', -1.1, 0, 0); set('LeftForeArm', -.9, 0, 0); set('Head', .25, 0, 0); }
+function poseKid(rig, kind, t) {
+  const SIT = { LeftUpLeg: [1.4, 0, .12], RightUpLeg: [1.4, 0, -.12], LeftLeg: [-1.3], RightLeg: [-1.3] }; let p = null;
+  if (kind === 'sick') { const w = Math.sin(t * 7) * .08; p = { ...SIT, Spine: [.35 + w, 0, w], Head: [.4, w * 2, 0], LeftArm: [-.9, 0, -1.2], RightArm: [-.9, 0, 1.2], LeftForeArm: [-1.6], RightForeArm: [-1.6] }; }
+  if (kind === 'arms-up') p = { ...SIT, Spine: [.35], LeftForeArm: [-1.6], RightForeArm: [-1.6], LeftArm: [0, 0, 1.3 + Math.sin(t * 6) * .15], RightArm: [0, 0, -1.3 - Math.sin(t * 6) * .15], Head: [-.25] };
+  if (kind === 'sit') p = { ...SIT, Spine: [.12], LeftArm: [-.2, 0, -1.25], RightArm: [-.2, 0, 1.25], LeftForeArm: [-.3], RightForeArm: [-.3], Head: [.05, Math.sin(t) * .2, 0] };
+  if (kind === 'lie') p = { Spine: [.12], LeftForeArm: [-.3], RightForeArm: [-.3], LeftUpLeg: [0, 0, 1.15], RightUpLeg: [0, 0, 1.15], LeftLeg: [-.3], RightLeg: [-.3], LeftArm: [-.1, 0, -1.3], RightArm: [-.1, 0, 1.3], Head: [.15] };
+  if (kind === 'kneel') { const br = Math.sin(t * 2) * .03; p = { LeftUpLeg: [1.5, 0, .05], LeftLeg: [-2.3], RightUpLeg: [.1, 0, -.05], RightLeg: [-2.2], Spine: [.4 + br], LeftArm: [-1.0, 0, -1.0], RightArm: [-1.3 + br, 0, 1.0], RightForeArm: [-1.1], LeftForeArm: [-.9], Head: [.25] }; }
+  if (p) E.pose(rig, p);
 }
 const faceTo = (obj, target) => { obj.rotation.y = Math.atan2(target.x - obj.position.x, target.z - obj.position.z); };
 function thighWorld(rig) { const b = rig && rig.LeftUpLeg; const v = new THREE.Vector3(); if (!b) return v.copy(R.kidPos).add(new THREE.Vector3(0, .5, 0)); b.updateWorldMatrix(true, false); b.getWorldPosition(v); return v; }
@@ -529,16 +468,17 @@ function rescueUpdate(dt) {
 function rescueCamera(dt) { const kk = 1 - Math.pow(.03, dt || .016); const portrait = innerHeight > innerWidth; const target = new THREE.Vector3(G.x - 3.4, 1.0, 1.4); const pos = portrait ? new THREE.Vector3(G.x - 3.0, 5.6, 10.5) : new THREE.Vector3(G.x - 2.4, 3.2, 9.0); camera.position.lerp(pos, kk); const look = camera.userData.look || (camera.userData.look = target.clone()); look.lerp(target, kk); camera.lookAt(look); }
 /* ---------------- Game state ---------------- */
 const G = { scene: 'title', level: 0, lane: 1, x: 0, items: [], t: 0, score: 0, hearts: 3, oops: 0, mood: 1, nextMystery: 10, fed: 0, got: 0, labels: 0, dodged: 0, learned: new Set(), paused: false, spawnT: 0, speed: 7, mult: 1, offersDone: 0, nextOfferAt: 0, scan: false, drilled: false, lastTip: 0, combo: 0, shake: 0, goalDone: false, done: false };
-const keys = {};
-addEventListener('keydown', e => { keys[e.code] = 1; if (['Space', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault(); if (G.scene === 'play' && !G.paused) { if (e.code === 'KeyA' || e.code === 'ArrowLeft') move(-1); if (e.code === 'KeyD' || e.code === 'ArrowRight') move(1); if (e.code === 'Space' || e.code === 'KeyE') tryRead(); if (e.code === 'Escape') pause(); } });
-addEventListener('keyup', e => { keys[e.code] = 0; });
+// Keyboard (A/D/arrows, Space/J/Enter or E = read, Shift/K = Scanner, Esc/P = pause) + gamepad (stick/d-pad, A, X/Y, B/R2, Start)
+// come from the engine's unified input, polled every frame in pollInput(). Touch keeps the big on-screen buttons and canvas taps.
+const input = E.createInput({ surface: canvas });
 function move(d) { if (G.scene !== 'play' || G.paused) return; const n = clamp(G.lane + d, 0, 2); if (n !== G.lane) { G.lane = n; SFX.pop(); } }
 $('btnL').addEventListener('pointerdown', e => { e.preventDefault(); ac(); move(-1); });
 $('btnR').addEventListener('pointerdown', e => { e.preventDefault(); ac(); move(1); });
 $('btnRead').addEventListener('pointerdown', e => { e.preventDefault(); ac(); tryRead(); });
 const scanBtn = $('scan');
 const scanOn = v => { G.scan = v; scanBtn.classList.toggle('hold', v); };
-scanBtn.addEventListener('pointerdown', e => { e.preventDefault(); scanOn(true); }); scanBtn.addEventListener('pointerup', () => scanOn(false)); scanBtn.addEventListener('pointercancel', () => scanOn(false)); scanBtn.addEventListener('pointerleave', () => scanOn(false));
+let touchScan = false; const scanTouch = v => { touchScan = v; scanOn(v && S.duo && G.scene === 'play'); };
+scanBtn.addEventListener('pointerdown', e => { e.preventDefault(); scanTouch(true); }); scanBtn.addEventListener('pointerup', () => scanTouch(false)); scanBtn.addEventListener('pointercancel', () => scanTouch(false)); scanBtn.addEventListener('pointerleave', () => scanTouch(false));
 // swipe on the canvas
 let sw = null; canvas.addEventListener('pointerdown', e => { sw = { x: e.clientX, t: performance.now() }; ac(); }); canvas.addEventListener('pointerup', e => { if (!sw) return; const dx = e.clientX - sw.x; if (Math.abs(dx) > 30) move(dx > 0 ? 1 : -1); else if (G.scene === 'play') { if (e.clientX < innerWidth / 3) move(-1); else if (e.clientX > innerWidth * 2 / 3) move(1); else tryRead(); } sw = null; });
 /* ---------------- Items ---------------- */
@@ -605,7 +545,7 @@ let drillStep = 0, holdT = 0, holdOn = false;
 function startDrill(why) { G.paused = true; drillStep = 1; startRescue(); ['st1', 'st2', 'st3'].forEach((s, i) => { const el = $(s); el.classList.toggle('done', false); el.classList.toggle('now', i === 0); }); $('drillA').hidden = false; $('drillB').hidden = true; $('drillC').hidden = true; tip(why, 3000); const stepSay = () => say(['', $('st1').textContent, $('st2').textContent, $('st3').textContent][drillStep]); $('btnDrillSay').onclick = stepSay; setTimeout(stepSay, 3200); show('scrDrill'); }
 $('drillA').addEventListener('click', () => { SFX.good(); rescueStep(1); $('st1').classList.add('done'); $('st1').classList.remove('now'); $('st2').classList.add('now'); $('drillA').hidden = true; say(T('gotYou')); setTimeout(() => { $('drillB').hidden = false; drillStep = 2; rescueStep(2); say($('st2').textContent); }, 2600); });
 const hb = $('drillB'), hbFill = hb.querySelector('i'), hbTxt = hb.querySelector('span');
-const holdStart = e => { e.preventDefault(); holdOn = true; holdT = performance.now(); }; const holdEnd = () => { holdOn = false; hbFill.style.width = '0'; hbTxt.textContent = 'Hold on the thigh: 3… 2… 1…'; };
+const holdStart = e => { if (e) e.preventDefault(); holdOn = true; holdT = performance.now(); }; const holdEnd = () => { holdOn = false; hbFill.style.width = '0'; hbTxt.textContent = 'Hold on the thigh: 3… 2… 1…'; };
 hb.addEventListener('pointerdown', holdStart); hb.addEventListener('pointerup', holdEnd); hb.addEventListener('pointerleave', holdEnd); hb.addEventListener('pointercancel', holdEnd);
 function drillTick() { if (drillStep !== 2) return; if (!holdOn) { R.holdK = Math.max(0, R.holdK - .05); return; } const k = (performance.now() - holdT) / 3000; R.holdK = Math.min(1, k); hbFill.style.width = Math.min(100, k * 100) + '%'; const n = 3 - Math.min(3, Math.floor(k * 3)); hbTxt.textContent = n > 0 ? `Hold… ${n}` : 'Done!'; if (k >= 1) { holdOn = false; drillStep = 3; SFX.good(); $('st2').classList.add('done'); $('st2').classList.remove('now'); $('st3').classList.add('now'); hb.hidden = true; say(T('penDone')); setTimeout(() => { rescueStep(3); buildDial(); say($('st3').textContent); }, 2200); } }
 function buildDial() { const d = $('dial'); d.innerHTML = ''; d.hidden = false; const seq = ['9', '1', '1']; let idx = 0; ['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'].forEach(kk => { const b = document.createElement('button'); b.className = 'dialBtn' + (kk === '9' ? ' hot' : ''); b.textContent = kk; b.addEventListener('click', () => { if (kk !== seq[idx]) { SFX.bad(); say(T('tryKey') + ' ' + seq[idx]); return; } SFX.tick(); b.classList.remove('hot'); b.classList.add('done'); idx++; setPhoneStep(idx); say(kk); [...d.children].forEach(x => x.classList.remove('hot')); if (idx < 3) { [...d.children].find(x => x.textContent === seq[idx]).classList.add('hot'); } else { d.hidden = true; $('drillC').hidden = false; $('drillC').classList.add('hot'); say(T('nowCall')); } }); d.appendChild(b); }); }
@@ -616,21 +556,33 @@ let offer = null;
 function startOffer() { offer = pick(OFFERS); G.paused = true; $('offTitle').textContent = offer.t; $('offText').textContent = offer.s; const box = $('offChoices'); box.innerHTML = ''; offer.c.slice().sort(() => Math.random() - .5).forEach(ch => { const b = document.createElement('button'); b.className = 'lv'; b.innerHTML = `<div class="ic">${ch[1] ? '💬' : '🍪'}</div><div><b>${ch[0]}</b></div><div></div>`; b.addEventListener('click', () => { if (ch[1]) { SFX.good(); G.score += 40; G.learned.add(ch[2]); tip(ch[2], 2800); } else { SFX.bad(); hurt(ch[2]); if (G.drilled && G.hearts > 0) tip(ch[2], 3000); } hide('scrOffer'); if (!$('scrDrill').hidden) return; G.paused = false; }); box.appendChild(b); }); const spokenOffer = () => say(`${offer.t}. ${offer.s} ${T('options')}: ` + [...box.children].map((b, i) => `${i + 1}. ${b.querySelector('b').textContent}`).join('. ')); $('btnOffSay').onclick = spokenOffer; spokenOffer(); show('scrOffer'); }
 /* ---------------- Level flow ---------------- */
 function startLevel(i) {
+  if (resCard) { resCard.remove(); resCard = null; }
   G.level = i; const L = LEVELS[i]; buildWorld(L); buildCart(); for (const it of G.items.slice()) removeItem(it);
   Object.assign(G, { scene: 'play', lane: 1, x: 0, t: 0, score: 0, hearts: 3, oops: 0, mood: 1, nextMystery: 10, got: 0, labels: 0, dodged: 0, learned: new Set(), paused: false, spawnT: 1, speed: L.speed, offersDone: 0, nextOfferAt: 8, drilled: false, combo: 0, shake: 0, done: false });
   scanBtn.hidden = !S.duo; hud(); hideAll(); $('hud').hidden = false; tip((S.name ? S.name + '! ' : '') + T('go'), 2400);
 }
+let resCard = null;
+function shareText() { const L = LEVELS[G.level]; return `${S.name || 'We'} cleared "${L.name}" in Snack Squad Safari: ${G.got} safe foods, ${G.labels} labels read, ${G.dodged} allergens dodged. Practicing ${S.allergens.map(a => AL[a].name.toLowerCase()).join(', ')} safety. ${location.href}`; }
 function endLevel(won) {
-  if (G.done) return; try { window.__inoaReward('safari', 40 + G.got * 3, 10 + G.got); } catch (e) { } G.done = true; G.scene = 'results'; G.paused = true;
+  if (G.done) return; G.done = true; G.scene = 'results'; G.paused = true;
   const L = LEVELS[G.level]; let stars = G.oops === 0 ? 3 : G.oops <= 2 ? 2 : 1; S.stars[G.level] = Math.max(S.stars[G.level], stars); persist();
-  $('resStars').textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars); $('resTitle').textContent = stars === 3 ? T('perfect') : T('clear');
-  $('rSafe').textContent = G.got; $('rLabels').textContent = G.labels; $('rDodge').textContent = G.dodged;
-  const learn = $('resLearn'); learn.innerHTML = ''; const items = [...G.learned]; (items.length ? items : ['Catch what is safe, dodge what is not, and read every ? label']).slice(0, 5).forEach(t => { const d = document.createElement('div'); d.textContent = '✓ ' + t; learn.appendChild(d); });
-  $('btnNext').hidden = !(G.level < LEVELS.length - 1); SFX.win(); say(`${$('resTitle').textContent} ${G.got} ${T('safeSnacks')}.`); const col = $('resCollect'); col.innerHTML = S.collection.length ? `<div>🎁 ${T('collection')}: ${S.collection.slice(-6).map(c => c.e + ' ' + c.n).join(' · ')} (${S.collection.length})</div>` : '';
-  setTimeout(() => { $('hud').hidden = true; show('scrResults'); }, 600);
+  const title = stars === 3 ? T('perfect') : T('clear'), es = S.lang === 'es', lvl = G.level;
+  // E.results grants XP + coins to the shared hero profile (once, here) and builds the shared card; it stays invisible for 0.6 s like before
+  if (resCard) resCard.remove();
+  const card = resCard = E.results({ gameId: 'safari', title, stats: [[T('rFed'), G.got], [T('rLabels'), G.labels], [T('rDodged'), G.dodged], [T('rScore'), G.score]], xp: 40 + G.got * 3, coins: 10 + G.got, best: G.score, bestLabel: T('bestScore'), onAgain: () => startLevel(lvl), share: shareText() });
+  card.classList.add('wait');
+  const box = card.querySelector('.ig-card'), kick = box.querySelector('.ig-kicker');
+  const st = document.createElement('div'); st.className = 'bigstars'; st.id = 'resStars'; st.textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars); box.insertBefore(st, kick);
+  if (es) kick.textContent = kick.textContent === 'NEW BEST' ? 'NUEVO RÉCORD' : 'NIVEL TERMINADO';
+  const learnWrap = document.createElement('div'); learnWrap.innerHTML = `<p class="sub" style="margin-bottom:6px">${T('learned')}</p><div class="learn" id="resLearn"></div>`; box.querySelector('.ig-stats').after(learnWrap);
+  const learn = learnWrap.querySelector('.learn'); const items = [...G.learned]; (items.length ? items : ['Catch what is safe, dodge what is not, and read every ? label']).slice(0, 5).forEach(t => { const d = document.createElement('div'); d.textContent = '✓ ' + t; learn.appendChild(d); });
+  if (S.collection.length) { const col = document.createElement('div'); col.className = 'learn'; col.id = 'resCollect'; col.innerHTML = `<div>🎁 ${T('collection')}: ${S.collection.slice(-6).map(c => c.e + ' ' + c.n).join(' · ')} (${S.collection.length})</div>`; box.querySelector('.ig-reward').before(col); }
+  const again = card.querySelector('[data-a=again]'); again.id = 'btnAgain'; again.textContent = es ? 'Jugar de nuevo' : 'Play again';
+  if (lvl < LEVELS.length - 1) { again.classList.add('ghost'); const nx = document.createElement('button'); nx.className = 'ig-btn'; nx.id = 'btnNext'; nx.textContent = es ? 'Siguiente nivel' : 'Next level'; nx.onclick = () => { card.remove(); startLevel(lvl + 1); }; again.after(nx); }
+  const sh = card.querySelector('[data-a=share]'); if (sh) { sh.id = 'btnShare'; sh.textContent = es ? '📣 Compartir mi carrera' : '📣 Share my run'; again.parentNode.appendChild(sh); } // share sits in the button row so the card fits a landscape phone
+  SFX.win(); say(`${title} ${G.got} ${T('safeSnacks')}.`);
+  setTimeout(() => { if (resCard !== card) return; $('hud').hidden = true; card.classList.remove('wait'); }, 600);
 }
-$('btnAgain').addEventListener('click', () => startLevel(G.level)); $('btnNext').addEventListener('click', () => startLevel(Math.min(LEVELS.length - 1, G.level + 1)));
-$('btnShare').addEventListener('click', async () => { const L = LEVELS[G.level]; const txt = `${S.name || 'We'} cleared "${L.name}" in Snack Squad Safari: ${G.got} safe foods, ${G.labels} labels read, ${G.dodged} allergens dodged. Practicing ${S.allergens.map(a => AL[a].name.toLowerCase()).join(', ')} safety. ${location.href}`; try { if (navigator.share) await navigator.share({ text: txt }); else { await navigator.clipboard.writeText(txt); tip('Copied! Paste it anywhere.'); } } catch (e) { } });
 /* ---------------- Mystery Snack (earned, never bought) ---------------- */
 const TREATS = [['Golden Mango Pop', '🥭', 3], ['Rainbow Rice Cake', '🍘', 2], ['Sunflower Butter Cup', '🌻', 2], ['Coconut Cloud', '🥥', 2], ['Berry Blast Bar', '🫐', 1], ['Crispy Chickpea Pack', '🫘', 1], ['Watermelon Stars', '🍉', 1], ['Oat Moon Cookie', '🌙', 2], ['Dragonfruit Gem', '🐉', 3], ['Honey Pear Chips', '🍐', 1]];
 const RAR = ['', 'Common', 'Rare', 'Legendary'], RAR_ES = ['', 'Común', 'Raro', 'Legendario'];
@@ -642,6 +594,7 @@ const STR = {
   perfect: ['Perfect run! Your buddy is glowing.', '¡Carrera perfecta! Tu amiguito brilla.'], clear: ['Level clear! Your buddy grew.', '¡Nivel completado! Tu amiguito creció.'], collection: ['Collection', 'Colección'], go: ['Feed your buddy. Catch what is safe, dodge your allergens.', 'Alimenta a tu amiguito. Atrapa lo seguro, esquiva tus alérgenos.'], labelPro: ['label pro', 'experto en etiquetas'],
   noPack: ['No package close by. Get in the lane of a ? box first.', 'No hay paquete cerca. Ponte en el carril de una caja ?.'], lucky: ['Lucky! That one was fine, but read the label next time.', '¡Suerte! Ese estaba bien, pero lee la etiqueta la próxima vez.'], skipSafe: ['That one was actually safe. Skipping when unsure is still a good habit.', 'Ese sí era seguro. Saltarlo cuando dudas sigue siendo un buen hábito.'],
   helpHere: ['Help is here! You did everything right.', '¡Llegó la ayuda! Hiciste todo bien.'], kidHelp: ['I feel itchy and sick', 'Me pica y me siento mal'], gotYou: ['I am here. Let me see you.', 'Aquí estoy. Déjame verte.'], penTip: ['Blue cap off, orange to the outer thigh, hold', 'Tapa azul fuera, naranja al muslo, sostén'], penDone: ['Done! Now rub the spot for 10 seconds.', '¡Listo! Ahora frota el lugar 10 segundos.'], dialTip: ['Press 9, then 1, then 1', 'Marca 9, luego 1, luego 1'], tryKey: ['Not that one. Press', 'Ese no. Marca el'], nowCall: ['Now press the green call button.', 'Ahora presiona el botón verde de llamar.'], callScript: ['Say: my friend had an allergic reaction. We used the epinephrine. Please come to the Dawn Trail picnic area.', 'Di: mi amigo tuvo una reacción alérgica. Usamos la epinefrina. Vengan al área de picnic del sendero.'], lieTip: ['Lie down, legs up, stay together until help comes', 'Acuéstate, piernas arriba, juntos hasta que llegue la ayuda'], ingr: ['Ingredients', 'Ingredientes'], contains: ['Contains', 'Contiene'], mayContain: ['May contain', 'Puede contener'], askSafe: ['Is it safe for you?', '¿Es seguro para ti?'], options: ['Your choices', 'Tus opciones'], mysteryTitle: ['Mystery snack', 'Snack misterioso'],
+  rFed: ['snacks fed', 'snacks dados'], rLabels: ['labels read', 'etiquetas leídas'], rDodged: ['allergens dodged', 'alérgenos esquivados'], rScore: ['score', 'puntos'], bestScore: ['Best score', 'Mejor puntuación'], learned: ['Things you learned', 'Lo que aprendiste'],
   noRead: ['You grabbed a package without reading the label, and it had your allergen in it.', 'Tomaste un paquete sin leer la etiqueta y tenía tu alérgeno.'], alwaysRead: ['Always read the label on packaged food', 'Siempre lee la etiqueta de los empaques']
 };
 const T = k => STR[k] ? STR[k][S.lang === 'es' ? 1 : 0] : k;
@@ -671,18 +624,16 @@ $('btnLang').addEventListener('click', () => { S.lang = S.lang === 'es' ? 'en' :
 
 
 /* ================= Update / render ================= */
-let last = performance.now(), camSway = 0, wheelSpin = 0;
+let camSway = 0, wheelSpin = 0;
 function animateRig(rig, t, speed, lean, mode) {
-  if (!rig) return; const set = (name, x, y, z) => { const b = rig[name]; if (!b) return; b.quaternion.copy(b.userData.rest); if (z) b.rotateZ(z); if (x) b.rotateX(x); if (y) b.rotateY(y); };
-  const ph = t * speed;
+  if (!rig) return; const ph = t * speed;
   if (mode === 'ride') { // sitting in the cart, hands on the rail, looking around; cheers on a good catch
-    const ch = clamp(G.cheer || 0, 0, 1); set('LeftUpLeg', 1.35, 0, .1); set('RightUpLeg', 1.35, 0, -.1); set('LeftLeg', -1.2, 0, 0); set('RightLeg', -1.2, 0, 0);
-    set('LeftArm', -.7 + Math.sin(ph * .5) * .05, 0, -1.0); set('RightArm', lerp(-.7 - Math.sin(ph * .5) * .05, .2, ch), 0, lerp(1.0, -1.1, ch)); set('LeftForeArm', -.5, 0, 0); set('RightForeArm', -.5, 0, 0);
-    set('Spine', .1 + Math.abs(Math.sin(ph)) * .03, 0, lean * .4); set('Head', -.05 + Math.sin(t * 1.3) * .06, lean * 1.2 + Math.sin(t * .7) * .25, 0);
-  } else { // walking behind the cart, hands on the handle
-    const sw = .55; set('LeftUpLeg', Math.sin(ph) * sw, 0, 0); set('RightUpLeg', -Math.sin(ph) * sw, 0, 0); set('LeftLeg', -Math.max(0, -Math.sin(ph)) * .9, 0, 0); set('RightLeg', -Math.max(0, Math.sin(ph)) * .9, 0, 0);
-    set('LeftArm', -.9, 0, -1.1); set('RightArm', G.scan ? .3 : -.9, 0, G.scan ? -.9 : 1.1); set('LeftForeArm', -.6, 0, 0); set('RightForeArm', G.scan ? 0 : -.6, 0, 0);
-    set('Spine', .2 + Math.abs(Math.sin(ph * 2)) * .04, 0, lean * .3); set('Head', -.15, lean * .8, 0); if (rig.Hips) rig.Hips.position.y = (rig.Hips.userData.y0 ?? (rig.Hips.userData.y0 = rig.Hips.position.y)) + Math.abs(Math.sin(ph)) * .05;
+    const ch = clamp(G.cheer || 0, 0, 1);
+    E.pose(rig, { LeftUpLeg: [1.35, 0, .1], RightUpLeg: [1.35, 0, -.1], LeftLeg: [-1.2], RightLeg: [-1.2], LeftArm: [-.7 + Math.sin(ph * .5) * .05, 0, -1.0], RightArm: [lerp(-.7 - Math.sin(ph * .5) * .05, .2, ch), 0, lerp(1.0, -1.1, ch)], LeftForeArm: [-.5], RightForeArm: [-.5], Spine: [.1 + Math.abs(Math.sin(ph)) * .03, 0, lean * .4], Head: [-.05 + Math.sin(t * 1.3) * .06, lean * 1.2 + Math.sin(t * .7) * .25, 0] });
+  } else { // walking behind the cart, hands on the handle (right arm points the scanner)
+    const sw = .55;
+    E.pose(rig, { LeftUpLeg: [Math.sin(ph) * sw], RightUpLeg: [-Math.sin(ph) * sw], LeftLeg: [-Math.max(0, -Math.sin(ph)) * .9], RightLeg: [-Math.max(0, Math.sin(ph)) * .9], LeftArm: [-.9, 0, -1.1], RightArm: [G.scan ? .3 : -.9, 0, G.scan ? -.9 : 1.1], LeftForeArm: [-.6], RightForeArm: [G.scan ? 0 : -.6], Spine: [.2 + Math.abs(Math.sin(ph * 2)) * .04, 0, lean * .3], Head: [-.15, lean * .8, 0] });
+    if (rig.Hips) rig.Hips.position.y = (rig.Hips.userData.y0 ?? (rig.Hips.userData.y0 = rig.Hips.position.y)) + Math.abs(Math.sin(ph)) * .05;
   }
 }
 function update(dt) {
@@ -720,15 +671,47 @@ function render(dt) {
   const portrait = innerHeight > innerWidth; camera.position.set(G.x * .35 + camSway + rnd(-sh, sh), (portrait ? 6.2 : 5.2) + rnd(-sh, sh), portrait ? 11 : 9.5); camera.lookAt(G.x * .5, 1.3, -9);
   sunL.position.set(G.x + 8, 16, 6); sunL.target.position.set(G.x, 0, -8); sunL.target.updateMatrixWorld();
 }
-function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); composer.setSize(w, h); bloom.resolution.set(w / 2, h / 2); camera.aspect = w / h; camera.fov = w < h ? 62 : 50; camera.updateProjectionMatrix(); }
-addEventListener('resize', resize); resize();
-let fpsAcc = 0, fpsN = 0, lowPerf = false;
-function loop(now) { requestAnimationFrame(loop); const dt = Math.min(.05, (now - last) / 1000); last = now; update(dt); drillTick(); updateSparks(dt); render(dt); if (G.scene === 'title' || G.scene === 'menu') { G.t += dt; for (const g of scrollers) { g.position.z += 2.5 * dt; if (g.position.z > 14) g.position.z -= 128; } for (const tg of tuftGroups) { tg.position.z += 2.5 * dt; if (tg.position.z > 68) tg.position.z -= 256; } updateWeather(dt, 2.5); if (water) water.material.uniforms.uTime.value = G.t; animateRig(kidRig, G.t, 3, 0, 'ride'); } fpsAcc += dt; fpsN++; if (fpsAcc > 3) { const fps = fpsN / fpsAcc; fpsAcc = 0; fpsN = 0; if (fps < 40 && !lowPerf) { lowPerf = true; renderer.setPixelRatio(Math.min(DPR, 1.25)); resize(); bloom.enabled = false; } } composer.render(); }
+/* ---------- input polling (keyboard + gamepad via the engine) ---------- */
+let padDir = 0, padHold = false;
+function pollInput() {
+  const st = input.poll(); let used = false;
+  if (G.scene === 'play' && !G.paused && !R.active) {
+    const dir = st.x > .5 ? 1 : st.x < -.5 ? -1 : 0; if (dir && dir !== padDir) { move(dir); used = true; } padDir = dir;
+    if (st.aPressed || st.cPressed) { tryRead(); used = true; }
+    if (st.pausePressed) { pause(); used = true; }
+  } else padDir = 0;
+  if (st.pausePressed && !used && !$('scrPause').hidden) { hide('scrPause'); G.paused = false; used = true; }
+  const wantScan = S.duo && G.scene === 'play' && (st.b || touchScan); if (wantScan !== G.scan) scanOn(wantScan);
+  // rescue hold step: hold Space / gamepad A as well as the on-screen button
+  if (drillStep === 2) { if (st.a && !holdOn && !padHold) { padHold = true; holdStart(); } else if (!st.a && padHold) { padHold = false; if (holdOn) holdEnd(); } used = used || st.a; } else padHold = false;
+  padMenu(used);
+}
+// Gamepad menu navigation (local helper; the engine has none): d-pad/stick moves a focus ring over the open card's buttons, A presses.
+// With nothing focused yet, A presses the card's main button (on the label card that is "Not safe for me", the safe default).
+const GP = { prev: {}, el: null };
+function padMenu(consumed) {
+  const pads = navigator.getGamepads ? [...navigator.getGamepads()].filter(Boolean) : []; if (!pads.length) return;
+  const cur = { l: false, r: false, u: false, d: false, a: false };
+  for (const p of pads) { const ax = p.axes[0] || 0, ay = p.axes[1] || 0; cur.l ||= ax < -.5 || !!p.buttons[14]?.pressed; cur.r ||= ax > .5 || !!p.buttons[15]?.pressed; cur.u ||= ay < -.5 || !!p.buttons[12]?.pressed; cur.d ||= ay > .5 || !!p.buttons[13]?.pressed; cur.a ||= !!p.buttons[0]?.pressed; }
+  const edge = k => cur[k] && !GP.prev[k]; const prev = GP.prev; GP.prev = cur; if (consumed) return;
+  const open = [...document.querySelectorAll('#app > .screen:not([hidden]), .ig-screen')]; const scr = open[open.length - 1];
+  if (!scr) { if (GP.el) GP.el.classList.remove('gpf'); GP.el = null; return; }
+  const btns = [...scr.querySelectorAll('button, a.btn, a.ig-btn')].filter(b => !b.hidden && !b.disabled && b.offsetParent !== null); if (!btns.length) return;
+  let i = btns.indexOf(GP.el); const step = (edge('r') || edge('d')) ? 1 : (edge('l') || edge('u')) ? -1 : 0;
+  if (step) { i = i < 0 ? 0 : (i + step + btns.length) % btns.length; if (GP.el) GP.el.classList.remove('gpf'); GP.el = btns[i]; GP.el.classList.add('gpf'); GP.el.focus({ preventScroll: false }); }
+  if (edge('a')) { const b = i >= 0 ? btns[i] : (btns.find(x => x.matches('.btn:not(.ghost), .ig-btn:not(.ghost)')) || btns[0]); if (b && b.id !== 'drillB') b.click(); }
+  void prev;
+}
+/* ---------- one frame: input, simulation, rescue hold, particles, camera, title idle ---------- */
+function frame(dt) {
+  pollInput(); update(dt); drillTick(); updateSparks(dt); render(dt);
+  if (G.scene === 'title' || G.scene === 'menu') { G.t += dt; for (const g of scrollers) { g.position.z += 2.5 * dt; if (g.position.z > 14) g.position.z -= 128; } for (const tg of tuftGroups) { tg.position.z += 2.5 * dt; if (tg.position.z > 68) tg.position.z -= 256; } updateWeather(dt, 2.5); if (water) water.material.uniforms.uTime.value = G.t; animateRig(kidRig, G.t, 3, 0, 'ride'); }
+}
 /* ---------------- Screens ---------------- */
-const SCREENS = ['scrTitle', 'scrHow', 'scrSetup', 'scrLevels', 'scrLabel', 'scrOffer', 'scrDrill', 'scrPause', 'scrResults', 'scrMystery'];
+const SCREENS = ['scrTitle', 'scrHow', 'scrSetup', 'scrLevels', 'scrLabel', 'scrOffer', 'scrDrill', 'scrPause', 'scrMystery'];
 function hideAll() { SCREENS.forEach(s => { $(s).hidden = true; }); }
 function show(id) { $(id).hidden = false; } function hide(id) { $(id).hidden = true; }
-function goTitle() { G.scene = 'title'; hideAll(); $('hud').hidden = true; show('scrTitle'); }
+function goTitle() { if (resCard) { resCard.remove(); resCard = null; } G.scene = 'title'; hideAll(); $('hud').hidden = true; show('scrTitle'); }
 $('btnPlay').addEventListener('click', () => { ac(); if (voiceOK) speechSynthesis.getVoices(); G.scene = 'menu'; hideAll(); show('scrSetup'); });
 $('btnHow').addEventListener('click', () => { hideAll(); show('scrHow'); }); $('btnHowBack').addEventListener('click', goTitle);
 // setup
@@ -749,7 +732,7 @@ $('btnPause').addEventListener('click', pause); $('btnResume').addEventListener(
 $('tglSound').addEventListener('click', () => { S.sound = !S.sound; persist(); $('tglSound').innerHTML = `<span class="e">${S.sound ? '🔊' : '🔇'}</span>Sound ${S.sound ? 'on' : 'off'}`; });
 $('tglMotion').addEventListener('click', () => { S.motion = !S.motion; persist(); $('tglMotion').innerHTML = `<span class="e">🎢</span>Camera sway ${S.motion ? 'on' : 'off'}`; });
 $('tglVoice').addEventListener('click', () => { S.voice = !S.voice; persist(); $('tglVoice').innerHTML = `<span class="e">🗣️</span>Read aloud ${S.voice ? 'on' : 'off'}`; });
-addEventListener('keydown', e => { if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') scanOn(S.duo && G.scene === 'play'); }); addEventListener('keyup', e => { if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') scanOn(false); });
+$('kidName').addEventListener('keydown', e => e.stopPropagation()); // let Space reach the name field (the shared input swallows it for gameplay)
 document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
 
 
@@ -772,12 +755,15 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) pause
 
 
 /* boot */
-(async () => {
+window.__AA = { G, S, startLevel, spawn, answerLabel, LEVELS, endLevel, move, tryRead, openLabel, nearestPack, ASSETS, buildCart, update, say, rig: () => kidRig, grig: () => grownRig, THREE, scene, camera, R, engine: ENG };
+window.__GAME = { G, S, R, LEVELS, update: frame, step: update, start(i = 0, opts = {}) { if (opts.duo != null) S.duo = !!opts.duo; startLevel(clamp(i | 0, 0, LEVELS.length - 1)); }, startLevel, endLevel, spawn, tryRead, openLabel, answerLabel, nearestPack, pause, state: () => ({ scene: G.scene, level: G.level, got: G.got, goal: LEVELS[G.level].goal, score: G.score, labels: G.labels, dodged: G.dodged, oops: G.oops, paused: G.paused, rescue: R.phase }) };
+{
   const bar = $('ldBar'), txt = $('ldTxt'), eggs = ['🥚', '🐣', '🍎', '🥦', '🧃'];
-  await loadAssets(p => { bar.style.width = Math.round(p * 100) + '%'; $('ldE').textContent = eggs[Math.min(eggs.length - 1, Math.floor(p * eggs.length))]; txt.textContent = p < .5 ? 'Packing the cart…' : p < .9 ? 'Waking up the buddy…' : 'Ready!'; });
-  buildWorld(LEVELS[0]); buildCart(); applyLang(); goTitle(); $('loading').hidden = true; requestAnimationFrame(loop);
-})();
-window.__AA = { G, S, startLevel, spawn, answerLabel, LEVELS, endLevel, move, tryRead, openLabel, nearestPack, ASSETS, buildCart, update, say, rig: () => kidRig, grig: () => grownRig, THREE, scene, camera, R };
+  await E.loadPack('../packs/safari.json', ENG, p => { bar.style.width = Math.round(p * 100) + '%'; $('ldE').textContent = eggs[Math.min(eggs.length - 1, Math.floor(p * eggs.length))]; txt.textContent = p < .5 ? 'Packing the cart…' : p < .9 ? 'Waking up the buddy…' : 'Ready!'; });
+  buildWorld(LEVELS[0]); buildCart(); applyLang(); goTitle(); $('loading').hidden = true;
+  E.loop(dt => { frame(dt); ENG.render(dt); });
+  window.__READY = true;
+}
 </script>
 
 </body>
