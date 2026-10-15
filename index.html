@@ -142,48 +142,47 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
 </style>
 
 </head><body>
-<nav><div class="wrap"><div class="logo">INOA<span>GAMES</span></div><ul><li><a href="#shelf">Games</a></li><li><a href="#hero">Your hero</a></li><li><a href="#party">Party</a></li><li><a href="#pricing">Pricing</a></li><li><a href="#faq">FAQ</a></li></ul><a class="btn" href="games/pixelpact.html" style="padding:11px 16px;font-size:12px">Play free</a></div></nav>
+<nav><div class="wrap"><div class="logo">INOA<span>GAMES</span></div><ul><li><a href="#shelf">Games</a></li><li><a href="#hero">Your hero</a></li><li><a href="#party">Party</a></li><li><a href="#faq">FAQ</a></li></ul><a class="btn" href="#shelf">Play</a></div></nav>
 
 <header>
   <canvas id="bg" aria-hidden="true"></canvas>
   <div class="wrap hero">
-    <div class="eyebrow">One link · every phone is a controller · free to start</div>
+    <div class="eyebrow">One link · no download · free to play</div>
     <h1>INOA<span>GAMES</span></h1>
-    <p class="lead">A hub of quick, friendly games you play together from one link. Build a hero once and grow it in every game, from the Pixel Pact islands to a 60-second drawer restock.</p>
+    <p class="lead">A hub of quick, friendly browser games for one player or a whole couch. Build a hero once and grow it in every game, from the Pixel Pact islands to a 60-second drawer restock.</p>
     <div class="cta">
-      <a class="btn" href="games/pixelpact.html">Play Pixel Pact free</a>
+      <a class="btn" href="games/pixelpact.html">Play Pixel Pact</a>
       <a class="btn glass" href="#shelf">See the games</a>
     </div>
-    <div class="proof"><span><b>14</b> games on the shelf</span><span><b>1</b> hero everywhere</span><span><b>10 s</b> link to lobby</span><span><b>0</b> downloads · <b>0</b> forced ads</span></div>
+    <div class="proof"><span><b>13</b> games on the shelf</span><span><b>1</b> hero everywhere</span><span><b>1–4</b> players on one screen</span><span><b>0</b> downloads · <b>0</b> forced ads</span></div>
   </div>
 </header>
 
 <section class="heropanel"><div class="wrap"><div class="hp" id="heroStats"></div></div></section>
-<div class="band"><span><b>All ages</b>no stranger chat</span><span><b>60 fps</b>on 2021 phones</span><span><b>EN · ES</b>from day one</span><span><b>$4.99</b>once, your party plays free</span></div>
+<div class="band"><span><b>All ages</b>no stranger chat</span><span><b>Phone · laptop</b>touch, keys, gamepad</span><span><b>EN · ES</b>from day one</span><span><b>Free</b>while in preview</span></div>
 
 <section id="shelf">
   <div class="wrap">
-    <div class="sec-head"><div class="eyebrow">The shelf</div><h2>Fourteen games, one party, one hero</h2><p>Co-op adventure and a brawler for game night, four signature 3D titles with real depth for adults, a kids' allergy safari for families, and cozy one-minute games for the bus. Every one of them pays XP and coins into the same hero.</p></div>
+    <div class="sec-head"><div class="eyebrow">The shelf</div><h2>Thirteen games, one couch, one hero</h2><p>Co-op adventure and a brawler for game night, four signature 3D titles with real depth for adults, a kids' allergy safari for families, and cozy one-minute games for the bus. Every one of them pays XP and coins into the same hero.</p></div>
     <div class="shelf" id="shelfGrid"></div>
   </div>
 </section>
 
 <section class="alt" id="hero">
   <div class="wrap">
-    <div class="sec-head"><div class="eyebrow">Create your hero</div><h2>Make one hero. Grow it everywhere.</h2><p>Pick a class, shape the look, name it. It fights in Pixel Pact, races in Tide Runner and sits behind the counter in Brew and Bloom. Levels, cosmetics and titles are earned by playing anything on the shelf and never lost.</p></div>
+    <div class="sec-head"><div class="eyebrow">Create your hero</div><h2>Make one hero. Grow it everywhere.</h2><p>Pick a class, shape the look, name it. Every game on the shelf adds XP and coins to the same hero, saved on this device.</p></div>
     <div class="creator">
       <div class="stage">
         <canvas id="maker"></canvas>
         <div class="nm"><span id="mkName">Rook Ironhide</span><small id="mkClass">TANK · SHIELD KNIGHT</small></div>
         <div class="row" id="mkClasses"></div>
         <div class="row"><button class="chip" id="mkColors">New colors</button><button class="chip" id="mkName2">New name</button><button class="chip" id="mkSurprise">Surprise me</button></div>
-        <div><div style="display:flex;justify-content:space-between;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mist);margin-bottom:6px"><span>Level 12</span><span>XP to 13</span></div><div class="bar"><i></i></div></div>
+        <div><div style="display:flex;justify-content:space-between;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mist);margin-bottom:6px"><span id="mkLv">Level 1</span><span id="mkXp">XP to 2</span></div><div class="bar"><i></i></div></div>
       </div>
       <div class="tree">
-        <div class="t"><div class="d">01</div><div><b>Ten classes</b><p>Knight, Ninja, Mage and Boxer today; Ranger, Monk, Drummer, Chef, Surfer and Inventor on the way. The class sets your 3-hit combo, Special and Ultimate.</p></div></div>
-        <div class="t"><div class="d">02</div><div><b>Looks are yours</b><p>Body shape, skin, hair, face, outfit, cape, weapon skin, trail and victory pose. Colors are free; rare pieces are earned or bought, never power.</p></div></div>
-        <div class="t"><div class="d">03</div><div><b>Train, don't grind</b><p>Level 1 to 50 from XP earned in any game. Each level gives a skill point in a three-branch tree (Power, Mobility, Team) with free respec, and a guaranteed drop every 3 wins.</p></div></div>
-        <div class="t"><div class="d">04</div><div><b>Training Grounds</b><p>A 90-second daily drill that teaches the combo, the double jump and the dodge before any level asks for them.</p></div></div>
+        <div class="t"><div class="d">01</div><div><b>Four classes</b><p>Knight, Ninja, Mage and Boxer. Pick one, roll new colours and a name.</p></div></div>
+        <div class="t"><div class="d">02</div><div><b>One level, every game</b><p>Hero level 1 to 50 from XP earned in any game on the shelf, plus coins.</p></div></div>
+        <div class="t"><div class="d">03</div><div><b>Saved on this device</b><p>No account and no sign-up. Your hero lives in this browser only.</p></div></div>
       </div>
     </div>
   </div>
@@ -191,39 +190,26 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
 
 <section id="party">
   <div class="wrap">
-    <div class="sec-head"><div class="eyebrow">How a party works</div><h2>Send the link. Everyone is in within ten seconds.</h2></div>
+    <div class="sec-head"><div class="eyebrow">Play together</div><h2>One screen, a few friends, no setup.</h2></div>
     <div class="steps">
-      <div class="stp"><b>Host opens a room</b><p>On a laptop, a TV browser or a phone. A 4-letter code and a QR appear on screen.</p><span class="code">PACT</span></div>
-      <div class="stp"><b>Friends scan or tap</b><p>No account, no download. Guests get a name and a random hero in one tap; their phone becomes a gamepad with haptics and a private screen.</p></div>
-      <div class="stp"><b>Pick a game together</b><p>The party stays together while you hop between games. The host picks, a 3-2-1 countdown starts for everyone, bots fill empty seats.</p></div>
-      <div class="stp"><b>Share the moment</b><p>Auto-clips of KOs, perfect restocks and fails, share codes for drawers and daily islands, and a hero card for your story.</p></div>
+      <div class="stp"><b>Open a game</b><p>On a laptop, a TV browser, a tablet or a phone. Nothing to install.</p></div>
+      <div class="stp"><b>Grab a controller</b><p>Keyboard, gamepads or the on-screen buttons. Party games take 2–4 players on one screen or pass the device around.</p></div>
+      <div class="stp"><b>Bots fill the seats</b><p>Racing, turf, trivia and the brawler fill empty slots with friendly bots, so solo play always works.</p></div>
+      <div class="stp"><b>Share the moment</b><p>Share codes for drawers and islands, and results you can copy to friends. Online rooms are on the roadmap, not here yet.</p></div>
     </div>
   </div>
 </section>
 
-<section class="alt" id="pricing">
-  <div class="wrap">
-    <div class="sec-head"><div class="eyebrow">Pricing</div><h2>Free to play. Cheap to own. Fair to keep.</h2><p>No paid power, no loot boxes, no interstitial ads. Everything in the shop is also earnable with coins. Planned launch prices.</p></div>
-    <div class="price">
-      <div class="plan"><h3>Free</h3><div class="amt">$0</div><ul><li>The whole hub and every mini-game</li><li>Pixel Pact World 1 levels 1 to 3, Match on 3 arenas</li><li>Hero creator, levels 1 to 20</li><li>Parties up to 4, bots included</li></ul><a class="btn glass" href="games/pixelpact.html">Play now</a></div>
-      <div class="plan best"><span class="pill">HOST PAYS, PARTY PLAYS</span><h3>Full game</h3><div class="amt">$4.99 <small>one time</small></div><ul><li>Every world and arena as it ships</li><li>Hero levels to 50, all ten classes</li><li>Online rooms up to 8 players; your guests play free</li><li>Cloud save across phone, laptop and app</li></ul><a class="btn" href="#faq">Notify me at launch</a></div>
-      <div class="plan"><h3>Pact Pass</h3><div class="amt">$9.99 <small>per year</small></div><ul><li>Seasonal cosmetic track and name colors</li><li>Double daily drops</li><li>Early access to each new game</li><li>Gift it to a friend in one tap</li></ul><a class="btn glass" href="#faq">Notify me at launch</a></div>
-    </div>
-  </div>
-</section>
 
 <section id="roadmap">
   <div class="wrap">
-    <div class="sec-head"><div class="eyebrow">Roadmap</div><h2>From demo to the app stores</h2></div>
+    <div class="sec-head"><div class="eyebrow">Roadmap</div><h2>What is here, what is next</h2></div>
     <div class="roadmap">
-      <div class="step done"><span class="k">DONE</span><b>Pixel Pact demo</b><p>Three co-op levels, boss fight, three arenas, bots, 2.5D look, touch, keyboard and gamepad.</p></div>
-      <div class="step"><span class="k">PHASE 0 · NOW</span><b>Online rooms</b><p>Room codes, QR phone controllers, guest accounts. Four friends on four phones.</p></div>
-      <div class="step"><span class="k">PHASE 1</span><b>Hero and hub</b><p>Hero creator, skill trees, Training Grounds, the plaza, Perfect Fit and Tide Runner.</p></div>
-      <div class="step"><span class="k">PHASE 2</span><b>3D and World 1</b><p>Three.js toon renderer, 10 levels, 6 arenas, Fail Tray, Trivia, Junkyard to Jewel.</p></div>
-      <div class="step"><span class="k">PHASE 3</span><b>App stores</b><p>iOS and Android apps of the same game: offline play, push invites, native billing.</p></div>
-      <div class="step"><span class="k">SEASONS</span><b>New every month</b><p>A new game every 4 weeks, a world or arena every 8, a cosmetic set every 2.</p></div>
+      <div class="step done"><span class="k">NOW</span><b>13 games in the browser</b><p>Local multiplayer, bots, touch, keyboard and gamepad. One shared hero on this device.</p></div>
+      <div class="step"><span class="k">NEXT</span><b>Install and play offline</b><p>Add Inoa Games to your home screen and keep playing without a connection.</p></div>
+      <div class="step"><span class="k">LATER</span><b>Online rooms</b><p>Room codes and phones as controllers. Not available yet.</p></div>
+      <div class="step"><span class="k">LATER</span><b>App stores</b><p>iOS and Android versions of the same games.</p></div>
     </div>
-    <p style="margin-top:18px;color:var(--mist);font-size:14px">Launch notifications will be collected on the real site once payments are set up. Until then, follow <a href="https://www.instagram.com/eduardoinoa_" target="_blank" rel="noopener">@eduardoinoa_</a> for updates.</p>
   </div>
 </section>
 
@@ -231,17 +217,17 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
   <div class="wrap">
     <div class="sec-head"><div class="eyebrow">FAQ</div><h2>Questions people ask</h2></div>
     <div class="faq">
-      <details open><summary>Do I need to download anything?</summary><p>No. Open the link and play. On a phone, add it to your home screen for a full-screen app. iOS and Android apps of the same game come in Phase 3.</p></details>
-      <details><summary>Is it for kids or adults?</summary><p>Both. The hub is all ages: Snack Squad Safari and the cozy games are built for families, while the signature 3D titles (Depths, Driftwood Builders, Tide Lines, Island Drift) are rated 10+ with ranked play and builds for adults. A child profile hides ranked play and voice. There is no text chat with strangers, no gore and no gambling mechanics. Emotes and quick-chat only; parties are private by code.</p></details>
-      <details><summary>Is it hard?</summary><p>Friendly is the default: unlimited lives, a checkpoint every 20 seconds, and a teammate can revive you in 5 seconds. Normal and Brutal are there for people who want a fight, and Brutal par times are made to be chased.</p></details>
-      <details><summary>What do I actually pay for?</summary><p>One $4.99 unlock for more worlds, arenas, classes and 8-player online rooms. Your guests never pay to join your party. Cosmetics are expression, never power, and every one is also earnable.</p></details>
-      <details><summary>Where does my hero live?</summary><p>On your account, synced across phone, laptop and app. Start as a guest, upgrade with Apple, Google or email later and nothing is lost.</p></details>
+      <details open><summary>Do I need to download anything?</summary><p>No. Open the link and play in the browser.</p></details>
+      <details><summary>Is it for kids or adults?</summary><p>Both. Everything is all ages: no chat, no strangers, no gambling mechanics. Cozy games and Snack Squad Safari are built for families; Depths, Driftwood Builders, Tide Lines and Island Drift have harder options for older players.</p></details>
+      <details><summary>Is it hard?</summary><p>Friendly is the default. Many games have an optional harder mode for people who want a challenge.</p></details>
+      <details><summary>Does it cost anything?</summary><p>No. Inoa Games is free while it is in preview. There are no ads and no purchases.</p></details>
+      <details><summary>Where does my hero live?</summary><p>In this browser on this device (local storage). Clearing site data resets it. Nothing is sent to a server.</p></details>
       <details><summary>Who makes this?</summary><p>Inoa Services, a Methuen, MA company. Pixel Pact is the first game; the hub grows a game a month.</p></details>
     </div>
   </div>
 </section>
 
-<footer><div class="wrap"><span>© 2026 Inoa Games · an Inoa Services project</span><span>Made in Methuen, MA · <a href="games/pixelpact.html">Play Pixel Pact</a> · <a href="https://claude.ai/artifact/Q2FKuHrPNuEPCLGvU6q5Nm" target="_blank" rel="noopener">Pixel Pact page</a></span></div></footer>
+<footer><div class="wrap"><span>© 2026 Inoa Games · an Inoa Services project</span><span>Made in Methuen, MA · <a href="games/pixelpact.html">Play Pixel Pact</a></span></div></footer>
 
 <script>
 (() => {
@@ -344,20 +330,20 @@ function drawBg(t) {
 /* ---------- The shelf: nine games, each with a tiny live illustration ---------- */
 const PASTEL = { mint: '#9fe3cf', butter: '#ffe59a', pink: '#ffb7c5', lav: '#c9b8ff', peach: '#ffc9a3', cream: '#fff4e3', wood: '#c48a5a' };
 const GAMES = [
-  { id: 'pact', kind: 'FLAGSHIP · CO-OP ADVENTURE', name: 'Pixel Pact', desc: 'Four heroes, one exit. Clear the Emberwood Isles together, revive your friends, beat Big Claw. Ten levels in World 1.', meta: ['1–4 players', '3–5 min', 'Play now'], flag: true , href: 'games/pixelpact.html', st: 'PLAY', live: true, thumb: 'thumbs/pixelpact.jpg' },
-  { id: 'match', kind: 'VERSUS · PLATFORM BRAWLER', name: 'Pixel Pact: Match', desc: 'Damage, knockback, ring-outs. Last hero standing on Driftwood Docks, Canopy Clash or Molten Crown.', meta: ['2–4 players', '2–3 min', 'Play now'] , href: 'games/pixelpact.html', st: 'PLAY', live: true, thumb: 'thumbs/pixelpact.jpg' },
-  { id: 'safari', kind: 'KIDS + GROWN-UPS · ALLERGY SAFE SAFARI', name: 'Snack Squad Safari', desc: 'A real 3D safari trail where you feed your buddy only what is safe for you. Labels read aloud for kids who can\u2019t read yet, a grown-up Scanner role, and an animated Buddy Rescue that teaches the auto-injector and 9-1-1 step by step. English and Spanish.', meta: ['1–2 players', '5 levels', 'Play now'] , href: 'games/safari.html', st: 'PLAY', live: true, thumb: 'thumbs/safari.jpg' },
-  { id: 'depths', kind: 'SIGNATURE 3D · CO-OP ROGUELITE', name: 'Pixel Pact: Depths', desc: 'Dive under the islands with up to three friends. Every run builds a different hero; bosses demand teamwork; a weekly seeded run with a friends leaderboard.', meta: ['1–4 players', '15–25 min', 'Ages 10+'] , href: 'games/depths.html', st: 'PLAY', live: true, thumb: 'thumbs/depths.jpg' },
-  { id: 'builders', kind: 'SIGNATURE 3D · SURVIVAL BUILD', name: 'Driftwood Builders', desc: 'A shared island that grows for months. Farms, boats, blueprints and tide raids with up to eight friends.', meta: ['1–8 players', '10–40 min', 'Ages 10+'] , href: 'games/builders.html', st: 'PLAY', live: true },
-  { id: 'tide', kind: 'SIGNATURE 3D · 4V4 TERRITORY', name: 'Tide Lines', desc: 'Paint the arena with water cannons, hold the most ground when the horn sounds. Ranked seasons, four-minute matches, built to stream.', meta: ['8 players', '4 min', 'Ages 10+'] , href: 'games/tidelines.html', st: 'PLAY', live: true },
-  { id: 'drift', kind: 'SIGNATURE 3D · KART RACER', name: 'Island Drift', desc: 'Eight karts, phone tilt or gamepad, items with counterplay and your friends\u2019 ghosts on every track.', meta: ['2–8 players', '3 min'] , href: 'games/drift.html', st: 'PLAY', live: true, thumb: 'thumbs/drift.jpg' },
-  { id: 'fit', kind: 'COZY · ASMR', name: 'Perfect Fit', desc: 'A messy drawer, perfectly shaped slots, and a bass-boosted snap every time something lands. Race a friend or zone out alone.', meta: ['1–4 players', '60–90 s'] , href: 'games/fit.html', st: 'PLAY', live: true },
-  { id: 'tray', kind: 'PARTY · PHYSICS', name: 'Fail Tray', desc: 'Carry a wobbling tower of jelly, ice and an anvil through an obstacle course. Falling is the funny part.', meta: ['1–8 players', '45 s'] , href: 'games/tray.html', st: 'PLAY', live: true },
-  { id: 'junk', kind: 'COZY · RESTORATION', name: 'Junkyard to Jewel', desc: 'Wipe the rust away with your finger and watch the shine come back. Day 1 to Day 30 on a single wreck.', meta: ['Solo', '2–4 min'] , href: 'games/junk.html', st: 'PLAY', live: true },
-  { id: 'brew', kind: 'COZY · IDLE CAFE', name: 'Brew and Bloom', desc: 'Grow magical tea plants while you are away, brew for woodland regulars when you are back. Nobody ever gets angry.', meta: ['Solo', '30–90 s check-ins'] , href: 'games/brew.html', st: 'PLAY', live: true },
-  { id: 'trivia', kind: 'PARTY · PHONES AS BUZZERS', name: 'Pact Trivia', desc: 'Questions on the big screen, buzzers in every hand. English and Spanish packs, family rounds, spicy rounds for adults.', meta: ['2–20 players', '5 min'] , href: 'games/trivia.html', st: 'PLAY', live: true },
-  { id: 'draw', kind: 'PARTY · DRAW AND GUESS', name: 'Draw the Pact', desc: 'Draw on your phone, the room guesses on the TV. The worst drawing wins the clip.', meta: ['3–12 players', '4 min'] , href: 'games/draw.html', st: 'PLAY', live: true },
-  { id: 'runner', kind: 'RACE · GHOSTS', name: 'Tide Runner', desc: 'A 60-second runner with the same seed for everyone today. Race your friends’ ghosts and post a time to beat.', meta: ['1–8 players', '60 s'], st: 'PHASE 1' }
+  { id: 'pact', kind: 'FLAGSHIP · CO-OP ADVENTURE', name: 'Pixel Pact', desc: 'Four heroes, one exit. Clear the Emberwood Isles together, revive your friends and beat Big Claw.', meta: ['1–4 players', '3–5 min', 'Play now'], flag: true , href: 'games/pixelpact.html', st: 'PLAY', live: true, thumb: 'thumbs/pixelpact.jpg' },
+  { id: 'match', kind: 'VERSUS · PLATFORM BRAWLER', name: 'Pixel Pact: Match', desc: 'Damage, knockback, ring-outs. Last hero standing on Driftwood Docks, Canopy Clash or Molten Crown. Bots fill empty slots.', meta: ['1–4 players', '2–3 min', 'Play now'] , href: 'games/pixelpact.html', st: 'PLAY', live: true, thumb: 'thumbs/pixelpact.jpg' },
+  { id: 'safari', kind: 'KIDS + GROWN-UPS · ALLERGY SAFE SAFARI', name: 'Snack Squad Safari', desc: 'A 3D safari trail where you feed your buddy only what is safe for you. Labels read aloud, a grown-up Scanner role and a step-by-step Buddy Rescue practice. English and Spanish.', meta: ['1–2 players', '5 levels', 'Play now'] , href: 'games/safari.html', st: 'PLAY', live: true, thumb: 'thumbs/safari.jpg' },
+  { id: 'depths', kind: '3D · CO-OP ROGUELITE', name: 'Pixel Pact: Depths', desc: 'Dive under the islands with AI allies or a second player. Eight rooms, boons that change every run, and a drowned captain to defeat.', meta: ['1–2 players', '10–15 min', 'Ages 10+'] , href: 'games/depths.html', st: 'PLAY', live: true, thumb: 'thumbs/depths.jpg' },
+  { id: 'builders', kind: '3D · ISLAND SANDBOX', name: 'Driftwood Builders', desc: 'Gather driftwood, build a cozy island home, plant crops, sail a boat and share your island with a code.', meta: ['Solo', '10–30 min', 'Ages 8+'] , href: 'games/builders.html', st: 'PLAY', live: true },
+  { id: 'tide', kind: '3D · 4V4 TURF', name: 'Tide Lines', desc: 'Paint the pier with water cannons alongside three bots. Most ground when the horn sounds wins.', meta: ['Solo vs bots', '2.5 min', 'Ages 8+'] , href: 'games/tidelines.html', st: 'PLAY', live: true },
+  { id: 'drift', kind: '3D · KART RACER', name: 'Island Drift', desc: 'Drift for mini-turbos, grab items and race five rivals on two island tracks, or chase your best lap.', meta: ['Solo vs 5 bots', '3 min'] , href: 'games/drift.html', st: 'PLAY', live: true, thumb: 'thumbs/drift.jpg' },
+  { id: 'fit', kind: 'COZY · ASMR', name: 'Perfect Fit', desc: 'A messy drawer, perfectly shaped slots, and a satisfying snap every time something lands. Zen mode for zoning out.', meta: ['Solo', '1–2 min'] , href: 'games/fit.html', st: 'PLAY', live: true },
+  { id: 'tray', kind: 'PARTY · PHYSICS', name: 'Fail Tray', desc: 'Carry a wobbling tower of food through an obstacle course. Falling is the funny part. Take turns with friends.', meta: ['1–4 players', '45 s'] , href: 'games/tray.html', st: 'PLAY', live: true },
+  { id: 'junk', kind: 'COZY · RESTORATION', name: 'Junkyard to Jewel', desc: 'Wash, sand, paint and polish rusty old rides with your finger and watch the shine come back.', meta: ['Solo', '2–4 min'] , href: 'games/junk.html', st: 'PLAY', live: true },
+  { id: 'brew', kind: 'COZY · IDLE CAFE', name: 'Brew and Bloom', desc: 'Grow tea plants in real time, even while you are away, then brew for woodland regulars. Nobody ever gets angry.', meta: ['Solo', 'Short check-ins'] , href: 'games/brew.html', st: 'PLAY', live: true },
+  { id: 'trivia', kind: 'PARTY · GAME SHOW', name: 'Pact Trivia', desc: 'A 3D game-show studio with buzzers for up to four players on one device, or play solo against bots. English and Spanish.', meta: ['1–4 players', '5 min'] , href: 'games/trivia.html', st: 'PLAY', live: true },
+  { id: 'draw', kind: 'PARTY · DRAW AND GUESS', name: 'Draw the Pact', desc: 'Pass the device, draw the secret word, and let the room guess. Speed Sketch and Telephone modes too.', meta: ['2–8 players', '5 min'] , href: 'games/draw.html', st: 'PLAY', live: true },
+  { id: 'runner', kind: 'RACE · GHOSTS', name: 'Tide Runner', desc: 'A boardwalk runner with a daily course that is the same for everyone. Race the ghost of your best run.', meta: ['Solo', '1–2 min'] , href: 'games/runner.html', st: 'PLAY', live: true },
 ];
 const grid = document.getElementById('shelfGrid'), tiles = [];
 GAMES.forEach(g => {
@@ -390,7 +376,7 @@ function drawTiles() {
 function readProfile() { try { return Object.assign({ name: '', xp: 0, coins: 0, games: {} }, JSON.parse(localStorage.getItem('inoa.profile') || '{}')); } catch (e) { return { name: '', xp: 0, coins: 0, games: {} }; } }
 function writeProfile(p) { try { localStorage.setItem('inoa.profile', JSON.stringify(p)); } catch (e) { } }
 function heroLv(xp) { let lv = 1, need = 100, x = xp; while (x >= need && lv < 50) { x -= need; lv++; need = Math.round(need * 1.12); } return { lv, into: x, need }; }
-function renderProfile() { const p = readProfile(), L = heroLv(p.xp); const el = document.getElementById('heroStats'); if (!el) return; const played = Object.keys(p.games || {}).length; el.innerHTML = `<div class="hp-lv"><b>${L.lv}</b><small>Hero level</small></div><div class="hp-main"><div class="hp-name">${p.name || 'New hero'}</div><div class="bar"><i style="width:${Math.round(L.into / L.need * 100)}%"></i></div><div class="hp-row"><span>${L.into}/${L.need} XP</span><span>🪙 ${p.coins}</span><span>🎮 ${played} game${played === 1 ? '' : 's'} played</span></div></div>`; }
+function renderProfile() { const p = readProfile(), L = heroLv(p.xp); const el = document.getElementById('heroStats'); if (!el) return; const played = Object.keys(p.games || {}).length; el.innerHTML = `<div class="hp-lv"><b>${L.lv}</b><small>Hero level</small></div><div class="hp-main"><div class="hp-name">${p.name || 'New hero'}</div><div class="bar"><i style="width:${Math.round(L.into / L.need * 100)}%"></i></div><div class="hp-row"><span>${L.into}/${L.need} XP</span><span>🪙 ${p.coins}</span><span>🎮 ${played} game${played === 1 ? '' : 's'} played</span></div></div>`; const ml = document.getElementById('mkLv'), mx = document.getElementById('mkXp'), mb = document.querySelector('.stage .bar i'); if (ml) ml.textContent = 'Level ' + L.lv; if (mx) mx.textContent = (L.need - L.into) + ' XP to ' + (L.lv + 1); if (mb) mb.style.width = Math.round(L.into / L.need * 100) + '%'; }
 renderProfile(); addEventListener('focus', renderProfile); document.addEventListener('visibilitychange', () => { if (!document.hidden) renderProfile(); });
 /* ---------- Hero maker: class, random palette, random name ---------- */
 const mk = document.getElementById('maker'), mkName = document.getElementById('mkName'), mkClass = document.getElementById('mkClass'), mkClasses = document.getElementById('mkClasses');
