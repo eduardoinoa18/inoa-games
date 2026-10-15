@@ -152,3 +152,27 @@ Every safety-relevant string (EN + ES) is listed verbatim in `docs/audit-notes/s
 - Hub rebuilt (8 games were unreachable) and honest copy (no pricing / online rooms / QR claims).
 - Survivor character textures cleaned for all ages (dirt/torn splotches, red skin) at the asset level (`tools/clean_textures.mjs`), so every game gets the clean version.
 - Engine: compact name tags, scrollable title cards, results best only when passed.
+
+### Phase 1 regression (final)
+`/tmp` run of all 13 games × 2 orientations on the current engine: **26/26 `NO_ERRORS`** (drift, runner, tidelines, fit, junk, brew, builders, tray, trivia, draw, depths, safari, pixelpact). Engine contract (`test/engine.js`), hub (`test/index.js`), offline (`test/pwa.js`) and hero default (`test/hero.js`) also pass. One-shot-per-game contact sheet reviewed; no regressions from the engine or texture changes.
+
+## Phase 2 measurements — load size and time (2026-10-15)
+Measured with `node test/run.js <game> test/perf.js` in a 4-core container with **software WebGL (SwiftShader)** and a local server. Ready time = navigation → `__READY` (500 ms polling granularity). FPS here is **not** device performance (every 3D game shows ~2 fps under software GL); it is only useful to compare games relative to each other. Real-device numbers (2021 mid-range phone) are still **not measured**.
+
+| Game | Pack before (base64 JSON) | Pack now (manifest files) | Requests | Ready (ms) | Relative fps (SW GL) |
+| --- | --- | --- | --- | --- | --- |
+| drift | 6.7 MB | 1.87 MB | 50 | 1516 | 1.9 |
+| runner | 4.4 MB | 1.37 MB | 46 | 2449 | 2.6 |
+| tidelines | 3.5 MB | 1.04 MB | 37 | 3784 | 2.0 |
+| fit | 5.7 MB | 1.33 MB | 63 | 1132 | 0.3 (title scene heavy under SW GL — check on device) |
+| junk | 3.4 MB | 0.81 MB | 33 | 1470 | 1.8 |
+| brew | 4.5 MB | 1.29 MB | 49 | 2401 | 1.1 |
+| builders | 4.7 MB | 1.74 MB | 51 | 3519 | 2.3 |
+| tray | 4.0 MB | 1.16 MB | 52 | 1658 | 1.9 |
+| trivia | 5.0 MB | 1.37 MB | 31 | 2866 | 2.2 |
+| draw | 6.0 MB | 2.21 MB | 36 | 1992 | 2.1 |
+| depths | 4.9 MB | 1.93 MB | 50 | 2398 | 2.3 |
+| safari | 5.7 MB | 1.38 MB | 77 | 1516 | 2.1 |
+| pixelpact (2D) | — | — | 1 | 511 | 13.8 |
+
+Not included: three.js (~700 KB of modules from jsDelivr, cached by the service worker after the first game) and fonts. Models are shared between games, so the second game a player opens downloads far less. Vercel will also gzip/brotli the `.hdr`/`.json`.
