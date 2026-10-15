@@ -26,7 +26,7 @@ const ES_GAMES = {
   fit: ['Un cajón desordenado, huecos perfectos y un clic satisfactorio cada vez que algo encaja. Modo Zen para relajarte.', ['Solo', '1–2 min']],
   tray: ['Lleva una torre tambaleante de comida por una pista de obstáculos. Caerse es lo divertido. Turnos con amigos.', ['1–4 jugadores', '45 s']],
   junk: ['Lava, lija, pinta y pule coches viejos con el dedo y mira cómo vuelve el brillo.', ['Solo', '2–4 min']],
-  brew: ['Cultiva plantas de té en tiempo real, incluso cuando no estás, y prepara té para clientes del bosque.', ['Solo', 'Visitas cortas']],
+  brew: ['Cultiva hierbas en tiempo real, incluso cuando no estás, prepara 16 tés para clientes con pequeñas historias y sube tu café hasta el nivel 10: plantas de temporada, un pianito y un perrito. Aquí nadie se enoja.', ['Solo', 'Visitas cortas']],
   trivia: ['Un plató de concurso en 3D con pulsadores para hasta cuatro jugadores en un dispositivo, o juega contra bots. Inglés y español.', ['1–4 jugadores', '5 min']],
   draw: ['Pasa el dispositivo, dibuja la palabra secreta y que los demás adivinen. También Boceto Rápido y Teléfono.', ['2–8 jugadores', '5 min']],
   runner: ['Un corredor por el paseo con una ruta diaria igual para todos. Compite contra el fantasma de tu mejor carrera.', ['Solo', '1–2 min']]

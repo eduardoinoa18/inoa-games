@@ -42,7 +42,7 @@ It is a **static site**: `index.html` (hub) + `games/*.html` (one page per game)
 | `games/tidelines.html` | **Tide Lines** — 4v4 paint battles vs bots or up to 8 phones | Elevation pass done: 3 arenas (Sunny Pier, Rooftop Garden, Island Market), Tide Pools mode, Chill default + star ladder, colour-blind patterns/shapes, bot routing fixes; uses hub hero |
 | `games/fit.html` | **Perfect Fit** — ASMR organizing, 8+ levels, Zen mode | Phase 1 done (drop under pointer, portrait framing, EN/ES). Real-phone feel unverified |
 | `games/junk.html` | **Junkyard to Jewel** — wash/sand/paint/polish, 8 vehicles | Phase 1 done (stroke tracing, portrait framing, EN/ES). Real-phone feel unverified |
-| `games/brew.html` | **Brew and Bloom** — cozy idle café + greenhouse | Phase 1 done (barista, portrait tray, safe offline summary, EN/ES) |
+| `games/brew.html` | **Brew and Bloom** — cozy idle café + greenhouse: café levels 1–10, 16 teas, regulars' daily requests + story chapters, café journal (collection book), seasonal plants, decor | Elevation pass done 2026-10-15 (docs/AUDIT.md). Open: real-phone feel, native ES read-through of stories |
 | `games/builders.html` | **Driftwood Builders** — island sandbox | Phase 1 done (occluder fade, phone palette, boats, EN/ES) |
 | `games/tray.html` | **Fail Tray** — wobble physics courses, slow-mo replay, hot-seat | Passing; P3 polish deferred |
 | `games/trivia.html` | **Pact Trivia** — 3D game show, 160+ EN/ES questions | Phase 1 done (portrait board framing, kids mode never subtracts). Fact-check in Phase 5 |

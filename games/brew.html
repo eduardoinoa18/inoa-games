@@ -10,6 +10,7 @@
 .bb-lab.ready{background:var(--sun);animation:bbp 1.2s ease-in-out infinite}
 .bb-order{font-size:14px;padding:6px 11px;border:2px solid var(--ink);border-radius:16px}.bb-order.vip{background:#ffe39a}.bb-order::after{content:'';position:absolute;left:50%;bottom:-7px;width:10px;height:10px;background:inherit;border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:translateX(-50%) rotate(45deg)}.bb-order.busy{opacity:.6}
 .bb-lab.lock{background:rgba(27,36,48,.78);color:#fff}
+.bb-lab::before{content:'';position:absolute;inset:-7px -4px}/* bigger tap target than the visible pill */
 .bb-labels.port .bb-lab{font-size:11px;padding:3px 7px;border-radius:10px}.bb-labels.port .bb-order{font-size:12px;padding:4px 8px;max-width:150px;overflow:hidden;text-overflow:ellipsis}
 .bb-card.focus{outline:3px solid var(--berry);outline-offset:2px}
 .bb-recipe.port{gap:6px;padding:10px 10px}
@@ -27,6 +28,9 @@
 .bb-card.on{border-color:var(--mint-ink);background:var(--mint)}
 .bb-card:disabled{opacity:.45;cursor:default}
 .bb-tools{display:flex;gap:8px;flex-wrap:wrap}.bb-tools>*{flex:1 1 auto}
+.bb-sheet.side{left:auto;right:0;top:max(60px,env(safe-area-inset-top));bottom:0;transform:none;width:min(318px,36vw);border-radius:24px 0 0 0;padding:12px 12px max(12px,env(safe-area-inset-bottom));align-content:start;overflow-y:auto;animation:bbside .25s ease-out}
+@keyframes bbside{from{transform:translateX(30px)}}
+.bb-sheet.side .bb-cards{flex-wrap:wrap;overflow:visible;justify-content:flex-start}.bb-sheet.side .bb-card{width:calc(33.3% - 6px);min-width:78px;font-size:12px;padding:6px 4px}.bb-sheet.side .bb-card .e{font-size:24px}.bb-sheet.side h3{order:-2}.bb-sheet.side .bb-tools{order:-1}.bb-sheet.side .bb-tools .ig-chipbtn,.bb-sheet.side .bb-tools .ig-btn{min-height:42px;padding:6px 8px;font-size:13px}
 .bb-recipe{position:fixed;left:50%;bottom:calc(max(12px,env(safe-area-inset-bottom)));transform:translateX(-50%);z-index:21;background:rgba(255,248,238,.96);border-radius:20px;padding:10px 14px;box-shadow:0 8px 30px rgba(0,0,0,.2);display:grid;gap:8px;text-align:center;width:min(360px,calc(100% - 24px));box-sizing:border-box}
 .bb-recipe b{font-family:var(--f-d);font-size:16px}
 .bb-recipe p{font-size:13px;color:#4c5868;font-weight:700}
@@ -44,7 +48,32 @@
 .bb-opt{display:flex;gap:6px;flex-wrap:wrap}
 .bb-opt button{flex:1 1 auto}
 .bb-vis{cursor:pointer}
-@media (max-width:640px){.bb-card{width:92px}.ig-hud .ig-chip{padding:6px 9px;font-size:13px;min-height:36px}}
+.bb-card.lock{opacity:.5}.bb-card .tag{font-size:10px;color:#a0522d}
+.bb-lvchip{position:relative;padding-right:30px!important;overflow:hidden}.bb-lvbadge{position:absolute;right:5px;top:50%;transform:translateY(-50%);font-style:normal;background:var(--mint-ink,#1f6f5c);color:#fff;border-radius:9px;min-width:20px;height:20px;display:grid;place-items:center;font-size:12px;font-weight:900}
+.bb-lvbar{position:absolute;left:8px;right:30px;bottom:3px;height:3px;border-radius:2px;background:rgba(0,0,0,.08)}.bb-lvbar::after{content:'';position:absolute;inset:0;width:var(--p);background:#ff7b9c;border-radius:2px}
+.bb-bookchip{cursor:pointer;border:0;font:inherit;color:inherit;min-height:40px}
+#bbCoins.bump{animation:bbbump .45s ease-out}@keyframes bbbump{30%{transform:scale(1.18);background:var(--sun)}}
+.bb-note{position:fixed;left:50%;top:max(62px,env(safe-area-inset-top));transform:translateX(-50%);z-index:27;width:min(420px,calc(100% - 24px));box-sizing:border-box;background:#fff8ee;border:2px solid #f3c6a5;border-radius:18px;padding:10px 14px;box-shadow:0 10px 30px rgba(0,0,0,.22);cursor:pointer;animation:bbnote .35s ease-out}
+@keyframes bbnote{from{transform:translate(-50%,-14px);opacity:0}}
+.bb-note-h{display:flex;align-items:center;gap:8px}.bb-note-h .e{font-size:26px}.bb-note-h b{flex:1;font-size:15px}.bb-note-h small{font-weight:800;color:#a0522d;font-size:12px}
+.bb-note p{margin:6px 0 2px;font-weight:700;font-size:14px;line-height:1.35;color:var(--ink)}.bb-note .rw{font-weight:900;color:#1f6f5c;font-size:13px}
+.bb-chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}.bb-chips span{background:#fff;border:2px solid var(--line);border-radius:12px;padding:6px 10px;font-weight:800;font-size:14px}.bb-chips.sm span{font-size:12px;padding:3px 8px;border-width:1px}
+.bb-lvl .ig-card{text-align:center}
+.bb-bookcard{gap:10px;padding:18px 16px}.bb-bookh{display:flex;justify-content:space-between;align-items:center;gap:8px}.bb-bookh h2{font-size:20px;margin:0}
+.bb-tabs{display:flex;gap:6px;flex-wrap:wrap}.bb-tabs .ig-chipbtn{flex:1 1 0;min-height:42px}
+.bb-bookbody{display:grid;gap:10px}.bb-bookbody h4{margin:4px 0 0;font-size:15px}
+.bb-lv{background:#fff;border:2px solid var(--line);border-radius:16px;padding:10px 12px;display:grid;gap:6px}.bb-lv small{font-weight:700;color:#4c5868}
+.bb-bar{height:10px;border-radius:6px;background:#efe6d6;overflow:hidden}.bb-bar i{display:block;height:100%;background:linear-gradient(90deg,#ff9fb4,#ff7b9c);border-radius:6px}
+.bb-line{margin:0;font-weight:700;font-size:14px;color:#3a4552}
+.bb-reqs,.bb-friends{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.bb-reqs li{display:flex;gap:10px;align-items:center;background:#fff;border:2px solid var(--line);border-radius:14px;padding:8px 10px}.bb-reqs li.done{opacity:.6;border-color:var(--mint-ink,#1f6f5c)}
+.bb-reqs .e{font-size:26px}.bb-reqs div{flex:1;font-size:14px;font-weight:700}.bb-reqs p{margin:2px 0 0;font-size:13px;color:#4c5868;font-weight:600}.bb-reqs .pr{font-weight:900;font-size:16px;min-width:34px;text-align:right}
+.bb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px}
+.bb-it{background:#fff;border:2px solid var(--line);border-radius:14px;padding:8px;text-align:center;display:grid;gap:2px;font-size:13px}.bb-it .e{font-size:28px}.bb-it small{font-size:11px;color:#4c5868;font-weight:700}.bb-it.new{background:#fbf6ee}.bb-it.lock{opacity:.5}
+.bb-friends li{background:#fff;border:2px solid var(--line);border-radius:14px;padding:8px 12px}.bb-fh{display:flex;gap:8px;align-items:center}.bb-fh .e{font-size:24px}.bb-fh b{flex:1}
+.bb-friends p{margin:6px 0 0;font-size:13px;font-weight:600;line-height:1.35}.bb-friends p small{font-weight:900;color:#a0522d}.bb-friends .mute{color:#9aa3ad}
+@media (max-width:640px){.bb-card{width:92px}.ig-hud .ig-chip{padding:6px 9px;font-size:13px;min-height:36px}.bb-lvchip{padding-right:28px!important}}
+@media (max-width:430px){.ig-hud{gap:4px!important}.ig-hud .ig-chip{padding:5px 7px;font-size:12px;min-height:34px}.bb-lvchip{padding-right:25px!important}.bb-lvbadge{min-width:17px;height:17px;font-size:11px;right:4px}.bb-bookchip{min-height:34px}}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
 </head><body>
@@ -78,31 +107,87 @@ const STR = {
     wb: 'Bienvenido de nuevo', away: 'Mientras no estabas…', kept: r => `🌱 Tu jardín siguió creciendo${r ? `: <b>${r}</b> maceta${r > 1 ? 's están listas' : ' está lista'} para cosechar` : ''}.`, tipsT: t => `🪙 Los clientes dejaron <b>${t}</b> monedas de propina.`, visited: (e, n) => `${e} ${n} ya pasó hoy.`, visitor: (n, e, f) => `⭐ Visita del día: <b>${n}</b> ${e}. Le encanta ${f}.`, lovely: '¡Qué bien!',
     visTip: (n, e, f) => `Visita del día: ${n} ${e}. Le encanta ${f}. ¡Monedas extra!`, visDone: n => `${n} ya vino hoy. ¡Hasta mañana!`, fresh: 'Nuevo turno: tu jardín y tu café están guardados 🌿', btnTend: 'Cuidar el jardín', btnDecor: 'Decorar', btnBrew: 'Preparar té', menu: 'MENÚ DE TÉ', grown: 'cultivado aquí ✿' }
 };
+Object.assign(STR.en, { how5: 'Hearts level up your café: new teas, seeds and decor. Regulars leave daily requests in the 📖 journal (B)',
+  goldPot: 'Golden teapot', masterSign: 'Master Brewer sign', lvUp: 'Café level up!', lvNew: 'New in your café', lvSay: (n, name) => `Hooray! Your café reached level ${n}, ${name}!`, lvMax: 'Top level — you are a Master Brewer!',
+  journal: 'Café journal', tabs: ['Today', 'Teas', 'Plants', 'Friends'], reqT: 'Requests from regulars', reqNone: 'No requests yet — they arrive with the morning kettle.', reqAll: 'All three done! A thank-you bouquet: +25 🪙 💐', reqDoneT: 'done',
+  reqGot: (w, e, t, g, n) => `${e} ${w}: ${t} ${g}/${n}`, reqFinish: (w) => `${w} is so happy! +2 ❤️`, chapter: n => `Chapter ${n}/3`, noteFrom: w => `A note from ${w}`,
+  nextLv: (n, h) => `${h} ❤️ more to level ${n}`, lvl: n => `Level ${n}`, seasonNow: (e, s, p) => `${e} ${s} special: ${p}`, backIn: s => `Back in ${s}`, notBrewed: 'Not brewed yet', notGrown: 'Not grown yet', brewedN: n => `brewed ×${n}`, grownN: n => `harvested ×${n}`,
+  friendsHint: 'Finish a regular’s request to hear the next part of their story.', storyLocked: '…', readyNow: 'Your plants are ready! Tap them to harvest.', newReq: 'Your regulars left new requests in the journal 📖', btnBook: 'Journal', close: 'Close', inSeason: 'in season', reward: 'reward', visitorLine: (n, e, f) => `⭐ Visitor of the day: ${n} ${e} loves ${f}.`, pianoHi: '🎹 A little tune for the guests!', pupHi: '🐶 Woof! The café pup says hi.' });
+Object.assign(STR.es, { how5: 'Los corazones suben el nivel de tu café: nuevos tés, semillas y decoración. Los clientes dejan pedidos en el 📖 diario (B)',
+  goldPot: 'Tetera dorada', masterSign: 'Letrero de maestro', lvUp: '¡Tu café sube de nivel!', lvNew: 'Nuevo en tu café', lvSay: (n, name) => `¡Hurra! Tu café llegó al nivel ${n}: ${name}!`, lvMax: 'Nivel máximo: ¡eres maestro del té!',
+  journal: 'Diario del café', tabs: ['Hoy', 'Tés', 'Plantas', 'Amigos'], reqT: 'Pedidos de los clientes', reqNone: 'Aún no hay pedidos: llegan con la tetera de la mañana.', reqAll: '¡Los tres listos! Un ramo de gracias: +25 🪙 💐', reqDoneT: 'listo',
+  reqGot: (w, e, t, g, n) => `${e} ${w}: ${t} ${g}/${n}`, reqFinish: (w) => `¡${w} está feliz! +2 ❤️`, chapter: n => `Capítulo ${n}/3`, noteFrom: w => `Una nota de ${w}`,
+  nextLv: (n, h) => `Faltan ${h} ❤️ para el nivel ${n}`, lvl: n => `Nivel ${n}`, seasonNow: (e, s, p) => `${e} Especial de ${s.toLowerCase()}: ${p}`, backIn: s => `Vuelve en ${s.toLowerCase()}`, notBrewed: 'Aún no preparado', notGrown: 'Aún no cultivada', brewedN: n => `preparado ×${n}`, grownN: n => `cosechada ×${n}`,
+  friendsHint: 'Completa el pedido de un cliente para conocer la siguiente parte de su historia.', storyLocked: '…', readyNow: '¡Tus plantas están listas! Tócalas para cosechar.', newReq: 'Tus clientes dejaron pedidos nuevos en el diario 📖', btnBook: 'Diario', close: 'Cerrar', inSeason: 'de temporada', reward: 'premio', visitorLine: (n, e, f) => `⭐ Visita del día: ${n} ${e}. Le encanta ${f}.`, pianoHi: '🎹 ¡Una cancioncita para los clientes!', pupHi: '🐶 ¡Guau! El perrito del café te saluda.' });
+STR.en.how[1] = 'Tap the counter (or Space/🫖), then drag ingredients into the teapot'; STR.en.how[2] = 'Decorate (E/🪑): lamps, rugs, tables, a piano, a café pup…'; STR.es.how[2] = 'Decora (E/🪑): lámparas, alfombras, mesas, un pianito, un perrito…';
 const T = () => STR[LANG];
 const nm = o => (LANG === 'es' && o.es) || o.name;
 
 /* ================= data ================= */
+// lv = café level that unlocks it; orig = part of the first release (stays unlocked for players with an old save)
+// season = only plantable in that season (northern-hemisphere months); the harvest keeps all year
 const SEEDS = {
-  mint: { name: 'Mint', es: 'Menta', e: '🌿', time: 120, cost: 0, yield: 3 },
-  cham: { name: 'Chamomile', es: 'Manzanilla', e: '🌼', time: 300, cost: 0, yield: 3 },
-  lav: { name: 'Lavender', es: 'Lavanda', e: '💜', time: 900, cost: 3, yield: 2 },
-  moon: { name: 'Moon orchid', es: 'Orquídea lunar', e: '🌙', time: 3600, cost: 20, yield: 2 }
+  mint: { name: 'Mint', es: 'Menta', e: '🌿', time: 120, cost: 0, yield: 3, lv: 1, orig: 1 },
+  cham: { name: 'Chamomile', es: 'Manzanilla', e: '🌼', time: 300, cost: 0, yield: 3, lv: 1, orig: 1 },
+  lav: { name: 'Lavender', es: 'Lavanda', e: '💜', time: 900, cost: 3, yield: 2, lv: 2, orig: 1 },
+  rose: { name: 'Rose', es: 'Rosa', e: '🌹', time: 600, cost: 5, yield: 2, lv: 3 },
+  blossom: { name: 'Cherry blossom', es: 'Flor de cerezo', e: '🌸', time: 480, cost: 4, yield: 3, lv: 4, season: 'spring' },
+  berry: { name: 'Strawberry', es: 'Fresa', e: '🍓', time: 480, cost: 4, yield: 3, lv: 4, season: 'summer' },
+  pumpkin: { name: 'Pumpkin', es: 'Calabaza', e: '🎃', time: 480, cost: 4, yield: 3, lv: 4, season: 'autumn' },
+  clem: { name: 'Clementine', es: 'Clementina', e: '🍊', time: 480, cost: 4, yield: 3, lv: 4, season: 'winter' },
+  moon: { name: 'Moon orchid', es: 'Orquídea lunar', e: '🌙', time: 3600, cost: 20, yield: 2, lv: 5, orig: 1 }
 };
-const ING = ['mint', 'cham', 'lav', 'moon', 'honey', 'lemon'];
-const ING_INFO = { mint: ['🌿', 'Mint', 'Menta'], cham: ['🌼', 'Chamomile', 'Manzanilla'], lav: ['💜', 'Lavender', 'Lavanda'], moon: ['🌙', 'Moon orchid', 'Orquídea lunar'], honey: ['🍯', 'Honey', 'Miel'], lemon: ['🍋', 'Lemon', 'Limón'] };
+const SEED_IDS = Object.keys(SEEDS);
+const ING = ['mint', 'cham', 'lav', 'rose', 'blossom', 'berry', 'pumpkin', 'clem', 'moon', 'honey', 'lemon', 'milk'];
+const ING_INFO = { mint: ['🌿', 'Mint', 'Menta'], cham: ['🌼', 'Chamomile', 'Manzanilla'], lav: ['💜', 'Lavender', 'Lavanda'], rose: ['🌹', 'Rose', 'Rosa'], blossom: ['🌸', 'Blossom', 'Flor de cerezo'], berry: ['🍓', 'Strawberry', 'Fresa'], pumpkin: ['🎃', 'Pumpkin', 'Calabaza'], clem: ['🍊', 'Clementine', 'Clementina'], moon: ['🌙', 'Moon orchid', 'Orquídea lunar'], honey: ['🍯', 'Honey', 'Miel'], lemon: ['🍋', 'Lemon', 'Limón'], milk: ['🥛', 'Milk', 'Leche'] };
 const ingName = id => ING_INFO[id][LANG === 'es' ? 2 : 1];
-const PANTRY = { honey: 1, lemon: 1 };
+const PANTRY = { honey: 1, lemon: 1, milk: 4 }; // value = café level that stocks it
 const RECIPES = [
-  { id: 'hl', name: 'Honey Lemon', es: 'Miel y limón', e: '🍋', need: ['honey', 'lemon'], price: 4, col: 0xe9b949, w: 1 },
-  { id: 'fm', name: 'Fresh Mint', es: 'Menta fresca', e: '🌿', need: ['mint', 'mint'], price: 6, col: 0x9cc25e, w: 2 },
-  { id: 'hm', name: 'Honey Mint', es: 'Menta con miel', e: '🍯', need: ['mint', 'honey'], price: 7, col: 0xc2b850, w: 2 },
-  { id: 'cd', name: 'Chamomile Dream', es: 'Sueño de manzanilla', e: '🌼', need: ['cham', 'honey'], price: 9, col: 0xeec55a, w: 3 },
-  { id: 'lc', name: 'Sunny Chamomile', es: 'Manzanilla soleada', e: '☀️', need: ['cham', 'lemon'], price: 9, col: 0xf2cf5c, w: 3 },
-  { id: 'lv', name: 'Lavender Cloud', es: 'Nube de lavanda', e: '💜', need: ['lav', 'cham', 'honey'], price: 14, col: 0xb49ad8, w: 4 },
-  { id: 'mb', name: 'Moonlight Brew', es: 'Té de luna', e: '🌙', need: ['moon', 'lav', 'honey'], price: 32, col: 0x8ea6ea, w: 6 }
+  { id: 'hl', name: 'Honey Lemon', es: 'Miel y limón', e: '🍋', need: ['honey', 'lemon'], price: 4, col: 0xe9b949, w: 1, lv: 1, orig: 1 },
+  { id: 'fm', name: 'Fresh Mint', es: 'Menta fresca', e: '🌿', need: ['mint', 'mint'], price: 6, col: 0x9cc25e, w: 2, lv: 1, orig: 1 },
+  { id: 'hm', name: 'Honey Mint', es: 'Menta con miel', e: '🍯', need: ['mint', 'honey'], price: 7, col: 0xc2b850, w: 2, lv: 1, orig: 1 },
+  { id: 'cd', name: 'Chamomile Dream', es: 'Sueño de manzanilla', e: '🌼', need: ['cham', 'honey'], price: 9, col: 0xeec55a, w: 3, lv: 1, orig: 1 },
+  { id: 'lc', name: 'Sunny Chamomile', es: 'Manzanilla soleada', e: '☀️', need: ['cham', 'lemon'], price: 9, col: 0xf2cf5c, w: 3, lv: 1, orig: 1 },
+  { id: 'lv', name: 'Lavender Cloud', es: 'Nube de lavanda', e: '☁️', need: ['lav', 'cham', 'honey'], price: 14, col: 0xb49ad8, w: 4, lv: 2, orig: 1 },
+  { id: 'rs', name: 'Rose Petal', es: 'Pétalos de rosa', e: '🌹', need: ['rose', 'honey'], price: 12, col: 0xe88fa0, w: 4, lv: 3 },
+  { id: 'rl', name: 'Rosy Lemonade', es: 'Limonada de rosa', e: '🥤', need: ['rose', 'lemon', 'honey'], price: 16, col: 0xf2a0a8, w: 4, lv: 3 },
+  { id: 'mk', name: 'Cozy Milk Tea', es: 'Té con leche', e: '🥛', need: ['cham', 'milk', 'honey'], price: 13, col: 0xe8d2b0, w: 4, lv: 4 },
+  { id: 'bl', name: 'Blossom Latte', es: 'Latte de cerezo', e: '🌸', need: ['blossom', 'milk'], price: 18, col: 0xf4c4d4, w: 5, lv: 4, season: 'spring' },
+  { id: 'sc', name: 'Strawberry Cooler', es: 'Refresco de fresa', e: '🍓', need: ['berry', 'mint', 'lemon'], price: 18, col: 0xef7d86, w: 5, lv: 4, season: 'summer' },
+  { id: 'pc', name: 'Pumpkin Cloud', es: 'Nube de calabaza', e: '🎃', need: ['pumpkin', 'milk', 'honey'], price: 20, col: 0xe9a35a, w: 5, lv: 4, season: 'autumn' },
+  { id: 'cg', name: 'Clementine Glow', es: 'Brillo de clementina', e: '🍊', need: ['clem', 'cham', 'honey'], price: 20, col: 0xf5a742, w: 5, lv: 4, season: 'winter' },
+  { id: 'mb', name: 'Moonlight Brew', es: 'Té de luna', e: '🌙', need: ['moon', 'lav', 'honey'], price: 32, col: 0x8ea6ea, w: 6, lv: 5, orig: 1 },
+  { id: 'mm', name: 'Moon Milk', es: 'Leche de luna', e: '🌌', need: ['moon', 'milk', 'lav'], price: 36, col: 0xc9c4ee, w: 5, lv: 5 },
+  { id: 'gp', name: 'Garden Party', es: 'Fiesta del jardín', e: '🎉', need: ['rose', 'lav', 'mint'], price: 26, col: 0xd7a4c8, w: 5, lv: 6 }
 ];
+const SEASONS = { spring: ['🌷', 'Spring', 'Primavera'], summer: ['☀️', 'Summer', 'Verano'], autumn: ['🍂', 'Autumn', 'Otoño'], winter: ['❄️', 'Winter', 'Invierno'] };
+let seasonOverride = null; // tests
+const season = () => seasonOverride || ['winter', 'winter', 'spring', 'spring', 'spring', 'summer', 'summer', 'summer', 'autumn', 'autumn', 'autumn', 'winter'][new Date().getMonth()];
+const seasonName = s => SEASONS[s][LANG === 'es' ? 2 : 1];
+// café levels: lifetime hearts → level. Each level unlocks something (see unlocksAt)
+const LEVELS = [
+  { h: 0, name: 'Tiny Teapot', es: 'Tetera pequeña' }, { h: 10, name: 'Sprout Corner', es: 'Rincón del brote' }, { h: 25, name: 'Herb Nook', es: 'Rincón de hierbas' },
+  { h: 45, name: 'Garden Café', es: 'Café jardín' }, { h: 70, name: 'Moonlit Café', es: 'Café de luna' }, { h: 100, name: 'Blooming House', es: 'Casa en flor' },
+  { h: 140, name: 'Cozy Haven', es: 'Refugio acogedor' }, { h: 190, name: 'Lantern Café', es: 'Café de faroles' }, { h: 250, name: 'Golden Teapot', es: 'Tetera dorada' }, { h: 320, name: 'Master Brewer', es: 'Maestro del té' }
+];
+// regulars with daily requests + three-chapter stories (unlocked one per finished request)
+const REGULARS = [
+  { name: 'Mila', model: 'skater-female', e: '📚', why: ['Spelling bee practice tonight! {tea}, please.', '¡Practico para el concurso de deletreo! {tea}, por favor.'],
+    story: [['Mila is practising for the school spelling bee. She spells “chamomile” on a napkin — perfectly!', 'Mila practica para el concurso de deletreo. Escribe “manzanilla” en una servilleta, ¡perfecto!'], ['Mila made it to the final round! She says your tea helps her feel calm and brave.', '¡Mila llegó a la ronda final! Dice que tu té la ayuda a sentirse tranquila y valiente.'], ['Mila won second place and brought a tiny ribbon for the café wall. 🎀', 'Mila ganó el segundo lugar y trajo un listón para la pared del café. 🎀']] },
+  { name: 'Theo', model: 'skater-male', e: '🎸', why: ['My band practises today! {tea} for the band?', '¡Hoy ensaya mi banda! ¿{tea} para la banda?'],
+    story: [['Theo is learning his first three guitar chords. His fingers are sore, but he is smiling.', 'Theo aprende sus tres primeros acordes de guitarra. Le duelen los dedos, pero sonríe.'], ['Theo wrote a little song called “Steam and Stars”. It hums like a kettle!', 'Theo escribió una canción: “Vapor y estrellas”. ¡Suena como una tetera!'], ['Theo played his song at the park concert. Everyone clapped — even the ducks.', 'Theo tocó su canción en el concierto del parque. Todos aplaudieron, ¡hasta los patos!']] },
+  { name: 'Kenji', model: 'survivor-male', e: '🌻', why: ['Long morning at the community garden. {tea}, please!', 'Larga mañana en el huerto comunitario. ¡{tea}, por favor!'],
+    story: [['Kenji looks after the neighbourhood garden. He asks how you grow such happy herbs.', 'Kenji cuida el huerto del barrio. Te pregunta cómo cultivas hierbas tan felices.'], ['Kenji brought sunflower seeds to share. “A garden grows better with friends,” he says.', 'Kenji trajo semillas de girasol para compartir. “Un jardín crece mejor con amigos”, dice.'], ['The garden’s first sunflower bloomed — taller than Kenji! He named it after your café.', 'Floreció el primer girasol del huerto, ¡más alto que Kenji! Le puso el nombre de tu café.']] },
+  { name: 'Lucía', model: 'survivor-female', e: '🎨', why: ['I am painting the sunset today. {tea} to keep me cozy?', 'Hoy pinto el atardecer. ¿{tea} para estar a gusto?'],
+    story: [['Lucía sketches the greenhouse while her tea cools. She draws the teapot with a smile.', 'Lucía dibuja el invernadero mientras se enfría su té. Dibuja la tetera con una sonrisa.'], ['Lucía’s painting of your café is in the town library window this week!', '¡El cuadro de Lucía de tu café está en la ventana de la biblioteca esta semana!'], ['Lucía gave you a small painting of the café at night, full of fireflies. ✨', 'Lucía te regaló un cuadrito del café de noche, lleno de luciérnagas. ✨']] },
+  { name: 'Finn', model: 'skater-male', e: '⚽', why: ['Big game tomorrow! {tea} for the team captain?', '¡Partido importante mañana! ¿{tea} para el capitán?'],
+    story: [['Finn is nervous about being team captain. You tell him the kettle gets nervous too, right before it sings.', 'Finn está nervioso por ser capitán. Le dices que la tetera también se pone nerviosa antes de cantar.'], ['Finn’s team tied the game — and he passed the ball to the youngest player for the last kick.', 'El equipo de Finn empató, y él le pasó el balón al jugador más pequeño para la última patada.'], ['Finn brought the whole team for honey lemon. “Best fans ever,” he says, pointing at you.', 'Finn trajo a todo el equipo a tomar miel y limón. “Los mejores fans”, dice, señalándote.']] },
+  { name: 'Ada', model: 'skater-female', e: '🔬', why: ['Science fair project day! {tea}, please — for science.', '¡Día de la feria de ciencias! {tea}, por favor, por la ciencia.'],
+    story: [['Ada is building a volcano for the science fair. She asks why tea changes colour when you add lemon.', 'Ada construye un volcán para la feria de ciencias. Pregunta por qué el té cambia de color con limón.'], ['Ada tested which herbs smell strongest. Mint won! She wrote your café in her notes.', 'Ada probó qué hierbas huelen más fuerte. ¡Ganó la menta! Anotó tu café en sus apuntes.'], ['Ada’s project won a blue ribbon: “The Science of a Cozy Cup”. You are in the thank-yous!', 'El proyecto de Ada ganó un listón azul: “La ciencia de una taza acogedora”. ¡Sales en los agradecimientos!']] }
+];
+const REG_BY = Object.fromEntries(REGULARS.map(r => [r.name, r]));
 const RBY = Object.fromEntries(RECIPES.map(r => [r.id, r]));
-const PEOPLE = [['Mila', 'skater-female'], ['Theo', 'skater-male'], ['Rosa', 'survivor-female'], ['Kenji', 'survivor-male'], ['Omar', 'male'], ['Lucía', 'survivor-female'], ['Finn', 'skater-male'], ['Ada', 'skater-female'], ['Nico', 'survivor-male'], ['Jules', 'male']].map(([name, model]) => ({ name, model }));
+const PEOPLE = [['Mila', 'skater-female'], ['Theo', 'skater-male'], ['Rosa', 'survivor-female'], ['Kenji', 'survivor-male'], ['Omar', 'male'], ['Lucía', 'survivor-female'], ['Finn', 'skater-male'], ['Ada', 'skater-female'], ['Nico', 'survivor-male'], ['Jules', 'male']].map(([name, model]) => ({ name, model, e: REG_BY[name]?.e }));
 const ANIMALS = [{ name: 'Pip', model: 'bunny', animal: true, scale: .46, tint: 0xfff4e6, e: '🐰' }, { name: 'Clover', model: 'bunny', animal: true, scale: .44, tint: 0xc9a27e, e: '🐰' }, { name: 'Biscuit', model: 'dogue', animal: true, scale: .58, e: '🐶' }, { name: 'Maple', model: 'dogue', animal: true, scale: .55, tint: 0xd9a37a, e: '🐶' }];
 const VISITORS = [
   { name: 'Grandma Rosa', es: 'Abuela Rosa', model: 'survivor-female', fav: 'cd', e: '👵', vip: true },
@@ -113,30 +198,47 @@ const VISITORS = [
   { name: 'Mister Bramble', es: 'Señor Zarza', model: 'survivor-male', fav: 'fm', e: '🎩', vip: true }
 ];
 const DECOR = [
-  { id: 'wall-sage', kind: 'wall', name: 'Sage paper', es: 'Papel salvia', e: '🌿', cost: 0, col: 0xb3c9a6 },
-  { id: 'wall-blush', kind: 'wall', name: 'Blush paper', es: 'Papel rosado', e: '🌸', cost: 15, col: 0xf1c7bf },
-  { id: 'wall-butter', kind: 'wall', name: 'Butter paper', es: 'Papel mantequilla', e: '🧈', cost: 15, col: 0xf2dca0 },
-  { id: 'wall-sky', kind: 'wall', name: 'Sky paper', es: 'Papel cielo', e: '🩵', cost: 15, col: 0xbcd7ec },
-  { id: 'wall-lilac', kind: 'wall', name: 'Lilac paper', es: 'Papel lila', e: '🪻', cost: 15, col: 0xd2c4ea },
-  { id: 'lamp', name: 'Floor lamp', es: 'Lámpara de pie', e: '💡', cost: 20, w: 1, d: 1 },
-  { id: 'plant', name: 'Big plant', es: 'Planta grande', e: '🪴', cost: 12, w: 1, d: 1 },
-  { id: 'rug', name: 'Round rug', es: 'Alfombra redonda', e: '🟠', cost: 18, w: 2, d: 2, flat: true },
-  { id: 'rug2', name: 'Mint rug', es: 'Alfombra menta', e: '🟢', cost: 18, w: 2, d: 2, flat: true },
-  { id: 'table', name: 'Table for two', es: 'Mesa para dos', e: '🪑', cost: 40, w: 3, d: 1, seats: true },
-  { id: 'bench', name: 'Garden bench', es: 'Banco de jardín', e: '🛋️', cost: 25, w: 2, d: 1 },
-  { id: 'cake', name: 'Cake stand', es: 'Pastelero', e: '🎂', cost: 15, w: 1, d: 1 },
-  { id: 'shelf', name: 'Book nook', es: 'Rincón de libros', e: '📚', cost: 30, w: 2, d: 1 }
+  { id: 'wall-sage', kind: 'wall', name: 'Sage paper', es: 'Papel salvia', e: '🌿', cost: 0, col: 0xb3c9a6, lv: 1, orig: 1 },
+  { id: 'wall-blush', kind: 'wall', name: 'Blush paper', es: 'Papel rosado', e: '🌸', cost: 15, col: 0xf1c7bf, lv: 1, orig: 1 },
+  { id: 'wall-butter', kind: 'wall', name: 'Butter paper', es: 'Papel mantequilla', e: '🧈', cost: 15, col: 0xf2dca0, lv: 2, orig: 1 },
+  { id: 'wall-sky', kind: 'wall', name: 'Sky paper', es: 'Papel cielo', e: '🩵', cost: 15, col: 0xbcd7ec, lv: 3, orig: 1 },
+  { id: 'wall-lilac', kind: 'wall', name: 'Lilac paper', es: 'Papel lila', e: '🪻', cost: 15, col: 0xd2c4ea, lv: 4, orig: 1 },
+  { id: 'wall-mint', kind: 'wall', name: 'Mint stripes', es: 'Rayas menta', e: '🍃', cost: 20, col: 0x9fd8c0, lv: 6 },
+  { id: 'wall-night', kind: 'wall', name: 'Starry paper', es: 'Papel estrellado', e: '🌌', cost: 25, col: 0x5f6f9f, lv: 8 },
+  { id: 'lamp', name: 'Floor lamp', es: 'Lámpara de pie', e: '💡', cost: 20, w: 1, d: 1, lv: 1, orig: 1 },
+  { id: 'plant', name: 'Big plant', es: 'Planta grande', e: '🪴', cost: 12, w: 1, d: 1, lv: 1, orig: 1 },
+  { id: 'rug', name: 'Round rug', es: 'Alfombra redonda', e: '🟠', cost: 18, w: 2, d: 2, flat: true, lv: 1, orig: 1 },
+  { id: 'table', name: 'Table for two', es: 'Mesa para dos', e: '🪑', cost: 40, w: 3, d: 1, seats: true, lv: 1, orig: 1 },
+  { id: 'cake', name: 'Cake stand', es: 'Pastelero', e: '🎂', cost: 15, w: 1, d: 1, lv: 1, orig: 1 },
+  { id: 'rug2', name: 'Mint rug', es: 'Alfombra menta', e: '🟢', cost: 18, w: 2, d: 2, flat: true, lv: 2, orig: 1 },
+  { id: 'bench', name: 'Garden bench', es: 'Banco de jardín', e: '🛋️', cost: 25, w: 2, d: 1, lv: 2, orig: 1 },
+  { id: 'shelf', name: 'Book nook', es: 'Rincón de libros', e: '📚', cost: 30, w: 2, d: 1, lv: 3, orig: 1 },
+  { id: 'crate', name: 'Fruit crate', es: 'Caja de fruta', e: '🍎', cost: 14, w: 1, d: 1, lv: 3 },
+  { id: 'pastry', name: 'Pastry case', es: 'Vitrina de pasteles', e: '🥐', cost: 35, w: 2, d: 1, lv: 4 },
+  { id: 'piano', name: 'Little piano', es: 'Pianito', e: '🎹', cost: 60, w: 2, d: 1, lv: 5 },
+  { id: 'fountain', name: 'Garden fountain', es: 'Fuente de jardín', e: '⛲', cost: 70, w: 2, d: 2, lv: 6 },
+  { id: 'petbed', name: 'Café pup', es: 'Perrito del café', e: '🐶', cost: 50, w: 1, d: 1, lv: 7 },
+  { id: 'arbor', name: 'Flower arch', es: 'Arco de flores', e: '💐', cost: 45, w: 2, d: 1, lv: 8 }
 ];
 const DBY = Object.fromEntries(DECOR.map(d => [d.id, d]));
 const POT_UNLOCK = [0, 0, 0, 15, 30, 50];
 
 /* ================= save ================= */
 const KEY = 'inoa.brew';
-const DEF = { v: 1, coins: 20, hearts: 0, pots: [null, null, null, null, null, null], unlocked: 3, inv: { mint: 2, cham: 1, lav: 0, moon: 0 }, decor: [], wall: 'wall-sage', walls: ['wall-sage'], served: 0, lastSeen: 0, visDay: '', lastSeed: 'mint', timeMode: 'clock', tips: 0 };
-const S = Object.assign(JSON.parse(JSON.stringify(DEF)), E.store.get(KEY, {}));
+const DEF = { v: 2, coins: 20, hearts: 0, pots: [null, null, null, null, null, null], unlocked: 3, inv: { mint: 2, cham: 1 }, decor: [], wall: 'wall-sage', walls: ['wall-sage'], served: 0, lastSeen: 0, visDay: '', lastSeed: 'mint', timeMode: 'clock', tips: 0,
+  lvl: 1, legacy: false, book: { teas: {}, plants: {} }, friends: {}, req: { day: '', list: [], bonus: false } };
+const RAW = (() => { const r = E.store.get(KEY, {}); return r && typeof r === 'object' && !Array.isArray(r) ? r : {}; })();
+const S = Object.assign(JSON.parse(JSON.stringify(DEF)), RAW);
 // sanitise a loaded save: never trust stored numbers/timestamps (clock changes, hand-edited or corrupt saves)
 { const now = Date.now(), num = (v, d, lo = 0, hi = 1e9) => Number.isFinite(+v) ? clamp(Math.floor(+v), lo, hi) : d;
-  S.inv = Object.assign({ mint: 0, cham: 0, lav: 0, moon: 0 }, S.inv && typeof S.inv === 'object' ? S.inv : {}); for (const k of Object.keys(SEEDS)) S.inv[k] = num(S.inv[k], 0);
+  // v1 → v2: players who already played keep everything the first release gave them (lavender, moon orchid, all old teas + decor)
+  if (!(+RAW.v >= 2)) { S.legacy = !!(+RAW.served > 0 || +RAW.hearts > 0 || (Array.isArray(RAW.decor) && RAW.decor.length)); S.v = 2; }
+  S.legacy = !!S.legacy;
+  S.inv = Object.assign({}, S.inv && typeof S.inv === 'object' ? S.inv : {}); for (const k of SEED_IDS) S.inv[k] = num(S.inv[k], 0); for (const k of Object.keys(S.inv)) if (!SEEDS[k]) delete S.inv[k];
+  const bk = S.book && typeof S.book === 'object' ? S.book : {}; S.book = { teas: {}, plants: {} };
+  for (const [k, v] of Object.entries(bk.teas || {})) if (RECIPES.some(r => r.id === k)) S.book.teas[k] = num(v, 0); for (const [k, v] of Object.entries(bk.plants || {})) if (SEEDS[k]) S.book.plants[k] = num(v, 0);
+  const fr = S.friends && typeof S.friends === 'object' ? S.friends : {}; S.friends = {}; for (const r of REGULARS) if (fr[r.name]) S.friends[r.name] = num(fr[r.name], 0, 0, 3);
+  const rq = S.req && typeof S.req === 'object' ? S.req : {}; S.req = { day: typeof rq.day === 'string' ? rq.day : '', bonus: !!rq.bonus, list: (Array.isArray(rq.list) ? rq.list : []).filter(q => q && REG_BY[q.who] && RECIPES.some(r => r.id === q.r)).slice(0, 3).map(q => ({ who: q.who, r: q.r, n: num(q.n, 1, 1, 3), got: num(q.got, 0, 0, 3), done: !!q.done })) };
   if (!Array.isArray(S.pots)) S.pots = []; S.pots = S.pots.slice(0, 6).map(p => p && SEEDS[p.seed] && Number.isFinite(+p.t0) ? { seed: p.seed, t0: Math.min(+p.t0, now) } : null); while (S.pots.length < 6) S.pots.push(null);
   S.coins = num(S.coins, 20); S.hearts = num(S.hearts, 0); S.served = num(S.served, 0); S.unlocked = num(S.unlocked, 3, 3, 6);
   S.lastSeen = Number.isFinite(+S.lastSeen) && +S.lastSeen > 0 ? +S.lastSeen : 0;
@@ -145,6 +247,19 @@ const S = Object.assign(JSON.parse(JSON.stringify(DEF)), E.store.get(KEY, {}));
 const save = () => { S.lastSeen = Date.now(); E.store.set(KEY, S); };
 const dayKey = () => new Date().toDateString();
 const VISITOR = VISITORS[Math.floor(hash(Math.floor(Date.now() / 864e5), 11) * VISITORS.length)];
+
+/* ================= progression ================= */
+const levelOf = h => { let l = 1; for (let i = 1; i < LEVELS.length; i++) if (h >= LEVELS[i].h) l = i + 1; return l; };
+const level = () => levelOf(S.hearts);
+// the level already celebrated (never above the real level; a migrated save starts at its current level: no level-up flood)
+S.lvl = Number.isFinite(+S.lvl) ? clamp(Math.floor(+S.lvl), 1, LEVELS.length) : 1; if (!(+RAW.v >= 2) || S.lvl > level()) S.lvl = level();
+const isOpen = o => !!o && ((o.lv || 1) <= level() || (S.legacy && !!o.orig));
+const seedOpen = id => isOpen(SEEDS[id]);
+const plantable = id => seedOpen(id) && (!SEEDS[id].season || SEEDS[id].season === season());
+const ingOpen = id => PANTRY[id] ? PANTRY[id] <= level() : seedOpen(id);
+const recipeOpen = r => isOpen(r) && r.need.every(ingOpen);
+// what a level unlocks (shown on the level-up card and in the journal)
+function unlocksAt(l) { const out = []; for (const [id, s] of Object.entries(SEEDS)) if (s.lv === l && (!s.season || s.season === season())) out.push(s.e + ' ' + nm(s)); for (const [id, v] of Object.entries(PANTRY)) if (v === l && v > 1) out.push(ING_INFO[id][0] + ' ' + ingName(id)); for (const r of RECIPES) if (r.lv === l && (!r.season || r.season === season())) out.push(r.e + ' ' + nm(r)); for (const d of DECOR) if (d.lv === l && l > 1) out.push(d.e + ' ' + nm(d)); if (l === 9) out.push('✨ ' + T().goldPot); if (l === 10) out.push('🏆 ' + T().masterSign); return out; }
 
 /* ================= engine ================= */
 const ld = E.loading('Brew and Bloom', 'Warming the teapot…');
@@ -198,7 +313,7 @@ function mergeStatic(root) {
 
 /* ================= materials ================= */
 const MT = {
-  cafeFloor: E.pbr('wood', 0xe3b98a, [5, 2.2], { bump: 2.5 }),
+  cafeFloor: E.pbr('wood', 0xdcbc98, [5, 2.2], { bump: 1.8 }),
   tile: E.pbr('tile', 0xd8d4c6, [7, 3], { bump: 2 }),
   plinth: E.pbr('stone', 0x8f8579, [10, 1]),
   wood: E.pbr('wood', 0x8c5f3c, [1, 1]),
@@ -222,6 +337,13 @@ const MT = {
 };
 const wallPattern = canvasTex(256, 256, (g, w, h) => { g.fillStyle = '#fff'; g.fillRect(0, 0, w, h); for (let x = 0; x < w; x += 32) { g.fillStyle = 'rgba(0,0,0,.045)'; g.fillRect(x, 0, 14, h); } g.fillStyle = 'rgba(255,255,255,.9)'; for (let y = 16; y < h; y += 64) for (let x = 23; x < w; x += 64) { g.beginPath(); g.ellipse(x, y + (x / 64 % 2) * 32, 6, 3, .6, 0, 6.3); g.fill(); g.beginPath(); g.ellipse(x + 5, y + 6 + (x / 64 % 2) * 32, 6, 3, -.6, 0, 6.3); g.fill(); } });
 wallPattern.wrapS = wallPattern.wrapT = THREE.RepeatWrapping; wallPattern.repeat.set(4, 2);
+// café floor: warm planks with soft grain (the generic pbr wood reads as a noisy orange carpet from the diorama camera)
+{ const t = canvasTex(512, 512, (g, w, h) => { const rows = 8, ph = h / rows; for (let r = 0; r < rows; r++) { let x = -hash(r, 3) * 200; while (x < w) { const len = 160 + hash(r, x | 0) * 160, c = .9 + hash(x | 0, r + 9) * .14; g.fillStyle = `rgb(${Math.round(222 * c)},${Math.round(176 * c)},${Math.round(128 * c)})`; g.fillRect(x, r * ph, len, ph);
+      for (let k = 0; k < 7; k++) { g.strokeStyle = `rgba(120,72,36,${.05 + hash(k, r + x) * .08})`; g.lineWidth = 1 + hash(r, k) * 1.5; const yy = r * ph + 4 + hash(k + 3, x | 0) * (ph - 8); g.beginPath(); g.moveTo(x, yy); g.bezierCurveTo(x + len * .3, yy + 3, x + len * .6, yy - 3, x + len, yy + 1); g.stroke(); }
+      g.fillStyle = 'rgba(90,52,28,.55)'; g.fillRect(x, r * ph, 2, ph); x += len; } g.fillStyle = 'rgba(90,52,28,.6)'; g.fillRect(0, r * ph, w, 2); } });
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(3, 1.6); MT.cafeFloor = new THREE.MeshStandardMaterial({ map: t, roughness: .62, metalness: 0 });
+  // light furniture wood (tables, chairs, arches, cases) shares the soft grain instead of the noisy generic one
+  const t2 = t.clone(); t2.repeat.set(.5, .5); t2.needsUpdate = true; MT.woodLight = new THREE.MeshStandardMaterial({ map: t2, color: 0xf2dcc4, roughness: .55 }); }
 MT.wall = new THREE.MeshStandardMaterial({ color: DBY[S.wall]?.col || 0xb3c9a6, map: wallPattern, normalMap: E.pbr('paint', 0xffffff, [4, 2]).normalMap, roughness: .85 });
 
 /* ================= world: diorama ================= */
@@ -236,6 +358,8 @@ const ghFloor = new THREE.Mesh(new THREE.PlaneGeometry(12, 5), MT.tile); ghFloor
 for (let i = 0; i < 9; i++) { const s = new THREE.Mesh(new THREE.CylinderGeometry(.34 + hash(i, 2) * .1, .4, .08, 9), MT.path); s.position.set(6.7 + i * .75, -.28, 3.95 + Math.sin(i * .8) * .35); s.rotation.y = hash(i, 5) * 3; s.receiveShadow = true; s.castShadow = true; world.add(s); }
 // trees + bushes around the island (procedural, cheap)
 const leafA = new THREE.MeshStandardMaterial({ color: 0x5f9c4c, roughness: .85, flatShading: true }), leafB = new THREE.MeshStandardMaterial({ color: 0x77b257, roughness: .85, flatShading: true }), barkM = E.pbr('wood', 0x6b4a33, [1, 2]);
+// the island changes with the real season: blossom pinks in spring, warm leaves in autumn, frosty tips in winter
+{ const SC = { spring: [0x7fbf5a, 0xf2b9cb], summer: [0x5f9c4c, 0x77b257], autumn: [0xd9822b, 0xe8b04a], winter: [0x7f9f8f, 0xe4ecee] }[season()]; leafA.color.set(SC[0]); leafB.color.set(SC[1]); }
 const flowerCols = [0xffb3c7, 0xfff1a6, 0xffffff, 0xc8b6ff, 0xff9f80];
 function tree(x, z, s) { const g = new THREE.Group(); cyl(.12 * s, .18 * s, 1.6 * s, barkM, 0, .8 * s, 0, g, 8); for (let k = 0; k < 4; k++) { const m = new THREE.Mesh(new THREE.IcosahedronGeometry((.75 + hash(x, k) * .4) * s, 1), k % 2 ? leafA : leafB); m.position.set((hash(k, x) - .5) * 1.1 * s, (1.9 + hash(z, k) * .7) * s, (hash(k, z) - .5) * 1.1 * s); m.castShadow = true; g.add(m); } g.position.set(x, -.32, z); world.add(g); }
 function bush(x, z, s) { const g = new THREE.Group(); for (let k = 0; k < 3; k++) { const m = new THREE.Mesh(new THREE.IcosahedronGeometry((.35 + hash(x, k) * .2) * s, 1), k % 2 ? leafA : leafB); m.position.set((k - 1) * .35 * s, .25 * s, hash(k, z) * .2); m.castShadow = true; g.add(m); } for (let k = 0; k < 5; k++) { const f = new THREE.Mesh(new THREE.SphereGeometry(.06 * s, 6, 5), E.mat(flowerCols[(k + Math.floor(x)) % 5])); f.position.set((hash(k, x) - .5) * .9 * s, (.42 + hash(k, 3) * .15) * s, (hash(z, k) - .3) * .4 * s); g.add(f); } g.position.set(x, -.32, z); world.add(g); }
@@ -296,7 +420,7 @@ box(.05, .05, 5, MT.woodLight, -5.95, 1.02, 2.5, CAFE); box(.08, .1, 5, MT.woodD
 // wall top cap visible from outside
 box(.16, 3.05, .16, MT.woodDark, -6.02, 1.52, 4.98, CAFE);
 // menu chalkboard
-function paintMenu(g, w, h) { g.fillStyle = '#26322c'; g.fillRect(0, 0, w, h); g.strokeStyle = '#c9a25a'; g.lineWidth = 18; g.strokeRect(9, 9, w - 18, h - 18); g.fillStyle = '#fff8ee'; g.textAlign = 'center'; g.font = '900 54px Unbounded, Manrope, sans-serif'; g.fillText(T().menu, w / 2, 92); g.font = '700 30px Manrope, sans-serif'; g.textAlign = 'left'; RECIPES.forEach((r, i) => { g.fillStyle = '#fff8ee'; g.fillText(r.e + ' ' + nm(r), 44, 168 + i * 64, w - 140); g.textAlign = 'right'; g.fillStyle = '#ffd166'; g.fillText(String(r.price), w - 44, 168 + i * 64); g.textAlign = 'left'; }); g.fillStyle = 'rgba(255,255,255,.5)'; g.font = '600 22px Manrope, sans-serif'; g.textAlign = 'center'; g.fillText(T().grown, w / 2, h - 40); }
+function paintMenu(g, w, h) { g.fillStyle = '#26322c'; g.fillRect(0, 0, w, h); g.strokeStyle = '#c9a25a'; g.lineWidth = 18; g.strokeRect(9, 9, w - 18, h - 18); g.fillStyle = '#fff8ee'; g.textAlign = 'center'; g.font = '900 54px Unbounded, Manrope, sans-serif'; g.fillText(T().menu, w / 2, 92); const list = RECIPES.filter(r => recipeOpen(r) && (!r.season || r.season === season())).slice(-9), lh = Math.min(64, 430 / Math.max(1, list.length)); g.font = `700 ${Math.round(Math.min(30, lh * .5))}px Manrope, sans-serif`; g.textAlign = 'left'; list.forEach((r, i) => { const y = 160 + i * lh; g.fillStyle = r.season ? '#ffd8a8' : '#fff8ee'; g.fillText(r.e + ' ' + nm(r), 44, y, w - 140); g.textAlign = 'right'; g.fillStyle = '#ffd166'; g.fillText(String(r.price), w - 44, y); g.textAlign = 'left'; }); g.fillStyle = 'rgba(255,255,255,.5)'; g.font = '600 22px Manrope, sans-serif'; g.textAlign = 'center'; g.fillText(T().grown, w / 2, h - 40); }
 const menuTex = canvasTex(512, 640, paintMenu);
 function drawMenu() { const c = menuTex.image; paintMenu(c.getContext('2d'), c.width, c.height); menuTex.needsUpdate = true; }
 const menu = new THREE.Mesh(new THREE.PlaneGeometry(1.15, 1.44), new THREE.MeshStandardMaterial({ map: menuTex, roughness: .9 })); menu.rotation.y = Math.PI / 2; menu.position.set(-5.95, 2.05, 1.7); CAFE.add(menu);
@@ -334,6 +458,7 @@ function makeTeapot(scale = 1) {
 }
 const teapot = makeTeapot(1.15); teapot.userData.dyn = true; teapot.position.set(COUNTER.x, COUNTER.top, .3); teapot.rotation.y = -Math.PI / 2 + .3; CAFE.add(teapot);
 const TEAPOT_POS = V3(COUNTER.x, COUNTER.top + .2, .3);
+const stream = new THREE.Mesh(new THREE.CylinderGeometry(.011, .009, 1, 8, 1, true), new THREE.MeshStandardMaterial({ color: 0xe9b949, roughness: .1, transparent: true, opacity: .85 })); stream.visible = false; stream.userData.dyn = true; world.add(stream);
 // kettle on a little stove-plate
 prop('pot', .3, -5.0, .62, .3);
 // entrance trellis arch with flowers + sign
@@ -343,10 +468,12 @@ const vines = new THREE.Mesh(mergeGeometries(vineL), new THREE.MeshStandardMater
 arch.position.set(6.05, 0, 3.95); world.add(arch);
 const signTex = canvasTex(512, 384, (g, w, h) => { g.fillStyle = '#26322c'; g.fillRect(0, 0, w, h); g.strokeStyle = '#c9a25a'; g.lineWidth = 16; g.strokeRect(8, 8, w - 16, h - 16); g.fillStyle = '#fff8ee'; g.textAlign = 'center'; g.font = '900 58px Unbounded, Manrope, sans-serif'; g.fillText('Brew', w / 2, 120); g.fillStyle = '#ffd166'; g.font = '800 40px Manrope, sans-serif'; g.fillText('& ', w / 2, 180); g.fillStyle = '#9fe3cf'; g.font = '900 58px Unbounded, Manrope, sans-serif'; g.fillText('Bloom', w / 2, 250); g.fillStyle = 'rgba(255,255,255,.7)'; g.font = '700 28px Manrope, sans-serif'; g.fillText('teas · plants · hugs', w / 2, 320); });
 const sign = new THREE.Group(); for (const s of [-1, 1]) { const leg = box(.05, 1.0, .05, MT.woodLight, 0, .5, s * .28, sign); leg.rotation.x = 0; } const board = new THREE.Mesh(new THREE.PlaneGeometry(.6, .45), new THREE.MeshStandardMaterial({ map: signTex, roughness: .9 })); board.position.set(.03, .78, 0); board.rotation.y = Math.PI / 2; sign.add(board); const boardB = box(.02, .5, .65, MT.woodLight, 0, .78, 0, sign); sign.position.set(7.0, -.32, 5.05); sign.rotation.y = .5; world.add(sign);
+// level 10 reward: a gold star on the sign
+const signStar = (() => { const sh = new THREE.Shape(); for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2 + Math.PI / 2, r = i % 2 ? .05 : .12; i ? sh.lineTo(Math.cos(a) * r, Math.sin(a) * r) : sh.moveTo(Math.cos(a) * r, Math.sin(a) * r); } const m = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: .03, bevelEnabled: false }), MT.brass); m.rotation.y = Math.PI / 2; m.position.set(0, 1.12, 0); m.visible = false; m.castShadow = true; sign.add(m); sign.userData.dyn = true; return m; })();
 
 /* ---- furniture builders ---- */
 function makeChair() { const g = new THREE.Group(); const w = MT.woodLight; box(.44, .045, .42, w, 0, .455, 0, g); for (const x of [-.18, .18]) for (const z of [-.17, .17]) box(.04, .45, .04, w, x, .225, z, g); for (const x of [-.18, .18]) box(.04, .5, .04, w, x, .72, -.18, g); box(.4, .14, .03, w, 0, .86, -.185, g); box(.4, .06, .03, w, 0, .64, -.185, g); const cush = new THREE.Mesh(new THREE.BoxGeometry(.38, .04, .36), MT.fabric); cush.position.y = .495; cush.castShadow = true; g.add(cush); return g; }
-function makeTable() { const g = new THREE.Group(); cyl(.46, .46, .04, MT.woodLight, 0, .73, 0, g, 28); cyl(.04, .05, .7, MT.frame, 0, .37, 0, g, 10); cyl(.22, .25, .03, MT.frame, 0, .015, 0, g, 18);
+function makeTable() { const g = new THREE.Group(); cyl(.46, .46, .04, MT.woodLight, 0, .73, 0, g, 28); cyl(.04, .05, .7, MT.brass, 0, .37, 0, g, 10); cyl(.22, .25, .03, MT.brass, 0, .015, 0, g, 18);
   // little vase + lantern
   const vase = E.instance('glass', { scale: .11 }); vase.position.set(.12, .75, -.1); g.add(vase); const fl = []; for (let k = 0; k < 3; k++) { part(fl, new THREE.CylinderGeometry(.003, .003, .12, 4), M4(V3(.12 + (k - 1) * .012, .84, -.1), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, (k - 1) * .25))), 0x4f8f4a); part(fl, new THREE.SphereGeometry(.018, 6, 5), M4(V3(.12 + (k - 1) * .03, .905, -.1)), flowerCols[k + 1]); } const fm = new THREE.Mesh(mergeGeometries(fl), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .7 })); g.add(fm);
   const lan = makeLantern(.5); lan.position.set(-.14, .75, .08); g.add(lan); return g; }
@@ -358,7 +485,15 @@ function makeCakeStand() { const g = new THREE.Group(); cyl(.25, .3, .7, MT.wood
 function makeShelf() { const g = new THREE.Group(); box(1.7, 1.5, .34, MT.woodDark, 0, .75, -.05, g); const back = E.mat(0x3f2b1e); const cols = [0xd96b5f, 0x5f9ed9, 0xf2c14e, 0x7fb08d, 0xb49ad8, 0xe9dfcd]; for (let r = 0; r < 3; r++) { box(1.6, .38, .02, back, 0, .3 + r * .45, .1, g, false); let x = -.75; for (let k = 0; k < 9 && x < .7; k++) { const w = .06 + hash(r, k) * .06, h = .22 + hash(k, r) * .1; box(w, h, .2, E.mat(cols[(k + r) % 6]), x + w / 2, .14 + r * .45 + h / 2, .03, g); x += w + .01; } } const pl = E.instance('plant', { scale: .4 }); pl.position.set(.55, 1.5, 0); g.add(pl); return g; }
 function makeBigPlant() { const g = new THREE.Group(); const p = E.instance('plant', { scale: 1.2 }); g.add(p); return g; }
 function makeTableSet() { const g = new THREE.Group(); g.add(makeTable()); for (const s of [-1, 1]) { const c = makeChair(); c.position.x = s * .85; c.rotation.y = -s * Math.PI / 2; g.add(c); } return g; }
-function buildDecor(id) { const d = DBY[id]; let g; if (id === 'lamp') g = makeFloorLamp(); else if (id === 'plant') g = makeBigPlant(); else if (id === 'rug') g = makeRug(0xe59a6b); else if (id === 'rug2') g = makeRug(0x8cc7a8); else if (id === 'table') g = makeTableSet(); else if (id === 'bench') g = makeBench(); else if (id === 'cake') g = makeCakeStand(); else if (id === 'shelf') g = makeShelf(); shadowAll(g); g.traverse(o => { if (o.isMesh && o.userData.outline) { o.castShadow = false; o.receiveShadow = false; } }); return g; }
+function makeCrate() { const g = new THREE.Group(); for (const y of [.08, .24]) for (const s of [-1, 1]) { box(.62, .1, .03, MT.woodLight, 0, y, s * .27, g); box(.03, .1, .56, MT.woodLight, s * .3, y, 0, g); } box(.6, .02, .54, MT.wood, 0, .03, 0, g); for (let k = 0; k < 6; k++) { const f = E.instance(k % 2 ? 'orange' : 'apple', { scale: .12 }); f.position.set(-.18 + (k % 3) * .18, .26, k < 3 ? -.1 : .1); f.rotation.y = k; g.add(f); } return g; }
+function makePastry() { const g = new THREE.Group(); box(1.7, .8, .62, MT.woodLight, 0, .4, 0, g); box(1.74, .04, .66, MT.marble, 0, .82, 0, g); const gl = new THREE.Mesh(new THREE.BoxGeometry(1.6, .34, .56), new THREE.MeshStandardMaterial({ color: 0xeaf6ff, transparent: true, opacity: .14, roughness: .05, metalness: .2, depthWrite: false })); gl.position.y = 1.01; gl.renderOrder = 3; g.add(gl); for (const x of [-.8, .8]) for (const z of [-.28, .28]) box(.025, .34, .025, MT.brass, x, 1.01, z, g); box(1.62, .02, .58, MT.woodLight, 0, 1.19, 0, g);
+  [['croissant', .22], ['muffin', .17], ['cupcake', .17], ['pie', .26], ['muffin', .17], ['croissant', .22]].forEach(([m, s], k) => { const p = E.instance(m, { scale: s }); p.position.set(-.62 + k * .25, .84, (k % 2 - .5) * .14); p.rotation.y = k * 1.3; g.add(p); }); return g; }
+function makePiano() { const g = new THREE.Group(); const lac = new THREE.MeshStandardMaterial({ color: 0x3a2a3f, roughness: .25, metalness: .1 }); box(1.5, 1.15, .42, lac, 0, .575, -.25, g); box(1.5, .06, .3, lac, 0, .74, .07, g); box(1.42, .04, .2, E.mat(0xfbf7ee), 0, .78, .07, g, false); for (let k = 0; k < 10; k++) if (k % 7 !== 2 && k % 7 !== 6) box(.06, .03, .11, E.mat(0x1e1a22), -.6 + k * .135, .805, .03, g, false); box(.08, .7, .08, lac, -.68, .35, .15, g); box(.08, .7, .08, lac, .68, .35, .15, g); const lan = makeLantern(.45); lan.position.set(.5, 1.15, -.28); g.add(lan); const vase = E.instance('glass', { scale: .12 }); vase.position.set(-.5, 1.15, -.28); g.add(vase); cyl(.16, .16, .08, MT.fabric, 0, .46, .34, g, 16); cyl(.03, .04, .42, MT.woodDark, 0, .21, .34, g, 8); return g; }
+const waterMat = new THREE.MeshStandardMaterial({ color: 0x7cc7e8, roughness: .05, metalness: .1, transparent: true, opacity: .8 });
+function makeFountain() { const g = new THREE.Group(); const stone = E.pbr('stone', 0xcfc6b8, [3, 1]); const basin = new THREE.Mesh(new THREE.LatheGeometry([[0, 0], [.85, 0], [.88, .05], [.88, .32], [.8, .34], [.76, .1], [0, .1]].map(p => new THREE.Vector2(p[0], p[1])), 32), stone); basin.castShadow = basin.receiveShadow = true; g.add(basin); const w1 = new THREE.Mesh(new THREE.CircleGeometry(.77, 32), waterMat); w1.rotation.x = -Math.PI / 2; w1.position.y = .27; g.add(w1); cyl(.08, .12, .7, stone, 0, .45, 0, g, 12); const top = new THREE.Mesh(new THREE.LatheGeometry([[0, 0], [.32, 0], [.34, .1], [.3, .11], [0, .05]].map(p => new THREE.Vector2(p[0], p[1])), 24), stone); top.position.y = .8; top.castShadow = true; g.add(top); const w2 = new THREE.Mesh(new THREE.CircleGeometry(.29, 24), waterMat); w2.rotation.x = -Math.PI / 2; w2.position.y = .89; g.add(w2); g.userData.fountain = true; return g; }
+function makePetBed() { const g = new THREE.Group(); const bed = new THREE.Mesh(new THREE.TorusGeometry(.3, .09, 10, 24), E.pbr('fabric', 0xd98c7a, [2, 1])); bed.rotation.x = -Math.PI / 2; bed.position.y = .09; bed.castShadow = true; g.add(bed); cyl(.3, .3, .05, E.pbr('fabric', 0xf3dfc4, [2, 2]), 0, .04, 0, g, 24); const pup = E.instance('dogue', { scale: .6, tint: 0xe8c39e }); const pv = new THREE.Group(); pv.userData.dyn = true; pv.add(pup); pv.position.y = .06; pv.rotation.y = .6; g.add(pv); g.userData.pup = pv; const bone = new THREE.Group(); cyl(.015, .015, .14, E.mat(0xfff6e6), 0, 0, 0, bone, 6).rotation.z = Math.PI / 2; for (const s of [-1, 1]) { const b = new THREE.Mesh(new THREE.SphereGeometry(.025, 8, 6), E.mat(0xfff6e6)); b.position.x = s * .07; bone.add(b); } bone.position.set(.32, .03, .3); g.add(bone); return g; }
+function makeArbor() { const g = new THREE.Group(); for (const s of [-1, 1]) box(.08, 2.1, .08, MT.woodLight, s * .8, 1.05, 0, g); const top = new THREE.Mesh(new THREE.TorusGeometry(.8, .045, 8, 20, Math.PI), MT.woodLight); top.position.y = 2.1; top.castShadow = true; g.add(top); const L = []; for (let i = 0; i < 34; i++) { const a = i / 33 * Math.PI; part(L, new THREE.IcosahedronGeometry(1, 0), M4(V3(Math.cos(a) * .8, 2.1 + Math.sin(a) * .8, (hash(i, 2) - .5) * .12), null, V3(.11, .11, .11)), i % 3 === 0 ? flowerCols[i % 5] : (i % 2 ? 0x5e9e4e : 0x7cb860)); } for (let i = 0; i < 26; i++) { const s = i % 2 ? -1 : 1; part(L, new THREE.IcosahedronGeometry(1, 0), M4(V3(s * .8 + (hash(i, 3) - .5) * .1, .15 + i * .075, (hash(i, 4) - .5) * .12), null, V3(.08, .08, .08)), i % 4 === 0 ? 0xffb3c7 : i % 5 === 0 ? 0xfff1a6 : 0x6aa957); } const m = new THREE.Mesh(mergeGeometries(L), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .8, flatShading: true })); m.castShadow = true; g.add(m); return g; }
+function buildDecor(id) { const d = DBY[id]; let g; if (id === 'crate') g = makeCrate(); else if (id === 'pastry') g = makePastry(); else if (id === 'piano') g = makePiano(); else if (id === 'fountain') g = makeFountain(); else if (id === 'petbed') g = makePetBed(); else if (id === 'arbor') g = makeArbor(); else if (id === 'lamp') g = makeFloorLamp(); else if (id === 'plant') g = makeBigPlant(); else if (id === 'rug') g = makeRug(0xe59a6b); else if (id === 'rug2') g = makeRug(0x8cc7a8); else if (id === 'table') g = makeTableSet(); else if (id === 'bench') g = makeBench(); else if (id === 'cake') g = makeCakeStand(); else if (id === 'shelf') g = makeShelf(); shadowAll(g); g.traverse(o => { if (o.isMesh && o.userData.outline) { o.castShadow = false; o.receiveShadow = false; } }); return g; }
 
 /* ---- seats ---- */
 const SEATS = [], TABLES = [];
@@ -384,15 +519,25 @@ function leafPart(L, at, dir, len, wid, col, thick = .006) { part(L, LEAF, M4(at
 function makeFlowerGeo(kind) { const L = []; if (kind === 'mint') { for (let k = 0; k < 6; k++) part(L, BALL, M4(V3(Math.cos(k) * .012, k * .009, Math.sin(k) * .012), null, V3(.011, .011, .011)), k % 2 ? 0xe6d9f7 : 0xc9b2ee); }
   else if (kind === 'cham') { for (let k = 0; k < 11; k++) { const a = k / 11 * 6.283; part(L, LEAF, M4(V3(Math.cos(a) * .024, 0, Math.sin(a) * .024), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, -a, -.15)), V3(.022, .004, .008)), 0xfffdf4); } part(L, BALL, M4(V3(0, .006, 0), null, V3(.015, .011, .015)), 0xf3c331); }
   else if (kind === 'lav') { for (let k = 0; k < 9; k++) { const s = .017 - k * .0012; part(L, BALL, M4(V3(Math.cos(k * 2.4) * .006, k * .019, Math.sin(k * 2.4) * .006), null, V3(s, s * 1.2, s)), k % 2 ? 0x8f6fd0 : 0xa686e0); } }
+  else if (kind === 'rose') { for (let k = 0; k < 7; k++) { const a = k * 2.4; part(L, BALL, M4(V3(Math.cos(a) * .014, .012 + k * .002, Math.sin(a) * .014), null, V3(.024, .02, .024)), k % 2 ? 0xe2557a : 0xf07a98); } part(L, BALL, M4(V3(0, .03, 0), null, V3(.016, .016, .016)), 0xc93d63); }
+  else if (kind === 'blossom') { for (let c = 0; c < 3; c++) { const o = V3(Math.cos(c * 2.1) * .03, c * .012, Math.sin(c * 2.1) * .03); for (let k = 0; k < 5; k++) { const a = k / 5 * 6.283; part(L, LEAF, M4(o.clone().add(V3(Math.cos(a) * .013, 0, Math.sin(a) * .013)), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, -a, -.25)), V3(.014, .004, .01)), k % 2 ? 0xffd3e1 : 0xffbfd3); } part(L, BALL, M4(o.clone().add(V3(0, .004, 0)), null, V3(.005, .005, .005)), 0xd8486e); } }
+  else if (kind === 'berry') { part(L, BALL, M4(V3(0, -.022, 0), null, V3(.02, .028, .02)), 0xe0363f); for (let k = 0; k < 5; k++) { const a = k / 5 * 6.283; part(L, LEAF, M4(V3(Math.cos(a) * .012, .004, Math.sin(a) * .012), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, -a, .3)), V3(.013, .003, .006)), 0x3f8a3a); } }
+  else if (kind === 'pumpkin') { for (let k = 0; k < 8; k++) { const a = k / 8 * 6.283; part(L, BALL, M4(V3(Math.cos(a) * .028, .035, Math.sin(a) * .028), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, -a, 0)), V3(.03, .036, .022)), k % 2 ? 0xe8872c : 0xf09a3a); } part(L, STEM, M4(V3(0, .078, 0), null, V3(.006, .022, .006)), 0x6b7a35); }
+  else if (kind === 'clem') { part(L, BALL, M4(V3(0, 0, 0), null, V3(.028, .026, .028)), 0xf5952a); part(L, LEAF, M4(V3(.01, .026, 0), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, .5)), V3(.018, .003, .009)), 0x3e8a45); }
   else { for (let k = 0; k < 5; k++) { const a = k / 5 * 6.283; part(L, LEAF, M4(V3(Math.cos(a) * .04, 0, Math.sin(a) * .04), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, -a, .25)), V3(.045, .006, .03)), k % 2 ? 0xf2efff : 0xe3dcff); } part(L, BALL, M4(V3(0, .01, 0), null, V3(.016, .02, .016)), 0xa58cf0); }
   return mergeGeometries(L); }
-const FLOWER_GEO = { mint: makeFlowerGeo('mint'), cham: makeFlowerGeo('cham'), lav: makeFlowerGeo('lav'), moon: makeFlowerGeo('moon') };
+const FLOWER_GEO = Object.fromEntries(SEED_IDS.map(k => [k, makeFlowerGeo(k)]));
 function buildPlant(kind, seed = 1) {
   const L = [], F = []; // F: matrices for flowers
   const h = (a, b) => hash(seed * 13 + a, b);
   if (kind === 'mint') { for (let i = 0; i < 7; i++) { const a = i / 7 * 6.283 + h(i, 1), tilt = .15 + h(i, 2) * .35, len = .26 + h(i, 3) * .16; const dir = V3(Math.sin(tilt) * Math.cos(a), Math.cos(tilt), Math.sin(tilt) * Math.sin(a)); const tip = dir.clone().multiplyScalar(len); stemPart(L, V3(), tip, .006, 0x5d8f45); for (let f = .25; f <= 1.01; f += .19) { const at = dir.clone().multiplyScalar(len * f); const side = V3(-dir.z, 0, dir.x).normalize(); const sz = .055 * (1.15 - f * .5); for (const s of [-1, 1]) leafPart(L, at, side.clone().multiplyScalar(s).add(V3(0, .35, 0)), sz, sz * .62, f > .7 ? 0x6cc36a : 0x4fa457, .008); } F.push(M4(tip, null, V3(1, 1, 1))); } }
   else if (kind === 'cham') { for (let i = 0; i < 14; i++) { const a = i / 14 * 6.283 + h(i, 1); leafPart(L, V3(), V3(Math.cos(a), .9 + h(i, 2), Math.sin(a)), .09, .012, 0x7aa85a); } for (let i = 0; i < 8; i++) { const a = i / 8 * 6.283 + h(i, 4), tilt = .1 + h(i, 5) * .3, len = .32 + h(i, 6) * .2; const dir = V3(Math.sin(tilt) * Math.cos(a), Math.cos(tilt), Math.sin(tilt) * Math.sin(a)); const tip = dir.clone().multiplyScalar(len); stemPart(L, V3(), tip, .004, 0x6f9a4f); leafPart(L, tip.clone().multiplyScalar(.5), V3(dir.z, .6, -dir.x), .04, .008, 0x7aa85a); F.push(M4(tip, qFrom(QY, V3(dir.x * .6, 1, dir.z * .6)), V3(1, 1, 1))); } }
   else if (kind === 'lav') { for (let i = 0; i < 16; i++) { const a = i / 16 * 6.283 + h(i, 1); leafPart(L, V3(0, .02, 0), V3(Math.cos(a), 1.3 + h(i, 2), Math.sin(a)), .1, .01, 0x8eac87); } for (let i = 0; i < 10; i++) { const a = i / 10 * 6.283 + h(i, 4), tilt = .08 + h(i, 5) * .32, len = .42 + h(i, 6) * .22; const dir = V3(Math.sin(tilt) * Math.cos(a), Math.cos(tilt), Math.sin(tilt) * Math.sin(a)); const tip = dir.clone().multiplyScalar(len); stemPart(L, V3(), tip, .0035, 0x7f9b6f); F.push(M4(tip.clone().addScaledVector(dir, -.15), qFrom(QY, dir), V3(1, 1, 1))); } }
+  else if (kind === 'rose') { for (let i = 0; i < 6; i++) { const a = i / 6 * 6.283 + h(i, 1), tilt = .12 + h(i, 2) * .3, len = .3 + h(i, 3) * .14; const dir = V3(Math.sin(tilt) * Math.cos(a), Math.cos(tilt), Math.sin(tilt) * Math.sin(a)); const tip = dir.clone().multiplyScalar(len); stemPart(L, V3(), tip, .006, 0x4f7a3c); for (let f = .3; f < .95; f += .22) { const at = dir.clone().multiplyScalar(len * f), side = V3(-dir.z, .3, dir.x); leafPart(L, at, f > .5 ? side : side.clone().negate().setY(.3), .045, .028, 0x3f7d3f, .007); } F.push(M4(tip, null, V3(1, 1, 1))); } }
+  else if (kind === 'blossom') { const trunk = new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V3(0, 0, 0), V3(.02, .18, 0), V3(-.01, .34, .01)]), 8, .014, 6); part(L, trunk, new THREE.Matrix4(), 0x6e4b36); for (let i = 0; i < 5; i++) { const a = i / 5 * 6.283 + h(i, 1); const from = V3(0, .22 + i * .03, 0), tip = from.clone().add(V3(Math.cos(a) * .17, .1 + h(i, 2) * .08, Math.sin(a) * .17)); stemPart(L, from, tip, .006, 0x6e4b36); for (let k = 0; k < 3; k++) { part(L, BALL, M4(tip.clone().add(V3((h(i, k) - .5) * .08, (h(k, i) - .3) * .05, (h(k + 2, i) - .5) * .08)), null, V3(.04, .03, .04)), k % 2 ? 0x7fae5c : 0x8cbd66); F.push(M4(tip.clone().add(V3((h(i, k + 5) - .5) * .1, .02 + h(k, i + 3) * .04, (h(k + 7, i) - .5) * .1)), null, V3(1, 1, 1))); } } }
+  else if (kind === 'berry') { for (let i = 0; i < 9; i++) { const a = i / 9 * 6.283 + h(i, 1), dir = V3(Math.cos(a), .55 + h(i, 2) * .4, Math.sin(a)); const tip = dir.clone().normalize().multiplyScalar(.14 + h(i, 3) * .06); stemPart(L, V3(), tip, .004, 0x5a8f3f); for (let k = 0; k < 3; k++) leafPart(L, tip, V3(dir.x + Math.cos(a + k * 2.1) * .6, .4, dir.z + Math.sin(a + k * 2.1) * .6), .04, .03, k % 2 ? 0x4c9a45 : 0x5aac4f, .006); } for (let i = 0; i < 5; i++) { const a = i / 5 * 6.283 + .3; F.push(M4(V3(Math.cos(a) * .13, .1, Math.sin(a) * .13), null, V3(1, 1, 1))); } }
+  else if (kind === 'pumpkin') { for (let i = 0; i < 5; i++) { const a = i / 5 * 6.283 + h(i, 1); leafPart(L, V3(0, .05, 0), V3(Math.cos(a), .35, Math.sin(a)), .12, .1, i % 2 ? 0x4f8f3e : 0x5c9e47, .01); } const vine = new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V3(0, .02, 0), V3(.08, .06, .05), V3(.14, .03, -.04), V3(.2, .07, .02)]), 12, .006, 5); part(L, vine, new THREE.Matrix4(), 0x5d8a3a); F.push(M4(V3(-.02, .0, .02), null, V3(1.6, 1.6, 1.6))); F.push(M4(V3(.17, .02, .0), null, V3(.9, .9, .9))); }
+  else if (kind === 'clem') { const trunk = new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V3(0, 0, 0), V3(-.01, .14, .01), V3(.01, .26, 0)]), 6, .012, 6); part(L, trunk, new THREE.Matrix4(), 0x6b4d35); for (let k = 0; k < 9; k++) { const a = k / 9 * 6.283 + h(k, 1); part(L, BALL, M4(V3(Math.cos(a) * .09, .3 + h(k, 2) * .1, Math.sin(a) * .09), null, V3(.075, .06, .075)), k % 2 ? 0x3e8a45 : 0x4f9c50); } for (let k = 0; k < 5; k++) { const a = k / 5 * 6.283 + .5; F.push(M4(V3(Math.cos(a) * .14, .29 + (k % 2) * .08, Math.sin(a) * .14), null, V3(1, 1, 1))); } }
   else { for (let i = 0; i < 4; i++) { const a = i / 4 * 6.283 + .4; leafPart(L, V3(0, .02, 0), V3(Math.cos(a), .25, Math.sin(a)), .15, .055, 0x2f6b4f, .012); } const curve = new THREE.CatmullRomCurve3([V3(0, 0, 0), V3(.02, .25, 0), V3(.09, .45, 0), V3(.2, .5, 0)]); const tg = new THREE.TubeGeometry(curve, 12, .007, 5); part(L, tg, new THREE.Matrix4(), 0x3f6b3c); for (let k = 0; k < 4; k++) { const p = curve.getPoint(.55 + k * .15); F.push(M4(p.add(V3(0, -.03, (k % 2 - .5) * .05)), new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI / 2 - .4, 0, -.3)), V3(1, 1, 1))); } }
   const g = new THREE.Group(); const leafMesh = new THREE.Mesh(mergeGeometries(L), MT.leafVC); leafMesh.castShadow = true; leafMesh.receiveShadow = true; g.add(leafMesh);
   const fl = new THREE.Mesh(new THREE.BufferGeometry(), kind === 'moon' ? MT.moonVC : MT.leafVC); fl.castShadow = true; g.add(fl); g.userData = { kind, leafMesh, fl, base: F, bloom: -1 };
@@ -402,14 +547,20 @@ function buildPlant(kind, seed = 1) {
 function setBloom(pl, k) { const u = pl.userData; const st = k < .02 ? 0 : Math.min(1, Math.ceil(k * 5) / 5); if (u.bloom === st) return; u.bloom = st; u.fl.visible = st > 0; if (!st) return; const geos = u.base.map(m => FLOWER_GEO[u.kind].clone().applyMatrix4(m.clone().multiply(new THREE.Matrix4().makeScale(st, st, st)))); u.fl.geometry.dispose(); u.fl.geometry = mergeGeometries(geos); geos.forEach(g => g.dispose()); }
 function potProgress(i) { const p = S.pots[i]; if (!p) return -1; return clamp((Date.now() - p.t0) / 1000 / SEEDS[p.seed].time, 0, 1); }
 function syncPot(i) { const pt = pots[i], p = S.pots[i]; const kind = p ? p.seed : null; if (pt.plantSeed !== (p ? p.seed + p.t0 : null)) { if (pt.plant) pt.g.remove(pt.plant); pt.plant = null; if (p) { pt.plant = buildPlant(p.seed, i + 1 + (p.t0 % 97)); pt.plant.position.y = .3; pt.plant.userData.k = 1.45; pt.g.add(pt.plant); } pt.plantSeed = p ? p.seed + p.t0 : null; } const locked = i >= S.unlocked; pt.lock.forEach(m => m.visible = locked); }
-function updatePlants(dt) { for (let i = 0; i < 6; i++) { syncPot(i); const pt = pots[i]; if (!pt.plant) { pt.ready = false; continue; } const k = potProgress(i); const grow = .12 + .88 * E.smooth(0, .8, k); const pop = pt.pop > 0 ? (pt.pop -= dt, 1 + Math.sin(pt.pop * 20) * pt.pop * .5) : 1; pt.plant.scale.setScalar(grow * pop * 2.1); setBloom(pt.plant, E.smooth(.78, 1, k)); pt.ready = k >= 1; if (pt.ready) { pt.plant.rotation.z = Math.sin(G.t * 2 + i) * .03; pt.sparkT -= dt; if (pt.sparkT < 0) { pt.sparkT = 1.4 + Math.random(); P.burst(pt.g.position.clone().add(V3(0, .7, 0)), { color: 0xfff2a8, n: 5, speed: .4, up: .8, size: .12, life: .9, gravity: -.2 }); } } } }
+function updatePlants(dt) { for (let i = 0; i < 6; i++) { syncPot(i); const pt = pots[i]; if (!pt.plant) { pt.ready = false; continue; } const k = potProgress(i); const grow = .12 + .88 * E.smooth(0, .8, k); const pop = pt.pop > 0 ? (pt.pop -= dt, 1 + Math.sin(pt.pop * 20) * pt.pop * .5) : 1; pt.plant.scale.setScalar(grow * pop * 2.7); setBloom(pt.plant, E.smooth(.78, 1, k)); const was = pt.ready; pt.ready = k >= 1;
+    // bloom moment: a plant finishing while you watch gets a chime, a sparkle and a little hop
+    if (pt.ready && was === false && G.mode !== 'title' && G.t > 1 && pt.seen === S.pots[i].t0) { pt.pop = .6; E.tone(880, .14, 'sine', .06); E.tone(1320, .2, 'sine', .05, 0, .1); P.burst(pt.g.position.clone().add(V3(0, .9, 0)), { color: 0xfff2a8, n: 22, speed: 1, up: 1.6, size: .16, life: 1.1 }); E.say(T().readyNow, { once: true }); }
+    pt.seen = S.pots[i].t0; if (pt.ready) { pt.plant.rotation.z = Math.sin(G.t * 2 + i) * .03; pt.sparkT -= dt; if (pt.sparkT < 0) { pt.sparkT = 1.4 + Math.random(); P.burst(pt.g.position.clone().add(V3(0, .7, 0)), { color: 0xfff2a8, n: 5, speed: .4, up: .8, size: .12, life: .9, gravity: -.2 }); } } } }
 
 /* ================= customers ================= */
-const hipsCache = {};
+const hipsCache = {}, fixCache = {};
 function makeChar(def) {
   const pivot = new THREE.Group(); let model, rig = null;
   if (def.animal) { model = E.instance(def.model, { scale: def.scale, tint: def.tint }); if (def.model === 'bunny') model.rotation.y = Math.PI / 2; const wrap = new THREE.Group(); wrap.add(model); pivot.add(wrap); model = wrap; }
-  else { model = E.instance(def.model, { scale: 1.68, fit: 'height', outline: false }); pivot.add(model); rig = E.bones(model); if (hipsCache[def.model] == null) { pivot.updateMatrixWorld(true); hipsCache[def.model] = rig.Hips ? rig.Hips.getWorldPosition(V3()).y : .9; } }
+  else { model = E.instance(def.model, { scale: 1.68, fit: 'height', outline: false }); pivot.add(model);
+    // instance(fit:'height') measures the unposed geometry, so these rigs come out ~2.5 m tall: measure the skinned mesh once and scale to a cozy 1.6 m
+    if (fixCache[def.model] == null) { fixCache[def.model] = 1; try { pivot.updateMatrixWorld(true); const bb = new THREE.Box3(); model.traverse(o => { if (o.isSkinnedMesh) { o.skeleton.update(); o.computeBoundingBox(); bb.union(o.boundingBox.clone().applyMatrix4(o.matrixWorld)); } }); const h = bb.max.y - Math.min(0, bb.min.y); if (h > .5 && h < 6) fixCache[def.model] = clamp(1.6 / h, .4, 1.5); } catch (e) { } }
+    model.scale.multiplyScalar(fixCache[def.model]); rig = E.bones(model); if (hipsCache[def.model] == null) { pivot.updateMatrixWorld(true); hipsCache[def.model] = rig.Hips ? rig.Hips.getWorldPosition(V3()).y : .9; } }
   const shadow = new THREE.Mesh(new THREE.CircleGeometry(def.animal ? .22 : .3, 18), new THREE.MeshBasicMaterial({ color: 0, transparent: true, opacity: .18, depthWrite: false })); shadow.rotation.x = -Math.PI / 2; shadow.position.y = .01; pivot.add(shadow);
   world.add(pivot); return { pivot, model, rig, shadow, hips: hipsCache[def.model] || 0 };
 }
@@ -431,11 +582,16 @@ function seatsReachable(block) { for (const s of SEATS) if (!bfs(cellOf(DOOR_IN.
 function reserved(id, except) { let n = 0; for (const c of G.custs) if (c !== except && c.reserve) n += c.reserve.filter(x => x === id).length; return n; }
 function avail(id) { return PANTRY[id] ? 99 : S.inv[id] - reserved(id); }
 function makeable(r) { const cnt = {}; for (const i of r.need) cnt[i] = (cnt[i] || 0) + 1; return Object.keys(cnt).every(i => avail(i) >= cnt[i]); }
-function chooseRecipe(c) { if (c.def.vip && makeable(RBY[c.def.fav])) return RBY[c.def.fav]; const opts = RECIPES.filter(makeable); let tot = opts.reduce((a, r) => a + r.w, 0), x = Math.random() * tot; for (const r of opts) { x -= r.w; if (x <= 0) return r; } return opts[0] || RECIPES[0]; }
+function chooseRecipe(c) { if (c.def.vip && recipeOpen(RBY[c.def.fav]) && makeable(RBY[c.def.fav])) return RBY[c.def.fav];
+  // a regular with an open request orders what they asked for (when you have the ingredients)
+  const q = S.req.list.find(q => q.who === c.def.name && !q.done); if (q && makeable(RBY[q.r])) return RBY[q.r];
+  const opts = RECIPES.filter(r => recipeOpen(r) && makeable(r)); let tot = opts.reduce((a, r) => a + r.w, 0), x = Math.random() * tot; for (const r of opts) { x -= r.w; if (x <= 0) return r; } return opts[0] || RECIPES[0]; }
 function spawnCustomer(force) {
   const free = SEATS.filter(s => !s.occ); if (!free.length) return null;
   let def; if (S.visDay !== dayKey() && !G.custs.some(c => c.def.vip) && !G.visSpawned) { def = VISITOR; G.visSpawned = true; }
-  else { const present = new Set(G.custs.map(c => c.def.name)); const pool = (Math.random() < .3 ? ANIMALS : PEOPLE).filter(d => !present.has(d.name)); def = pick(pool.length ? pool : PEOPLE); }
+  else { const present = new Set(G.custs.map(c => c.def.name)); const asker = S.req.list.filter(q => !q.done && !present.has(q.who)).map(q => PEOPLE.find(p => p.name === q.who)).filter(Boolean);
+    // regulars with an open request drop by more often, so their story moves forward
+    if (asker.length && Math.random() < .5) def = pick(asker); else { const pool = (Math.random() < .3 ? ANIMALS : PEOPLE).filter(d => !present.has(d.name)); def = pick(pool.length ? pool : PEOPLE); } }
   const seat = force?.seat || pick(free); const ch = makeChar(def);
   const path = routeTo(DOOR_IN, V3(seat.x, 0, seat.z), BLOCK) || [DOOR_IN.clone(), V3(seat.x, 0, seat.z)];
   const c = { def, ch, seat, state: 'in', path: [SPAWN.clone(), DOOR.clone(), ...path], pi: 1, t: rnd(0, 5), recipe: null, reserve: null, tag: null, id: Math.random() };
@@ -448,7 +604,7 @@ function sitDown(c) { const s = c.seat, ch = c.ch; const back = c.def.animal ? -
   c.tag = document.createElement('div'); c.tag.className = 'bb-lab bb-order' + (c.def.vip ? ' vip' : ''); c.tag.innerHTML = `${c.def.vip ? '⭐ ' : ''}${c.recipe.e} <span class="nm">${nm(c.recipe)}</span>`; c.tag.onclick = () => { if (G.mode === 'cafe' && !G.modal) openBrew(c); }; labelsEl.appendChild(c.tag); c.tagY = isAnimalY(c); SFX.pop(); E.tone(784, .12, 'sine', .06, 0, .05);
   if (!S.served && !G.saidOrder) { G.saidOrder = true; E.toast(T().wouldLove(nm(c.def), nm(c.recipe)), 3500, true); }
   else if (c.def.vip) E.toast(T().vipHere(nm(c.def)), 2600); }
-function isAnimalY(c) { return c.def.animal ? .52 + (c.def.model === 'bunny' ? .55 : .7) : 1.62; }
+function isAnimalY(c) { return c.def.animal ? .52 + (c.def.model === 'bunny' ? .55 : .7) : 1.42; }
 function headY(c) { return c.def.animal ? .52 + c.ch.model.children[0].userData.size?.y + .3 || 1.2 : 1.88; }
 function updateCustomers(dt) {
   for (const c of G.custs.slice()) {
@@ -463,6 +619,7 @@ function updateCustomers(dt) {
       if (!isA) { const pz = E.POSES.sit(); const base = Object.assign({}, pz, { Head: [0, Math.sin(c.t * .7) * .25, 0], Spine: [Math.sin(c.t * 1.3) * .02, 0, 0] }); if (c.state === 'drink') { const k = Math.max(0, Math.sin(c.t * 1.6)); base.RightArm = [-.6 - k * .9, 0, 1.0 - k * .5]; base.RightForeArm = [-.6 - k * 1.4]; base.Head = [k * -.15, 0, 0]; } if (c.state === 'happy') Object.assign(base, { LeftArm: [0, 0, .9 + Math.sin(c.t * 9) * .2], RightArm: [0, 0, -.9 - Math.sin(c.t * 9) * .2] }); E.pose(ch.rig, base); }
       else { ch.model.position.y = c.state === 'happy' ? Math.abs(Math.sin(c.t * 9)) * .12 : 0; ch.model.rotation.z = Math.sin(c.t * 1.5) * .04; }
 
+      if (c.state === 'drink' && c.cup && Math.random() < dt * 1.2) P.burst(c.cup.position.clone().add(V3(0, .12, 0)), { color: 0xffffff, n: 2, size: .07, speed: .05, up: .4, life: 1.1, gravity: -.12, additive: false });
       if (c.state === 'happy' && c.t > c.happyEnd) { c.state = 'drink'; c.drinkEnd = c.t + 6; }
       if (c.state === 'drink' && c.t > c.drinkEnd) leave(c);
     }
@@ -476,13 +633,18 @@ function leave(c) { if (c.cup) { const cup = c.cup; tween(.4, k => cup.scale.set
 const ingObjs = {};
 function ingVisual(id) {
   const g = new THREE.Group();
-  if (SEEDS[id]) { const b = E.instance('bowl', { scale: .2 }); g.add(b); const pl = buildPlant(id, 7); setBloom(pl, 1); pl.scale.setScalar(id === 'moon' ? .32 : .36); pl.position.y = .03; g.add(pl); }
+  if (SEEDS[id]) { const b = E.instance('bowl', { scale: .2 }); g.add(b); const pl = buildPlant(id, 7); setBloom(pl, 1); pl.scale.setScalar({ moon: .32, pumpkin: .55, berry: .6, blossom: .38, clem: .38 }[id] || .36); pl.position.y = .03; g.add(pl); }
   else if (id === 'honey') { g.add(E.instance('honey', { scale: .15 })); }
+  else if (id === 'milk') { const jug = new THREE.Mesh(new THREE.LatheGeometry([[0, 0], [.045, 0], [.05, .03], [.042, .09], [.034, .12], [.04, .135], [0, .13]].map(p => new THREE.Vector2(p[0], p[1])), 18), MT.ceramic); g.add(jug); const band = new THREE.Mesh(new THREE.CylinderGeometry(.048, .05, .014, 18, 1, true), new THREE.MeshStandardMaterial({ color: 0x7fb2d9, roughness: .3 })); band.position.y = .035; g.add(band); const hd = new THREE.Mesh(new THREE.TorusGeometry(.028, .008, 6, 12, Math.PI), MT.ceramic); hd.position.set(-.045, .075, 0); hd.rotation.z = Math.PI / 2; g.add(hd); E.addOutline(g, 1.03); }
   else { const pl = E.instance('plate', { scale: .2 }); g.add(pl); for (const [x, z, r] of [[-.035, 0, 0], [.04, .02, 1.2]]) { const l = E.instance('lemon', { scale: .075 }); l.position.set(x, .012, z); l.rotation.y = r; g.add(l); } }
   shadowAll(g); g.userData.pick = { type: 'ing', id }; const hit = new THREE.Mesh(new THREE.CylinderGeometry(.16, .16, .32, 8), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })); hit.position.y = .12; hit.userData.pick = { type: 'ing', id }; g.add(hit); g.userData.hit = hit; return g;
 }
 const PORTRAIT = () => innerHeight > innerWidth;
-const slotPos = i => V3(COUNTER.x + (i - 2.5) * .36, COUNTER.top, .66);
+// the counter row shows only what this café has (unlocked pantry items + herbs in stock, in season or needed now)
+let BI = ING.slice(0, 6);
+const brewIngs = (need = []) => ING.filter(id => need.includes(id) || (ingOpen(id) && (PANTRY[id] || S.inv[id] > 0 || plantable(id))));
+const slotPos = i => { const n = Math.max(BI.length, 6), sp = Math.min(.36, 3.7 / (n - 1)); return V3(COUNTER.x - .1 + (i - (BI.length - 1) / 2) * sp, COUNTER.top, .66); };
+const homeOf = id => slotPos(Math.max(0, BI.indexOf(id)));
 const selRing = new THREE.Mesh(new THREE.TorusGeometry(.15, .012, 8, 32), new THREE.MeshBasicMaterial({ color: 0xffd166 })); selRing.rotation.x = Math.PI / 2; selRing.visible = false; world.add(selRing);
 ING.forEach((id, i) => { const g = ingVisual(id); g.position.copy(slotPos(i)); g.visible = false; world.add(g); ingObjs[id] = g; });
 function ingCount(id, c) { return PANTRY[id] ? '∞' : Math.max(0, S.inv[id]); }
@@ -492,27 +654,29 @@ function openBrew(cust) {
   if (G.modal || G.mode === 'brew' || G.pendingRes > 0) return; if (G.mode === 'decor') closeDecor();
   const c = cust && cust.state === 'wait' && !cust.brewing ? cust : waitingCusts()[0];
   if (!c) { E.toast(G.custs.length ? T().settling : T().noOrders, 2000); SFX.tick(); return; }
-  c.brewing = true; G.mode = 'brew'; G.brew = { c, recipe: c.recipe, added: [], done: false }; G.sel = 0;
-  for (const id of ING) { const o = ingObjs[id]; o.visible = true; o.position.copy(slotPos(ING.indexOf(id))); o.scale.setScalar(1); }
+  // tall decor standing in front of the counter would block the brew close-up: hide it while brewing
+  for (const [d, g] of decorObjs) if (!DBY[d.id].flat && d.x < -.6 && d.z > .8 && d.z < 3.4) { g.visible = false; g.userData.brewHidden = true; }
+  c.brewing = true; G.mode = 'brew'; G.brew = { c, recipe: c.recipe, added: [], done: false }; G.sel = 0; BI = brewIngs(c.recipe.need);
+  for (const id of ING) { const o = ingObjs[id], on = BI.includes(id); o.visible = on; o.position.copy(homeOf(id)); const s = BI.length > 9 ? .85 : 1; o.scale.setScalar(s); o.userData.s = s; }
   recipeEl = document.createElement('div'); recipeEl.className = 'bb-recipe'; document.body.appendChild(recipeEl); drawRecipe(); setPad(); SFX.whoosh();
   if (!G.saidBrew) { G.saidBrew = true; E.say(T().sayBrew); }
 }
 function drawRecipe() { const b = G.brew; if (!recipeEl || !b) return; const t = T(), vipTxt = b.c.def.vip ? '⭐ ' : '', port = PORTRAIT(), rem = remainingNeed();
   // portrait: big tap targets for every ingredient right in the card (the 3D row is small on a phone)
-  const tray = port ? `<div class="bb-tray">${ING.map((id, i) => { const n = ingCount(id); return `<button class="bb-ing ${rem.includes(id) ? 'need' : ''} ${n !== '∞' && n <= 0 ? 'off' : ''}" data-ing="${id}" aria-label="${ingName(id)}"><span>${ING_INFO[id][0]}</span><small>${n === '∞' ? '∞' : '×' + n}</small></button>`; }).join('')}</div>` : '';
+  const tray = port ? `<div class="bb-tray" style="grid-template-columns:repeat(${BI.length > 7 ? Math.ceil(BI.length / 2) : BI.length},1fr)">${BI.map((id, i) => { const n = ingCount(id); return `<button class="bb-ing ${rem.includes(id) ? 'need' : ''} ${n !== '∞' && n <= 0 ? 'off' : ''}" data-ing="${id}" aria-label="${ingName(id)}"><span>${ING_INFO[id][0]}</span><small>${n === '∞' ? '∞' : '×' + n}</small></button>`; }).join('')}</div>` : '';
   recipeEl.classList.toggle('port', port);
   recipeEl.innerHTML = `<b>${b.recipe.e} ${nm(b.recipe)}</b><p>${vipTxt}${t.forWho(nm(b.c.def))}${b.c.def.e ? ' ' + b.c.def.e : ''} · ${t.dragHint}</p><div class="bb-row"><div class="bb-slots">${b.recipe.need.map((id, i) => `<div class="bb-slot ${i < b.added.length ? 'on' : ''}" title="${ingName(id)}">${ING_INFO[id][0]}</div>`).join('')}</div><button class="ig-chipbtn" id="bbBack">${t.back}</button></div>${tray}`;
-  recipeEl.querySelector('#bbBack').onclick = () => closeBrew(true); recipeEl.querySelectorAll('[data-ing]').forEach(x => x.onclick = () => { G.sel = ING.indexOf(x.dataset.ing); addIngredient(x.dataset.ing); }); }
+  recipeEl.querySelector('#bbBack').onclick = () => closeBrew(true); recipeEl.querySelectorAll('[data-ing]').forEach(x => x.onclick = () => { G.sel = BI.indexOf(x.dataset.ing); addIngredient(x.dataset.ing); }); }
 function remainingNeed() { const b = G.brew; const rem = b.recipe.need.slice(); for (const a of b.added) { const k = rem.indexOf(a); if (k >= 0) rem.splice(k, 1); } return rem; }
 function addIngredient(id, instant) {
-  const b = G.brew; if (!b || b.done) return false; const o = ingObjs[id]; const home = slotPos(ING.indexOf(id));
+  const b = G.brew; if (!b || b.done || !BI.includes(id)) return false; const o = ingObjs[id]; const home = homeOf(id), s0 = o.userData.s || 1;
   if (!PANTRY[id] && S.inv[id] <= 0) { E.toast(T().noIng(ingName(id)), 1800); tween(.25, k => o.position.lerp(home, k)); SFX.tick(); return false; }
   const rem = remainingNeed(); if (!rem.includes(id)) { E.toast(T().notThis(rem.map(i => ING_INFO[i][0]).join(' ')), 1600); SFX.tick(); const from = o.position.clone(); tween(.35, k => { o.position.lerpVectors(from, home, ease(k)); o.rotation.z = Math.sin(k * 18) * .15 * (1 - k); }); return false; }
   b.added.push(id); if (!PANTRY[id]) { S.inv[id]--; const r = b.c.reserve; const k = r.indexOf(id); if (k >= 0) r.splice(k, 1); }
   const from = o.position.clone(), top = TEAPOT_POS.clone().add(V3(0, .12, 0)); SFX.snap();
   const lid = teapot.userData.lid;
-  const fin = () => { o.position.copy(home); o.scale.setScalar(.01); tween(.25, k => o.scale.setScalar(Math.max(.01, k))); P.burst(TEAPOT_POS.clone().add(V3(0, .05, 0)), { color: 0xbfe6ff, n: 8, size: .05, speed: .25, up: .6, life: .5, gravity: 2 }); E.tone(520 + b.added.length * 120, .1, 'sine', .08); drawRecipe(); if (b.added.length >= b.recipe.need.length) finishBrew(instant); };
-  if (instant) fin(); else tween(.38, k => { o.position.lerpVectors(from, top, ease(k)); o.position.y += Math.sin(k * Math.PI) * .18; o.scale.setScalar(1 - k * .75); lid.position.y = .162 + Math.sin(k * Math.PI) * .07; }, fin);
+  const fin = () => { o.position.copy(home); o.scale.setScalar(.01); tween(.25, k => o.scale.setScalar(Math.max(.01, k * s0))); P.burst(TEAPOT_POS.clone().add(V3(0, .05, 0)), { color: 0xbfe6ff, n: 8, size: .05, speed: .25, up: .6, life: .5, gravity: 2 }); P.burst(TEAPOT_POS.clone().add(V3(0, .12, 0)), { color: b.recipe.col, n: 6, size: .07, speed: .35, up: .9, life: .45, gravity: 2.5, additive: false }); E.tone(520 + b.added.length * 120, .1, 'sine', .08); E.noise(.12, .025, 900, 2); drawRecipe(); if (b.added.length >= b.recipe.need.length) finishBrew(instant); };
+  if (instant) fin(); else tween(.38, k => { o.position.lerpVectors(from, top, ease(k)); o.position.y += Math.sin(k * Math.PI) * .18; o.scale.setScalar(s0 * (1 - k * .75)); lid.position.y = .162 + Math.sin(k * Math.PI) * .07; }, fin);
   return true;
 }
 function finishBrew(instant) {
@@ -521,14 +685,22 @@ function finishBrew(instant) {
   const cup = makeCup(r.col); cup.position.copy(TEAPOT_POS).add(V3(.32, -.2, .22)); world.add(cup);
   const s = c.seat, t = s.table; const target = V3(s.x + (t.x - s.x) * .5, .75, s.z + (t.z - s.z) * .5);
   const fly = () => { closeBrew(false); const from = cup.position.clone(); tween(instant ? .01 : .9, k => { cup.position.lerpVectors(from, target, ease(k)); cup.position.y += Math.sin(k * Math.PI) * 1.1; cup.rotation.y = k * 6.28; }, () => { cup.rotation.y = s.ry + Math.PI / 2; serve(c, cup); }); };
-  if (instant) fly(); else { const tp = teapot.rotation.z; tween(.7, k => { teapot.rotation.z = -Math.sin(k * Math.PI) * .5; cup.scale.setScalar(.3 + k * .7); }, () => { teapot.rotation.z = tp; setTimeout(fly, 250); }); }
+  if (instant) fly(); else { const tp = teapot.rotation.z; stream.material.color.set(r.col); stream.visible = true; E.noise(.8, .035, 1400, .8); const cupTop = cup.position.clone().add(V3(0, .1, 0)), spout = V3();
+    tween(.9, k => { const tilt = Math.sin(Math.min(1, k * 1.25) * Math.PI); teapot.rotation.z = -tilt * .55; cup.scale.setScalar(.3 + Math.min(1, k * 1.6) * .7);
+      // pour stream: a thin ribbon from the spout tip to the cup while the pot is tipped
+      teapot.updateMatrixWorld(true); teapot.localToWorld(spout.set(.215, .17, 0)); const pour = E.smooth(.15, .35, k) * (1 - E.smooth(.7, .82, k)); stream.visible = pour > .02; const d = cupTop.clone().sub(spout), len = d.length(); stream.position.copy(spout).addScaledVector(d, .5); stream.quaternion.setFromUnitVectors(QY, d.normalize()); stream.scale.set(pour, len, pour);
+      if (pour > .5 && Math.random() < .3) P.burst(cupTop, { color: 0xffffff, n: 2, size: .06, speed: .08, up: .5, life: .8, gravity: -.2, additive: false }); },
+    () => { teapot.rotation.z = tp; stream.visible = false; for (let k = 0; k < 4; k++) setTimeout(() => P.burst(cupTop, { color: 0xffffff, n: 3, size: .08, speed: .06, up: .45, life: 1.1, gravity: -.15, additive: false }), k * 150); setTimeout(fly, 300); }); }
 }
 function makeCup(col) { const g = new THREE.Group(); const sc = E.instance('cup-saucer', { scale: .15 }); g.add(sc); const cp = E.instance('cup-tea', { scale: .105 }); cp.position.y = .012; cp.traverse(o => { if (o.isMesh && !o.userData.outline && o.material?.name === 'brownDarkest') { o.material = o.material.clone(); o.material.color.set(col); o.material.roughness = .15; } }); g.add(cp); shadowAll(g); return g; }
-function closeBrew(cancel) { const b = G.brew; if (!b) return; if (cancel) { b.c.brewing = false; for (const a of b.added) if (!PANTRY[a]) { S.inv[a]++; b.c.reserve.push(a); } } for (const id of ING) ingObjs[id].visible = false; selRing.visible = false; if (recipeEl) recipeEl.remove(); recipeEl = null; G.brew = null; G.mode = 'cafe'; G.drag = null; setPad(); }
+function closeBrew(cancel) { const b = G.brew; if (!b) return; for (const [, g] of decorObjs) if (g.userData.brewHidden) { g.visible = true; g.userData.brewHidden = false; } if (cancel) { b.c.brewing = false; for (const a of b.added) if (!PANTRY[a]) { S.inv[a]++; b.c.reserve.push(a); } } for (const id of ING) ingObjs[id].visible = false; selRing.visible = false; if (recipeEl) recipeEl.remove(); recipeEl = null; G.brew = null; G.mode = 'cafe'; G.drag = null; setPad(); }
 function serve(c, cup) {
   c.cup = cup; c.brewing = false; c.reserve = null; if (c.tag) { c.tag.remove(); c.tag = null; }
-  const r = c.recipe; let coins = r.price, hearts = 1; if (c.def.vip && S.visDay !== dayKey()) { coins += 20; hearts += 3; S.visDay = dayKey(); E.toast(T().adored(nm(c.def)), 2600, true); }
-  S.coins += coins; S.hearts += hearts; S.served++; G.sess.served++; G.sess.coins += coins; G.sess.hearts += hearts; G.sess.teas[r.id] = (G.sess.teas[r.id] || 0) + 1;
+  const r = c.recipe; let coins = r.price, hearts = r.need.length >= 3 ? 2 : 1; const firstTime = !S.book.teas[r.id];
+  if (c.def.vip && S.visDay !== dayKey()) { coins += 20; hearts += 3; S.visDay = dayKey(); E.toast(T().adored(nm(c.def)), 2600, true); }
+  S.coins += coins; S.hearts += hearts; S.served++; G.sess.served++; G.sess.coins += coins; G.sess.hearts += hearts; G.sess.teas[r.id] = (G.sess.teas[r.id] || 0) + 1; S.book.teas[r.id] = (S.book.teas[r.id] || 0) + 1;
+  if (firstTime) G.sess.newTeas = (G.sess.newTeas || 0) + 1;
+  progressRequests(r, c); checkLevel();
   c.state = 'happy'; c.t = 0; c.happyEnd = 1.4; SFX.coin(); setTimeout(() => SFX.good(), 120);
   const hp = c.ch.pivot.position.clone().add(V3(0, c.def.animal ? .9 : 1.5, 0)); P.burst(hp, { color: 0xff7b9c, n: 14, speed: 1, up: 2, size: .22, life: 1, gravity: 2 }); P.burst(hp, { color: 0xffd166, n: 10, speed: 1.2, up: 2.2, size: .14, life: .9 });
   const sp = E.toScreen(hp, camera); E.floatText(`+${coins} 🪙  ❤️`, sp.x, sp.y, 'gold');
@@ -540,7 +712,7 @@ let resultsCount = 0;
 function sessionResults() {
   if (G.modal || G.sess.resulted) return false; G.pendingRes = 0; G.sess.resulted = true; G.modal = true; if (G.mode === 'brew') closeBrew(true); if (G.mode === 'decor') closeDecor(); closeSheet(); setPad(); const s = G.sess, t = T(); const fav = Object.entries(s.teas).sort((a, b) => b[1] - a[1])[0];
   resultsCount++;
-  E.results({ gameId: 'brew', title: t.shift, stats: [[t.stServed, s.served], [t.stCoins, s.coins], [t.stHearts, s.hearts], [t.stFav, fav ? nm(RBY[fav[0]]) : '–']], xp: 40 + s.coins * 1.5, coins: Math.round(s.coins / 2), best: S.hearts, bestLabel: t.bestLabel, share: `My little tea café has ${S.hearts} hearts in Brew and Bloom (Inoa Games)! ${location.href}`, onAgain: () => { G.modal = false; newShift(); hud(); setPad(); E.toast(t.nextShift, 1800); } });
+  E.results({ gameId: 'brew', title: t.shift, stats: [[t.stServed, s.served], [t.stCoins, s.coins], [t.stHearts, s.hearts], [t.stFav, fav ? nm(RBY[fav[0]]) : '–']], xp: 40 + s.coins * 1.5, coins: Math.round(s.coins / 2), best: S.hearts, bestLabel: `🏡 ${t.lvl(level())} · ${t.bestLabel}`, share: `My little tea café has ${S.hearts} hearts in Brew and Bloom (Inoa Games)! ${location.href}`, onAgain: () => { G.modal = false; newShift(); hud(); setPad(); E.toast(t.nextShift, 1800); } });
   const btn = document.querySelector('.ig-results [data-a=again]'); if (btn) btn.textContent = t.keep; return true;
 }
 
@@ -550,13 +722,80 @@ function openSheet(html) { closeSheet(); sheetEl = document.createElement('div')
 function potTap(i) {
   if (i >= S.unlocked) { if (i > S.unlocked) { E.toast(T().unlockOrder, 1800); return; } const cost = POT_UNLOCK[i]; const sh = openSheet(`<h3>${T().unlockT} <button class="bb-x">✕</button></h3><p class="ig-sub">${T().unlockSub}</p><button class="ig-btn" id="bbUnlock" ${S.coins < cost ? 'disabled style="opacity:.5"' : ''}>${T().unlockFor(cost)}</button>`); sh.querySelector('#bbUnlock').onclick = () => { if (S.coins < cost) return; S.coins -= cost; S.unlocked++; SFX.level(); P.burst(pots[i].g.position.clone().add(V3(0, .5, 0)), { color: 0xffd166, n: 20 }); closeSheet(); save(); hud(); }; return; }
   const p = S.pots[i]; if (p) { const k = potProgress(i); if (k >= 1) harvest(i); else { const left = SEEDS[p.seed].time * (1 - k); E.toast(T().readyIn(SEEDS[p.seed].e, nm(SEEDS[p.seed]), fmtT(left)), 2200); SFX.tick(); } return; }
-  const sh = openSheet(`<h3>${T().plantT} <button class="bb-x">✕</button></h3><div class="bb-cards">${Object.entries(SEEDS).map(([id, s]) => `<button class="bb-card" data-s="${id}" ${S.coins < s.cost ? 'disabled' : ''}><span class="e">${s.e}</span>${nm(s)}<small>${fmtT(s.time).replace(':00', T().min)} · ${s.cost ? s.cost + ' 🪙' : T().free}</small></button>`).join('')}</div>`);
+  const t = T(), list = SEED_IDS.filter(id => !SEEDS[id].season || SEEDS[id].season === season());
+  const sh = openSheet(`<h3>${t.plantT} <button class="bb-x">✕</button></h3><div class="bb-cards">${list.map(id => { const s = SEEDS[id], open = seedOpen(id); return `<button class="bb-card ${s.season ? 'season' : ''}" data-s="${id}" ${!open || S.coins < s.cost ? 'disabled' : ''}><span class="e">${open ? s.e : '🔒'}</span>${nm(s)}<small>${open ? `${fmtT(s.time).replace(':00', t.min)} · ${s.cost ? s.cost + ' 🪙' : t.free}` : t.lvl(s.lv)}</small>${s.season && open ? `<small class="tag">${SEASONS[s.season][0]} ${t.inSeason}</small>` : ''}</button>`; }).join('')}</div>`);
   sh.querySelectorAll('[data-s]').forEach(b => b.onclick = () => { plant(i, b.dataset.s); closeSheet(); });
   if (!G.saidSeed) { G.saidSeed = true; E.say(T().saySeed); }
 }
-function plant(i, seed) { const s = SEEDS[seed]; if (S.coins < s.cost || i >= S.unlocked || S.pots[i]) return false; S.coins -= s.cost; S.pots[i] = { seed, t0: Date.now() }; S.lastSeed = seed; pots[i].pop = .5; SFX.pop(); E.tone(660, .1, 'sine', .07, 200, .05); P.burst(pots[i].g.position.clone().add(V3(0, .35, 0)), { color: 0x8a6a4a, n: 10, size: .08, speed: .5, up: 1.2, life: .6, additive: false }); save(); hud(); return true; }
-function harvest(i, quiet) { const p = S.pots[i]; if (!p || potProgress(i) < 1) return 0; const s = SEEDS[p.seed]; S.inv[p.seed] += s.yield; S.pots[i] = null; pots[i].lastSeed = p.seed; const pos = pots[i].g.position.clone().add(V3(0, .6, 0)); P.burst(pos, { color: p.seed === 'lav' ? 0xb49ad8 : p.seed === 'moon' ? 0xc9d4ff : p.seed === 'cham' ? 0xfff6c8 : 0x8fdc8a, n: 18, speed: 1, up: 2, size: .14, life: .9 }); if (!quiet) { SFX.good(); const sp = E.toScreen(pos, camera); E.floatText(`+${s.yield} ${s.e}`, sp.x, sp.y, 'gold'); } save(); hud(); return s.yield; }
-function tend() { let h = 0, pl = 0; for (let i = 0; i < S.unlocked; i++) { const seed = S.pots[i]?.seed; if (S.pots[i] && potProgress(i) >= 1) { h += harvest(i, true); } if (!S.pots[i]) { const want = pots[i].lastSeed || seed || S.lastSeed || 'mint'; if (plant(i, S.coins >= SEEDS[want].cost ? want : 'mint')) pl++; } } if (h || pl) { SFX.good(); E.toast(`${h ? T().harvested(h) : ''}${h && pl ? ' · ' : ''}${pl ? T().planted(pl) : ''} 🌿`, 1800); } else E.toast(T().growing, 1500); }
+function plant(i, seed) { const s = SEEDS[seed]; if (!s || !plantable(seed) || S.coins < s.cost || i >= S.unlocked || S.pots[i]) return false; S.coins -= s.cost; S.pots[i] = { seed, t0: Date.now() }; S.lastSeed = seed; pots[i].pop = .5; SFX.pop(); E.tone(660, .1, 'sine', .07, 200, .05); P.burst(pots[i].g.position.clone().add(V3(0, .35, 0)), { color: 0x8a6a4a, n: 10, size: .08, speed: .5, up: 1.2, life: .6, additive: false }); save(); hud(); return true; }
+function harvest(i, quiet) { const p = S.pots[i]; if (!p || potProgress(i) < 1) return 0; const s = SEEDS[p.seed]; S.inv[p.seed] += s.yield; S.book.plants[p.seed] = (S.book.plants[p.seed] || 0) + s.yield; S.pots[i] = null; pots[i].lastSeed = p.seed; const pos = pots[i].g.position.clone().add(V3(0, .6, 0)); P.burst(pos, { color: p.seed === 'lav' ? 0xb49ad8 : p.seed === 'moon' ? 0xc9d4ff : p.seed === 'cham' ? 0xfff6c8 : 0x8fdc8a, n: 18, speed: 1, up: 2, size: .14, life: .9 }); if (!quiet) { SFX.good(); const sp = E.toScreen(pos, camera); E.floatText(`+${s.yield} ${s.e}`, sp.x, sp.y, 'gold'); } save(); hud(); return s.yield; }
+function tend() { let h = 0, pl = 0; for (let i = 0; i < S.unlocked; i++) { const seed = S.pots[i]?.seed; if (S.pots[i] && potProgress(i) >= 1) { h += harvest(i, true); } if (!S.pots[i]) { const want = pots[i].lastSeed || seed || S.lastSeed || 'mint'; if (plant(i, plantable(want) && S.coins >= SEEDS[want].cost ? want : 'mint')) pl++; } } if (h || pl) { SFX.good(); E.toast(`${h ? T().harvested(h) : ''}${h && pl ? ' · ' : ''}${pl ? T().planted(pl) : ''} 🌿`, 1800); } else E.toast(T().growing, 1500); }
+
+/* ================= regulars' requests, café levels, journal ================= */
+// three gentle requests a day (same for the whole day, no timers, nothing lost if left undone)
+function ensureRequests() {
+  if (S.req.day === dayKey() && S.req.list.length) return false;
+  let s = 7; for (const ch of dayKey()) s = (s * 31 + ch.charCodeAt(0)) % 100003;
+  const ok = RECIPES.filter(r => recipeOpen(r) && r.need.every(i => PANTRY[i] || plantable(i)));
+  const who = REGULARS.map((r, k) => [hash(s, k + 1), r]).sort((a, b) => a[0] - b[0]).slice(0, 3).map(x => x[1]);
+  const used = new Set();
+  S.req = { day: dayKey(), bonus: false, list: who.map((w, k) => { let pool = ok.filter(r => !used.has(r.id)); if (!pool.length) pool = ok.length ? ok : [RBY.hl]; const r = pool[Math.floor(hash(s, k * 3 + 11) * pool.length)]; used.add(r.id); return { who: w.name, r: r.id, n: hash(s, k * 3 + 12) < .4 && r.need.length < 3 ? 2 : 1, got: 0, done: false }; }) };
+  save(); return true;
+}
+function progressRequests(r, c) {
+  const open = S.req.list.filter(q => !q.done && q.r === r.id); if (!open.length) return;
+  const q = open.find(q => q.who === c.def.name) || open[0]; q.got++; const reg = REG_BY[q.who], t = T();
+  if (q.got < q.n) { E.toast(t.reqGot(q.who, reg.e, nm(r), q.got, q.n), 1800); return; }
+  q.done = true; const bonus = 10 + r.price * q.n; S.hearts += 2; G.sess.hearts += 2; S.coins += bonus; G.sess.coins += bonus;
+  const ch = S.friends[q.who] || 0; if (ch < 3) S.friends[q.who] = ch + 1;
+  showNote(reg, Math.min(ch, 2), `+${bonus} 🪙 · +2 ❤️`, ch >= 3);
+  if (S.req.list.every(x => x.done) && !S.req.bonus) { S.req.bonus = true; S.coins += 25; G.sess.coins += 25; setTimeout(() => { E.toast(t.reqAll, 3000, true); SFX.win(); }, 4200); }
+}
+// a little story note (non-blocking: taps and play continue underneath)
+let noteEl = null, noteTO = 0;
+function showNote(reg, ch, reward, repeat) {
+  const t = T(), story = reg.story[ch][LANG === 'es' ? 1 : 0]; if (noteEl) noteEl.remove(); clearTimeout(noteTO);
+  noteEl = document.createElement('div'); noteEl.className = 'bb-note'; noteEl.innerHTML = `<div class="bb-note-h"><span class="e">${reg.e}</span><b>💌 ${t.noteFrom(reg.name)}</b><small>${repeat ? '❤️❤️❤️' : t.chapter(ch + 1)}</small></div><p>${repeat ? t.reqFinish(reg.name) : story}</p><small class="rw">${reward}</small>`;
+  noteEl.onclick = () => { noteEl?.remove(); noteEl = null; }; document.body.appendChild(noteEl); SFX.level(); noteTO = setTimeout(() => { noteEl?.remove(); noteEl = null; }, 9000);
+  E.say(repeat ? t.reqFinish(reg.name) : story);
+}
+function checkLevel() { if (level() > S.lvl) G.lvlQueue = true; }
+let lvlEl = null;
+function showLevelUp() {
+  G.lvlQueue = false; const to = level(); if (to <= S.lvl) return; const from = S.lvl, t = T(), L = LEVELS[to - 1]; const got = []; for (let l = from + 1; l <= to; l++) got.push(...unlocksAt(l));
+  S.lvl = to; save(); G.modal = true; setPad(); closeSheet();
+  lvlEl = document.createElement('div'); lvlEl.className = 'ig-screen bb-lvl'; lvlEl.innerHTML = `<div class="ig-card"><div class="ig-kicker">${t.lvUp}</div><h2>🏡 ${t.lvl(to)} · ${nm(L)}</h2>${got.length ? `<p class="ig-sub">${t.lvNew}</p><div class="bb-chips">${got.map(g => `<span>${g}</span>`).join('')}</div>` : ''}${to >= LEVELS.length ? `<p class="ig-sub">${t.lvMax}</p>` : ''}<button class="ig-btn" data-a="ok">${t.lovely}</button></div>`;
+  document.body.appendChild(lvlEl); SFX.win(); for (let k = 0; k < 4; k++) setTimeout(() => P.burst(V3(rnd(-4, 4), 2.5, rnd(0, 4)), { color: [0xffd166, 0xff7b9c, 0x9fe3cf, 0xb49ad8][k], n: 24, speed: 2, up: 2, size: .18, life: 1.4 }), k * 160);
+  lvlEl.querySelector('[data-a=ok]').onclick = () => { lvlEl.remove(); lvlEl = null; G.modal = false; setPad(); hud(); drawMenu(); applyCosmetics(); };
+  E.say(t.lvSay(to, nm(L)));
+}
+// level 9: golden teapot band; level 10: a gold star on the entrance sign
+function applyCosmetics() { const l = level(); MT.ceramicBand.color.set(l >= 9 ? 0xd9b04a : 0x7fa88e); MT.ceramicBand.metalness = l >= 9 ? .7 : 0; MT.ceramicBand.roughness = l >= 9 ? .25 : .3; signStar.visible = l >= 10; }
+let bookEl = null, bookTab = 0;
+function openBook(tab) { if (G.modal || G.mode === 'title' || bookEl) return; if (G.mode === 'brew') closeBrew(true); if (G.mode === 'decor') closeDecor(); closeSheet(); if (tab != null) bookTab = tab; G.modal = true; bookEl = document.createElement('div'); bookEl.className = 'ig-screen bb-book'; document.body.appendChild(bookEl); drawBook(); setPad(); SFX.whoosh(); }
+function closeBook() { if (!bookEl) return; bookEl.remove(); bookEl = null; G.modal = false; setPad(); hud(); }
+function drawBook() {
+  if (!bookEl) return; const t = T(), lv = level(), L = LEVELS[lv - 1], nx = LEVELS[lv], se = season(); let body = '';
+  const ingE = r => r.need.map(i => ING_INFO[i][0]).join('');
+  if (bookTab === 0) {
+    const pct = nx ? Math.round((S.hearts - L.h) / (nx.h - L.h) * 100) : 100, nextU = nx ? unlocksAt(lv + 1) : [];
+    const sSeed = Object.values(SEEDS).find(s => s.season === se);
+    body = `<div class="bb-lv"><b>🏡 ${t.lvl(lv)} · ${nm(L)}</b><div class="bb-bar"><i style="width:${pct}%"></i></div><small>${nx ? t.nextLv(lv + 1, nx.h - S.hearts) : t.lvMax}</small>${nextU.length ? `<div class="bb-chips sm">${nextU.map(u => `<span>${u}</span>`).join('')}</div>` : ''}</div>
+      <p class="bb-line">${t.seasonNow(SEASONS[se][0], seasonName(se), sSeed.e + ' ' + nm(sSeed))}${sSeed.lv > lv ? ` · ${t.lvl(sSeed.lv)}` : ''}</p>
+      <p class="bb-line">${S.visDay === dayKey() ? '✅ ' + t.visDone(nm(VISITOR)) : t.visitorLine(nm(VISITOR), VISITOR.e, nm(RBY[VISITOR.fav]))}</p>
+      <h4>${t.reqT}</h4>${S.req.list.length ? `<ul class="bb-reqs">${S.req.list.map(q => { const reg = REG_BY[q.who], r = RBY[q.r]; return `<li class="${q.done ? 'done' : ''}"><span class="e">${reg.e}</span><div><b>${q.who}</b> · ${r.e} ${nm(r)} <small>${ingE(r)}</small><p>“${reg.why[LANG === 'es' ? 1 : 0].replace('{tea}', (q.n > 1 ? q.n + '× ' : '') + nm(r))}”</p></div><span class="pr">${q.done ? '✓' : `${q.got}/${q.n}`}</span></li>`; }).join('')}</ul>` : `<p class="bb-line">${t.reqNone}</p>`}`;
+  } else if (bookTab === 1) {
+    body = `<div class="bb-grid">${RECIPES.filter(r => !r.season || r.season === se || S.book.teas[r.id]).map(r => { const n = S.book.teas[r.id] || 0, open = recipeOpen(r); const off = r.season && r.season !== se;
+      return `<div class="bb-it ${n ? '' : 'new'} ${open ? '' : 'lock'}"><span class="e">${open || n ? r.e : '🔒'}</span><b>${open || n ? nm(r) : '???'}</b><small>${open || n ? ingE(r) + ' · ' + r.price + ' 🪙' : t.lvl(r.lv)}</small><small>${off ? t.backIn(seasonName(r.season)) : n ? t.brewedN(n) : open ? t.notBrewed : ''}</small></div>`; }).join('')}</div>`;
+  } else if (bookTab === 2) {
+    body = `<div class="bb-grid">${SEED_IDS.filter(id => !SEEDS[id].season || SEEDS[id].season === se || S.book.plants[id]).map(id => { const s = SEEDS[id], n = S.book.plants[id] || 0, open = seedOpen(id), off = s.season && s.season !== se;
+      return `<div class="bb-it ${n ? '' : 'new'} ${open ? '' : 'lock'}"><span class="e">${open || n ? s.e : '🔒'}</span><b>${open || n ? nm(s) : '???'}</b><small>${open ? fmtT(s.time).replace(':00', t.min) + (s.season ? ' · ' + SEASONS[s.season][0] : '') : t.lvl(s.lv)}</small><small>${off ? t.backIn(seasonName(s.season)) : n ? t.grownN(n) : open ? t.notGrown : ''}</small></div>`; }).join('')}</div>`;
+  } else {
+    body = `<p class="bb-line">${t.friendsHint}</p><ul class="bb-friends">${REGULARS.map(reg => { const ch = S.friends[reg.name] || 0; return `<li><div class="bb-fh"><span class="e">${reg.e}</span><b>${reg.name}</b><span>${'❤️'.repeat(ch)}${'🤍'.repeat(3 - ch)}</span></div>${reg.story.slice(0, ch).map((s, i) => `<p><small>${t.chapter(i + 1)}</small> ${s[LANG === 'es' ? 1 : 0]}</p>`).join('') || `<p class="mute">${t.storyLocked}</p>`}</li>`; }).join('')}</ul>`;
+  }
+  bookEl.innerHTML = `<div class="ig-card bb-bookcard"><div class="bb-bookh"><h2>📖 ${t.journal}</h2><button class="bb-x" data-a="close" aria-label="${t.close}">✕</button></div><div class="bb-tabs">${t.tabs.map((n, i) => `<button class="ig-chipbtn ${i === bookTab ? 'on' : ''}" data-tab="${i}">${n}</button>`).join('')}</div><div class="bb-bookbody">${body}</div></div>`;
+  bookEl.querySelector('[data-a=close]').onclick = closeBook; bookEl.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { bookTab = +b.dataset.tab; SFX.click(); drawBook(); bookEl.querySelector(`[data-tab="${bookTab}"]`)?.focus(); });
+}
 
 /* ================= decor mode ================= */
 let decorEl = null; const gridLines = (() => { const pts = []; for (let x = -6; x <= 6; x++) pts.push(x, .02, 0, x, .02, 5); for (let z = 0; z <= 5; z++) pts.push(-6, .02, z, 6, .02, z); const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3)); const l = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: .35 })); l.visible = false; world.add(l); return l; })();
@@ -575,24 +814,34 @@ function validPlace(d) { const def = DBY[d.id], f = footprint(d); if (f.x0 < -6.
   return seatsReachable(buildBlock(def.seats ? [{ x0: d.x - .5, x1: d.x + .5, z0: d.z - .5, z1: d.z + .5 }, ...[-1, 1].map(s => { const sx = d.x + (d.r % 2 ? 0 : s * .85), sz = d.z + (d.r % 2 ? s * .85 : 0); return { x0: sx - .24, x1: sx + .24, z0: sz - .24, z1: sz + .24 }; })] : extra)); }
 function openDecor() {
   if (G.modal || G.mode === 'decor') return; if (G.mode === 'brew') closeBrew(true); closeSheet(); G.mode = 'decor'; G.decor = { sel: null, ghost: null, x: 1, z: 4, r: 0, remove: false }; gridLines.visible = true; SFX.whoosh();
-  decorEl = document.createElement('div'); decorEl.className = 'bb-sheet'; document.body.appendChild(decorEl); drawDecor(); setPad();
+  // landscape: the decor shop is a side panel, so the whole café floor stays big and visible while you place things
+  decorEl = document.createElement('div'); decorEl.className = 'bb-sheet' + (PORTRAIT() ? '' : ' side'); document.body.appendChild(decorEl); drawDecor(); setPad();
   if (!G.saidDecor) { G.saidDecor = true; E.say(T().sayDecor); }
 }
-function drawDecor() { const D = G.decor; if (!decorEl) return; decorEl.innerHTML = `<h3><span>${T().decorate} · <b>${S.coins}</b> 🪙</span><button class="bb-x" id="bbDone">${T().done}</button></h3><div class="bb-cards">${DECOR.map(d => { const owned = d.kind === 'wall' && S.walls.includes(d.id); const on = d.kind === 'wall' ? S.wall === d.id : D.sel === d.id; return `<button class="bb-card ${on ? 'on' : ''} ${!D.sel && !D.remove && G.decorCur === DECOR.indexOf(d) && G.usedPad ? 'focus' : ''}" data-d="${d.id}" ${!owned && S.coins < d.cost ? 'disabled' : ''}><span class="e">${d.e}</span>${nm(d)}<small>${owned ? (on ? T().onWall : T().owned) : d.cost ? d.cost + ' 🪙' : T().free}</small></button>`; }).join('')}</div><div class="bb-tools"><button class="ig-chipbtn" id="bbRot">${T().rotate}</button><button class="ig-chipbtn ${D.remove ? 'on' : ''}" id="bbRem">${T().putAway}</button><button class="ig-btn" id="bbPlace" ${D.sel ? '' : 'disabled style="opacity:.5"'}>${T().placeHere}</button></div>`;
+function drawDecor() { const D = G.decor; if (!decorEl) return; decorEl.innerHTML = `<h3><span>${T().decorate} · <b>${S.coins}</b> 🪙</span><button class="bb-x" id="bbDone">${T().done}</button></h3><div class="bb-cards">${DECOR.map(d => { const owned = d.kind === 'wall' && S.walls.includes(d.id), open = isOpen(d); const on = d.kind === 'wall' ? S.wall === d.id : D.sel === d.id; return `<button class="bb-card ${on ? 'on' : ''} ${open ? '' : 'lock'} ${!D.sel && !D.remove && G.decorCur === DECOR.indexOf(d) && G.usedPad ? 'focus' : ''}" data-d="${d.id}" ${!open || (!owned && S.coins < d.cost) ? 'disabled' : ''}><span class="e">${open ? d.e : '🔒'}</span>${nm(d)}<small>${!open ? T().lvl(d.lv) : owned ? (on ? T().onWall : T().owned) : d.cost ? d.cost + ' 🪙' : T().free}</small></button>`; }).join('')}</div><div class="bb-tools"><button class="ig-chipbtn" id="bbRot">${T().rotate}</button><button class="ig-chipbtn ${D.remove ? 'on' : ''}" id="bbRem">${T().putAway}</button><button class="ig-btn" id="bbPlace" ${D.sel ? '' : 'disabled style="opacity:.5"'}>${T().placeHere}</button></div>`;
   decorEl.querySelector('#bbDone').onclick = closeDecor; decorEl.querySelector('#bbRot').onclick = () => rotateGhost(); decorEl.querySelector('#bbPlace').onclick = () => placeGhost(); decorEl.querySelector('#bbRem').onclick = () => { D.remove = !D.remove; selectDecor(null); E.toast(D.remove ? T().putAwayOn : T().putAwayOff, 1600); drawDecor(); };
   decorEl.querySelectorAll('[data-d]').forEach(b => b.onclick = () => { const def = DBY[b.dataset.d]; if (def.kind === 'wall') { if (!S.walls.includes(def.id)) { if (S.coins < def.cost) return; S.coins -= def.cost; S.walls.push(def.id); SFX.coin(); } S.wall = def.id; applyWall(); save(); hud(); drawDecor(); return; } D.remove = false; selectDecor(def.id); drawDecor(); }); }
 function selectDecor(id) { const D = G.decor; if (D.ghost) { world.remove(D.ghost); D.ghost = null; } D.sel = id; if (!id) return; const g = buildDecor(id); g.traverse(o => { if (o.isMesh) { o.castShadow = false; o.userData.ghost = true; if (o.userData.outline) o.visible = false; } }); D.ghost = g; world.add(g); snapGhost(D.x, D.z); }
 function ghostRec() { const D = G.decor; return { id: D.sel, x: D.x, z: D.z, r: D.r }; }
 function snapGhost(x, z) { const D = G.decor; const def = DBY[D.sel]; if (!def) return; const w = D.r % 2 ? def.d : def.w, d = D.r % 2 ? def.w : def.d; D.x = clamp(Math.round(x - w / 2) + w / 2, -6 + w / 2, 6 - w / 2); D.z = clamp(Math.round(z - d / 2) + d / 2, d / 2, 5 - d / 2); D.ghost.position.set(D.x, .02, D.z); D.ghost.rotation.y = -D.r * Math.PI / 2; const ok = validPlace(ghostRec()); D.ghost.traverse(o => { if (o.isMesh && o.userData.ghost) o.material = ok ? ghostOK : ghostNO; }); D.ok = ok; }
 function rotateGhost() { const D = G.decor; if (!D?.ghost) return; D.r = (D.r + 1) % 4; snapGhost(D.x, D.z); SFX.click(); }
-function placeGhost() { const D = G.decor; if (!D?.sel) return; const def = DBY[D.sel]; if (!D.ok) { E.toast(T().notThere, 1600); SFX.tick(); return; } if (S.coins < def.cost) { E.toast(T().needCoins(def.cost), 1600); return; } S.coins -= def.cost; const d = ghostRec(); S.decor.push(d); placeDecorObj(d); BLOCK = buildBlock(); SFX.snap(); P.burst(V3(d.x, .4, d.z), { color: 0xffe9a8, n: 16, speed: 1.2, up: 1.5 }); save(); hud(); if (S.coins < def.cost) selectDecor(null); else snapGhost(D.x, D.z); drawDecor(); }
+function placeGhost() { const D = G.decor; if (!D?.sel) return; const def = DBY[D.sel]; if (!isOpen(def)) return; if (!D.ok) { E.toast(T().notThere, 1600); SFX.tick(); return; } if (S.coins < def.cost) { E.toast(T().needCoins(def.cost), 1600); return; } S.coins -= def.cost; const d = ghostRec(); S.decor.push(d); placeDecorObj(d); BLOCK = buildBlock(); SFX.snap(); P.burst(V3(d.x, .4, d.z), { color: 0xffe9a8, n: 16, speed: 1.2, up: 1.5 }); save(); hud(); if (S.coins < def.cost) selectDecor(null); else snapGhost(D.x, D.z); drawDecor(); }
 function removeDecor(d) { if (DBY[d.id].seats && SEATS.some(s => s.decor === d && s.occ)) { E.toast(T().tableBusy, 1600); return; } removeDecorObj(d); S.decor.splice(S.decor.indexOf(d), 1); S.coins += DBY[d.id].cost; BLOCK = buildBlock(); SFX.pop(); save(); hud(); drawDecor(); }
 function closeDecor() { const D = G.decor; if (D?.ghost) world.remove(D.ghost); G.decor = null; gridLines.visible = false; if (decorEl) decorEl.remove(); decorEl = null; G.mode = 'cafe'; setPad(); }
+
+// decor with a little life: the piano plays a tune, the café pup says hi, fountains splash
+function decorTap(d) { const g = decorObjs.get(d); if (!g) return; const at = g.position.clone().add(V3(0, 1.2, 0));
+  if (d.id === 'piano') { if (G.pianoT > G.t) return; G.pianoT = G.t + 2; const sc = [523, 587, 659, 784, 880, 1047]; let k = 0; for (let i = 0; i < 6; i++) { k = clamp(k + pick([-1, 1, 1, 2]), 0, 5); E.tone(sc[k], .32, 'triangle', .07, 0, i * .2); } for (let i = 0; i < 3; i++) setTimeout(() => P.burst(at, { color: 0xb49ad8, n: 4, speed: .5, up: 1.2, size: .14, life: 1.2, gravity: -.4 }), i * 300); E.toast(T().pianoHi, 1600); for (const c of G.custs) if (c.state === 'wait') c.t = 0; }
+  else if (d.id === 'petbed') { const pv = g.userData.pup; if (pv) pv.userData.hop = .6; E.tone(330, .09, 'square', .05, -80); E.tone(300, .1, 'square', .05, -80, .16); P.burst(at.setY(.7), { color: 0xff7b9c, n: 8, speed: .6, up: 1.4, size: .16, life: .9 }); E.toast(T().pupHi, 1500); }
+  else { SFX.click(); P.burst(at.setY(.8), { color: 0xffe9a8, n: 6, speed: .5, up: 1, size: .1, life: .6 }); } }
+function updateDecorLife(dt) { for (const [d, g] of decorObjs) {
+  if (g.userData.fountain) { g.userData.ft = (g.userData.ft || 0) - dt; if (g.userData.ft <= 0) { g.userData.ft = .22; P.burst(g.position.clone().add(V3(0, .95, 0)), { color: 0xbfe6ff, n: 3, speed: .35, up: 1.3, size: .06, life: .55, gravity: 3.2, additive: false }); } }
+  const pv = g.userData.pup; if (pv) { const h = pv.userData.hop || 0; pv.scale.set(1, 1 + Math.sin(G.t * 2) * .025, 1); pv.position.y = .06 + (h > 0 ? Math.abs(Math.sin(h * 15)) * .15 : 0); pv.rotation.y = .6 + Math.sin(G.t * .4 + d.x) * .5; if (h > 0) pv.userData.hop = h - dt; } } }
 
 /* ================= barista ================= */
 // barista stands behind the counter, off to the left of the teapot so the brewing area stays clear (waistcoat outfit = café staff)
 // note: the chunky-head character rig stands ~2.5 m tall to the top of the head, so the barista is scaled down to read as a person behind a 1 m counter
-const barista = makeChar({ model: 'male' }); barista.pivot.scale.setScalar(.78); barista.pivot.position.set(COUNTER.x - 1.4, 0, -.5); barista.pivot.rotation.y = .55; let baristaCheer = 0;
+const barista = makeChar({ model: 'male' }); barista.pivot.scale.setScalar(1.05); barista.pivot.position.set(COUNTER.x - 1.4, 0, -.5); barista.pivot.rotation.y = .55; let baristaCheer = 0;
 
 /* ================= time of day ================= */
 const NIGHT = { top: 0x0b1230, hor: 0x252e58, glow: 0x6a78c0, sun: .24, sc: 0x9fb2ff, hemi: .26, hc: 0x46528c, exp: .95, lamp: 1, sd: [-.25, .75, .6] };
@@ -623,23 +872,45 @@ const cam = { az: .42, el: .66, zoom: 1, pos: V3(14, 12, 18), tgt: V3(0, .6, 0) 
 function fitDist(w, h) { const v = camera.fov * Math.PI / 180; const hf = 2 * Math.atan(Math.tan(v / 2) * camera.aspect); return Math.max((w / 2) / Math.tan(hf / 2), (h / 2) / Math.tan(v / 2)); }
 // place `center` at screen-height fraction fy (0 = top) for a camera looking along -dir at distance d
 function framed(center, dir, d, fy = .5) { dir = dir.clone().normalize(); const fwd = dir.clone().negate(), right = new THREE.Vector3().crossVectors(fwd, QY).normalize(), up = new THREE.Vector3().crossVectors(right, fwd); const visH = 2 * d * Math.tan(camera.fov * Math.PI / 360); const tgt = center.clone().addScaledVector(up, -(.5 - fy) * visH); return { pos: tgt.clone().addScaledVector(dir, d), tgt }; }
+// Fit a set of world points into the free screen box (margins in px) for a camera looking along -dir:
+// binary-search the distance, then pan so the content is centred in the box. Exact for any orbit angle / aspect.
+const fitCam = new THREE.PerspectiveCamera(), _fp = V3(), fitMemo = new Map();
+function fitView(key, pts, dir, tgt0, m) {
+  const W = innerWidth, H = innerHeight; key += `|${W}x${H}|${camera.fov}|${m.t}|${m.b}`; const hit = fitMemo.get(key); if (hit) return hit;
+  fitCam.fov = camera.fov; fitCam.aspect = W / H; fitCam.near = .1; fitCam.far = 1000; fitCam.updateProjectionMatrix(); dir = dir.clone().normalize();
+  const ax0 = -1 + 2 * m.l / W, ax1 = 1 - 2 * m.r / W, ay0 = -1 + 2 * m.b / H, ay1 = 1 - 2 * m.t / H;
+  const ext = (d, tgt) => { fitCam.position.copy(tgt).addScaledVector(dir, d); fitCam.lookAt(tgt); fitCam.updateMatrixWorld(); let x0 = 9, x1 = -9, y0 = 9, y1 = -9; for (const p of pts) { _fp.copy(p).project(fitCam); x0 = Math.min(x0, _fp.x); x1 = Math.max(x1, _fp.x); y0 = Math.min(y0, _fp.y); y1 = Math.max(y1, _fp.y); } return [x0, x1, y0, y1]; };
+  let lo = 1.5, hi = 150; const tgt = tgt0.clone();
+  for (let pass = 0; pass < 2; pass++) {
+    lo = 1.5; hi = 150; for (let i = 0; i < 24; i++) { const d = (lo + hi) / 2, e = ext(d, tgt); if (e[1] - e[0] <= ax1 - ax0 && e[3] - e[2] <= ay1 - ay0) hi = d; else lo = d; }
+    const fwd = dir.clone().negate(), right = V3().crossVectors(fwd, QY).normalize(), up = V3().crossVectors(right, fwd), halfH = hi * Math.tan(fitCam.fov * Math.PI / 360), halfW = halfH * fitCam.aspect;
+    for (let k = 0; k < 3; k++) { const e = ext(hi, tgt); tgt.addScaledVector(right, ((e[0] + e[1]) / 2 - (ax0 + ax1) / 2) * halfW).addScaledVector(up, ((e[2] + e[3]) / 2 - (ay0 + ay1) / 2) * halfH); }
+  }
+  const out = { d: hi, tgt, dir }; if (fitMemo.size > 400) fitMemo.clear(); fitMemo.set(key, out); return out;
+}
+const boxPts = (x0, x1, y0, y1, z0, z1) => { const o = []; for (const x of [x0, x1]) for (const y of [y0, y1]) for (const z of [z0, z1]) o.push(V3(x, y, z)); return o; };
+// the whole diorama: island plinth, greenhouse roof + ridge, café wall
+const PTS_ALL = [...boxPts(-6.1, 6.1, -.1, 0, -5.05, 5.1), V3(-6, 1.7, -5), V3(6, 1.7, -5), V3(-6, 2, 5), V3(0, 2.2, -2.5)];
+const PTS_DECOR = [...boxPts(-6, 6, 0, .4, 0, 5)];
+const PTS_BREW = [...boxPts(-5.8, -1.45, 1.06, 1.32, .12, .9), V3(COUNTER.x, 1.5, .3)];
+// touch-button rects, re-measured at most twice a second (avoids a forced layout every frame)
+let padCache = { t: -1, rects: [] };
+const padRects = () => { const now = performance.now(); if (now - padCache.t > 500) padCache = { t: now, rects: [...document.querySelectorAll('.ig-pad .ig-tbtn')].filter(b => b.offsetParent).map(b => b.getBoundingClientRect()) }; return padCache.rects; };
+const padTop = () => padRects().reduce((t, r) => Math.min(t, r.top), innerHeight);
 function camWant() {
-  const portrait = PORTRAIT();
+  const portrait = PORTRAIT(), q = v => Math.round(v * 50) / 50;
   if (G.mode === 'brew') {
-    // steeper look-down so the counter top, teapot and ingredient row read clearly; barista stays a small figure at the back-left
-    const c = V3(COUNTER.x - .25, COUNTER.top + .05, .45);
-    if (portrait) { const ui = recipeEl ? recipeEl.getBoundingClientRect().height + 24 : 260; const free = innerHeight - ui - 64; const fy = (64 + free / 2) / innerHeight; const d = fitDist(3.3, 1.5 * innerHeight / Math.max(120, free)); return framed(c, V3(0, 1.9, 1), d, fy); }
-    return framed(c, V3(0, 1.75, 1), fitDist(4.1, 2.6), .56);
+    // counter top, teapot, ingredient row and the barista's head all in view, above the recipe card
+    const ui = recipeEl ? Math.round(recipeEl.getBoundingClientRect().height) : 160;
+    const f = fitView('brew' + portrait, PTS_BREW, portrait ? V3(0, 1.9, 1) : V3(0, 1.25, 1), V3(COUNTER.x, 1.1, .4), { l: 10, r: 10, t: 64, b: ui + (portrait ? 22 : 46) });
+    return { pos: f.tgt.clone().addScaledVector(f.dir, f.d), tgt: f.tgt };
   }
   if (G.mode === 'title') { const a = G.t * .05 + .3; const tgt = V3(0, .6, -.3); const d = fitDist(15, 10.5); return { pos: tgt.clone().add(V3(Math.sin(a) * Math.cos(.55), Math.sin(.55), Math.cos(a) * Math.cos(.55)).multiplyScalar(d)), tgt }; }
-  const decor = G.mode === 'decor';
-  const tgt = decor ? V3(0, 0, portrait ? 3.0 : 2.9) : V3(0, .7, portrait ? .1 : -.25); const el = decor ? Math.max(cam.el, .95) : cam.el;
-  // portrait: the diorama's projected width grows with the orbit angle — widen the fit so the greenhouse never clips at the sides
-  const projW = 12 * Math.abs(Math.cos(cam.az)) + 10 * Math.abs(Math.sin(cam.az)) * Math.cos(el) + .8;
-  const d = (decor ? fitDist(portrait ? Math.max(12.5, projW) : 13.5, 8) : fitDist(portrait ? Math.max(12.8, projW) : 16.5, 12)) * cam.zoom;
-  const dir = V3(Math.sin(cam.az) * Math.cos(el), Math.sin(el), Math.cos(cam.az) * Math.cos(el));
-  if (decor && portrait) return framed(tgt, dir, d, .36);
-  return { pos: tgt.clone().add(dir.multiplyScalar(d)), tgt };
+  const decor = G.mode === 'decor'; const el = decor ? (portrait ? Math.max(cam.el, 1) : clamp(cam.el, .78, .9)) : cam.el;
+  const dir = V3(Math.sin(q(cam.az)) * Math.cos(q(el)), Math.sin(q(el)), Math.cos(q(cam.az)) * Math.cos(q(el)));
+  const side = decor && !!decorEl && decorEl.classList.contains('side'), bottom = decor ? (side ? 14 : decorEl ? Math.round(decorEl.getBoundingClientRect().height) + 10 : 200) : portrait ? Math.max(12, innerHeight - padTop() + 8) : 14;
+  const f = fitView((decor ? 'decor' + side : 'cafe') + q(cam.az) + ',' + q(el), decor ? PTS_DECOR : PTS_ALL, dir, V3(0, .6, 0), { l: 8, r: side ? Math.round(decorEl.getBoundingClientRect().width) + 12 : 8, t: decor ? 60 : 66, b: bottom });
+  return { pos: f.tgt.clone().addScaledVector(f.dir, f.d * cam.zoom), tgt: f.tgt };
 }
 function updateCamera(dt, snap) { const w = camWant(); const k = snap ? 1 : 1 - Math.pow(.015, dt); cam.pos.lerp(w.pos, k); cam.tgt.lerp(w.tgt, k); camera.position.copy(cam.pos); camera.lookAt(cam.tgt); }
 
@@ -650,13 +921,13 @@ function isVisible(o) { while (o) { if (!o.visible) return false; o = o.parent; 
 function planeHit(x, y, py) { ndc.set(x / innerWidth * 2 - 1, -(y / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera); const t = (py - ray.ray.origin.y) / ray.ray.direction.y; return t > 0 ? ray.ray.origin.clone().addScaledVector(ray.ray.direction, t) : null; }
 canvas.addEventListener('pointerdown', e => { E.audio(); ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, t: performance.now(), moved: false }); try { canvas.setPointerCapture(e.pointerId); } catch (_) { }
   if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), z: cam.zoom }; G.drag = null; }
-  else if (G.mode === 'brew' && G.brew && !G.brew.done && !G.modal) { const ingHits = ING.map(id => ingObjs[id].userData.hit); const h = hitTest(e.clientX, e.clientY, ingHits); if (h) { G.drag = { id: h.pick.id, pid: e.pointerId }; G.sel = ING.indexOf(h.pick.id); SFX.click(); } } });
+  else if (G.mode === 'brew' && G.brew && !G.brew.done && !G.modal) { const ingHits = ING.map(id => ingObjs[id].userData.hit); const h = hitTest(e.clientX, e.clientY, ingHits); if (h) { G.drag = { id: h.pick.id, pid: e.pointerId }; G.sel = BI.indexOf(h.pick.id); SFX.click(); } } });
 canvas.addEventListener('pointermove', e => { const p = ptrs.get(e.pointerId); if (!p) return; const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY; if (Math.hypot(p.x - p.sx, p.y - p.sy) > 8) p.moved = true;
   if (pinch && ptrs.size === 2) { const [a, b] = [...ptrs.values()]; cam.zoom = clamp(pinch.z * pinch.d / Math.max(20, Math.hypot(a.x - b.x, a.y - b.y)), .5, 1.35); return; }
   if (G.drag && G.drag.pid === e.pointerId) { const hp = planeHit(e.clientX, e.clientY, COUNTER.top + .12); if (hp) { const o = ingObjs[G.drag.id]; o.position.set(clamp(hp.x, COUNTER.x - 1.9, COUNTER.x + 1.9), COUNTER.top + .1, clamp(hp.z, .1, .82)); } return; }
   if (p.moved && G.mode !== 'brew' && G.mode !== 'title') { cam.az = clamp(cam.az - dx * .006, -.75, 1.15); cam.el = clamp(cam.el + dy * .004, .38, 1.15); } });
 function endPtr(e) { const p = ptrs.get(e.pointerId); if (!p) return; ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null;
-  if (G.drag && G.drag.pid === e.pointerId) { const id = G.drag.id, o = ingObjs[id]; G.drag = null; const d = Math.hypot(o.position.x - TEAPOT_POS.x, o.position.z - TEAPOT_POS.z); if (!p.moved || d < .34) addIngredient(id); else { const from = o.position.clone(), home = slotPos(ING.indexOf(id)); tween(.25, k => o.position.lerpVectors(from, home, ease(k))); } return; }
+  if (G.drag && G.drag.pid === e.pointerId) { const id = G.drag.id, o = ingObjs[id]; G.drag = null; const d = Math.hypot(o.position.x - TEAPOT_POS.x, o.position.z - TEAPOT_POS.z); if (!p.moved || d < .34) addIngredient(id); else { const from = o.position.clone(), home = homeOf(id); tween(.25, k => o.position.lerpVectors(from, home, ease(k))); } return; }
   if (!p.moved && performance.now() - p.t < 450 && e.type === 'pointerup') tap(e.clientX, e.clientY); }
 canvas.addEventListener('pointerup', endPtr); canvas.addEventListener('pointercancel', endPtr);
 canvas.addEventListener('wheel', e => { e.preventDefault(); if (G.mode === 'brew') return; cam.zoom = clamp(cam.zoom * (1 + e.deltaY * .001), .5, 1.35); }, { passive: false });
@@ -665,28 +936,36 @@ function tap(x, y) {
   if (G.mode === 'decor') { const D = G.decor; if (D.remove) { const h = hitTest(x, y, [...decorObjs.values()].map(g => g.userData.hit)); if (h) removeDecor(h.pick.d); return; } if (D.sel) { const fp = planeHit(x, y, 0); if (fp && fp.z > -.5 && fp.z < 5.5 && Math.abs(fp.x) < 6.5) { const wasX = D.x, wasZ = D.z; snapGhost(fp.x, fp.z); if (wasX === D.x && wasZ === D.z) placeGhost(); else SFX.click(); } } else E.toast(T().pickFirst, 1300); return; }
   if (G.mode === 'brew') return;
   const h = hitTest(x, y); if (!h) return; const pk = h.pick;
-  if (pk.type === 'pot') potTap(pk.i); else if (pk.type === 'counter') openBrew(); else if (pk.type === 'cust') openBrew(pk.c);
+  if (pk.type === 'pot') potTap(pk.i); else if (pk.type === 'counter') openBrew(); else if (pk.type === 'cust') openBrew(pk.c); else if (pk.type === 'decor') decorTap(pk.d);
 }
 
 /* ================= HUD / pads ================= */
 let SH = null; const labelsEl = $('labels');
 const potLabs = pots.map((pt, i) => { const d = document.createElement('div'); d.className = 'bb-lab'; d.onclick = () => { if (G.mode === 'cafe' && !G.modal) potTap(i); }; labelsEl.appendChild(d); return d; });
 const ingLabs = ING.map(id => { const d = document.createElement('div'); d.className = 'bb-lab ing'; labelsEl.appendChild(d); return d; });
-function hud() { if (!SH) return; SH.hud.innerHTML = `<span class="ig-chip">🪙 <b>${S.coins}</b></span><span class="ig-chip">❤️ <b>${S.hearts}</b></span><span class="ig-chip">☕ <b>${G.sess.served}/5</b></span><span class="ig-chip bb-vis" id="bbVis">${S.visDay === dayKey() ? '✅' : '⭐'} ${VISITOR.e}</span>`; const v = $('bbVis'); if (v) v.onclick = () => E.toast(S.visDay === dayKey() ? T().visDone(nm(VISITOR)) : T().visTip(nm(VISITOR), VISITOR.e, nm(RBY[VISITOR.fav])), 2800, true); }
-function setPad() { const pad = document.querySelector('.ig-pad'); if (!pad) return; const hide = G.mode !== 'cafe' || !!sheetEl || G.modal; pad.style.display = hide ? 'none' : ''; }
+let hudCoins = -1;
+function hud() { if (!SH) return; const lv = level(), nx = LEVELS[lv], L = LEVELS[lv - 1], pct = nx ? Math.round((S.hearts - L.h) / (nx.h - L.h) * 100) : 100, done = S.req.list.filter(q => q.done).length;
+  SH.hud.innerHTML = `<span class="ig-chip" id="bbCoins">🪙 <b>${S.coins}</b></span><span class="ig-chip bb-lvchip" title="${T().lvl(lv)}">❤️ <b>${S.hearts}</b><i class="bb-lvbadge">${lv}</i><i class="bb-lvbar" style="--p:${pct}%"></i></span><span class="ig-chip">☕ <b>${G.sess.served}/5</b></span><button class="ig-chip bb-bookchip" id="bbBook" aria-label="${T().journal}">📖 <b>${done}/${S.req.list.length || 3}</b></button>`;
+  $('bbBook').onclick = () => openBook(0);
+  if (hudCoins >= 0 && S.coins > hudCoins) { const c = $('bbCoins'); c.classList.remove('bump'); void c.offsetWidth; c.classList.add('bump'); } hudCoins = S.coins; }
+function setPad() { const pad = document.querySelector('.ig-pad'); if (!pad) return; const hide = G.mode !== 'cafe' || !!sheetEl || G.modal; pad.style.display = hide ? 'none' : ''; padCache.t = -1; }
 // screen-space label layout: anchor → clamp to the safe area → push overlapping labels apart (higher label moves up)
 function layoutLabels(items) {
-  const top = 58, pad = 6; for (const it of items) { it.w = it.el.offsetWidth || 60; it.h = it.el.offsetHeight || 26; it.x = clamp(it.x, it.w / 2 + pad, innerWidth - it.w / 2 - pad); it.y = clamp(it.y, top + it.h, innerHeight - 8); }
-  for (let iter = 0; iter < 6; iter++) { let moved = false; for (let i = 0; i < items.length; i++) for (let j = i + 1; j < items.length; j++) { const A = items[i], B = items[j]; const ox = (A.w + B.w) / 2 + 3 - Math.abs(A.x - B.x), oy = (A.h + B.h) / 2 + 2 - Math.abs(A.y - B.y); if (ox <= 0 || oy <= 0) continue; moved = true; const [hi, lo] = A.y <= B.y ? [A, B] : [B, A]; if (hi.fixed && lo.fixed) continue; if (ox < oy * .6 && !hi.fixed && !lo.fixed) { const s = A.x < B.x ? -1 : 1; A.x += s * ox / 2; B.x -= s * ox / 2; } else if (!hi.fixed) hi.y -= oy; else lo.y += oy; } if (!moved) break; }
-  for (const it of items) { it.x = clamp(it.x, it.w / 2 + pad, innerWidth - it.w / 2 - pad); it.y = Math.max(it.y, top + it.h); it.el.style.transform = `translate(${it.x}px,${it.y}px) translate(-50%,-100%)`; }
+  const top = 58, pad = 6;
+  // touch buttons (bottom row): labels that would sit on them are lifted above the row
+  const btns = padRects();
+  const offBtns = it => { for (const r of btns) if (it.x + it.w / 2 > r.left - 4 && it.x - it.w / 2 < r.right + 4 && it.y > r.top - 4 && it.y - it.h < r.bottom) it.y = r.top - 6; };
+  for (const it of items) { it.w = it.el.offsetWidth || 60; it.h = it.el.offsetHeight || 26; it.x = clamp(it.x, it.w / 2 + pad, innerWidth - it.w / 2 - pad); it.y = clamp(it.y, top + it.h, innerHeight - 8); offBtns(it); }
+  for (let iter = 0; iter < 8; iter++) { let moved = false; for (let i = 0; i < items.length; i++) for (let j = i + 1; j < items.length; j++) { const A = items[i], B = items[j]; const ox = (A.w + B.w) / 2 + 3 - Math.abs(A.x - B.x), oy = (A.h + B.h) / 2 + 2 - Math.abs(A.y - B.y); if (ox <= 0 || oy <= 0) continue; moved = true; const [hi, lo] = A.y <= B.y ? [A, B] : [B, A]; if (hi.fixed && lo.fixed) continue; if (ox < oy * .6 && !hi.fixed && !lo.fixed) { const s = A.x < B.x ? -1 : 1; A.x += s * ox / 2; B.x -= s * ox / 2; } else if (!hi.fixed) hi.y -= oy; else lo.y += oy; } if (!moved) break; }
+  for (const it of items) { it.x = clamp(it.x, it.w / 2 + pad, innerWidth - it.w / 2 - pad); offBtns(it); it.y = Math.max(it.y, top + it.h); it.el.style.transform = `translate(${it.x}px,${it.y}px) translate(-50%,-100%)`; }
 }
 function updateLabels() {
   const show = G.mode === 'cafe' && !G.modal; const v = V3(), port = PORTRAIT(); const items = [];
   labelsEl.classList.toggle('port', port);
-  pots.forEach((pt, i) => { const d = potLabs[i]; if (!show) { d.style.display = 'none'; return; } v.copy(pt.g.position).add(V3(0, (pt.plant ? .55 + pt.plant.scale.x * .62 : .75) + (port && i % 2 ? .45 : 0), 0)); const s = E.toScreen(v, camera); d.style.display = ''; let txt, cls = 'bb-lab'; if (i >= S.unlocked) { txt = i === S.unlocked ? `🔒${POT_UNLOCK[i]}🪙` : '🔒'; cls += ' lock'; } else if (!S.pots[i]) txt = '＋🌱'; else { const k = potProgress(i), sd = SEEDS[S.pots[i].seed]; if (k >= 1) { txt = `✨${sd.e}`; cls += ' ready'; } else txt = `${sd.e} ${fmtT(sd.time * (1 - k))}`; } if (d.textContent !== txt) d.textContent = txt; if (d.className !== cls) d.className = cls; items.push({ el: d, x: s.x, y: s.y, fixed: false }); });
+  pots.forEach((pt, i) => { const d = potLabs[i]; if (!show) { d.style.display = 'none'; return; } v.copy(pt.g.position).add(V3(0, (pt.plant ? .5 + pt.plant.scale.x * .42 : .75) + (port && i % 2 ? .45 : 0), 0)); const s = E.toScreen(v, camera); d.style.display = ''; let txt, cls = 'bb-lab'; if (i >= S.unlocked) { txt = i === S.unlocked ? `🔒${POT_UNLOCK[i]}🪙` : '🔒'; cls += ' lock'; } else if (!S.pots[i]) txt = '＋🌱'; else { const k = potProgress(i), sd = SEEDS[S.pots[i].seed]; if (k >= 1) { txt = `✨${sd.e}`; cls += ' ready'; } else txt = `${sd.e} ${fmtT(sd.time * (1 - k))}`; } if (d.textContent !== txt) d.textContent = txt; if (d.className !== cls) d.className = cls; items.push({ el: d, x: s.x, y: s.y, fixed: false }); });
   for (const c of G.custs) if (c.tag) { if (!show) { c.tag.style.display = 'none'; continue; } const s = E.toScreen(c.ch.pivot.position.clone().setY(c.tagY + Math.sin(c.t * 2.2) * .03), camera); c.tag.style.display = ''; c.tag.classList.toggle('busy', !!c.brewing); items.push({ el: c.tag, x: s.x, y: s.y }); }
   if (items.length) layoutLabels(items);
-  ING.forEach((id, i) => { const d = ingLabs[i]; if (G.mode !== 'brew' || port) { d.style.display = 'none'; return; } const s = E.toScreen(slotPos(i).add(V3(0, -.02, .12)), camera); d.style.display = ''; d.style.transform = `translate(${s.x}px,${s.y}px) translate(-50%,0)`; const n = ingCount(id); d.textContent = `${ING_INFO[id][0]} ${n === '∞' ? ingName(id) : '×' + n}`; d.className = 'bb-lab ing' + (n !== '∞' && n <= 0 ? ' off' : ''); });
+  ING.forEach((id, j) => { const d = ingLabs[j], i = BI.indexOf(id); if (G.mode !== 'brew' || port || i < 0) { d.style.display = 'none'; return; } const s = E.toScreen(slotPos(i).add(V3(0, -.02, .12)), camera); d.style.display = ''; d.style.transform = `translate(${s.x}px,${s.y}px) translate(-50%,0)`; const n = ingCount(id); d.textContent = `${ING_INFO[id][0]} ${n === '∞' ? ingName(id) : '×' + n}`; d.className = 'bb-lab ing' + (n !== '∞' && n <= 0 ? ' off' : ''); });
 }
 
 /* ================= main update ================= */
@@ -696,20 +975,30 @@ function update(dt) {
   for (const w of TW.slice()) { w.t += dt; const k = Math.min(1, w.t / w.dur); w.fn(k); if (k >= 1) { TW.splice(TW.indexOf(w), 1); w.done && w.done(); } }
   timeT -= dt; if (timeT <= 0) { timeT = 1; applyTime(); }
   if (G.pendingRes > 0 && G.mode !== 'brew' && !G.modal && !TW.length) { G.pendingRes -= dt; if (G.pendingRes <= 0) sessionResults(); }
-  updatePlants(dt); updateCustomers(dt);
+  updatePlants(dt); updateCustomers(dt); updateDecorLife(dt);
   // barista
-  if (baristaCheer > 0) { baristaCheer -= dt; E.pose(barista.rig, E.POSES.cheer(G.t)); } else if (G.mode === 'brew') E.pose(barista.rig, { ...E.POSES.idle(G.t), RightArm: [-.9, 0, .9], RightForeArm: [-.8], LeftArm: [-.7, 0, -.9], LeftForeArm: [-.9], Head: [.25, -.3, 0] }); else E.pose(barista.rig, E.POSES.idle(G.t));
+  // landscape brew close-up: the barista steps out of shot (his big head would fill the top of the frame); portrait keeps him small at the back
+  barista.pivot.visible = !(G.mode === 'brew' && !PORTRAIT());
+  { const bx = G.mode === 'brew' ? -5.45 : COUNTER.x - 1.4, bz = G.mode === 'brew' ? -.95 : -.5, bp = barista.pivot.position; G.bMove = Math.hypot(bp.x - bx, bp.z - bz) > .06; bp.x = damp(bp.x, bx, .02, dt); bp.z = damp(bp.z, bz, .02, dt); }
+  if (G.bMove) E.pose(barista.rig, E.POSES.walk(G.t, .7)); else if (baristaCheer > 0) { baristaCheer -= dt; E.pose(barista.rig, E.POSES.cheer(G.t)); } else if (G.mode === 'brew') E.pose(barista.rig, { ...E.POSES.idle(G.t), RightArm: [-.9, 0, .9], RightForeArm: [-.8], LeftArm: [-.7, 0, -.9], LeftForeArm: [-.9], Head: [.25, -.3, 0] }); else E.pose(barista.rig, E.POSES.idle(G.t));
   // fireflies
   if (ffMat.opacity > .01) { for (let i = 0; i < FF_N; i++) { const f = ffSeed[i], t = G.t * f.s + f.p; ffPos[i * 3] = f.x + Math.sin(t * .7) * .6 + Math.sin(t * 1.9) * .15; ffPos[i * 3 + 1] = f.y + Math.sin(t * 1.1) * .3; ffPos[i * 3 + 2] = f.z + Math.cos(t * .8) * .5; } ffGeo.attributes.position.needsUpdate = true; ffMat.size = .26 + Math.sin(G.t * 3) * .05; }
   // keyboard / gamepad
   const s = input.poll();
   const edgeR = s.x > .5 && prevX <= .5, edgeL = s.x < -.5 && prevX >= -.5, edgeD = s.y > .5 && (G.prevY || 0) <= .5, edgeU = s.y < -.5 && (G.prevY || 0) >= -.5;
+  // journal: B key, gamepad LB / Back (raw buttons: the engine maps X and Y both to "c")
+  let bookBtn = false; for (const gp of (navigator.getGamepads ? navigator.getGamepads() : [])) if (gp) bookBtn = bookBtn || !!(gp.buttons[4]?.pressed || gp.buttons[8]?.pressed);
+  const bookPressed = bookBtn && !G.prevBook; G.prevBook = bookBtn;
+  if (bookPressed) { if (bookEl) closeBook(); else if (G.mode !== 'title' && !G.modal) openBook(); }
+  if (G.lvlQueue && G.mode === 'cafe' && !G.modal && !TW.length && !(G.pendingRes > 0)) showLevelUp();
+  if (G.mode !== 'title' && (G.dayT = (G.dayT || 0) - dt) <= 0) { G.dayT = 30; if (ensureRequests()) { hud(); E.toast(T().newReq, 2400); } }
   if (G.modal) {
-    // gamepad / keyboard can confirm the welcome-back card, the results card and resume from pause
-    if (s.aPressed) { const btn = document.querySelector('.bb-away [data-a=ok]') || document.querySelector('.ig-results [data-a=again]') || document.querySelector('.ig-screen:not(.ig-title) [data-a=resume]'); if (btn) btn.click(); }
+    // gamepad / keyboard can confirm the welcome-back card, the level-up card, the results card and resume from pause; B closes the journal
+    if (s.aPressed && !bookEl) { const btn = document.querySelector('.bb-away [data-a=ok]') || document.querySelector('.bb-lvl [data-a=ok]') || document.querySelector('.ig-results [data-a=again]') || document.querySelector('.ig-screen:not(.ig-title) [data-a=resume]'); if (btn) btn.click(); }
+    if (s.bPressed && bookEl) closeBook();
   } else if (G.mode === 'title') { if (s.aPressed && titleEl && G.t > .5) titleEl.querySelector('[data-a=play]')?.click(); }
   else {
-    if (G.mode === 'brew') { if (edgeR) G.sel = (G.sel + 1) % ING.length; if (edgeL) G.sel = (G.sel + ING.length - 1) % ING.length; if (s.aPressed && G.brew && !G.brew.justOpened) addIngredient(ING[G.sel]); if (G.brew) G.brew.justOpened = false; if (s.bPressed) closeBrew(true); const sp = slotPos(G.sel); selRing.position.set(sp.x, sp.y + .01, sp.z); if (Math.abs(s.x) > .5) G.usedPad = true; selRing.visible = !!G.brew && !!G.usedPad; }
+    if (G.mode === 'brew') { if (edgeR) G.sel = (G.sel + 1) % BI.length; if (edgeL) G.sel = (G.sel + BI.length - 1) % BI.length; if (s.aPressed && G.brew && !G.brew.justOpened) addIngredient(BI[G.sel]); if (G.brew) G.brew.justOpened = false; if (s.bPressed) closeBrew(true); const sp = slotPos(G.sel); selRing.position.set(sp.x, sp.y + .01, sp.z); if (Math.abs(s.x) > .5) G.usedPad = true; selRing.visible = !!G.brew && !!G.usedPad; }
     else if (G.mode === 'decor') { const D = G.decor;
       if (D.sel && D.ghost) { if (edgeR) snapGhost(D.x + 1, D.z); if (edgeL) snapGhost(D.x - 1, D.z); if (edgeD) snapGhost(D.x, D.z + 1); if (edgeU) snapGhost(D.x, D.z - 1); if (s.aPressed) placeGhost(); if (s.bPressed) { selectDecor(null); drawDecor(); } else if (s.cPressed) closeDecor(); }
       else { if (edgeR || edgeL) { G.usedPad = true; G.decorCur = ((G.decorCur || 0) + (edgeR ? 1 : DECOR.length - 1)) % DECOR.length; drawDecor(); decorEl?.querySelector('.bb-card.focus')?.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } if (s.aPressed) decorEl?.querySelectorAll('[data-d]')[G.decorCur || 0]?.click(); if (s.bPressed || s.cPressed) closeDecor(); } }
@@ -719,7 +1008,9 @@ function update(dt) {
   prevX = s.x; G.prevY = s.y;
   saveT += dt; if (saveT > 10 && G.mode !== 'title') { saveT = 0; save(); }
 }
-addEventListener('keydown', e => { if (G.mode === 'decor' && e.code === 'KeyR') rotateGhost(); if (G.mode === 'brew' && /^Digit[1-6]$/.test(e.code)) addIngredient(ING[+e.code.slice(5) - 1]); if ((e.code === 'Escape' || e.code === 'KeyP') && G.mode !== 'title' && !G.modal) pause(); });
+addEventListener('keydown', e => { if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+  if (bookEl && (e.code === 'Escape' || e.code === 'KeyB')) { closeBook(); return; } if (e.code === 'KeyB' && !G.modal && G.mode !== 'title') { openBook(); return; }
+  if (G.mode === 'decor' && e.code === 'KeyR') rotateGhost(); if (G.mode === 'brew' && /^Digit[1-9]$/.test(e.code)) BI[+e.code.slice(5) - 1] && addIngredient(BI[+e.code.slice(5) - 1]); if ((e.code === 'Escape' || e.code === 'KeyP') && G.mode !== 'title' && !G.modal) pause(); });
 
 /* ================= flow ================= */
 function pause() { if (G.modal) return; G.modal = true; setPad(); music && music.stop(); E.pauseMenu({ onResume: () => { G.modal = false; setPad(); music = E.music(E.SONGS.chill); }, onRestart: () => { G.modal = false; setPad(); newShift(); hud(); music = E.music(E.SONGS.chill); E.toast(T().fresh, 2200); }, extra: timeOptions() }); bindTimeOptions(document.querySelector('.ig-screen:last-of-type')); }
@@ -730,33 +1021,33 @@ function setLang(l) { LANG = l === 'es' ? 'es' : 'en'; E.setProfile({ lang: LANG
 const AWAY_CAP_MIN = 7 * 24 * 60, TIP_CAP = 60;
 // elapsed minutes since the last save, safe against missing / invalid / future timestamps (clock moved back)
 function awayMinutes(now = Date.now()) { const t = +S.lastSeen; if (!Number.isFinite(t) || t <= 0 || t > now) return 0; return Math.min(AWAY_CAP_MIN, (now - t) / 60000); }
-function awaySummary() {
+function awaySummary(freshReq) {
   const now = Date.now(), mins = awayMinutes(now);
   // stamp "seen" right away so a reload (or a second reload) can never pay the same absence twice
   S.lastSeen = now; save();
   if (mins < 1.5) return false;
   const ready = S.pots.filter((p, i) => p && potProgress(i) >= 1).length;
   const tips = S.served ? clamp(Math.floor(mins / 6) * (1 + Math.floor(S.decor.length / 3)), 0, TIP_CAP) : 0; S.coins += tips; G.awayTips = tips; save();
-  const t = T(), vf = nm(RBY[VISITOR.fav]); const items = [t.kept(ready)]; if (tips) items.push(t.tipsT(tips)); items.push(S.visDay === dayKey() ? t.visited(VISITOR.e, nm(VISITOR)) : t.visitor(nm(VISITOR), VISITOR.e, vf));
+  const t = T(), vf = nm(RBY[VISITOR.fav]); const items = [t.kept(ready)]; if (tips) items.push(t.tipsT(tips)); items.push(S.visDay === dayKey() ? t.visited(VISITOR.e, nm(VISITOR)) : t.visitor(nm(VISITOR), VISITOR.e, vf)); if (freshReq) items.push(t.newReq);
   const d = document.createElement('div'); d.className = 'ig-screen bb-away'; d.innerHTML = `<div class="ig-card"><div class="ig-kicker">${t.wb}</div><h2>${t.away} <small style="font-size:14px;color:#4c5868">(${mins >= AWAY_CAP_MIN ? '7d+' : fmtT(mins * 60)})</small></h2><ul>${items.map(i => `<li>${i}</li>`).join('')}</ul><button class="ig-btn" data-a="ok">${t.lovely}</button></div>`; document.body.appendChild(d); G.modal = true; setPad();
   d.querySelector('[data-a=ok]').onclick = () => { d.remove(); G.modal = false; setPad(); hud(); }; E.say(t.sayAway);
   return true;
 }
 function newShift() { G.sess = { served: 0, coins: 0, hearts: 0, teas: {}, id: Date.now(), resulted: false }; G.pendingRes = 0; }
 function start() {
-  G.mode = 'cafe'; G.t = 0; G.spawnT = 2.5; if (innerHeight > innerWidth) { cam.el = .8; cam.az = .12; } newShift();
+  G.mode = 'cafe'; G.t = 0; G.spawnT = 2.5; if (innerHeight > innerWidth) { cam.el = .85; cam.az = .15; } newShift();
   if (!SH) { const t = T(); SH = E.shell({ onPause: pause, buttons: [{ id: 'bTend', icon: '🌿', label: t.btnTend }, { id: 'bDecor', icon: '🪑', label: t.btnDecor }, { id: 'bBrew', icon: '🫖', label: t.btnBrew, cls: 'big' }] }); $('bTend').onclick = () => !G.modal && G.mode === 'cafe' && tend(); $('bDecor').onclick = () => !G.modal && G.mode === 'cafe' && openDecor(); $('bBrew').onclick = () => !G.modal && G.mode === 'cafe' && openBrew(); }
-  hud(); setPad(); music && music.stop(); music = E.music(E.SONGS.chill);
-  awaySummary();
+  const fresh = ensureRequests(); G.dayT = 30; applyCosmetics(); hud(); setPad(); music && music.stop(); music = E.music(E.SONGS.chill);
+  awaySummary(fresh && S.served > 0);
   if (!G.modal) E.say(S.served ? T().hiBack : T().hi);
 }
 let titleEl = null;
 function title() {
   G.mode = 'title'; if (titleEl) titleEl.remove(); const t = T();
-  const d = titleEl = E.titleScreen({ title: 'Brew and Bloom', kicker: t.kicker, lead: t.lead, how: ['🌱', '🫖', '🪑', '👆'].map((e, i) => [e, t.how[i]]), extra: timeOptions() + langOptions(), onPlay: () => { titleEl = null; start(); } });
+  const d = titleEl = E.titleScreen({ title: 'Brew and Bloom', kicker: t.kicker, lead: t.lead, how: [...['🌱', '🫖', '🪑', '👆'].map((e, i) => [e, t.how[i]]), ['📖', t.how5]], extra: timeOptions() + langOptions(), onPlay: () => { titleEl = null; start(); } });
   bindTimeOptions(d); d.querySelectorAll('[data-lang]').forEach(b => b.onclick = () => { setLang(b.dataset.lang); title(); });
 }
-addEventListener('resize', () => { if (G.brew) drawRecipe(); });
+addEventListener('resize', () => { if (G.brew) drawRecipe(); if (decorEl) decorEl.classList.toggle('side', !PORTRAIT()); });
 document.addEventListener('visibilitychange', () => { if (document.hidden && G.mode !== 'title') save(); });
 
 /* ================= boot ================= */
@@ -764,7 +1055,7 @@ mergeStatic(GH); mergeStatic(CAFE); for (const o of [...world.children]) if (o !
 for (const d of S.decor) placeDecorObj(d); BLOCK = buildBlock(); applyWall();
 applyTime(); updatePlants(0); updateCamera(0, true);
 // warm up every shader variant behind the loading screen (first-use compiles are slow on weak GPUs)
-{ const tmp = []; for (const k of Object.keys(SEEDS)) { const pl = buildPlant(k, 3); setBloom(pl, 1); pl.position.set(0, 1, 0); world.add(pl); tmp.push(pl); } const ghost = buildDecor('table'); ghost.traverse(o => { if (o.isMesh) o.material = ghostOK; }); world.add(ghost); tmp.push(ghost); for (const d of ['lamp', 'rug', 'bench', 'cake', 'shelf', 'plant']) { const g = buildDecor(d); world.add(g); tmp.push(g); } const cup = makeCup(0xffffff); world.add(cup); tmp.push(cup); const ch = makeChar(ANIMALS[0]), ch2 = makeChar(ANIMALS[2]), ch3 = makeChar(PEOPLE[0]); tmp.push(ch.pivot, ch2.pivot, ch3.pivot);
+{ const tmp = []; for (const k of Object.keys(SEEDS)) { const pl = buildPlant(k, 3); setBloom(pl, 1); pl.position.set(0, 1, 0); world.add(pl); tmp.push(pl); } const ghost = buildDecor('table'); ghost.traverse(o => { if (o.isMesh) o.material = ghostOK; }); world.add(ghost); tmp.push(ghost); for (const d of ['lamp', 'rug', 'bench', 'cake', 'shelf', 'plant', 'crate', 'pastry', 'piano', 'fountain', 'petbed', 'arbor']) { const g = buildDecor(d); world.add(g); tmp.push(g); } const cup = makeCup(0xffffff); world.add(cup); tmp.push(cup); const ch = makeChar(ANIMALS[0]), ch2 = makeChar(ANIMALS[2]), ch3 = makeChar(PEOPLE[0]); tmp.push(ch.pivot, ch2.pivot, ch3.pivot);
   ING.forEach(id => ingObjs[id].visible = true); selRing.visible = true; gridLines.visible = true; SKY.starMat.opacity = .5; ffMat.opacity = .5; P.burst(V3(0, 1, 0), { n: 2 }); P.burst(V3(0, 1, 0), { n: 2, additive: false });
   R.render(1 / 60); tmp.forEach(o => world.remove(o)); ING.forEach(id => ingObjs[id].visible = false); selRing.visible = false; gridLines.visible = false; applyTime(); }
 title(); ld.done(); window.__READY = true;
@@ -777,6 +1068,7 @@ window.__GAME = {
   placeDecor(id, x, z, r = 0) { if (G.mode !== 'decor') openDecor(); selectDecor(id); G.decor.r = r; snapGhost(x, z); const ok = G.decor.ok; placeGhost(); return ok; },
   away: awaySummary, awayMinutes, R, frame() { updateCamera(0, true); updateLabels(); },
   barista, get camera() { return camera; },
+  findSpot(id, r = 0) { const def = DBY[id]; for (let z = .5; z <= 4.5; z += .5) for (let x = -5.5; x <= 5.5; x += .5) { const w = r % 2 ? def.d : def.w, d = r % 2 ? def.w : def.d; const sx = clamp(Math.round(x - w / 2) + w / 2, -6 + w / 2, 6 - w / 2), sz = clamp(Math.round(z - d / 2) + d / 2, d / 2, 5 - d / 2); if (validPlace({ id, x: sx, z: sz, r })) return [sx, sz]; } return null; }, decorTap, fixCache, LEVELS, level, ensureRequests, RBY, get BI() { return BI; }, get note() { return noteEl; }, openBook, closeBook, get book() { return bookEl; }, setSeason(s) { seasonOverride = s; },
   get resultsCount() { return resultsCount; }, setLang, get lang() { return LANG; },
   ingScreen(id) { camera.updateMatrixWorld(); const p = E.toScreen(ingObjs[id].position.clone().add(V3(0, .06, 0)), camera); return [p.x, p.y]; },
   teapotScreen() { camera.updateMatrixWorld(); const p = E.toScreen(TEAPOT_POS.clone(), camera); return [p.x, p.y]; },

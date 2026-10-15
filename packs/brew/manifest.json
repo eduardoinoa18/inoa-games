@@ -28,11 +28,14 @@
   "strawberry": "models/strawberry.glb?h=15ba46c2",
   "glass": "models/glass.glb?h=22816fab",
   "bowl": "models/bowl.glb?h=675cbb92",
-  "plate": "models/plate.glb?h=1c8b79a1"
+  "plate": "models/plate.glb?h=1c8b79a1",
+  "apple": "models/apple.glb?h=27433d2a",
+  "orange": "models/orange.glb?h=07318ad9",
+  "pie": "models/pie.glb?h=4e7760f3"
  },
  "hdri": {
   "interior": "hdri/interior.hdr?h=dd54c722"
  },
  "lazy": [],
- "bytes": 1353209
+ "bytes": 1372113
 }
