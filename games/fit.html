@@ -53,19 +53,21 @@ const { THREE, clamp, lerp, rnd, pick, hash, damp, SFX, $ } = E;
 // Target size (largest dimension, 1 unit ≈ 10 cm). Kenney food keeps consistent real-world ratios.
 const SIZE = { sandwich: 1.8, apple: .85, cookie: .95, 'carton-small': 1.55, strawberry: .62, 'utensil-fork': 2.1, 'utensil-spoon': 2.0, 'utensil-knife': 2.35, whisk: 2.7, 'rolling-pin': 3.2, 'pepper-mill': 2.1, 'shaker-salt': .95, 'shaker-pepper': .95, honey: 1.3, 'peanut-butter': 1.25, bottle: 1.8, carton: 2.3, 'soda-can': 1.35, can: 1.25, cheese: 1.55, egg: .72, 'cup-tea': 1.3, croissant: 1.75, 'donut-sprinkles': 1.15, 'donut-chocolate': 1.15, muffin: 1.15, glass: 1.15, orange: .8, lemon: .9, pear: 1.05, banana: 2.2, cherries: .8, grapes: 1.5, cupcake: 1.35, headphones: 2.0, 'mechanical-keyboard': 4.4, 'nes-controller': 2.1, tomato: .8 };
 const LABEL = { sandwich: 'sandwich', apple: 'apple', cookie: 'cookie', 'carton-small': 'juice box', strawberry: 'strawberry', 'utensil-fork': 'fork', 'utensil-spoon': 'spoon', 'utensil-knife': 'knife', whisk: 'whisk', 'rolling-pin': 'rolling pin', 'pepper-mill': 'pepper mill', 'shaker-salt': 'salt', 'shaker-pepper': 'pepper', honey: 'honey', 'peanut-butter': 'nut butter', bottle: 'oil bottle', carton: 'milk', 'soda-can': 'soda', can: 'tin can', cheese: 'cheese', egg: 'egg', 'cup-tea': 'teacup', croissant: 'croissant', 'donut-sprinkles': 'sprinkle donut', 'donut-chocolate': 'choc donut', muffin: 'muffin', glass: 'glass', orange: 'orange', lemon: 'lemon', pear: 'pear', banana: 'banana', cherries: 'cherries', grapes: 'grapes', cupcake: 'cupcake', headphones: 'headphones', 'mechanical-keyboard': 'keyboard', 'nes-controller': 'game pad', tomato: 'tomato' };
+const LABEL_ES = { sandwich: 'sándwich', apple: 'manzana', cookie: 'galleta', 'carton-small': 'jugo', strawberry: 'fresa', 'utensil-fork': 'tenedor', 'utensil-spoon': 'cuchara', 'utensil-knife': 'cuchillo', whisk: 'batidor', 'rolling-pin': 'rodillo', 'pepper-mill': 'molinillo', 'shaker-salt': 'sal', 'shaker-pepper': 'pimienta', honey: 'miel', 'peanut-butter': 'crema de nueces', bottle: 'botella de aceite', carton: 'leche', 'soda-can': 'refresco', can: 'lata', cheese: 'queso', egg: 'huevo', 'cup-tea': 'taza', croissant: 'cruasán', 'donut-sprinkles': 'dona de chispas', 'donut-chocolate': 'dona de chocolate', muffin: 'magdalena', glass: 'vaso', orange: 'naranja', lemon: 'limón', pear: 'pera', banana: 'plátano', cherries: 'cerezas', grapes: 'uvas', cupcake: 'pastelito', headphones: 'audífonos', 'mechanical-keyboard': 'teclado', 'nes-controller': 'control', tomato: 'tomate' };
+const T = E.L, nm = L => T(L.name, L.es), lbl = n => T(LABEL[n], LABEL_ES[n]);
 const FLAT = { headphones: [-Math.PI / 2, 0, 0] }; // models that should lie down in a tray
 const PAL = { mint: 0xbfe6d3, butter: 0xf6e3a1, pink: 0xf5c6c8, lav: 0xd6cdf0, cream: 0xf6efe3, peach: 0xf7d2b6, sky: 0xc9e2f0, sage: 0xc9d8c0 };
 // rows of slots; "name@90" rotates the item a quarter turn in its slot
 const LEVELS = [
-  { id: 'lunch', name: 'Lunchbox', e: '🍱', style: 'plastic', col: PAL.mint, lid: true, rows: [['sandwich', 'apple'], ['cookie', 'carton-small']] },
-  { id: 'spice', name: 'Spice Drawer', e: '🧂', style: 'wood', col: 0xf2e0c2, rows: [['pepper-mill@90', 'shaker-salt', 'shaker-pepper'], ['honey', 'peanut-butter']] },
-  { id: 'desk', name: 'Desk Organizer', e: '🎧', style: 'plastic', col: PAL.lav, rows: [['mechanical-keyboard'], ['nes-controller@90', 'headphones', 'glass', 'cookie']] },
-  { id: 'cutlery', name: 'Cutlery Drawer', e: '🍴', style: 'wood', col: 0xf5e6cc, rows: [['utensil-fork@90', 'utensil-fork@90', 'utensil-spoon@90', 'utensil-spoon@90', 'utensil-knife@90', 'utensil-knife@90'], ['rolling-pin']] },
-  { id: 'fridge', name: 'Fridge Shelf', e: '🧊', style: 'plastic', col: PAL.sky, rows: [['carton', 'bottle', 'soda-can', 'soda-can'], ['cheese', 'egg', 'egg', 'tomato']] },
-  { id: 'cafe', name: 'Café Tray', e: '☕', style: 'plastic', col: PAL.butter, rows: [['cup-tea', 'croissant', 'glass'], ['donut-sprinkles', 'donut-chocolate', 'muffin', 'cookie']] },
-  { id: 'fruit', name: 'Fruit Crate', e: '🍋', style: 'wood', col: 0xf0dbb8, rows: [['apple', 'apple', 'orange', 'orange'], ['lemon', 'pear', 'banana', 'cherries']] },
-  { id: 'picnic', name: 'Picnic Basket', e: '🧺', style: 'wicker', col: 0xdcb98a, lid: true, rows: [['sandwich', 'grapes', 'bottle'], ['apple', 'cheese', 'strawberry'], ['cupcake', 'banana', 'pear']] },
-  { id: 'bakery', name: 'Bakery Box', e: '🍩', style: 'card', col: PAL.pink, lid: true, rows: [['donut-sprinkles', 'donut-chocolate', 'donut-sprinkles', 'donut-chocolate'], ['cupcake', 'muffin', 'cupcake', 'muffin'], ['croissant', 'croissant']] }
+  { id: 'lunch', es: 'Lonchera', name: 'Lunchbox', e: '🍱', style: 'plastic', col: PAL.mint, lid: true, rows: [['sandwich', 'apple'], ['cookie', 'carton-small']] },
+  { id: 'spice', es: 'Cajón de especias', name: 'Spice Drawer', e: '🧂', style: 'wood', col: 0xf2e0c2, rows: [['pepper-mill@90', 'shaker-salt', 'shaker-pepper'], ['honey', 'peanut-butter']] },
+  { id: 'desk', es: 'Organizador de escritorio', name: 'Desk Organizer', e: '🎧', style: 'plastic', col: PAL.lav, rows: [['mechanical-keyboard'], ['nes-controller@90', 'headphones', 'glass', 'cookie']] },
+  { id: 'cutlery', es: 'Cajón de cubiertos', name: 'Cutlery Drawer', e: '🍴', style: 'wood', col: 0xf5e6cc, rows: [['utensil-fork@90', 'utensil-fork@90', 'utensil-spoon@90', 'utensil-spoon@90', 'utensil-knife@90', 'utensil-knife@90'], ['rolling-pin']] },
+  { id: 'fridge', es: 'Estante de la nevera', name: 'Fridge Shelf', e: '🧊', style: 'plastic', col: PAL.sky, rows: [['carton', 'bottle', 'soda-can', 'soda-can'], ['cheese', 'egg', 'egg', 'tomato']] },
+  { id: 'cafe', es: 'Bandeja de café', name: 'Café Tray', e: '☕', style: 'plastic', col: PAL.butter, rows: [['cup-tea', 'croissant', 'glass'], ['donut-sprinkles', 'donut-chocolate', 'muffin', 'cookie']] },
+  { id: 'fruit', es: 'Caja de fruta', name: 'Fruit Crate', e: '🍋', style: 'wood', col: 0xf0dbb8, rows: [['apple', 'apple', 'orange', 'orange'], ['lemon', 'pear', 'banana', 'cherries']] },
+  { id: 'picnic', es: 'Cesta de pícnic', name: 'Picnic Basket', e: '🧺', style: 'wicker', col: 0xdcb98a, lid: true, rows: [['sandwich', 'grapes', 'bottle'], ['apple', 'cheese', 'strawberry'], ['cupcake', 'banana', 'pear']] },
+  { id: 'bakery', es: 'Caja de panadería', name: 'Bakery Box', e: '🍩', style: 'card', col: PAL.pink, lid: true, rows: [['donut-sprinkles', 'donut-chocolate', 'donut-sprinkles', 'donut-chocolate'], ['cupcake', 'muffin', 'cupcake', 'muffin'], ['croissant', 'croissant']] }
 ];
 
 /* ---------------- engine ---------------- */
@@ -195,9 +197,9 @@ function buildContainer(L) {
     z += rowD[ri] + DIV;
   });
   let lidH = 0;
-  if (L.lid) { const LD = Math.min(OD * .92, 3.2); const lid = add(rr(OW, .12, LD, .06), 0, 0, 0); const piv = new THREE.Group(); piv.position.set(0, H, -OD / 2); piv.add(lid); lid.position.set(0, .06, -LD / 2); piv.rotation.x = 1.25; g.add(piv); lidH = H + LD * Math.sin(1.25); }
+  if (L.lid) { const LD = Math.min(OD * .92, 3.2); const lid = add(rr(OW, .12, LD, .06), 0, 0, 0); const piv = new THREE.Group(); piv.position.set(0, H, -OD / 2); piv.add(lid); lid.position.set(0, .06, -LD / 2); piv.rotation.x = 1.25; g.add(piv); lidH = H + LD * Math.sin(1.25); g.userData.lid = { piv, LD }; }
   if (L.style === 'wicker') for (const s of [-1, 1]) { const hdl = new THREE.Mesh(new THREE.TorusGeometry(.42, .07, 8, 20, Math.PI), m); hdl.position.set(s * (OW / 2 + .02), H * .55, 0); hdl.rotation.set(0, Math.PI / 2, -Math.PI / 2 * s); hdl.castShadow = true; g.add(hdl); }
-  return { g, slots, W: OW, D: OD, H, lidH };
+  return { g, slots, W: OW, D: OD, H, lidH, lidBack: 0 };
 }
 
 /* ---------------- items ---------------- */
@@ -212,10 +214,17 @@ function makeItem(name, idx) {
 /* ---------------- layout + camera fit ---------------- */
 const portrait = () => innerHeight > innerWidth * 1.05;
 function layout(reshuffle = true) {
-  const C = G.cont, port = portrait(); G.port = port; const GAP = 1.3;
+  const C = G.cont, port = portrait(); G.port = port; const GAP = port ? 1 : 1.3;
+  // lid: stands nearly upright on phones so it doesn't eat the screen height above the box
+  const lid = C.g.userData.lid; if (lid) { const th = port ? 1.5 : 1.25; lid.piv.rotation.x = th; C.lidH = C.H + lid.LD * Math.sin(th); C.lidBack = lid.LD * Math.cos(th); }
   const loose = G.items.filter(i => i.state !== 'placed');
   const area = G.items.reduce((a, i) => a + (i.size.x + .4) * (i.size.z + .4), 0) * 1.3 + 2;
-  let RW, RD; if (port) { RW = Math.max(C.W, Math.sqrt(area * 1.1)); RD = Math.max(3, area / RW); } else { RD = Math.max(C.D, Math.sqrt(area * .8)); RW = Math.max(3, area / RD); }
+  let RW, RD;
+  if (port) {
+    // pick the placemat shape so box + mat together match the tall phone screen (fills the width instead of leaving side bands)
+    const avail = Math.max(1, (innerHeight - 180) / (innerWidth * .95)), lidD = C.lidH ? (C.lidH - C.H) * .5 : 0, sq = Math.sqrt(area); let best = 1e9;
+    for (let w = Math.max(C.W, sq) * 2.2; w >= Math.max(3, sq * .7); w -= .05) { // widest first: on ties the wider, shallower mat wins (items spread across the phone) const d = Math.max(3, area / w), sc = Math.max(Math.max(C.W, w) + .8, (C.D + GAP + d + lidD + .8) * .92 / avail); if (sc < best - 1e-6) { best = sc; RW = w; RD = d; } }
+  } else { RD = Math.max(C.D, Math.sqrt(area * .8)); RW = Math.max(3, area / RD); }
   let cx, cz, rx, rz; if (port) { cx = 0; cz = -(C.D / 2) - GAP / 2; rx = 0; rz = RD / 2 + GAP / 2; } else { cx = -(C.W / 2) - GAP / 2; cz = 0; rx = RW / 2 + GAP / 2; rz = 0; }
   C.g.position.set(cx, 0, cz); C.g.updateMatrixWorld(true);
   G.region = { x0: rx - RW / 2, x1: rx + RW / 2, z0: rz - RD / 2, z1: rz + RD / 2 };
@@ -224,8 +233,10 @@ function layout(reshuffle = true) {
   const pm = new THREE.Mesh(rr(RW + 1, .04, RD + 1, .12, 2), linenMat()); pm.rotation.y = port ? 0 : Math.PI / 2; if (!port) pm.geometry = rr(RD + 1, .04, RW + 1, .12, 2); pm.position.set(rx, .02, rz); pm.receiveShadow = true; matGroup.add(pm);
   if (reshuffle) scatter(loose);
   for (const it of G.items) if (it.state === 'placed') { const p = slotPos(it.slot); it.g.position.copy(p); }
-  const bx = new THREE.Box3(); bx.expandByPoint(new THREE.Vector3(cx - C.W / 2, 0, cz - C.D / 2)); bx.expandByPoint(new THREE.Vector3(cx + C.W / 2, C.H + 1.2, cz + C.D / 2)); if (C.lidH) bx.expandByPoint(new THREE.Vector3(cx, C.lidH, cz - C.D / 2 - .5));
-  bx.expandByPoint(new THREE.Vector3(G.region.x0 - .4, 0, G.region.z0 - .4)); bx.expandByPoint(new THREE.Vector3(G.region.x1 + .4, 1.4, G.region.z1 + .4));
+  const bx = new THREE.Box3(); bx.expandByPoint(new THREE.Vector3(cx - C.W / 2, 0, cz - C.D / 2)); bx.expandByPoint(new THREE.Vector3(cx + C.W / 2, C.H + (port ? .6 : 1.2), cz + C.D / 2));
+  bx.expandByPoint(new THREE.Vector3(G.region.x0 - .4, 0, G.region.z0 - .4)); bx.expandByPoint(new THREE.Vector3(G.region.x1 + .4, port ? .8 : 1.4, G.region.z1 + .4));
+  // lid corners are framed separately: they may tuck up under the HUD's second row, the slots never do
+  G.fitLid = C.lidH ? [-1, 1].map(sx => new THREE.Vector3(cx + sx * C.W / 2, C.lidH, cz - C.D / 2 - C.lidBack)) : [];
   G.fitBox = bx; fitCamera();
   sun.position.set(bx.getCenter(new THREE.Vector3()).x - 7, 16, 7); sun.target.position.copy(bx.getCenter(new THREE.Vector3())); sun.target.updateMatrixWorld();
 }
@@ -240,16 +251,21 @@ function scatter(list) {
   }
 }
 function fitCamera() {
-  const bx = G.fitBox, ctr = bx.getCenter(new THREE.Vector3()); const port = G.port; const el = port ? 1.08 : .98, yaw = port ? 0 : -.1;
+  const bx = G.fitBox, ctr = bx.getCenter(new THREE.Vector3()); const port = G.port; const el = port ? 1.04 : .98, yaw = port ? 0 : -.1;
   camera.fov = port ? 52 : 38; camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
   const dir = new THREE.Vector3(Math.sin(yaw) * Math.cos(el), Math.sin(el), Math.cos(yaw) * Math.cos(el));
-  const top = 1 - 2 * 70 / innerHeight, bot = -1 + 2 * (port ? 40 : 26) / innerHeight, side = .94;
+  // screen margins from the real HUD: below the (possibly two-row) chip bar, above the hint button on phones
+  let hudB = 56, padT = innerHeight - 76; try { const r = hudEl && hudEl.hud.getBoundingClientRect(); if (r && r.height) hudB = r.bottom; const b = $('bHint')?.getBoundingClientRect(); if (b && b.height) padT = b.top; } catch (e) { }
+  const topPx = port ? hudB + 10 : 70, lidPx = port ? Math.min(hudB, 64) : 56, botPx = port ? Math.max(40, innerHeight - padT + 6) : 26;
+  const top = 1 - 2 * topPx / innerHeight, topLid = 1 - 2 * lidPx / innerHeight, bot = -1 + 2 * botPx / innerHeight, side = port ? .96 : .94;
   const corners = []; for (const x of [bx.min.x, bx.max.x]) for (const y of [bx.min.y, bx.max.y]) for (const z of [bx.min.z, bx.max.z]) corners.push(new THREE.Vector3(x, y, z));
+  for (const v of G.fitLid || []) { v.lid = true; corners.push(v); }
+  const ey = (c, p) => c.lid ? p.y - (topLid - top) : p.y;
   let look = ctr.clone(), d = 20;
   for (let pass = 0; pass < 4; pass++) {
-    let lo = 3, hi = 120; for (let k = 0; k < 30; k++) { d = (lo + hi) / 2; camera.position.copy(look).addScaledVector(dir, d); camera.lookAt(look); camera.updateMatrixWorld(); let ok = true, mnx = 9, mxx = -9, mny = 9, mxy = -9; for (const c of corners) { const p = c.clone().project(camera); mnx = Math.min(mnx, p.x); mxx = Math.max(mxx, p.x); mny = Math.min(mny, p.y); mxy = Math.max(mxy, p.y); } if (mxx - mnx > side * 2 || mxy - mny > top - bot) ok = false; if (ok) hi = d; else lo = d; }
+    let lo = 3, hi = 120; for (let k = 0; k < 30; k++) { d = (lo + hi) / 2; camera.position.copy(look).addScaledVector(dir, d); camera.lookAt(look); camera.updateMatrixWorld(); let ok = true, mnx = 9, mxx = -9, mny = 9, mxy = -9; for (const c of corners) { const p = c.clone().project(camera), y = ey(c, p); mnx = Math.min(mnx, p.x); mxx = Math.max(mxx, p.x); mny = Math.min(mny, y); mxy = Math.max(mxy, y); } if (mxx - mnx > side * 2 || mxy - mny > top - bot) ok = false; if (ok) hi = d; else lo = d; }
     d = hi; camera.position.copy(look).addScaledVector(dir, d); camera.lookAt(look); camera.updateMatrixWorld();
-    let mnx = 9, mxx = -9, mny = 9, mxy = -9; for (const c of corners) { const p = c.clone().project(camera); mnx = Math.min(mnx, p.x); mxx = Math.max(mxx, p.x); mny = Math.min(mny, p.y); mxy = Math.max(mxy, p.y); }
+    let mnx = 9, mxx = -9, mny = 9, mxy = -9; for (const c of corners) { const p = c.clone().project(camera), y = ey(c, p); mnx = Math.min(mnx, p.x); mxx = Math.max(mxx, p.x); mny = Math.min(mny, y); mxy = Math.max(mxy, y); }
     const ox = (mnx + mxx) / 2, oy = (mny + mxy) / 2 - (top + bot) / 2; const right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0), up = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 1);
     const k = d * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)); look.addScaledVector(right, ox * k * camera.aspect).addScaledVector(up, oy * k);
   }
@@ -265,48 +281,54 @@ function startLevel(li, opts = {}) {
   const cont = buildContainer(L); scene.add(cont.g);
   const items = cont.slots.map((s, i) => makeItem(s.name, i));
   G = { li, L, cont, items, t: 0, wrong: 0, placed: 0, drag: null, paused: false, done: false, playing: true, replay: opts.replay || null, focus: 0, kbSlot: -1, kb: false, hintT: 0, seq: null, order: [], crook: -1, ax: 0, ay: 0 };
-  layout(true); ensureHud(); hudKey = ''; hud();
+  ensureHud(); hudKey = ''; hud(); layout(true);
   $('keyHint').hidden = true; if (music) music.stop(); music = null;
   if (opts.quiet) return;
   music = E.music(E.SONGS.chill);
-  if (opts.replay) { G.playing = false; G.auto = { list: opts.replay.order.slice(), t: .9, speed: 1 }; G.crookWanted = opts.replay.crook; E.toast(`Replay · ${L.name}`, 1800); }
-  else { G.crookWanted = S.oneWrong ? -2 : -1; const msg = li === 0 && !(S.stars[L.id]) ? `${L.name}. Drag each thing into the spot shaped just like it.` : `${L.name}. ${items.length} things to tidy.`; E.toast(`${L.e} ${L.name} · ${items.length} items`, 2200); E.say(msg); }
+  if (opts.replay) { G.playing = false; G.auto = { list: opts.replay.order.slice(), t: .9, speed: 1 }; G.crookWanted = opts.replay.crook; E.toast(`${T('Replay', 'Repetición')} · ${nm(L)}`, 1800); }
+  else { G.crookWanted = S.oneWrong ? -2 : -1; const msg = li === 0 && !(S.stars[L.id]) ? `${nm(L)}. ${T('Drag each thing into the spot shaped just like it.', 'Arrastra cada cosa al hueco que tiene su misma forma.')}` : `${nm(L)}. ${T(`${items.length} things to tidy.`, `${items.length} cosas para ordenar.`)}`; E.toast(`${L.e} ${nm(L)} · ${items.length} ${T('items', 'cosas')}`, 2200); E.say(msg); }
 }
 function ensureHud() {
-  if (hudEl) return; hudEl = E.shell({ title: 'Perfect Fit', onPause: pause, buttons: [{ id: 'bHint', icon: '💡', label: 'Hint' }] });
+  if (hudEl) return; hudEl = E.shell({ title: 'Perfect Fit', onPause: pause, buttons: [{ id: 'bHint', icon: '💡', label: T('Hint', 'Pista') }] });
   $('bHint').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); hint(); });
 }
 const fmt = t => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
 let hudKey = '';
 function hud() {
-  if (!G || !hudEl) return; const k = `${G.li}|${G.placed}|${Math.floor(G.t)}|${G.wrong}|${S.zen}`; if (k === hudKey) return; hudKey = k;
-  hudEl.hud.innerHTML = `<span class="ig-chip">${G.L.e} <b>${G.L.name}</b></span><span class="ig-chip">✔ <b>${G.placed}/${G.items.length}</b></span>${S.zen || G.replay ? '<span class="ig-chip">🍃 Zen</span>' : `<span class="ig-chip">⏱ <b>${fmt(G.t)}</b></span>`}${G.wrong ? `<span class="ig-chip">↩ <b>${G.wrong}</b></span>` : ''}`;
+  if (!G || !hudEl) return; const k = `${G.li}|${G.placed}|${Math.floor(G.t)}|${G.wrong}|${S.zen}|${E.lang()}`; if (k === hudKey) return; hudKey = k;
+  hudEl.hud.innerHTML = `<span class="ig-chip">${G.L.e} <b>${nm(G.L)}</b></span><span class="ig-chip">✔ <b>${G.placed}/${G.items.length}</b></span>${S.zen || G.replay ? `<span class="ig-chip">🍃 ${T('Zen', 'Zen')}</span>` : `<span class="ig-chip">⏱ <b>${fmt(G.t)}</b></span>`}${G.wrong ? `<span class="ig-chip">↩ <b>${G.wrong}</b></span>` : ''}`;
 }
 function starsFor() { const par = G.items.length * 4.5 + 4; if (G.wrong === 0 && (S.zen || G.t <= par)) return 3; if (G.wrong <= 2 && (S.zen || G.t <= par * 1.8)) return 2; return 1; }
 
 /* ---------------- picking & dragging ---------------- */
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), hitP = new THREE.Vector3();
-function setRay(x, y) { ndc.set(x / innerWidth * 2 - 1, -(y / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera); }
+function setRay(x, y) { const r = cv.getBoundingClientRect(); ndc.set((x - r.left) / (r.width || innerWidth) * 2 - 1, -((y - r.top) / (r.height || innerHeight)) * 2 + 1); ray.setFromCamera(ndc, camera); }
 function pickAt(x, y) { setRay(x, y); const hits = ray.intersectObjects(G.items.filter(i => i.state === 'loose' || i.state === 'ret').map(i => i.proxy), false); return hits.length ? hits[0].object.userData.item : null; }
+const dropH = () => G.cont.slots[0].floor; // height of the slot floors: the drop point is where the pointer ray meets it
 function liftH(it) { return 1.35 + it.size.y * .35; }
 function planeAt(x, y, h) { setRay(x, y); plane.constant = -h; return ray.ray.intersectPlane(plane, hitP) ? hitP.clone() : null; }
 function grab(it, x, y, touch) {
-  if (!G.playing || G.done) return; G.drag = { it, touch, x, y, off: new THREE.Vector3(), target: it.g.position.clone(), kb: x == null };
-  if (x != null) { const p = planeAt(x, y, liftH(it)); if (p) G.drag.off.set(it.g.position.x - p.x, 0, it.g.position.z - p.z).multiplyScalar(.6); if (touch) G.drag.off.z -= .7; }
+  if (!G.playing || G.done) return; G.drag = { it, touch, x, y, off: new THREE.Vector3(), target: it.g.position.clone(), kb: x == null, fp: null };
+  // the item starts where it was grabbed and eases onto the pointer; the drop spot is always the table point under the pointer (d.fp)
+  if (x != null) { const p = planeAt(x, y, liftH(it)); if (p) G.drag.off.set(it.g.position.x - p.x, 0, it.g.position.z - p.z); G.drag.fp = planeAt(x, y, dropH()); }
   it.state = 'drag'; it.vel.set(0, 0, 0); G.focus = G.items.indexOf(it);
   SFX.pop(); E.tone(rnd(700, 820), .05, 'sine', .05); E.noise(.04, .04, 5200, 2);
 }
 function nearSlot(it, pos) {
-  let best = null, bd = 1e9; for (const s of G.cont.slots) { if (s.item) continue; const p = slotPos(s); const dd = Math.hypot(p.x - pos.x, p.z - pos.z); const lim = Math.max(s.w, s.d) * .5 + .45; if (dd < lim && dd < bd) { bd = dd; best = s; } }
+  if (!pos) return null; let best = null, bd = 1e9;
+  for (const s of G.cont.slots) { if (s.item) continue; const p = slotPos(s); if (Math.abs(p.x - pos.x) <= s.w / 2 + .05 && Math.abs(p.z - pos.z) <= s.d / 2 + .05) return { s, match: s.name === it.name }; }
+  for (const s of G.cont.slots) { if (s.item) continue; const p = slotPos(s); const dd = Math.hypot(p.x - pos.x, p.z - pos.z); const lim = Math.max(s.w, s.d) * .5 + .3; if (dd < lim && dd < bd) { bd = dd; best = s; } }
   if (!best) return null; return { s: best, match: best.name === it.name };
 }
 function release() {
   const d = G.drag; if (!d) return; G.drag = null; const it = d.it;
-  const ns = d.kb ? (G.kbSlot >= 0 ? { s: G.cont.slots[G.kbSlot], match: G.cont.slots[G.kbSlot].name === it.name } : null) : nearSlot(it, it.g.position);
+  const fp = d.kb ? null : (d.x != null ? planeAt(d.x, d.y, dropH()) : null) || d.fp;
+  const ns = d.kb ? (G.kbSlot >= 0 ? { s: G.cont.slots[G.kbSlot], match: G.cont.slots[G.kbSlot].name === it.name } : null) : nearSlot(it, fp);
   let target = ns && ns.match ? ns.s : null;
-  if (!target && ns && !ns.match && !d.kb) { const alt = G.cont.slots.find(s => !s.item && s.name === it.name && Math.hypot(slotPos(s).x - it.g.position.x, slotPos(s).z - it.g.position.z) < Math.max(s.w, s.d) * .5 + .25); if (alt) target = alt; }
+  // forgiving: a near miss next to an identical free slot still counts
+  if (!target && ns && !ns.match && !d.kb && fp) { const alt = G.cont.slots.find(s => !s.item && s.name === it.name && Math.hypot(slotPos(s).x - fp.x, slotPos(s).z - fp.z) < Math.max(s.w, s.d) * .5 + .15); if (alt) target = alt; }
   if (target) snapTo(it, target);
-  else { if (ns && !ns.match) { G.wrong++; E.tone(300, .2, 'sine', .1, -110); E.tone(240, .22, 'sine', .06, -60, .06); E.floatText('not quite', ...Object.values(E.toScreen(it.g.position.clone().setY(1), camera)), 'bad'); } else E.tone(420, .1, 'sine', .05, -80); goHome(it); }
+  else { if (ns && !ns.match) { G.wrong++; E.tone(300, .2, 'sine', .1, -110); E.tone(240, .22, 'sine', .06, -60, .06); E.floatText(T('not quite', 'casi'), ...Object.values(E.toScreen(it.g.position.clone().setY(1), camera)), 'bad'); } else E.tone(420, .1, 'sine', .05, -80); goHome(it); }
   G.kbSlot = -1; hud();
 }
 function snapTo(it, s, quick) {
@@ -330,15 +352,18 @@ cv.addEventListener('pointerdown', e => {
   ptr = { id: e.pointerId, x: e.clientX, y: e.clientY }; try { cv.setPointerCapture(e.pointerId); } catch (er) { } G.kb = false; $('keyHint').hidden = true; grab(it, e.clientX, e.clientY, e.pointerType === 'touch');
 });
 cv.addEventListener('pointermove', e => { if (ptr && e.pointerId === ptr.id) { ptr.x = e.clientX; ptr.y = e.clientY; if (G.drag) { G.drag.x = e.clientX; G.drag.y = e.clientY; } } else if (G && !G.drag && !G.done && e.pointerType === 'mouse') { cv.style.cursor = pickAt(e.clientX, e.clientY) ? 'grab' : 'default'; } });
-const endPtr = e => { if (!ptr || e.pointerId !== ptr.id) return; ptr = null; if (G && G.drag) release(); };
-cv.addEventListener('pointerup', endPtr); cv.addEventListener('pointercancel', endPtr);
+const endPtr = e => { if (!ptr || e.pointerId !== ptr.id) return; ptr = null; if (G && G.drag) { G.drag.x = e.clientX; G.drag.y = e.clientY; release(); } };
+// a cancelled gesture (system swipe, palm, lost capture) never counts as a drop: the item floats home, no "wrong"
+const cancelPtr = e => { if (!ptr || (e.pointerId != null && e.pointerId !== ptr.id)) return; ptr = null; if (G && G.drag && !G.drag.kb) { const it = G.drag.it; G.drag = null; goHome(it); hud(); } };
+cv.addEventListener('pointerup', endPtr); cv.addEventListener('pointercancel', cancelPtr); cv.addEventListener('lostpointercapture', e => { if (ptr && e.pointerId === ptr.id) setTimeout(() => cancelPtr(e), 0); });
+addEventListener('blur', () => cancelPtr({}));
 
 /* keyboard + gamepad */
 function cycleFocus(dir) { const L = G.items.map((it, i) => i).filter(i => G.items[i].state === 'loose' || G.items[i].state === 'ret'); if (!L.length) return; L.sort((a, b) => scr(G.items[a].g.position) - scr(G.items[b].g.position)); let k = L.indexOf(G.focus); k = k < 0 ? 0 : (k + dir + L.length) % L.length; G.focus = L[k]; E.tone(900, .03, 'sine', .04); }
 function cycleSlot(dir) { const L = G.cont.slots.filter(s => !s.item).map(s => s.i); if (!L.length) return; L.sort((a, b) => scr(slotPos(G.cont.slots[a])) - scr(slotPos(G.cont.slots[b]))); let k = L.indexOf(G.kbSlot); k = k < 0 ? 0 : (k + dir + L.length) % L.length; G.kbSlot = L[k]; E.tone(1000, .03, 'sine', .04); }
 const scr = p => { const s = E.toScreen(p, camera); return Math.round(s.y / 60) * 10000 + s.x; };
 function kbAct(kind, dir) {
-  if (!G || G.paused || G.done || !G.playing) return; if (!G.kb) { G.kb = true; $('keyHint').hidden = false; }
+  if (!G || G.paused || G.done || !G.playing) return; if (!G.kb) { G.kb = true; const kh = $('keyHint'); kh.textContent = padUsed ? T('D-pad: choose · A: pick up & place · B: put back', 'Cruceta: elegir · A: tomar y colocar · B: devolver') : T('Tab / arrows: choose · Space: pick up & place · Shift: put back', 'Tab / flechas: elegir · Espacio: tomar y colocar · Shift: devolver'); kh.hidden = false; E.say(padUsed ? T('Use the D-pad to choose, and A to pick up and place.', 'Usa la cruceta para elegir, y A para tomar y colocar.') : T('Use Tab or the arrows to choose, and Space to pick up and place.', 'Usa Tab o las flechas para elegir, y Espacio para tomar y colocar.'), { once: true }); }
   const it = G.items[G.focus];
   if (kind === 'move') { if (G.drag) cycleSlot(dir); else { if (!it || it.state === 'placed' || it.state === 'snap') cycleFocus(0); else cycleFocus(dir); } }
   else if (kind === 'a') { if (G.drag) { if (G.kbSlot < 0) cycleSlot(0); else release(); } else { if (!it || !(it.state === 'loose' || it.state === 'ret')) { cycleFocus(0); return; } grab(it, null, null, false); cycleSlot(0); } }
@@ -354,8 +379,9 @@ addEventListener('keydown', e => {
   else if (e.code === 'Escape' || e.code === 'KeyP') pause();
   else if (e.code === 'KeyH') hint();
 });
+let padUsed = false;
 function pollPad() {
-  const pads = navigator.getGamepads ? [...navigator.getGamepads()].filter(Boolean) : []; if (!pads.length) return; const p = pads[0];
+  const pads = navigator.getGamepads ? [...navigator.getGamepads()].filter(Boolean) : []; if (!pads.length) return; const p = pads[0]; if (p.buttons.some(b => b && b.pressed)) padUsed = true;
   const ax = p.axes[0] || 0, ay = p.axes[1] || 0; const h = p.buttons[15]?.pressed ? 1 : p.buttons[14]?.pressed ? -1 : Math.abs(ax) > .55 ? Math.sign(ax) : 0; const v = p.buttons[13]?.pressed ? 1 : p.buttons[12]?.pressed ? -1 : Math.abs(ay) > .55 ? Math.sign(ay) : 0;
   const dir = h || v; if (dir && !G.ax) kbAct('move', dir); G.ax = dir;
   const a = p.buttons[0]?.pressed, b = p.buttons[1]?.pressed, st = p.buttons[9]?.pressed, y = p.buttons[3]?.pressed;
@@ -363,7 +389,7 @@ function pollPad() {
 }
 function hint() {
   if (!G || G.done || !G.playing) return; const it = G.drag ? G.drag.it : (G.items[G.focus] && G.items[G.focus].state === 'loose' ? G.items[G.focus] : G.items.find(i => i.state === 'loose')); if (!it) return;
-  const s = G.cont.slots.find(s => !s.item && s.name === it.name); if (!s) return; s.hintT = 2; G.focus = G.items.indexOf(it); E.say(`The ${LABEL[it.name]} goes here.`); E.tone(1320, .12, 'sine', .06); E.tone(1760, .16, 'sine', .05, 0, .08);
+  const s = G.cont.slots.find(s => !s.item && s.name === it.name); if (!s) return; s.hintT = 2; G.focus = G.items.indexOf(it); E.say(T(`The ${LABEL[it.name]} goes here.`, `Aquí va: ${LABEL_ES[it.name]}.`)); E.tone(1320, .12, 'sine', .06); E.tone(1760, .16, 'sine', .05, 0, .08);
 }
 
 /* focus ring for keyboard play */
@@ -383,7 +409,14 @@ function update(dt) {
   if (d) {
     const it = d.it; let tgt;
     if (d.kb) { const s = G.kbSlot >= 0 ? G.cont.slots[G.kbSlot] : null; tgt = s ? slotPos(s).setY(s.floor + liftH(it) * .7) : it.home.clone().setY(liftH(it)); }
-    else { const p = planeAt(d.x, d.y, liftH(it)); tgt = p ? p.add(d.off) : it.g.position.clone(); const ns = nearSlot(it, tgt); if (ns && ns.match) { const sp = slotPos(ns.s); tgt.x = lerp(tgt.x, sp.x, .38); tgt.z = lerp(tgt.z, sp.z, .38); tgt.y = lerp(tgt.y, sp.y + .55 + it.size.y * .2, .5); } d.near = ns; }
+    else {
+      d.off.multiplyScalar(Math.exp(-dt * 9)); // grab offset melts away so the item ends up right under the pointer
+      const fp = planeAt(d.x, d.y, dropH()); if (fp) d.fp = fp;
+      // touch: the item rides ~44px above the fingertip so the thumb never hides it (the drop spot stays under the finger)
+      const p = planeAt(d.x, d.y - (d.touch ? 44 : 0), liftH(it)); tgt = p ? p.add(d.off) : it.g.position.clone();
+      const ns = nearSlot(it, d.fp); if (ns && ns.match) { const sp = slotPos(ns.s); tgt.x = lerp(tgt.x, sp.x, .5); tgt.z = lerp(tgt.z, sp.z, .5); tgt.y = lerp(tgt.y, sp.y + .55 + it.size.y * .2, .5); } d.near = ns;
+      const fb = G.fitBox; if (fb) { tgt.x = clamp(tgt.x, fb.min.x - 1, fb.max.x + 1); tgt.z = clamp(tgt.z, fb.min.z - 1, fb.max.z + 1.5); }
+    }
     d.target.copy(tgt);
     const k = 170, c = 2 * Math.sqrt(k) * .62; tmp.copy(d.target).sub(it.g.position).multiplyScalar(k).addScaledVector(it.vel, -c); it.vel.addScaledVector(tmp, Math.min(dt, 1 / 30)); it.g.position.addScaledVector(it.vel, Math.min(dt, 1 / 30));
     // lean into motion + tilt the top toward the camera
@@ -471,7 +504,7 @@ function runSeq(dt) {
 }
 let wipeEl = null;
 function wipeStart() {
-  SFX.whoosh(); if (!G.beforeURL) return; wipeEl = document.createElement('div'); wipeEl.className = 'pf-wipe'; wipeEl.innerHTML = `<img alt="" src="${G.beforeURL}"><div class="line"></div><div class="pf-tagb" style="right:16px">BEFORE</div><div class="pf-tagb" style="left:16px;opacity:0">AFTER</div>`; document.body.appendChild(wipeEl); wipeSet(0);
+  SFX.whoosh(); if (!G.beforeURL) return; wipeEl = document.createElement('div'); wipeEl.className = 'pf-wipe'; wipeEl.innerHTML = `<img alt="" src="${G.beforeURL}"><div class="line"></div><div class="pf-tagb" style="right:16px">${T('BEFORE', 'ANTES')}</div><div class="pf-tagb" style="left:16px;opacity:0">${T('AFTER', 'DESPUÉS')}</div>`; document.body.appendChild(wipeEl); wipeSet(0);
 }
 function wipeSet(e) { if (!wipeEl) return; const pc = e * 100; wipeEl.querySelector('img').style.clipPath = `inset(0 0 0 ${pc}%)`; wipeEl.querySelector('.line').style.left = pc + '%'; const tags = wipeEl.querySelectorAll('.pf-tagb'); tags[0].style.opacity = 1 - clamp((e - .7) / .3, 0, 1); tags[1].style.opacity = clamp(e * 4, 0, 1); if (Math.random() < .25) E.noise(.05, .03, 4000 + e * 4000, 2); }
 function wipeEnd() { if (wipeEl) { const w = wipeEl; w.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 500, fill: 'forwards' }); setTimeout(() => w.remove(), 520); wipeEl = null; } SFX.win(); }
@@ -488,8 +521,8 @@ function confetti() {
 function showStars() {
   const d = document.createElement('div'); d.className = 'pf-stars'; d.innerHTML = [0, 1, 2].map(i => `<span class="${i < G.stars ? '' : 'off'}">⭐</span>`).join(''); document.body.appendChild(d);
   d.querySelectorAll('span').forEach((s, i) => setTimeout(() => { s.classList.add('on'); if (i < G.stars) E.tone(880 * Math.pow(1.26, i), .18, 'triangle', .1); }, 200 + i * 260));
-  const b = document.createElement('div'); b.className = 'ig-big pf-big'; b.textContent = G.crook >= 0 ? 'Almost perfect…' : 'Perfect fit!'; document.body.appendChild(b); b.animate([{ transform: 'translate(-50%,-50%) scale(.6)', opacity: 0 }, { transform: 'translate(-50%,-50%) scale(1)', opacity: 1, offset: .3 }, { opacity: 1, offset: .8 }, { opacity: 0 }], { duration: 1500, easing: 'ease-out', fill: 'forwards' }); setTimeout(() => b.remove(), 1500);
-  E.say(G.crook >= 0 ? 'Almost perfect. Can you spot it?' : 'Perfect fit!');
+  const b = document.createElement('div'); b.className = 'ig-big pf-big'; b.textContent = G.crook >= 0 ? T('Almost perfect…', 'Casi perfecto…') : T('Perfect fit!', '¡Encaja perfecto!'); document.body.appendChild(b); b.animate([{ transform: 'translate(-50%,-50%) scale(.6)', opacity: 0 }, { transform: 'translate(-50%,-50%) scale(1)', opacity: 1, offset: .3 }, { opacity: 1, offset: .8 }, { opacity: 0 }], { duration: 1500, easing: 'ease-out', fill: 'forwards' }); setTimeout(() => b.remove(), 1500);
+  E.say(G.crook >= 0 ? T('Almost perfect. Can you spot it?', 'Casi perfecto. ¿Lo encuentras?') : T('Perfect fit!', '¡Encaja perfecto!'));
 }
 function shareCode() { const o = G.order.map(i => i.toString(36)).join(''); return `PF-${G.li.toString(36)}${(G.crook + 1).toString(36)}${G.stars}-${o}-${Math.round(G.t)}`.toUpperCase(); }
 function parseCode(c) {
@@ -499,12 +532,12 @@ function parseCode(c) {
 const buildContainerCount = li => LEVELS[li].rows.reduce((a, r) => a + r.length, 0);
 function endCard() {
   document.querySelectorAll('.pf-stars').forEach(e => e.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, fill: 'forwards' }));
-  if (G.replay) { const d = document.createElement('div'); d.className = 'pf-replay'; d.innerHTML = `<button class="ig-btn ghost">Menu</button><button class="ig-btn">Play this box</button>`; document.body.appendChild(d); const [a, b] = d.querySelectorAll('button'); a.onclick = () => title(); b.onclick = () => startLevel(G.li); return; }
+  if (G.replay) { const d = document.createElement('div'); d.className = 'pf-replay'; d.innerHTML = `<button class="ig-btn ghost">${T('Menu', 'Menú')}</button><button class="ig-btn">${T('Play this box', 'Jugar esta caja')}</button>`; document.body.appendChild(d); const [a, b] = d.querySelectorAll('button'); a.onclick = () => title(); b.onclick = () => startLevel(G.li); return; }
   if (music) music.stop(); const code = shareCode(); const L = G.L; const lvlBonus = Math.round(G.li * 2.5);
   const xp = clamp(40 + (G.stars - 1) * 10 + lvlBonus, 40, 80), coins = 6 + G.stars * 4 + G.li;
-  const r = E.results({ gameId: 'fit', title: G.crook >= 0 ? `${L.name}: almost perfect 😉` : `${L.name}: perfect fit!`, stats: [['Stars', '⭐'.repeat(G.stars)], ['Time', S.zen ? 'Zen' : fmt(G.t)], ['Wrong drops', G.wrong], ['Share code', `<span style="font-size:13px;letter-spacing:.02em">${code}</span>`]], xp, coins, best: S.zen ? null : +G.t.toFixed(1), bestLower: true, bestLabel: 'Fastest tidy ever (s)', onAgain: () => startLevel(G.li + 1 < LEVELS.length ? G.li + 1 : G.li), share: `I tidied the ${L.name} in Perfect Fit ${'⭐'.repeat(G.stars)}${G.crook >= 0 ? ' — one thing is crooked, can you spot it? 👀' : ''} Code ${code} (Inoa Games) ${location.href.split('#')[0]}` });
-  const again = r.querySelector('[data-a=again]'); if (G.li + 1 < LEVELS.length) again.textContent = 'Next box →';
-  const menu = document.createElement('button'); menu.className = 'ig-btn ghost'; menu.textContent = 'Boxes'; menu.onclick = () => { r.remove(); title(); }; r.querySelector('.ig-row').prepend(menu);
+  const r = E.results({ gameId: 'fit', title: G.crook >= 0 ? `${nm(L)}: ${T('almost perfect', 'casi perfecto')} 😉` : `${nm(L)}: ${T('perfect fit!', '¡encaja perfecto!')}`, stats: [[T('Stars', 'Estrellas'), '⭐'.repeat(G.stars)], [T('Time', 'Tiempo'), S.zen ? 'Zen' : fmt(G.t)], [T('Wrong drops', 'Fallos'), G.wrong], [T('Share code', 'Código'), `<span style="font-size:13px;letter-spacing:.02em">${code}</span>`]], xp, coins, best: S.zen ? null : +G.t.toFixed(1), bestLower: true, bestLabel: T('Fastest tidy ever (s)', 'Orden más rápido (s)'), onAgain: () => startLevel(G.li + 1 < LEVELS.length ? G.li + 1 : G.li), share: `I tidied the ${L.name} in Perfect Fit ${'⭐'.repeat(G.stars)}${G.crook >= 0 ? ' — one thing is crooked, can you spot it? 👀' : ''} Code ${code} (Inoa Games) ${location.href.split('#')[0]}` });
+  const again = r.querySelector('[data-a=again]'); if (G.li + 1 < LEVELS.length) again.textContent = T('Next box →', 'Siguiente caja →');
+  const menu = document.createElement('button'); menu.className = 'ig-btn ghost'; menu.textContent = T('Boxes', 'Cajas'); menu.onclick = () => { r.remove(); title(); }; r.querySelector('.ig-row').prepend(menu);
 }
 
 /* ---------------- camera / loop ---------------- */
@@ -515,7 +548,7 @@ function updateCamera(dt) {
 }
 let lastPort = portrait();
 addEventListener('resize', () => { if (!G) return; const p = portrait(); if (G.done) { fitCamera(); if (G.camTo) { pushIn(); G.camNow.pos.copy(G.camTo.pos); G.camNow.look.copy(G.camTo.look); } return; } if (p !== lastPort) { lastPort = p; if (G.drag) { const it = G.drag.it; G.drag = null; goHome(it); } layout(true); } else fitCamera(); G.camNow.pos.copy(G.cam.pos); G.camNow.look.copy(G.cam.look); });
-function pause() { if (!G || G.paused || G.done) return; G.paused = true; if (G.drag) { const it = G.drag.it; G.drag = null; goHome(it); } music && music.stop(); E.pauseMenu({ onResume: () => { G.paused = false; music = E.music(E.SONGS.chill); }, onRestart: () => startLevel(G.li), extra: `<p class="ig-sub">${G.L.e} ${G.L.name} · ${G.placed}/${G.items.length} placed</p>` }); }
+function pause() { if (!G || G.paused || G.done) return; G.paused = true; if (G.drag) { const it = G.drag.it; G.drag = null; goHome(it); } music && music.stop(); E.pauseMenu({ onResume: () => { G.paused = false; music = E.music(E.SONGS.chill); }, onRestart: () => startLevel(G.li), extra: `<p class="ig-sub">${G.L.e} ${nm(G.L)} · ${G.placed}/${G.items.length} ${T('placed', 'colocadas')}</p>` }); }
 document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
 
 /* ---------------- title ---------------- */
@@ -524,14 +557,14 @@ function title() {
   // a calm, tidy box on the table behind the menu
   startLevel(Math.min(S.sel, S.unlocked - 1), { quiet: true }); G.playing = false; G.attract = true;
   for (const it of G.items) { const s = G.cont.slots[it.idx]; it.state = 'placed'; it.slot = s; s.item = it; it.g.position.copy(slotPos(s)); it.g.rotation.y = s.yaw; } G.placed = G.items.length;
-  const lv = LEVELS.map((L, i) => `<button data-i="${i}" class="${i === S.sel ? 'on' : ''}" ${i >= S.unlocked ? 'disabled' : ''}><span class="e">${i >= S.unlocked ? '🔒' : L.e}</span>${L.name}<span class="st">${'★'.repeat(S.stars[L.id] || 0)}${'☆'.repeat(3 - (S.stars[L.id] || 0))}</span></button>`).join('');
-  const extra = `<div class="pf-extra"><div><div class="pf-lbl">Choose a box</div><div class="pf-lv" id="pLv">${lv}</div></div><div><div class="pf-lbl">Options</div><div class="pf-opts"><button class="ig-chipbtn ${S.zen ? 'on' : ''}" id="oZen">🍃 Zen mode<small>No timer, just vibes</small></button><button class="ig-chipbtn ${S.oneWrong ? 'on' : ''}" id="oWrong">😬 One wrong<small>Leaves one thing crooked for the clip</small></button></div></div><div><div class="pf-lbl">Watch a friend's layout</div><div class="pf-code"><input id="code" placeholder="PF-…" maxlength="24" aria-label="Share code"><button class="ig-chipbtn" id="codeGo">▶ Replay</button></div></div></div>`;
-  const d = E.titleScreen({ title: 'Perfect Fit', kicker: 'Inoa Games · Cozy 3D', lead: 'Everything has its place. Drag each thing into the spot shaped just like it — no rush, no fails, just that click.', how: [['👆', 'Drag an item with your finger or mouse'], ['🧩', 'Drop it on its matching outline'], ['⌨️', 'Tab / arrows to choose, Space to pick up and place']], extra, onPlay: () => { G && (G.attract = false); startLevel(S.sel); } });
+  const lv = LEVELS.map((L, i) => `<button data-i="${i}" class="${i === S.sel ? 'on' : ''}" ${i >= S.unlocked ? 'disabled' : ''}><span class="e">${i >= S.unlocked ? '🔒' : L.e}</span>${nm(L)}<span class="st">${'★'.repeat(S.stars[L.id] || 0)}${'☆'.repeat(3 - (S.stars[L.id] || 0))}</span></button>`).join('');
+  const extra = `<div class="pf-extra"><div><div class="pf-lbl">${T('Choose a box', 'Elige una caja')}</div><div class="pf-lv" id="pLv">${lv}</div></div><div><div class="pf-lbl">${T('Options', 'Opciones')}</div><div class="pf-opts"><button class="ig-chipbtn ${S.zen ? 'on' : ''}" id="oZen">🍃 ${T('Zen mode', 'Modo zen')}<small>${T('No timer, just vibes', 'Sin reloj, con calma')}</small></button><button class="ig-chipbtn ${S.oneWrong ? 'on' : ''}" id="oWrong">😬 ${T('One wrong', 'Uno torcido')}<small>${T('Leaves one thing crooked for the clip', 'Deja una cosa torcida para el video')}</small></button></div></div><div><div class="pf-lbl">${T("Watch a friend's layout", 'Mira el orden de un amigo')}</div><div class="pf-code"><input id="code" placeholder="PF-…" maxlength="24" aria-label="${T('Share code', 'Código')}"><button class="ig-chipbtn" id="codeGo">▶ ${T('Replay', 'Ver')}</button></div></div></div>`;
+  const d = E.titleScreen({ title: 'Perfect Fit', kicker: T('Inoa Games · Cozy 3D', 'Inoa Games · 3D relajante'), lead: T('Everything has its place. Drag each thing into the spot shaped just like it — no rush, no fails, just that click.', 'Todo tiene su lugar. Arrastra cada cosa al hueco con su misma forma: sin prisa, sin perder, solo ese clic.'), how: [['👆', T('Drag an item with your finger or mouse', 'Arrastra una cosa con el dedo o el ratón')], ['🧩', T('Drop it on its matching outline', 'Suéltala sobre su silueta')], ['⌨️', T('Tab / arrows to choose, Space to pick up and place · Pad: D-pad + A', 'Tab / flechas para elegir, Espacio para tomar y colocar · Mando: cruceta + A')]], extra, onPlay: () => { G && (G.attract = false); startLevel(S.sel); } });
   d.querySelectorAll('#pLv button').forEach(b => b.onclick = () => { S.sel = +b.dataset.i; save(); d.querySelectorAll('#pLv button').forEach(x => x.classList.toggle('on', x === b)); startLevel(S.sel, { quiet: true }); G.playing = false; for (const it of G.items) { const s = G.cont.slots[it.idx]; it.state = 'placed'; it.slot = s; s.item = it; it.g.position.copy(slotPos(s)); it.g.rotation.y = s.yaw; } G.placed = G.items.length; hudKey = ''; });
   d.querySelector('#oZen').onclick = e => { S.zen = !S.zen; save(); e.currentTarget.classList.toggle('on', S.zen); };
   d.querySelector('#oWrong').onclick = e => { S.oneWrong = !S.oneWrong; save(); e.currentTarget.classList.toggle('on', S.oneWrong); };
   setTimeout(() => d.querySelector('[data-a=play]')?.focus(), 50);
-  d.querySelector('#codeGo').onclick = () => { const c = parseCode(d.querySelector('#code').value); if (!c) { E.toast('That code doesn’t look right. It starts with PF-', 2200); return; } d.remove(); startLevel(c.li, { replay: c }); };
+  d.querySelector('#codeGo').onclick = () => { const c = parseCode(d.querySelector('#code').value); if (!c) { E.toast(T('That code doesn’t look right. It starts with PF-', 'Ese código no parece correcto. Empieza con PF-'), 2200); return; } d.remove(); startLevel(c.li, { replay: c }); };
   return d;
 }
 
@@ -539,6 +572,8 @@ function title() {
 // gamepad A presses the main button of whichever menu card is open; Play gets keyboard focus
 let padPrevA = false;
 function menuPad() { const pads = navigator.getGamepads ? [...navigator.getGamepads()].filter(Boolean) : []; const a = pads.some(p => p.buttons[0] && p.buttons[0].pressed); if (a && !padPrevA) { const b = document.querySelector('.ig-screen [data-a=play], .ig-screen [data-a=again], .ig-screen [data-a=resume], .jk-cta [data-a=go]'); if (b) b.click(); } padPrevA = a; }
+// language switch from the shared settings panel: rebuild the menu text / HUD in place
+addEventListener('inoa:settings', e => { if (!e.detail || e.detail.key !== 'lang') return; hudKey = ''; hud(); if (document.querySelector('.ig-title')) title(); });
 title(); ld.done(); window.__READY = true;
 E.loop((dt) => { menuPad(); update(dt); updateCamera(dt); R.render(dt); });
 window.__GAME = {
@@ -546,7 +581,10 @@ window.__GAME = {
   itemScreen: i => { const it = G.items[i]; const p = it.g.position.clone(); p.y += it.size.y * .5; return E.toScreen(p, camera); },
   slotScreen: i => E.toScreen(slotPos(G.cont.slots[i]), camera),
   slotFor: i => G.cont.slots.findIndex(s => !s.item && s.name === G.items[i].name),
-  wrongSlotFor: i => G.cont.slots.findIndex(s => !s.item && s.name !== G.items[i].name)
+  wrongSlotFor: i => G.cont.slots.findIndex(s => !s.item && s.name !== G.items[i].name),
+  dragInfo: () => G.drag ? { fp: G.drag.fp ? E.toScreen(G.drag.fp, camera) : null, item: E.toScreen(G.drag.it.g.position, camera), near: G.drag.near ? G.drag.near.s.i : -1, touch: !!G.drag.touch, idx: G.drag.it.idx } : null,
+  slotRectPx: i => { const s = G.cont.slots[i], p = slotPos(s); const a = E.toScreen(p.clone().add(new THREE.Vector3(-s.w / 2, 0, -s.d / 2)), camera), b = E.toScreen(p.clone().add(new THREE.Vector3(s.w / 2, 0, s.d / 2)), camera); return { w: Math.abs(b.x - a.x), h: Math.abs(b.y - a.y) }; },
+  itemPx: i => { const it = G.items[i]; const a = E.toScreen(it.g.position.clone().add(new THREE.Vector3(-it.size.x / 2, 0, 0)), camera), b = E.toScreen(it.g.position.clone().add(new THREE.Vector3(it.size.x / 2, 0, 0)), camera); return Math.abs(b.x - a.x); }
 };
 </script>
 </body></html>

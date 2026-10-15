@@ -36,7 +36,10 @@ Files touched: `games/draw.html`, `test/draw.js` (this file is new).
     - no English UI text on any ES screen
 
 ## Test results
-See the final report from the lead's run (landscape + portrait, PORT=8840).
+- Landscape `PORT=8840 node test/run.js draw test/draw.js` → `DRAW_CHECKS_PASSED`, `NO_ERRORS`.
+- Portrait `W=390 H=844 PORT=8840 node test/run.js draw test/draw.js` → `DRAW_CHECKS_PASSED`, `NO_ERRORS`.
+- Screenshots worth reviewing (portrait adds `_p`): `draw_es_title`, `draw_gp_draw`, `draw_es_results`, `draw_es_pause`, `draw_pointer_tools`, `draw_rotated_draw`, `draw_phone_slide1`, `draw_gallery`.
+- `test/out/draw_p_*.png` are stale files from the old test, which hard-coded the portrait shot names.
 
 ## Known issues / notes
 - Stylus pressure is checked with synthetic `PointerEvent(pointerType:'pen', pressure)`. It still needs a check on real hardware (iPad + Pencil, Android stylus).
