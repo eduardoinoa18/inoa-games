@@ -3,7 +3,7 @@ const fs = require('fs'), path = require('path'), http = require('http');
 // usage (from repo root): node test/run.js <game> [test/<game>.js]  (serves the repo on :8766, routes three.js CDN imports to node_modules)
 // script.js exports async (page, shot) => {...}; shot(name) saves <game>_<name>.png into test/out/
 const { chromium } = require('playwright');
-const ROOT = path.join(__dirname, '..'), NM = path.join(path.dirname(require.resolve('three/package.json')), '/');
+const ROOT = path.join(__dirname, '..'), NM = path.join(ROOT, 'node_modules/three/');
 const game = process.argv[2], scriptPath = process.argv[3];
 const types = { '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png' };
 const PORT = Number(process.env.PORT || 8766);
@@ -16,7 +16,8 @@ server.listen(PORT, async () => {
   await p.route(/fonts\.(googleapis|gstatic)/, r => r.abort());
   await p.route(/cdn\.jsdelivr\.net\/npm\/three@0\.170\.0\/(.*)/, r => { const rel = r.request().url().split('three@0.170.0/')[1].split('?')[0]; r.fulfill({ body: fs.readFileSync(NM + rel), contentType: 'application/javascript' }); });
   const outDir = path.join(ROOT, 'test/out'); fs.mkdirSync(outDir, { recursive: true });
-  const shot = async (name) => { await p.screenshot({ path: path.join(outDir, `${game}_${name}.png`) }); };
+  const SUF = process.env.SUFFIX ?? (H > W ? '_p' : ''); // portrait shots get a _p suffix so they don't overwrite landscape
+  const shot = async (name) => { await p.screenshot({ path: path.join(outDir, `${game}_${name}${SUF}.png`) }); };
   try {
     await p.goto(`http://localhost:${PORT}/${game === 'index' ? 'index.html' : 'games/' + game + '.html'}`);
     for (let i = 0; i < 60; i++) { await p.waitForTimeout(500); const ready = await p.evaluate(() => window.__READY === true || (document.getElementById('loading') ? document.getElementById('loading').hidden : !document.querySelector('.ig-loading'))); if (ready) break; }
