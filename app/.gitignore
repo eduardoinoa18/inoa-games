@@ -1,0 +1,38 @@
+# Generated web copy (rebuild: node ../tools/build_app_www.mjs && npx cap sync)
+www/
+node_modules/
+
+# Android build outputs / local config (the native project itself IS committed)
+android/.gradle/
+android/build/
+android/app/build/
+android/capacitor-cordova-android-plugins/build/
+android/local.properties
+android/.idea/
+android/app/release/
+android/app/src/main/assets/public/
+android/app/src/main/assets/capacitor.config.json
+android/app/src/main/assets/capacitor.plugins.json
+android/app/src/main/res/xml/config.xml
+*.apk
+*.aab
+
+# signing material: NEVER commit (owner keeps these in a password manager / secure backup)
+*.keystore
+*.jks
+keystore.properties
+*.p12
+*.mobileprovision
+*.cer
+
+# iOS build outputs / local state
+ios/App/Pods/
+ios/App/build/
+ios/DerivedData/
+ios/App/App/public/
+ios/App/App/capacitor.config.json
+ios/App/App/config.xml
+xcuserdata/
+*.xcuserstate
+*.ipa
+*.dSYM.zip

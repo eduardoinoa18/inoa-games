@@ -398,7 +398,7 @@ addStrings({ en: { phones: 'Phones', usePhones: 'Use phones as controllers', con
     if (_menuNavActive > 0) { focus = null; return; }
     const scr = [...document.querySelectorAll('.ig-screen, .inoa-pp')].filter(e => e.getClientRects().length > 0).pop();
     let x = 0, y = 0, a = false;
-    const gps = navigator.getGamepads ? navigator.getGamepads() : []; for (const p of gps) { if (!p) continue; x = x || (Math.abs(p.axes[0]) > .5 ? Math.sign(p.axes[0]) : p.buttons[14]?.pressed ? -1 : p.buttons[15]?.pressed ? 1 : 0); y = y || (Math.abs(p.axes[1]) > .5 ? Math.sign(p.axes[1]) : p.buttons[12]?.pressed ? -1 : p.buttons[13]?.pressed ? 1 : 0); a = a || !!p.buttons[0]?.pressed; }
+    const gps = navigator.getGamepads ? navigator.getGamepads() : []; for (const p of gps) { if (!p || !p.axes || !p.buttons) continue; x = x || (Math.abs(p.axes[0]) > .5 ? Math.sign(p.axes[0]) : p.buttons[14]?.pressed ? -1 : p.buttons[15]?.pressed ? 1 : 0); y = y || (Math.abs(p.axes[1]) > .5 ? Math.sign(p.axes[1]) : p.buttons[12]?.pressed ? -1 : p.buttons[13]?.pressed ? 1 : 0); a = a || !!p.buttons[0]?.pressed; }
     if (net.role === 'host') for (const pl of net.pads('pad')) { const n = net.pad(pl.slot); if (!n) continue; x = x || (Math.abs(n.x) > .5 ? Math.sign(n.x) : 0); y = y || (Math.abs(n.y) > .5 ? Math.sign(n.y) : 0); a = a || !!n.a; }
     if (!scr) { focus = null; prev = { a, x, y }; return; }
     const btns = [...scr.querySelectorAll('button, a.ig-btn')].filter(b => !b.disabled && b.getClientRects().length > 0);

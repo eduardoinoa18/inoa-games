@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Inoa Games</string>
+    <string name="title_activity_main">Inoa Games</string>
+    <string name="package_name">com.inoaservices.games</string>
+    <string name="custom_url_scheme">com.inoaservices.games</string>
+</resources>

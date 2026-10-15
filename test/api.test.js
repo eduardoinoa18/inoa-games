@@ -43,6 +43,10 @@ const event = (id, type, obj, created = Math.floor(Date.now() / 1000)) => JSON.s
     process.env.BILLING_ENABLED = ''; ok((await call(H.checkout, { headers: auth(kim.token) })).status === 503, 'free beta: checkout refused unless BILLING_ENABLED=yes'); process.env.BILLING_ENABLED = 'yes';
     ok((await call(H.checkout, {})).status === 401, 'checkout without a token → 401');
     ok((await call(H.checkout, { method: 'GET' })).status === 405, 'GET → 405');
+    { const pre = await new Promise(r => { const res = { statusCode: 200, h: {}, setHeader(k, v) { this.h[k] = v; }, end() { r(this); } }; H.del({ method: 'OPTIONS', headers: { origin: 'capacitor://localhost' }, [Symbol.asyncIterator]: async function* () { } }, res); });
+      ok(pre.statusCode === 204 && pre.h['Access-Control-Allow-Origin'] === 'capacitor://localhost' && /authorization/.test(pre.h['Access-Control-Allow-Headers']), 'native app preflight allowed (in-app account deletion)');
+      const evil = await new Promise(r => { const res = { statusCode: 200, h: {}, setHeader(k, v) { this.h[k] = v; }, end() { r(this); } }; H.del({ method: 'OPTIONS', headers: { origin: 'https://evil.example' }, [Symbol.asyncIterator]: async function* () { } }, res); });
+      ok(!evil.h['Access-Control-Allow-Origin'], 'other websites get no CORS access'); }
     ok((await call(H.checkout, { headers: auth('forged.jwt.token') })).status === 401, 'checkout with a forged token → 401');
     await sql("update auth.users set email_confirmed_at = null where email = 'kim@example.test'");
     ok((await call(H.checkout, { headers: auth(kim.token) })).status === 403, 'unverified email cannot check out');

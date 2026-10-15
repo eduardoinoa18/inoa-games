@@ -1,0 +1,46 @@
+{
+  "appId": "com.inoaservices.games",
+  "appName": "Inoa Games",
+  "webDir": "www",
+  "loggingBehavior": "production",
+  "backgroundColor": "#0b2a3a",
+  "server": {
+    "androidScheme": "https",
+    "iosScheme": "capacitor",
+    "hostname": "localhost"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false,
+    "backgroundColor": "#0b2a3a"
+  },
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#0b2a3a",
+    "scrollEnabled": false,
+    "allowsLinkPreview": false,
+    "preferredContentMode": "mobile",
+    "webContentsDebuggingEnabled": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1200,
+      "launchAutoHide": true,
+      "launchFadeOutDuration": 300,
+      "backgroundColor": "#0b2a3a",
+      "showSpinner": false,
+      "androidScaleType": "CENTER_CROP",
+      "splashFullScreen": true,
+      "splashImmersive": false
+    },
+    "SystemBars": {
+      "insetsHandling": "native",
+      "initialViewportFitValueHint": "cover",
+      "style": "DARK"
+    },
+    "StatusBar": {
+      "style": "DARK"
+    }
+  }
+}

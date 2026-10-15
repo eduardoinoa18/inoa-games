@@ -100,7 +100,7 @@ async function go() {
   try { document.documentElement.requestFullscreen?.().catch(() => { }); } catch (e) { }
   keepAwake();
   try { await join(code, { kind: params.get('as') === 'player' ? 'player' : 'pad', name }); show('sPlay'); buzz(30); }
-  catch (e) { show('sJoin'); $('err').textContent = e.message === 'Room not found' ? 'No room with that code. Check the big screen.' : e.message; }
+  catch (e) { show('sJoin'); $('err').textContent = e.message === 'Room not found' ? 'Could not find that room. Check the 4-letter code on the big screen, keep that screen open in front, and try again. Using the same Wi-Fi as the big screen helps.' : e.message === 'Could not reach the room' ? 'Found the room but could not connect to it. Try joining the same Wi-Fi as the big screen (or switch Wi-Fi off and use mobile data), then try again.' : /Signaling|network|server-error|socket/i.test(e.message || '') ? 'Could not reach the party service. Check your internet connection and try again.' : e.message; }
 }
 $('go').onclick = go; $('code').addEventListener('keydown', e => { if (e.key === 'Enter') $('name').focus(); }); $('name').addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
 if ((params.get('r') || params.get('join')) && params.get('auto') !== '0') setTimeout(go, 150);

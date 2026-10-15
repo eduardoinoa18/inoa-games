@@ -1,0 +1,29 @@
+{
+  "name": "inoa-games-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Capacitor wrapper (iOS + Android) for the Inoa Games static site. Web content is copied into www/ by ../tools/build_app_www.mjs.",
+  "scripts": {
+    "www": "node ../tools/build_app_www.mjs",
+    "sync": "node ../tools/build_app_www.mjs && npx cap sync",
+    "assets": "npx @capacitor/assets generate --ios --android --iconBackgroundColor '#0b2a3a' --iconBackgroundColorDark '#0b2a3a' --splashBackgroundColor '#0b2a3a' --splashBackgroundColorDark '#071c27'",
+    "open:android": "npx cap open android",
+    "open:ios": "npx cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.2",
+    "@capacitor/core": "8.5.2",
+    "@capacitor/ios": "8.5.2",
+    "@capacitor/splash-screen": "8.0.2",
+    "@capacitor/status-bar": "8.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "3.0.5",
+    "@capacitor/cli": "8.5.2",
+    "@fontsource/manrope": "5.3.0",
+    "@fontsource/press-start-2p": "5.3.0",
+    "@fontsource/unbounded": "5.3.0",
+    "peerjs": "1.5.4",
+    "qrcode-generator": "1.4.4"
+  }
+}

@@ -16,7 +16,7 @@ server.listen(PORT, async () => {
   const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist', '--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required'] });
   const errs = []; const W = Number(process.env.W || 1000), H = Number(process.env.H || 560);
   const p = await b.newPage({ viewport: { width: W, height: H }, serviceWorkers: process.env.SW ? 'allow' : 'block' }); // SW requests bypass page.route, so block unless testing the SW
-  p.on('pageerror', e => errs.push('PAGEERROR ' + e.message)); p.on('console', m => { if (m.type() === 'error' && !/ERR_FAILED|favicon/.test(m.text()) && !(process.env.ALLOW_4XX && /status of 4\d\d/.test(m.text()))) errs.push('console: ' + m.text().slice(0, 300)); });
+  p.on('pageerror', e => errs.push('PAGEERROR ' + e.message + (process.env.STACK ? '\n' + String(e.stack || '').split('\n').slice(1, 4).join('\n') : ''))); p.on('console', m => { if (m.type() === 'error' && !/ERR_FAILED|favicon/.test(m.text()) && !(process.env.ALLOW_4XX && /status of 4\d\d/.test(m.text()))) errs.push('console: ' + m.text().slice(0, 300)); });
   await p.route(/fonts\.(googleapis|gstatic)/, r => r.abort());
   await p.route(/cdn\.jsdelivr\.net\/npm\/three@0\.170\.0\/(.*)/, r => { const rel = r.request().url().split('three@0.170.0/')[1].split('?')[0]; r.fulfill({ body: fs.readFileSync(NM + rel), contentType: 'application/javascript' }); });
   const outDir = path.join(ROOT, 'test/out'); fs.mkdirSync(outDir, { recursive: true });

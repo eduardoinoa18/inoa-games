@@ -52,6 +52,10 @@ function verifyStripeSignature(payload, header, secret, toleranceSec = 300, now 
   return sigs.some(s => s.length === expected.length && crypto.timingSafeEqual(Buffer.from(s), Buffer.from(expected)));
 }
 const siteUrl = () => env('SITE_URL').replace(/\/$/, '');
-function handle(fn) { return async (req, res) => { try { if (req.method !== 'POST') return send(res, 405, { error: 'method not allowed' }, { Allow: 'POST' }); await fn(req, res); } catch (e) { const st = e.status || 500; if (st >= 500) console.error('[api]', e.message); send(res, st, { error: e.public || (st >= 500 ? 'Something went wrong' : e.message) }); } }; }
+// CORS only for the native app shells (Capacitor serves the app from these origins); the website itself is same-origin.
+// Auth is a Bearer token (no cookies), so allowing these origins cannot be abused cross-site.
+const APP_ORIGINS = new Set(['capacitor://localhost', 'https://localhost', 'http://localhost', 'ionic://localhost']);
+function cors(req, res) { const o = req.headers && req.headers.origin; if (o && APP_ORIGINS.has(o)) { res.setHeader('Access-Control-Allow-Origin', o); res.setHeader('Vary', 'Origin'); res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS'); res.setHeader('Access-Control-Allow-Headers', 'authorization, content-type'); res.setHeader('Access-Control-Max-Age', '600'); } }
+function handle(fn) { return async (req, res) => { try { cors(req, res); if (req.method === 'OPTIONS') { res.statusCode = 204; return res.end(); } if (req.method !== 'POST') return send(res, 405, { error: 'method not allowed' }, { Allow: 'POST' }); await fn(req, res); } catch (e) { const st = e.status || 500; if (st >= 500) console.error('[api]', e.message); send(res, st, { error: e.public || (st >= 500 ? 'Something went wrong' : e.message) }); } }; }
 
 module.exports = { env, send, rawBody, supa, userFromRequest, stripe, verifyStripeSignature, siteUrl, handle, form, _fetch: null };

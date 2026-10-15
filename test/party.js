@@ -18,7 +18,7 @@ server.listen(PORT, async () => {
   const errs = []; const outDir = path.join(ROOT, 'test/out'); fs.mkdirSync(outDir, { recursive: true });
   let n = 0;
   const open = async (url, { w = 1000, h = 560, label } = {}) => {
-    const ctx = await b.newContext({ viewport: { width: w, height: h }, hasTouch: w < 700 });
+    const ctx = await b.newContext({ viewport: { width: w, height: h }, hasTouch: w < 700, serviceWorkers: 'block' }); // SW requests bypass page.route (three.js → node_modules); offline is covered by test/pwa.js
     const p = await ctx.newPage(); const tag = label || `p${++n}`;
     await p.addInitScript(sig => { window.INOA_NET = { host: '127.0.0.1', port: sig, path: '/', secure: false, config: { iceServers: [] } }; }, SIG);
     p.on('pageerror', e => errs.push(`[${tag}] PAGEERROR ${e.message}`)); p.on('console', m => { if (m.type() === 'error' && !/ERR_FAILED|favicon|Could not load|net::/.test(m.text())) errs.push(`[${tag}] console: ${m.text().slice(0, 300)}`); });

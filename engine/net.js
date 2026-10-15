@@ -16,7 +16,11 @@ const ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; // no I/O to avoid confusion
 
 const scripts = {};
 function loadScript(src, globalName) { if (window[globalName]) return Promise.resolve(window[globalName]); if (!scripts[src]) scripts[src] = new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.async = true; s.onload = () => res(window[globalName]); s.onerror = () => rej(new Error('Could not load ' + src)); document.head.appendChild(s); }); return scripts[src]; }
-function cfg() { let o = window.INOA_NET; if (!o) { try { o = JSON.parse(localStorage.getItem('inoa.net') || 'null'); } catch (e) { } } return Object.assign({ debug: 0, config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478' }] } }, o || {}); }
+function cfg() { let o = window.INOA_NET; if (!o) { try { o = JSON.parse(localStorage.getItem('inoa.net') || 'null'); } catch (e) { } } return Object.assign({ debug: 0, config: { iceServers: [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] },
+  // TURN relay (PeerJS's free default servers): needed when the phone and the screen can't reach each other directly —
+  // phone on mobile data, Wi-Fi that isolates devices (guest/mesh/school networks), strict NAT. Without it joining fails.
+  // For launch, add a dedicated TURN service via window.INOA_NET / localStorage['inoa.net'] (see docs/MULTIPLAYER.md).
+  { urls: ['turn:eu-0.turn.peerjs.com:3478', 'turn:us-0.turn.peerjs.com:3478'], username: 'peerjs', credential: 'peerjsp' }], sdpSemantics: 'unified-plan' } }, o || {}); }
 function ss(k, v) { try { if (v === undefined) return JSON.parse(sessionStorage.getItem(k) || 'null'); if (v === null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, JSON.stringify(v)); } catch (e) { return null; } }
 function clientId() { try { let id = localStorage.getItem('inoa.cid'); if (!id) { id = Math.random().toString(36).slice(2, 10); localStorage.setItem('inoa.cid', id); } return id; } catch (e) { return Math.random().toString(36).slice(2, 10); } }
 export function makeCode() { let c = ''; for (let i = 0; i < 4; i++) c += ALPHA[Math.floor(Math.random() * ALPHA.length)]; return c; }
@@ -108,18 +112,31 @@ export async function join(code, { kind = 'pad', name = '' } = {}) {
   if (!peer || peer.destroyed) peer = await openPeer();
   const connect = () => new Promise((resolve, reject) => {
     const conn = peer.connect(PREFIX + code, { reliable: true, metadata: { kind, name, id: clientId() } }); let opened = false;
-    conn.on('open', () => { opened = true; clientConn = conn; });
+    // no host with that code → PeerJS reports 'peer-unavailable' on the peer right away: fail fast instead of waiting for the timeout
+    const onPeerErr = e => { if (e && e.type === 'peer-unavailable' && !opened) { try { peer.off('error', onPeerErr); } catch (x) { } reject(new Error('Room not found')); } }; try { peer.on('error', onPeerErr); } catch (x) { }
+    conn.on('open', () => { opened = true; clientConn = conn; try { peer.off('error', onPeerErr); } catch (x) { } });
     conn.on('data', m => { if (!m) return; if (m.t === 'welcome') { net.me = { slot: m.slot, color: m.color, name: m.name }; net.layout = m.layout || net.layout; net.online = m.online || null; net.status = 'ready'; emit('status', 'ready'); emit('welcome', m); emit('layout', net.layout); emit('online', net.online); resolve(conn); } else if (m.t === 'online') { net.online = m.online || null; emit('online', net.online); } else if (m.t === 'layout') { net.layout = m.layout; emit('layout', m.layout); } else if (m.t === 'rumble') { try { navigator.vibrate && navigator.vibrate(m.ms); } catch (e) { } } else if (m.t === 'full') { net.status = 'error'; net.error = 'Room is full'; emit('status', 'error'); } else if (m.t === 'bye' && m.reason === 'end') { net.status = 'ended'; emit('status', 'ended'); } else emit('msg', m); });
     conn.on('close', () => { if (clientConn === conn) clientConn = null; if (net.status !== 'ended') { net.status = 'reconnecting'; emit('status', 'reconnecting'); scheduleReconnect(); } });
     conn.on('error', () => { if (!opened) reject(new Error('Could not reach the room')); });
-    setTimeout(() => { if (!net.me || clientConn !== conn) { if (!opened) { try { conn.close(); } catch (e) { } reject(new Error('Room not found')); } } }, 7000);
+    setTimeout(() => { if (!net.me || clientConn !== conn) { if (!opened) { try { conn.close(); } catch (e) { } reject(new Error('Room not found')); } } }, 15000);
   });
   let tries = 0; const scheduleReconnect = () => { clearTimeout(retryTimer); if (tries++ > 90) { net.status = 'error'; net.error = 'Lost the room'; emit('status', 'error'); return; } retryTimer = setTimeout(() => connect().then(() => { tries = 0; }).catch(scheduleReconnect), 1200); };
   try { await connect(); } catch (e) { net.status = 'error'; net.error = e.message; emit('status', 'error'); throw e; }
   return net.me;
 }
 // Throttled input sender for pads: call every frame or on change.
-export function sendInput(state) { const s = JSON.stringify(state); if (s === lastSent && performance.now() - sendTimer < 250) return; lastSent = s; sendTimer = performance.now(); if (clientConn && clientConn.open) try { clientConn.send({ t: 'in', s: state }); } catch (e) { } }
+// Phone input: buttons go out immediately; stick-only changes are quantized (0.05) and capped at one message per 25 ms
+// (40 Hz) with a trailing send, so a 120 Hz touchscreen can't flood the ordered/reliable data channel and build up lag.
+let lastIn = null, stickTimer = 0;
+const q = v => Math.round((+v || 0) * 20) / 20;
+export function sendInput(state) {
+  const st = Object.assign({}, state, { x: q(state.x), y: q(state.y) }), s = JSON.stringify(st), now = performance.now();
+  if (s === lastSent && now - sendTimer < 250) return;   // unchanged: only the heartbeat goes out
+  const stickOnly = lastIn && ['a', 'b', 'c', 'd', 'pause'].every(k => !!lastIn[k] === !!st[k]);
+  if (stickOnly && now - sendTimer < 25) { clearTimeout(stickTimer); stickTimer = setTimeout(() => sendInput(st), 25 - (now - sendTimer)); return; }
+  clearTimeout(stickTimer); lastSent = s; lastIn = st; sendTimer = now;
+  if (clientConn && clientConn.open) try { clientConn.send({ t: 'in', s: st }); } catch (e) { }
+}
 export function sendMsg(msg) { if (net.role === 'client') { if (clientConn && clientConn.open) try { clientConn.send(msg); } catch (e) { } } else broadcast(msg); }
 
 /* ---------------- QR + party widget ---------------- */
