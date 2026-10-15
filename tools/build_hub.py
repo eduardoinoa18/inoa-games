@@ -9,7 +9,7 @@ FILES = {'pact': 'pixelpact', 'match': 'pixelpact', 'tide': 'tidelines'}
 head = open(f'{HUB}/head.html').read()
 head = head.replace('/*BASE*/', open(f'{HUB}/base.css').read().replace('<style>', '').replace('</style>', ''))
 head = head.replace('/*RIG*/', open(f'{HUB}/rig.js').read() + '\n' + open(f'{HUB}/bg.js').read())
-js = open(f'{HUB}/hub.js').read()
+js = open(f'{HUB}/hub.js').read().replace('/*EXTRAS*/', open(f'{HUB}/extras.js').read())
 
 live = {}
 for gid in re.findall(r"\{ id: '([a-z]+)'", js):

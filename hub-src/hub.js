@@ -21,7 +21,7 @@ GAMES.forEach(g => {
   const d = document.createElement(g.href ? 'a' : 'div'); d.className = 'game' + (g.flag ? ' flag' : ''); if (g.href) { d.href = g.href; d.target = '_blank'; d.rel = 'noopener'; d.style.textDecoration = 'none'; d.style.color = 'inherit'; }
   const cn = document.createElement('canvas'); d.appendChild(cn);
   d.insertAdjacentHTML('beforeend', `<span class="st${g.live ? ' live' : ''}">${g.st}</span><div class="body"><span class="kind">${g.kind}</span><b>${g.name}</b><p>${g.desc}</p><div class="meta">${g.meta.map(m => `<span>${m}</span>`).join('')}</div></div>`);
-  grid.appendChild(d); tiles.push({ g, cn });
+  grid.appendChild(d); tiles.push({ g, cn, el: d });
 });
 function slotRect(c, x, y, w, h, col) { c.fillStyle = col; c.beginPath(); rr(c, x, y, w, h, 5); c.fill(); }
 const ILLO = {
@@ -71,6 +71,7 @@ function drawMaker() {
   c.fillStyle = 'rgba(255,255,255,.55)'; c.font = '800 10px Manrope, sans-serif'; c.textAlign = 'center'; c.fillText('tap to attack', w / 2, h - 10);
   c.fillStyle = hero.c.accent; c.font = '900 11px Unbounded, sans-serif'; c.textAlign = 'left'; c.fillText(maker.title.toUpperCase(), 14, 22); c.restore();
 }
+/*EXTRAS*/
 buildSun();
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => { }));
 let last = performance.now();

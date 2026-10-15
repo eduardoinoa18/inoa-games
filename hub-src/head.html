@@ -43,6 +43,23 @@
 .band{display:flex;gap:28px;flex-wrap:wrap;justify-content:center;padding:18px;border-block:1px solid var(--line);background:var(--ink-2)}
 .band span{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mist)}
 .band b{color:var(--foam);font-family:var(--f-display);font-size:18px;display:block;letter-spacing:0}
+.today{padding-block:14px 18px;background:var(--ink-2)}
+.today-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:760px){.today-grid{grid-template-columns:1fr}}
+.daily{background:var(--glass);border:1px solid var(--line);padding:14px 16px;display:grid;gap:10px;clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px)}
+.daily.done{border-color:var(--lagoon)}
+.dc-k{font-family:var(--f-pixel);font-size:8px;letter-spacing:.06em;color:var(--sun);text-transform:uppercase}
+.dc-main{display:flex;gap:12px;align-items:center}.dc-main img{width:84px;height:48px;object-fit:cover;flex:none}
+.dc-main div{flex:1;min-width:0}.dc-main b{font-family:var(--f-display);font-size:17px;display:block}.dc-main p{font-size:13px;color:var(--mist);margin:2px 0 0}
+.dc-main .btn{flex:none}.dc-ok{font-size:30px;color:var(--lagoon);font-weight:900}.dc-note{font-size:11px;color:var(--mist)}
+.contwrap{display:grid;gap:8px}.controw{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.cont{display:flex;gap:10px;align-items:center;background:var(--glass);border:1px solid var(--line);padding:8px;color:inherit;text-decoration:none;min-height:56px}
+.cont:hover,.cont:focus-visible{border-color:var(--lagoon)}.cont img,.cont .ph{width:64px;height:40px;object-fit:cover;flex:none;background:#0b2a3a}
+.cont span{flex:1;min-width:0;display:grid}.cont b{font-size:14px}.cont small{font-size:11px;color:var(--mist);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cont i{font-style:normal;color:var(--sun)}
+.game .stats{font-size:12px;font-weight:800;color:var(--lagoon)}.game .stats.new{color:var(--mist);font-weight:700}
+#langToggle{display:flex;gap:2px;margin-left:auto;margin-right:10px}#langToggle button{font:800 12px var(--f-body);background:var(--glass-2);color:var(--foam);border:1px solid var(--line);padding:8px 10px;min-height:36px;cursor:pointer}
+#langToggle button.on{background:var(--lagoon);color:var(--coral-ink);border-color:transparent}
+#langToggle button:focus-visible,.chip:focus-visible,.cont:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 </style>
 
 <nav><div class="wrap"><div class="logo">INOA<span>GAMES</span></div><ul><li><a href="#shelf">Games</a></li><li><a href="#hero">Your hero</a></li><li><a href="#party">Party</a></li><li><a href="#faq">FAQ</a></li></ul><a class="btn" href="#shelf">Play</a></div></nav>
@@ -61,6 +78,10 @@
   </div>
 </header>
 
+<section class="today"><div class="wrap today-grid">
+  <div class="daily" id="dailyCard" aria-live="polite"></div>
+  <div class="contwrap" hidden><div class="eyebrow" id="contHead">Continue playing</div><div class="controw" id="continueRow"></div></div>
+</div></section>
 <div class="band"><span><b>All ages</b>no stranger chat</span><span><b>Phone · laptop</b>touch, keys, gamepad</span><span><b>EN · ES</b>from day one</span><span><b>Free</b>while in preview</span></div>
 
 <section id="shelf">
@@ -79,6 +100,7 @@
         <div class="nm"><span id="mkName">Rook Ironhide</span><small id="mkClass">TANK · SHIELD KNIGHT</small></div>
         <div class="row" id="mkClasses"></div>
         <div class="row"><button class="chip" id="mkColors">New colors</button><button class="chip" id="mkName2">New name</button><button class="chip" id="mkSurprise">Surprise me</button></div>
+        <div class="row"><button class="chip" id="heroShare">Share hero card</button></div>
         <div><div style="display:flex;justify-content:space-between;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mist);margin-bottom:6px"><span id="mkLv">Level 1</span><span id="mkXp">XP to 2</span></div><div class="bar"><i></i></div></div>
       </div>
       <div class="tree">
