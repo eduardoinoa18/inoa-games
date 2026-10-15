@@ -30,7 +30,7 @@
 .tv-card .q{font-family:var(--f-d);font-size:clamp(18px,3.4vw,26px);line-height:1.2}
 .tv-card .opts{display:grid;gap:8px}
 .tv-card .opts .tv-ch{box-shadow:0 4px 0 rgba(0,0,0,.15);border:2px solid var(--line)}
-.wg{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.wg button{min-height:56px;border-radius:14px;border:2px solid var(--line);background:#fff;font-weight:800;cursor:pointer;font-size:14px;color:var(--ink)}.wg button b{display:block;font-family:var(--f-d);font-size:15px}.wg button.all{background:var(--coral);color:#fff;border-color:transparent}
+.wg{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.wg button{min-height:56px;border-radius:14px;border:2px solid var(--line);background:#fff;font-weight:800;cursor:pointer;font-size:14px;color:var(--ink)}.wg button b{display:block;font-family:var(--f-d);font-size:15px}.wg button.all{background:var(--coral);color:#fff;border-color:transparent}.wg button.sel{outline:4px solid var(--ink);outline-offset:2px}
 .pk{display:flex;gap:6px;flex-wrap:wrap}.pk button{flex:1 1 70px;min-height:46px;border-radius:14px;border:2px solid var(--line);background:#fff;font-weight:800;cursor:pointer;color:var(--ink);padding:4px 6px}.pk button.on{border-color:var(--mint-ink);background:var(--mint)}
 .pk button small{display:block;font-weight:600;font-size:11px;color:#4c5868}
 .names{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:6px}.names input{min-height:42px;border-radius:12px;border:2px solid var(--line);padding:0 10px;font:inherit;font-weight:800;box-sizing:border-box;width:100%;user-select:text;-webkit-user-select:text}
@@ -41,7 +41,9 @@
 .tv-bubble:after{content:"";position:absolute;left:50%;bottom:-8px;margin-left:-8px;border:8px solid transparent;border-top-color:#fff;border-bottom:0}
 @keyframes pop{from{transform:translate(-50%,-80%) scale(.6);opacity:0}}
 @media (max-width:640px){.tv-choices{grid-template-columns:1fr 1fr;gap:6px;padding:8px}.tv-ch{min-height:52px;grid-template-columns:36px 1fr;font-size:14px}.tv-ch b{width:36px;height:36px;font-size:17px}.tv-scores{max-width:60vw}.tv-scores span{font-size:12px;padding:5px 8px}}
-@media (orientation:portrait){.tv-buz[data-c="0"],.tv-buz[data-c="1"]{top:auto;bottom:128px}.tv-scores{bottom:auto;top:max(56px,calc(env(safe-area-inset-top) + 50px));max-width:calc(100vw - 16px);gap:4px}.tv-scores span{font-size:12px;padding:4px 8px;gap:4px}}
+/* toasts sit low (over the stage floor) instead of on top of the question board */
+.ig-toast{top:auto;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 52px)}
+@media (orientation:portrait){.tv-buz[data-c="0"],.tv-buz[data-c="1"]{top:auto;bottom:128px}.tv-scores{bottom:auto;top:max(56px,calc(env(safe-area-inset-top) + 50px));left:8px;right:8px;transform:none;max-width:none;gap:4px}.ig-toast{bottom:max(30px,env(safe-area-inset-bottom));max-width:calc(100vw - 2 * clamp(78px,15vmin,112px) - 40px)}.tv-scores span{font-size:12px;padding:4px 8px;gap:4px}}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
 </head><body>
@@ -573,9 +575,11 @@ function wagerNext(i) {
   const pl = G.players[i], maxW = Math.max(pl.score, 100);
   if (!pl.human || G.auto) { const b = pl.bot || BOTS[i % 3]; const f = b.wager < 0 ? pick([.25, .5, .75, 1]) : b.wager; G.wagers[i] = Math.round(maxW * f / 10) * 10; bubble(i, `${T().yourWager}: ${G.wagers[i]}`); later(G.auto ? .3 : 1.1, () => wagerNext(i + 1)); return; }
   const cat = CATS[G.deck.fin.cat]; const card = overlay(`<div class="ig-kicker" style="color:${PCSS[i]}">${T().allin} · ${T().cat}: ${cat[0]} ${S.lang === 'es' ? cat[2] : cat[1]}</div><h2>${esc(T().wager(pl.name))}</h2><p class="ig-sub">${T().score}: <b>${pl.score}</b></p><div class="wg">${[0, .25, .5, .75, 1].map(f => `<button data-f="${f}" class="${f === 1 ? 'all' : ''}"><b>${Math.round(maxW * f / 10) * 10}</b>${f === 1 ? T().allin : Math.round(f * 100) + '%'}</button>`).join('')}</div>`);
-  E.say(T().wager(pl.name), { lang: S.lang }); G.wagerCard = { card, i, maxW };
+  E.say(T().wager(pl.name), { lang: S.lang }); G.wagerCard = { card, i, maxW, sel: 2 }; wagerNav(0);
   card.querySelectorAll('.wg button').forEach(b => b.onclick = () => setWager(+b.dataset.f));
 }
+const WF = [0, .25, .5, .75, 1];
+function wagerNav(d) { const wc = G.wagerCard; if (!wc) return; wc.sel = clamp(wc.sel + d, 0, 4); wc.card.querySelectorAll('.wg button').forEach((b, k) => b.classList.toggle('sel', k === wc.sel)); }
 function setWager(f) { const wc = G.wagerCard; if (!wc) return; G.wagerCard = null; wc.card.remove(); G.wagers[wc.i] = Math.round(wc.maxW * f / 10) * 10; SFX.coin(); wagerNext(wc.i + 1); }
 function finalQuestion() { G.cur = G.deck.fin; G.out = []; G.revealed = false; G.pickedShow = null; G.phase = 'fread'; SCR.dirty = true; readAloud(G.cur); hostTalk(3); later(2, () => finalPickNext(0)); }
 function finalPickNext(i) {
@@ -594,7 +598,7 @@ function showFinalChoices(i) {
 function finalPick(k) { if (G.phase !== 'fpick') return; const i = G.fi; G.finalPicks[i] = k; G.phase = 'fwait'; G.timer = null; SFX.snap(); const card = G.fcard; const nxt = G.players.findIndex((p, j) => j > i && p.human); card.querySelector('.ig-card').innerHTML = `<h2>🔒 ${T().locked}</h2>${nxt >= 0 ? `<p class="ig-sub">${esc(T().pass(G.players[nxt].name))}</p>` : ''}<button class="ig-btn" data-a="ok">OK</button>`; card.querySelector('[data-a=ok]').onclick = () => { card.remove(); G.fcard = null; finalPickNext(i + 1); }; if (G.auto) { card.remove(); G.fcard = null; finalPickNext(i + 1); } }
 function finalReveal() {
   G.phase = 'freveal'; G.timer = null; SCR.dirty = true; big(T().reveal); E.tone(220, .8, 'sawtooth', .06, 200);
-  G.players.forEach((pl, i) => later(1.4 + i * 1.3, () => { const ok = G.finalPicks[i] === G.cur.correct; const w = G.wagers[i] || 0; pl.score += ok ? w : -w; G.pickedShow = G.finalPicks[i]; SCR.dirty = true; drawPodium(i); scores(); react(i, ok ? 'cheer' : 'slump', 2.2); floatAt(i, (ok ? '+' : '−') + w, ok ? 'gold' : 'bad'); ok ? SFX.good() : SFX.bad(); G.focus = i; G.focusT = 1.1; }));
+  G.players.forEach((pl, i) => later(1.4 + i * 1.3, () => { const ok = G.finalPicks[i] === G.cur.correct; const w = G.wagers[i] || 0; pl.score += ok ? w : S.kids ? 0 : -w; // kids mode: never minus points G.pickedShow = G.finalPicks[i]; SCR.dirty = true; drawPodium(i); scores(); react(i, ok ? 'cheer' : 'slump', 2.2); floatAt(i, ok ? '+' + w : S.kids ? '✗' : '−' + w, ok ? 'gold' : 'bad'); ok ? SFX.good() : SFX.bad(); G.focus = i; G.focusT = 1.1; }));
   later(1.6 + G.players.length * 1.3, () => { G.revealed = true; G.pickedShow = null; SCR.dirty = true; E.say(`${T().answer} ${G.cur.ch[G.cur.correct]}`, { lang: S.lang }); later(2.6, endGame); });
 }
 function endGame() {
@@ -630,7 +634,8 @@ addEventListener('keydown', e => {
   const humans = G.players.filter(p => p.human).length;
   if (G.phase === 'buzz' || G.phase === 'steal') { const k = KEYS.indexOf(e.code); if (k >= 0 && G.players[k]?.human) buzz(k); if ((e.code === 'Space' || e.code === 'Enter') && humans === 1) buzz(0); }
   const n = ['Digit1', 'Digit2', 'Digit3', 'Digit4'].indexOf(e.code); const n2 = ['Numpad1', 'Numpad2', 'Numpad3', 'Numpad4'].indexOf(e.code); const ci = n >= 0 ? n : n2;
-  if (ci >= 0) { if (G.phase === 'answer' && G.players[G.buzzer].human && !G.out.includes(ci)) answer(ci); else if (G.phase === 'fpick') finalPick(ci); else if (G.wagerCard) setWager([0, .25, .5, 1][ci]); }
+  if (ci >= 0) { if (G.phase === 'answer' && G.players[G.buzzer].human && !G.out.includes(ci)) answer(ci); else if (G.phase === 'fpick') finalPick(ci); }
+  if (G.wagerCard) { const w = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5'].indexOf(e.code); if (w >= 0) setWager(WF[w]); else if (e.code === 'ArrowLeft') wagerNav(-1); else if (e.code === 'ArrowRight') wagerNav(1); else if (e.code === 'Enter' || e.code === 'Space') setWager(WF[G.wagerCard.sel]); return; }
   if (G.phase === 'fwait' && (e.code === 'Enter' || e.code === 'Space') && G.fcard) G.fcard.querySelector('[data-a=ok]')?.click();
   if (G.fcard && G.phase !== 'fpick' && G.phase !== 'fwait' && (e.code === 'Enter' || e.code === 'Space')) G.fcard.querySelector('[data-a=ready]')?.click();
 });
@@ -642,6 +647,8 @@ function pollPads() {
     if ((G.phase === 'buzz' || G.phase === 'steal') && [0, 1, 2, 3].some(pressed)) buzz(pi);
     else if (G.phase === 'answer' && G.buzzer === pi) { const k = [0, 1, 2, 3].find(pressed); if (k != null && !G.out.includes(k)) answer(k); }
     else if (G.phase === 'fpick' && G.fi === pi) { const k = [0, 1, 2, 3].find(pressed); if (k != null) finalPick(k); }
+    else if (G.wagerCard && (G.wagerCard.i === pi || G.players.filter(x => x.human).length === 1)) { if (pressed(14)) wagerNav(-1); if (pressed(15)) wagerNav(1); if (pressed(0)) setWager(WF[G.wagerCard.sel]); }
+    else if (G.fcard && G.phase !== 'fpick' && pressed(0)) G.fcard.querySelector('[data-a=ready],[data-a=ok]')?.click();
     if (pressed(9)) pause(); }
 }
 

@@ -9,10 +9,11 @@ module.exports = async (p) => {
   await p.evaluate(() => { localStorage.removeItem('inoa.trivia.seen'); window.__GAME.S.lang = 'en'; document.querySelector('.ig-title [data-a=play]').click(); });
   console.log('intro', JSON.stringify(await sim(6, ['buzz'])));
   await shot('question');
-  await p.evaluate(() => window.__GAME.buzz(0)); await sim(.3);
+  await p.evaluate(() => window.__GAME.buzz(0)); await sim(1.2);
   await shot('answer');
   // answer wrong on purpose → steal phase
   await p.evaluate(() => { const G = window.__GAME.G; window.__GAME.answer((G.cur.correct + 1) % 4); });
+  await sim(.4); await shot('wrong');
   console.log('after wrong', JSON.stringify(await sim(2.5, ['steal'])));
   console.log('steal', JSON.stringify(await sim(4, ['answer', 'result'])));
   await shot('steal');
@@ -70,7 +71,7 @@ module.exports = async (p) => {
   await p.evaluate(() => { document.querySelectorAll('.ig-results,.ig-screen,.tv-card').forEach(e => e.remove()); window.__GAME.setAuto(false); window.__GAME.start({ humans: 1, lang: 'en', kids: false }); });
   console.log('p q', JSON.stringify(await sim(6, ['buzz'])));
   await shot('p_question');
-  await p.evaluate(() => window.__GAME.buzz(0)); await sim(.3);
+  await p.evaluate(() => window.__GAME.buzz(0)); await sim(1.2);
   await shot('p_answer');
   await p.evaluate(() => { window.__GAME.G.cur && window.__GAME.answer(window.__GAME.G.cur.correct); }); await sim(.8);
   await shot('p_correct');
