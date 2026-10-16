@@ -514,7 +514,7 @@ const ES = {
   'REINFORCEMENTS!': '¡REFUERZOS!', 'ENRAGED!': '¡FURIOSO!', 'SECRET!': '¡SECRETO!', 'SUN GEM!': '¡GEMA SOLAR!', 'GATE OPEN!': '¡PUERTA ABIERTA!', 'THE HILL MOVED!': '¡LA COLINA SE MOVIÓ!',
   'MOVING SOON': 'SE MUEVE PRONTO', 'DAZZLED': 'DESLUMBRADO', 'WAVE INCOMING': 'SE ACERCA UNA OLA', 'WAITING FOR TEAM': 'ESPERANDO AL EQUIPO', 'HELP!': '¡AYUDA!', 'REVIVING': 'REVIVIENDO',
   'BOARD': 'SUBE', 'EXIT': 'SALIDA', 'STAGE CLEAR': 'NIVEL SUPERADO', 'OUT OF LIVES': 'SIN VIDAS', 'DOWN': 'CAÍDO', 'HITS': 'GOLPES', 'GO': '¡YA!', 'DRAW': 'EMPATE',
-  'PLAYER {0} WINS': '¡GANA JUGADOR {0}!', 'BOT {0} WINS': '¡GANA BOT {0}!',
+  'P{0} JOINED!': '¡J{0} SE UNE!', 'PLAYER {0} WINS': '¡GANA JUGADOR {0}!', 'BOT {0} WINS': '¡GANA BOT {0}!',
   'Stick together. Stand by a downed friend to revive them.': 'Manteneos juntos. Quédate junto a un amigo caído para revivirlo.', 'Find 3 Pact Shells and reach the exit': 'Encuentra 3 Conchas del Pacto y llega a la salida',
   'FORTRESS WALL!': '¡MURO FORTALEZA!', 'CLONE STORM!': '¡TORMENTA DE CLONES!', 'TSUNAMI!': '¡TSUNAMI!', 'VOLCANO FIST!': '¡PUÑO VOLCÁN!', 'SUNRISE!': '¡AMANECER!', 'THORNQUAKE!': '¡TERREMOTO DE ESPINAS!',
   // results + pause + title
@@ -1010,7 +1010,7 @@ function startLevel(fromCheckpoint) {
     map[ty][tx] = '.';
   }
   for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) if (map[ty][tx] === 'G' && arena) arena.gate.push([tx, ty]);
-  { const seen = {}; for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) { if (map[ty][tx] !== 'h' || seen[tx + ',' + ty]) continue; const grp = { tiles: [], set: {}, found: false, a: 1, x0: 1e9, x1: 0 }, st = [[tx, ty]]; seen[tx + ',' + ty] = 1;
+  { const seen = {}; for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) { if (map[ty][tx] !== 'h' || seen[tx + ',' + ty]) continue; const grp = { tiles: [], set: {}, found: !!stats.got['s' + tx + ',' + ty], key: 's' + tx + ',' + ty, a: 1, x0: 1e9, x1: 0 }, st = [[tx, ty]]; seen[tx + ',' + ty] = 1;
     while (st.length) { const [qx, qy] = st.pop(); grp.tiles.push([qx, qy]); grp.set[qx + ',' + qy] = 1; grp.x0 = Math.min(grp.x0, qx * TS); grp.x1 = Math.max(grp.x1, qx * TS + TS); for (const [ax, ay] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = qx + ax, ny = qy + ay, kk = nx + ',' + ny; if (ny >= 0 && ny < MH && nx >= 0 && nx < MW && !seen[kk] && map[ny][nx] === 'h') { seen[kk] = 1; st.push([nx, ny]); } } }
     secrets.push(grp); } }
   for (const e of ents) if (e.kind === 'gem') e.sg = secretAt(e.tx, e.ty);
@@ -1317,7 +1317,7 @@ function updatePlayer() {
   if (P.onGround && P.groundTile && tile(P.groundTile[0], P.groundTile[1]) === 'X') { const kk = P.groundTile.join(','); if (!crumbled[kk]) crumbled[kk] = { t: 0, gone: false, tx: P.groundTile[0], ty: P.groundTile[1] }; }
   if (secrets.length) { const kx0 = Math.floor(P.x / TS), kx1 = Math.floor((P.x + P.w - 1) / TS), ky0 = Math.floor(P.y / TS), ky1 = Math.floor((P.y + P.h - 1) / TS);
     for (const sg of secrets) { if (P.x + P.w < sg.x0 || P.x > sg.x1) continue; let inside = false; for (let qy = ky0; qy <= ky1 && !inside; qy++) for (let qx = kx0; qx <= kx1; qx++) if (sg.set[qx + ',' + qy]) { inside = true; break; }
-      if (inside) { sg.in = G.frame; if (!sg.found) { sg.found = true; stats.secrets = (stats.secrets || 0) + 1; Sound.sfx.secret(); floatText(P.x + 10, P.y - 24, tr('SECRET!'), '#ffc65c', 16, { crit: true }); burst(P.x + 10, P.y + 20, 24, ['#ffc65c', '#ffffff', '#2de2c3'], 5, 36, { add: true, g: -.02 }); } } } }
+      if (inside) { sg.in = G.frame; if (!sg.found) { sg.found = true; stats.got[sg.key] = 1; stats.secrets = (stats.secrets || 0) + 1; Sound.sfx.secret(); floatText(P.x + 10, P.y - 24, tr('SECRET!'), '#ffc65c', 16, { crit: true }); burst(P.x + 10, P.y + 20, 24, ['#ffc65c', '#ffffff', '#2de2c3'], 5, 36, { add: true, g: -.02 }); } } } }
   // hazards (adventure)
   if (G.mode !== 'match') {
     const tx0 = Math.floor(P.x / TS), tx1 = Math.floor((P.x + P.w - 1) / TS), tyF = Math.floor((P.y + P.h - 1) / TS), tyM = Math.floor((P.y + P.h * .6) / TS);
@@ -1793,7 +1793,7 @@ function updateCamera() {
     for (const p of ps) { minx = Math.min(minx, p.x); maxx = Math.max(maxx, p.x + p.w); miny = Math.min(miny, p.y); maxy = Math.max(maxy, p.y + p.h); if (!lead || p.x > lead.x) lead = p; }
     if (!lead) { lead = players[0]; minx = lead.x; maxx = lead.x + 20; miny = lead.y; maxy = lead.y + 40; }
     tx = (minx + maxx) / 2 + (ps.length === 1 ? lead.facing * vw0 * .08 + lead.vx * 8 : 0);
-    ty = (miny + maxy) / 2 + (G.portrait ? vh0 * .06 : -vh0 * .06);
+    ty = (miny + maxy) / 2 + (G.portrait ? vh0 * .06 : G.touchOn ? vh0 * .1 : -vh0 * .06);
     if (G.cine > 0 && boss) tx = (boss.x + boss.w / 2 + lead.x) / 2;
     if (G.levelDone && raft) tx = raft.x + 36;
     if (ps.length > 1) z = clamp(Math.min(vw0 / (maxx - minx + 260), vh0 / (maxy - miny + 220)), .62, 1);
@@ -1801,12 +1801,26 @@ function updateCamera() {
     let lo = vw / 2, hi = MW * TS - vw / 2;
     if (arena && arena.active) { lo = arena.x0 + vw / 2; hi = arena.x1 - vw / 2; }
     tx = lo > hi ? (lo + hi) / 2 : clamp(tx, lo, hi);
-    ty = Math.min(ty, (G.portrait ? MH * TS + vh * .26 : MH * TS) - vh / 2);
+    ty = Math.min(ty, (G.portrait ? MH * TS + vh * .26 : G.touchOn ? MH * TS + vh * .18 : MH * TS) - vh / 2);
     // teleport stragglers next to the leader
     for (const p of ps) if (p !== lead && Math.abs(p.x - lead.x) > vw0 * 1.1 && p.y > lead.y - 40) { p.x = lead.x - 30; p.y = lead.y - 20; p.vx = p.vy = 0; p.inv = 60; ringFx(p.x + 10, p.y + 20, 4, 40, p.col, 16, 3); }
   }
   G.cam.cx = lerp(G.cam.cx, tx, .1); G.cam.cy = lerp(G.cam.cy, ty, .09); G.cam.z = lerp(G.cam.z, z, .06);
   G.Z = G.Zbase * G.cam.z; G.viewW = cv.width / G.Z; G.viewH = cv.height / G.Z;
+}
+const dropIn = {};
+function pollDropIn() {
+  if (G.mode !== 'adventure' || players.length >= 4 || G.levelDone || G.gameOver || G.cine > 0) return;
+  for (const src of ALL_SRC) {
+    if (src === 'touch' || src === 'k1' || src === 'k2' || players.some(p => p.src === src)) continue; // keyboards join in the lobby (an arrow key press should never spawn a stray P2)
+    const st = dropIn[src] || (dropIn[src] = { cur: BLANK(), prev: {}, just: {} }); readSrc(src, st.cur); edge(st.cur, st.prev, st.just);
+    if (!st.just.jump || G.frame < 30) continue;
+    const lead = alive()[0] || players[0], idx = players.length, used = players.map(p => HEROES.indexOf(p.hero));
+    let hero = settings.heroes[idx] ?? idx; if (used.includes(hero)) hero = HEROES.map((_, i) => i).find(i => !used.includes(i)) ?? 0;
+    const np = makePlayer({ idx, src, hero }, lead ? lead.x - 24 : checkpoint.x, lead ? lead.y - 20 : checkpoint.y); np.inv = 120; players.push(np);
+    lobby.slots.push({ idx, src, hero, ready: true }); Sound.sfx.join(); ringFx(np.x + 10, np.y + 20, 4, 60, np.col, 24, 4); floatText(np.x + 10, np.y - 24, tr('P{0} JOINED!', idx + 1), np.col, 15, { crit: true }); say(tr('P{0} JOINED!', idx + 1));
+    if (stats.lives < 50) stats.lives++; setPlayUI(true); return;
+  }
 }
 function pollPlayers() {
   for (const pl of players) {
@@ -2790,7 +2804,7 @@ function drawOverlays() {
   if (G.fade > 0) { ctx.fillStyle = `rgba(6,24,33,${G.fade})`; ctx.fillRect(0, 0, W, H); }
 }
 function drawPlay() {
-  const z = G.Z * G.punch, vw = cv.width / z, vh = cv.height / z;
+  const z = G.Z * (motionOK() ? G.punch : 1), vw = cv.width / z, vh = cv.height / z;
   const sh = motionOK() ? G.trauma * G.trauma * 16 : 0, sx = sh * (Math.sin(G.frame * 1.7) + Math.sin(G.frame * 3.1) * .5) / 1.5, sy = sh * (Math.cos(G.frame * 1.3) + Math.sin(G.frame * 2.7) * .5) / 1.5;
   const left = G.cam.cx - vw / 2 + sx, top = G.cam.cy - vh / 2 + sy;
   view = { l: left, t: top, r: left + vw, b: top + vh };
@@ -3029,7 +3043,7 @@ function loop(now) {
   acc += dt * G.timeScale;
   let steps = 0;
   while (acc >= 1 / 60 && steps < 4) {
-    if (G.scene === 'play') { pollPlayers(); pollMenu(); if (menuJust.pause) pauseGame(); }
+    if (G.scene === 'play') { pollPlayers(); pollMenu(); pollDropIn(); if (menuJust.pause) pauseGame(); }
     else { pollMenu(); if (G.scene === 'lobby') pollLobby(); menuNav(); }
     step(); acc -= 1 / 60; steps++;
   }
@@ -3051,7 +3065,7 @@ function show(id) {
 function setPlayUI(on) {
   const hasTouch = players.some(p => p.src === 'touch'), coarse = matchMedia('(pointer:coarse)').matches;
   const showTouch = on && (settings.touch === 'on' || (settings.touch === 'auto' && (hasTouch || (coarse && players.length === 0))));
-  $('touch').classList.toggle('on', !!showTouch); $('btnPause').classList.toggle('on', !!on); document.body.classList.toggle('playing', !!on);
+  $('touch').classList.toggle('on', !!showTouch); G.touchOn = !!showTouch; $('btnPause').classList.toggle('on', !!on); document.body.classList.toggle('playing', !!on);
   document.documentElement.style.setProperty('--b', settings.btn + 'px');
 }
 function translateDOM() {
@@ -3204,7 +3218,7 @@ function boot() {
   // headless test hooks (test/pixelpact.js): drive the fixed-step sim without real-time waits
   window.__GAME = { G, levels: LEVELS, stages: STAGES, heroes: HEROES, progress, get players() { return players; }, get lobby() { return lobby; }, get ents() { return ents; }, get boss() { return boss; }, get arena() { return arena; }, get mapW() { return MW * TS; },
     start(mode, level = 0, o = {}) { G.mode = mode; G.level = level; if (o.stage != null) G.stage = o.stage; if (o.mode) settings.mmode = o.mode; if (o.hero != null) settings.heroes[0] = o.hero; lobby.slots = []; openLobby(); if (mode === 'match') { while (lobby.slots.length < 1 + (o.bots || 1)) addBot(); } startPlay(); },
-    openMap() { openPicks('adventure'); }, force(i, key) { const pl = players[i]; if (pl) { pl.force = key; if (key === 'ult') pl.meter = 100; } }, update(n = 1) { for (let i = 0; i < n; i++) { if (G.scene === 'play') pollPlayers(); step(); } if (G.world) drawPlay(); }, results: showResults };
+    openMap() { openPicks('adventure'); }, loopStep(n = 1) { for (let i = 0; i < n; i++) { if (G.scene === 'play') { pollPlayers(); pollDropIn(); } step(); } }, down(i) { const pl = players[i]; if (pl) { pl.hp = 0; downPlayer(pl); } }, force(i, key) { const pl = players[i]; if (pl) { pl.force = key; if (key === 'ult') pl.meter = 100; } }, update(n = 1) { for (let i = 0; i < n; i++) { if (G.scene === 'play') pollPlayers(); step(); } if (G.world) drawPlay(); }, results: showResults };
   window.__ppTr = tr; window.__READY = true;
 }
 const fontsReady = document.fonts && document.fonts.load ? Promise.all([document.fonts.load('900 20px "Unbounded"'), document.fonts.load('800 12px "Manrope"'), document.fonts.load('10px "Press Start 2P"')]).catch(() => {}) : Promise.resolve();

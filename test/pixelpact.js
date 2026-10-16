@@ -31,6 +31,24 @@ module.exports = async (p, shot) => {
     return { leverOn, swimming: !!p2.wet };
   });
   console.log('mechanics', JSON.stringify(mech));
+  // touch controls on a phone-sized screen (forced on: headless has no coarse pointer)
+  await p.evaluate(() => { document.querySelector('#sTouch button[data-v="on"]').click(); const G = window.__GAME; G.start('adventure', 3); G.update(90); });
+  await shot('touch');
+  // gamepad drop-in mid-level: a second pad presses A and joins next to the leader; a revive works
+  const drop = await p.evaluate(() => {
+    document.querySelector('#sTouch button[data-v="auto"]').click();
+    const btn = () => ({ pressed: false, value: 0 }), pad = { id: 'fake', index: 1, connected: true, axes: [0, 0, 0, 0], buttons: Array.from({ length: 17 }, btn) };
+    navigator.getGamepads = () => [null, pad, null, null];
+    const G = window.__GAME; G.start('adventure', 0); G.update(60);
+    pad.buttons[0].pressed = true; G.loopStep(3); pad.buttons[0].pressed = false; G.loopStep(3);
+    const n = G.players.length, src = G.players[1] && G.players[1].src;
+    // down P2 and let P1 stand next to them: revive
+    const p1 = G.players[0], p2 = G.players[1]; let revived = false;
+    if (p2) { p2.inv = 0; p2.x = p1.x + 10; p2.y = p1.y; G.down(1); for (let i = 0; i < 200 && p2.downed; i++) { p1.x = p2.x; p1.y = p2.y; G.update(1); } revived = !p2.downed && !p2.dead; }
+    navigator.getGamepads = () => [null, null, null, null];
+    return { players: n, src, revived };
+  });
+  console.log('drop-in', JSON.stringify(drop));
   // bosses: wake each one, fight with the sim for a while
   for (const [lvl, name] of [[0, 'claw'], [4, 'queen'], [9, 'magma']]) {
     const b = await p.evaluate(async lvl => {
