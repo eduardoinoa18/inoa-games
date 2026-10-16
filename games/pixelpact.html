@@ -171,6 +171,8 @@ kbd{font-family:var(--f-pixel);font-size:8px;padding:3px 6px;background:rgba(239
   .btn{min-height:40px;padding:9px 14px;font-size:12px}
   .modes .mode{padding:10px}
 }
+body.playing .inoa-home,body.playing .inoa-party{display:none!important}
+.rewardline{display:flex;flex-wrap:wrap;gap:8px}.rewardline span{font-family:var(--f-display);font-weight:800;font-size:12px;padding:6px 10px;background:rgba(255,198,92,.14);border:1px solid rgba(255,198,92,.4);color:var(--sun)}
 @media (prefers-reduced-motion:reduce){.screen,.panel,.title-col{animation:none}#tUlt.ready{animation:none}}
 </style>
 </head><body>
@@ -309,6 +311,7 @@ kbd{font-family:var(--f-pixel);font-size:8px;padding:3px 6px;background:rgba(239
         <div>Falls<b id="rDeaths">0</b></div>
       </div>
       <div class="board" id="resBoard" hidden></div>
+      <div class="rewardline" id="resReward"></div>
       <p class="muted" id="resTip"></p>
       <div class="row">
         <button class="btn" id="btnAgain">Play again</button>
@@ -318,7 +321,17 @@ kbd{font-family:var(--f-pixel);font-size:8px;padding:3px 6px;background:rgba(239
     </div>
   </div>
 </div>
-<script>window.__inoaReward = function (gameId, xp, coins, best) { try { const p = Object.assign({ xp: 0, coins: 0, games: {} }, JSON.parse(localStorage.getItem('inoa.profile') || '{}')); p.games = p.games || {}; p.xp += Math.round(xp); p.coins += Math.round(coins); const g = p.games[gameId] || { plays: 0, best: null }; g.plays++; g.last = Date.now(); if (best != null && (g.best == null || best > g.best)) { g.best = best; g.newBest = true; } else g.newBest = false; p.games[gameId] = g; localStorage.setItem('inoa.profile', JSON.stringify(p)); } catch (e) { } };</script>
+<script>/* Shared hero profile (same rules as engine/inoa3d.js reward(): profile v2, signed-in profile key, Continue row "recent", 3 s de-dupe) */
+window.__inoaReward = function (gameId, xp, coins, best) { try {
+  const now = Date.now(), L = window.__inoaReward; if (L.last && L.last.id === gameId && now - L.last.t < 3000) return; L.last = { id: gameId, t: now };
+  let key = 'inoa.profile'; try { const k = JSON.parse(localStorage.getItem('inoa.activeProfile') || 'null'); if (typeof k === 'string' && k.startsWith('inoa.profile.u.')) key = k; } catch (e) { }
+  const raw = JSON.parse(localStorage.getItem(key) || '{}') || {}, p = Object.assign({ v: 2, name: '', xp: 0, coins: 0, games: {}, recent: [], lang: 'en' }, raw);
+  if (!p.games || typeof p.games !== 'object') p.games = {}; if (!Array.isArray(p.recent)) p.recent = []; p.v = 2;
+  p.xp = Math.max(0, +p.xp || 0) + Math.round(Math.max(0, Math.min(5000, xp))); p.coins = Math.max(0, +p.coins || 0) + Math.round(Math.max(0, Math.min(5000, coins)));
+  const g = p.games[gameId] || { plays: 0, best: null }; g.plays = (g.plays || 0) + 1; g.last = now; if (best != null && (g.best == null || best > g.best)) { g.best = best; g.newBest = true; } else g.newBest = false; p.games[gameId] = g;
+  p.recent = [gameId].concat(p.recent.filter(x => x !== gameId)).slice(0, 8); localStorage.setItem(key, JSON.stringify(p));
+} catch (e) { } };
+window.__inoaProfile = function () { try { let key = 'inoa.profile'; try { const k = JSON.parse(localStorage.getItem('inoa.activeProfile') || 'null'); if (typeof k === 'string' && k.startsWith('inoa.profile.u.')) key = k; } catch (e) { } return JSON.parse(localStorage.getItem(key) || '{}') || {}; } catch (e) { return {}; } };</script>
 <script>
 (() => {
 'use strict';
@@ -1416,14 +1429,14 @@ function updateCamera() {
     for (const p of ps) { minx = Math.min(minx, p.x - 90); maxx = Math.max(maxx, p.x + p.w + 90); miny = Math.min(miny, p.y - 100); maxy = Math.max(maxy, p.y + p.h + 60); }
     minx = Math.max(minx, -60); maxx = Math.min(maxx, W + 60); miny = Math.max(miny, -200); maxy = Math.min(maxy, H + 20);
     z = clamp(Math.min(vw0 / (maxx - minx), vh0 / (maxy - miny + 120)), .55, 1.05);
-    tx = (minx + maxx) / 2; ty = (miny + maxy) / 2 + (vh0 / z) * .13;
+    tx = (minx + maxx) / 2; ty = (miny + maxy) / 2 + (vh0 / z) * (G.portrait ? .04 : .13);
   } else {
     const ps = alive().length ? alive() : players.filter(p => !p.out);
     let minx = 1e9, maxx = -1e9, miny = 1e9, maxy = -1e9, lead = null;
     for (const p of ps) { minx = Math.min(minx, p.x); maxx = Math.max(maxx, p.x + p.w); miny = Math.min(miny, p.y); maxy = Math.max(maxy, p.y + p.h); if (!lead || p.x > lead.x) lead = p; }
     if (!lead) { lead = players[0]; minx = lead.x; maxx = lead.x + 20; miny = lead.y; maxy = lead.y + 40; }
     tx = (minx + maxx) / 2 + (ps.length === 1 ? lead.facing * vw0 * .08 + lead.vx * 8 : 0);
-    ty = (miny + maxy) / 2 + (G.portrait ? vh0 * .1 : -vh0 * .06);
+    ty = (miny + maxy) / 2 + (G.portrait ? vh0 * .06 : -vh0 * .06);
     if (G.cine > 0 && boss) tx = (boss.x + boss.w / 2 + lead.x) / 2;
     if (G.levelDone && raft) tx = raft.x + 36;
     if (ps.length > 1) z = clamp(Math.min(vw0 / (maxx - minx + 260), vh0 / (maxy - miny + 220)), .62, 1);
@@ -1431,7 +1444,7 @@ function updateCamera() {
     let lo = vw / 2, hi = MW * TS - vw / 2;
     if (arena && arena.active) { lo = arena.x0 + vw / 2; hi = arena.x1 - vw / 2; }
     tx = lo > hi ? (lo + hi) / 2 : clamp(tx, lo, hi);
-    ty = Math.min(ty, (G.portrait ? MH * TS + vh * .08 : MH * TS) - vh / 2);
+    ty = Math.min(ty, (G.portrait ? MH * TS + vh * .26 : MH * TS) - vh / 2);
     // teleport stragglers next to the leader
     for (const p of ps) if (p !== lead && Math.abs(p.x - lead.x) > vw0 * 1.1 && p.y > lead.y - 40) { p.x = lead.x - 30; p.y = lead.y - 20; p.vx = p.vy = 0; p.inv = 60; ringFx(p.x + 10, p.y + 20, 4, 40, p.col, 16, 3); }
   }
@@ -2314,7 +2327,7 @@ function drawPlay() {
 }
 function drawTitle() {
   G.theme = THEMES.beach;
-  const z = G.Zbase, vw = cv.width / z, vh = cv.height / z, cx = 600 + G.t * 26, cy = G.portrait ? 330 : 300, left = cx - vw / 2, top = cy - vh / 2, t = G.t;
+  const z = G.Zbase, vw = cv.width / z, vh = cv.height / z, cx = 600 + G.t * 26, cy = G.portrait ? 520 : 300, left = cx - vw / 2, top = cy - vh / 2, t = G.t;
   view = { l: left, t: top, r: left + vw, b: top + vh };
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   const savedMode = G.mode; G.mode = 'adventure'; drawBackdrop(left, top, z, t); G.mode = savedMode;
@@ -2389,7 +2402,7 @@ function updateLobbyInfo() {
   $('selAbil').innerHTML = `<div class="ab"><span class="t">SPECIAL</span><div><b>${h.sig}</b> <span>${h.sigDesc}</span></div></div><div class="ab"><span class="t">ULTIMATE</span><div><b>${h.ult}</b> <span>${h.ultDesc}</span></div></div><div class="ab"><span class="t">PERK</span><div><span>${h.perk}</span></div></div>`;
   const n = lobby.slots.length, allReady = lobby.slots.every(q => q.ready || q.src === 'bot'), minN = G.mode === 'match' ? 2 : 1;
   $('btnStart').disabled = !(n >= minN && allReady);
-  $('lobbyHint').textContent = G.mode === 'match' ? (n < 2 ? 'Add a bot or press Jump on another controller to add a fighter.' : allReady ? 'Everyone is ready.' : 'Each player presses Attack or taps Ready.') : (allReady ? 'Ready. Up to 4 can join with keyboards, gamepads or bots.' : 'Press Attack or tap Ready when your hero is chosen.');
+  $('lobbyHint').textContent = G.mode === 'match' ? (n < 2 ? 'Add a bot or press Jump on another controller to add a fighter.' : allReady ? 'Everyone is ready. Press Jump again (or Start) to fight.' : 'Each player presses Attack or taps Ready.') : (allReady ? 'Ready. Press Jump again (or Start) to go. Up to 4 can join with keyboards, gamepads, phones or bots.' : 'Press Attack or tap Ready when your hero is chosen.');
 }
 function joinSlot(src) {
   if (lobby.slots.length >= 4 || lobby.slots.some(s => s.src === src)) return;
@@ -2407,9 +2420,13 @@ function pollLobby() {
     if (st.just.l || (st.cur.x < -.5 && !st.prevX)) cycleHero(s, -1);
     if (st.just.r || (st.cur.x > .5 && !st.prevX)) cycleHero(s, 1);
     st.prevX = Math.abs(st.cur.x) > .5;
-    if (st.just.atk || st.just.jump) toggleReady(s);
-    if (st.just.ok && !$('btnStart').disabled) $('btnStart').click();
-    if (st.just.back && s.idx > 0) leaveSlot(s);
+    // not ready: Jump/Attack = ready. Ready: Jump (or Enter/Start) = start once everyone is ready, Attack/Back = change hero again
+    const startable = !$('btnStart').disabled;
+    if (!s.ready && (st.just.atk || st.just.jump)) toggleReady(s);
+    else if (s.ready && st.just.atk) toggleReady(s);
+    else if (s.ready && (st.just.jump || st.just.ok || (st.just.pause && src.startsWith('pad'))) && startable) { $('btnStart').click(); return; }
+    else if (!s.ready && st.just.ok && startable) { $('btnStart').click(); return; }
+    if (st.just.back) { if (s.ready) toggleReady(s); else if (s.idx > 0) leaveSlot(s); else { $('btnLobbyBack').click(); return; } }
   }
 }
 function previewState(f) {
@@ -2510,7 +2527,7 @@ function show(id) {
 function setPlayUI(on) {
   const hasTouch = players.some(p => p.src === 'touch'), coarse = matchMedia('(pointer:coarse)').matches;
   const showTouch = on && (settings.touch === 'on' || (settings.touch === 'auto' && (hasTouch || (coarse && players.length === 0))));
-  $('touch').classList.toggle('on', !!showTouch); $('btnPause').classList.toggle('on', !!on);
+  $('touch').classList.toggle('on', !!showTouch); $('btnPause').classList.toggle('on', !!on); document.body.classList.toggle('playing', !!on);
   document.documentElement.style.setProperty('--b', settings.btn + 'px');
 }
 function fmt(s) { const m = Math.floor(s / 60), x = Math.floor(s % 60); return m + ':' + (x < 10 ? '0' : '') + x; }
@@ -2541,7 +2558,7 @@ function pauseGame() {
 function resumeGame() { show(null); G.scene = 'play'; setPlayUI(true); Sound.init(); for (const key in tch) tch[key] = 0; }
 const STAR = '<svg viewBox="0 0 24 24"><path fill="#ffc65c" stroke="#2b0a02" stroke-width="1.2" stroke-linejoin="round" d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z"/></svg>';
 let shareText = '';
-function showResults(won) { if (G.scene === 'results') return; try { window.__inoaReward('pixelpact', won ? 80 : 40, won ? 25 : 10, G.mode === 'match' ? null : (won ? G.level + 1 : null)); } catch (e) { } try { window.__inoaRound && window.__inoaRound(won); } catch (e) { }
+function showResults(won) { if (G.scene === 'results') return; let rw = { xp: won ? 80 : 40, coins: won ? 25 : 10 };
   G.scene = 'results'; setPlayUI(false); Sound.stop();
   const match = G.mode === 'match';
   $('resRankWrap').hidden = match; $('resGrid').hidden = match; $('resBoard').hidden = !match; $('btnResNext').hidden = match || !won || G.level >= LEVELS.length - 1;
@@ -2560,13 +2577,18 @@ function showResults(won) { if (G.scene === 'results') return; try { window.__in
     const st = [...$('resStars').children]; [s1, s2, s3].forEach((on, i) => { if (on) setTimeout(() => { st[i].classList.add('on'); Sound.sfx.star(); buzz(15); }, 450 + i * 320); });
     const rows = { rTime: [stats.time, v => fmt(v)], rCoins: [stats.coins, v => Math.round(v)], rShells: [stats.shells, v => Math.round(v) + '/3'], rKos: [stats.kos, v => Math.round(v)], rCombo: [stats.combo, v => Math.round(v)], rDeaths: [stats.deaths, v => Math.round(v)] };
     const t0 = performance.now(); (function count() { const k2 = Math.min(1, (performance.now() - t0) / 900); for (const id in rows) $(id).textContent = rows[id][1](rows[id][0] * easeOut(k2)); if (k2 < 1) requestAnimationFrame(count); })();
-    $('resTip').textContent = won ? (s3 ? 'Perfect run. Nothing on this island could touch you.' : s2 ? `Third star: finish with no falls in under ${fmt(par)}.` : 'Second star: find all 3 Pact Shells. They glow teal and are often above or under the main path.') : 'Tip: dodge through attacks (you are invincible mid-dodge), and stand next to a fallen friend to revive them.';
+    $('resTip').textContent = won ? (s2 && s3 ? 'Perfect run. Nothing on this island could touch you.' : !s2 ? 'Star tip: find all 3 Pact Shells. They glow teal and are often above or under the main path.' : `Star tip: finish with no falls in under ${fmt(par)}.`) : 'Tip: dodge through attacks (you are invincible mid-dodge), and stand next to a fallen friend to revive them.';
     let isNew = false;
     if (won) { const pr = progress.levels[LEVEL.id] || { stars: 0, bestTime: 0, rank: '' }; if (!pr.bestTime || stats.time < pr.bestTime) { pr.bestTime = stats.time; isNew = true; } pr.stars = Math.max(pr.stars || 0, stars); if (!pr.rank || 'SABC'.indexOf(rank) < 'SABC'.indexOf(pr.rank)) { pr.rank = rank; isNew = true; } progress.levels[LEVEL.id] = pr; saveProgress(); }
     $('resNew').hidden = !isNew;
     const names = players.map(p => p.hero.short).join(' + ');
+    rw = { xp: won ? 50 + stars * 15 + G.level * 3 : 25, coins: Math.min(60, Math.round(stats.coins / 3) + (won ? 10 : 3)) };
     shareText = won ? `I cleared Pixel Pact ${LEVEL.id} ${LEVEL.name} with ${names} in ${fmt(stats.time)} · rank ${rank} · ${stars}/3 stars${stats.combo >= 10 ? ' · ' + stats.combo + '-hit combo' : ''}.` : `Pixel Pact ${LEVEL.id} got me at ${fmt(stats.time)} with ${names}. Round two.`;
   }
+  if (match) { const hw = players.find(p => p.winner && !p.bot); rw = { xp: hw ? 70 : 40, coins: hw ? 20 : 10 }; }
+  G.lastReward = rw;
+  { let lv = 1, need = 100, x = (+((window.__inoaProfile && window.__inoaProfile().xp) || 0)) + rw.xp; while (x >= need && lv < 50) { x -= need; lv++; need = Math.round(need * 1.12); } $('resReward').innerHTML = `<span>+${rw.xp} XP</span><span>+${rw.coins} coins</span><span>Hero lv ${lv}</span>`; }
+  try { window.__inoaReward('pixelpact', rw.xp, rw.coins, match ? null : (won ? G.level + 1 : null)); } catch (e) { } try { window.__inoaRound && window.__inoaRound(won, rw); } catch (e) { }
   $('btnShare').textContent = 'Share my run';
   show('scrResults');
 }
@@ -2601,7 +2623,7 @@ on('btnLobbyBack', () => { Sound.sfx.back(); openPicks(G.mode); });
 const PF = import('../engine/platform.js').then(m => m.default.init().then(() => m.default)).catch(() => null);
 async function gate() { const P = await PF; if (!P || !P.enabled || P.sessionValid('pixelpact')) return true; const r = await P.startGame('pixelpact'); if (r.allowed) return true;
   const next = encodeURIComponent('games/pixelpact.html'); location.href = (r.reason === 'signin' || r.reason === 'unverified' || r.reason === 'not_authenticated') ? '../account.html?next=' + next : (r.reason === 'limit' || r.reason === 'premium_only' || r.reason === 'offline_limit') ? '../pricing.html?next=' + next : '../index.html'; return false; }
-window.__inoaRound = (won) => PF.then(P => P && P.enabled && P.finishRound('pixelpact', { score: G.mode === 'match' ? null : (won ? G.level + 1 : null), xp: won ? 80 : 40, coins: won ? 25 : 10 })).catch(() => { });
+window.__inoaRound = (won, rw) => PF.then(P => P && P.enabled && P.finishRound('pixelpact', { score: G.mode === 'match' ? null : (won ? G.level + 1 : null), xp: rw ? rw.xp : won ? 80 : 40, coins: rw ? rw.coins : won ? 25 : 10 })).catch(() => { });
 on('btnStart', async () => { if ($('btnStart').disabled) return; Sound.init(); if (!(await gate())) return; Sound.sfx.go(); startPlay(); });
 on('btnAddBot', addBot);
 on('btnResume', resumeGame);
