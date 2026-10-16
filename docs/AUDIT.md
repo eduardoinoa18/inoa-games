@@ -541,3 +541,89 @@ Pact Trivia (`games/trivia.html`) re-audited and extended by one game agent. The
 - Hub tile copy (EN/ES) updated.
 
 **Still open**: no timestamp arbitration for phone vs local buzzes; native ES read-through of the new lines; Daily 10 is big-screen solo only.
+
+
+## Tide Runner elevation pass (2026-10-16)
+One game agent re-audited and extended Tide Runner (`games/runner.html`). Tested with `test/runner.js` at 1000×560 and 390×844 (both `NO_ERRORS`, `ALL CHECKS PASSED`, every screenshot reviewed), `test/party.js test/party_runner.js` (phone controller) and the hub (`test/index.js`). Engine unchanged.
+
+**Bugs fixed**
+- **Portrait hearts chip wrapped to a second HUD row** (known P3): compact chips under 520 px, and 5-heart styles show `♥ 5`. Test: `portrait HUD chips on one row`.
+- **Landscape title hid the Play button** below a 560 px screen: the card is now two columns with a sticky Play row. Tested in both orientations.
+- **Swipes only counted when the finger lifted** (engine `pointerup`, 34 px). Swipes now fire mid-gesture after about 14–28 px (3.5% of the short side). One long drag is still one lane, and a diagonal picks its main axis. The engine swipe is used only when ours did not fire. Tests: `swipe: 24 px drag changes lane before release`, `one long drag`, `up-right diagonal = jump`.
+- **A hover after a lost `pointerup`** (finger or mouse released outside the window) could fire a phantom lane change. Fixed with pointer capture, `lostpointercapture`, and mouse moves now need a pressed button.
+- **A jump pressed just before landing was dropped.** Actions are now buffered for 0.2 s, and a slide in mid-air drops you fast into the slide. Test: `buffer: jump pressed 0.03 s before landing`.
+- **Collision fairness**:
+  - Hitboxes are a little smaller than the art for each style: lateral margin 0.10 / 0.14 / 0.22 m, depth ±0.22 m (Classic ±0.32 m).
+  - Jump clearance forgives 0.42 / 0.34 / 0.24 m.
+  - Rows are at least 0.62 s apart even at top Classic speed (the old gap shrank to 11.5 m whatever the speed).
+- `knock()` had an operator-precedence bug (`!o.lanes.length === 3`). Bumped vans no longer fly away; only hurdles do.
+- XP was fractional. The power-up HUD was rebuilt with `innerHTML` every frame and is now rebuilt only when it changes. The ghost recording was unbounded and is now capped at 6000 frames (20 min).
+- The keyboard and swipe hint text is chosen from the input you last used (touch, keys or pad), not from the screen width.
+
+**Added**
+- **Five zones that rotate every 432 m**: Sunset Boardwalk → Harbor Docks → Beach Market → Night Pier → Coral Reef Tunnel → lap 2… Each zone has its own:
+  - set dressing:
+    - **Docks**: quay, warehouses, container stacks, a crane carrying a container, moored boats, a dark ship.
+    - **Market**: tiled plaza, fruit stalls with awnings, bunting high above the lanes.
+    - **Night Pier**: stars, a ferris wheel, ticket booths, string lights.
+    - **Reef Tunnel**: a glass tube with ribs, coral, kelp, brain corals, swimming fish, light shafts, a wreck.
+  - obstacle set:
+    - **Docks**: fish crates, rope coils, containers, trucks, a crane beam, a hawser rope, a girder.
+    - **Market**: watermelons, fruit crates, coconut piles, pineapples, fruit stalls, bunting, a rolled rug, an awning.
+    - **Night Pier**: prize boxes, ticket booths, light strings, a neon bar, a lantern arch.
+    - **Reef Tunnel**: clams, coral, rock pillars, a sunken crate stack, jellyfish to slide under (they bob and pulse), a coral ridge.
+  - sky, fog, light and water, which cross-fade over the last 45 m before each gate.
+  - music and a spoken tip ("Slide under the jellyfish!").
+  - The daily course stays deterministic.
+- **Checkpoint gates** at every zone change (EN/ES banner): Friendly and Little ones styles refill your hearts there.
+- **Three styles**:
+  - 🐣 Little ones: 8 → 15 m/s, 5 hearts, more shields.
+  - ♥ Friendly: the default. 10 → 21 m/s, 3 hearts.
+  - ⚡ Classic: 12 → 26 m/s, one hit.
+  - Speed now follows a smooth exponential curve instead of a linear ramp.
+- **Missions**: 3 at a time from 11 kinds, for example jumps, slides, coins per run and in total, distance, reaching a zone, power-ups, close calls, lane changes, a clean stretch, and finished runs. Tiers rise as you complete them. Each pays +30–60 XP (added to the round's `results`) and 50–100 coins to the jar. In-run banner and voice line, a list in the pause menu, and completions shown on the results card.
+- **Coin jar + shop**: every coin you collect is saved. Spend it on 8 trails (sea foam, sunset, mint, bubbles, rainbow, stardust, comet; particle trails plus a subtle ribbon) and 4 surfboards. A purchase needs a second tap to confirm.
+- **New power-up 🌊 Wave ride**: you surf your shop board on a swell for 6 s, smash through anything for bonus coins, magnet coins, and get 1.2 s of grace afterwards. All power-ups have an aura (magnet ring, double-coin halo + sparkles, shield bubble, board + spray). The HUD chip blinks during the last 2 s.
+- **Juice**:
+  - "CLOSE!" near-miss calls (whoosh, FOV kick, +coins) for a late lane change, a low jump or a late slide.
+  - The coin streak pitch rises over an octave, with streak pops at 10/25/50/100.
+  - A zone banner and lap callouts.
+  - The ghost cheers once it has finished.
+- **Full EN/ES**: title, tabs, missions, shop, HUD, toasts, banners, results, share text and speech. The title re-renders when the language changes.
+- **Reduced motion**: no camera sway or roll, a smaller FOV kick, and capped shake.
+- **Save v2** with migration: v1 runner, mode, style, bests and ghosts are kept, and garbage saves fall back to defaults. Tests: `migration v1 → v2`, `garbage saves`.
+- **Performance**:
+  - Static models are merged into one mesh per material plus a single outline shell.
+  - Palms, lanterns, stalls, booths and umbrellas are instanced.
+  - Procedural obstacles are baked.
+  - Chunks and obstacles hidden in the fog are not drawn.
+  - Obstacle pools, zone dressings and shaders are warmed up on the title screen.
+  - Boardwalk went from ~1520 to ~660 draw calls (main + shadow pass, `renderer.info`). The other zones measure 250–650.
+- Pack: +16 CC0 models (delivery-truck, truck, fish, ship-wreck, ship-dark, watermelon, pineapple, coconut, banana, orange, lollypop, mussel, formation-large-rock/stone, ferris-wheel, ice-cream-cone). The manifest has 39 models (1.9 MB) and every file is present in `packs/assets`.
+- New tile art (`thumbs/runner.jpg`, Night Pier). Hub tile copy updated in EN/ES.
+
+**Tests** (`test/runner.js`; `RUNNER_QUICK=1` skips the 70 s autopilot stretch, `RUNNER_THUMB=1` writes the tile shot)
+- title: Play visible, 3 missions, Spanish re-render
+- migration
+- swipe and buffer checks
+- each zone warped to: own obstacle set + dressing, screenshot `runner_zone_<id>`
+- jellyfish close-up
+- lap-2 checkpoint refill + music change
+- mission payout
+- wave ride: smashes, keeps hearts, grace after
+- autopilot 70 s in Friendly
+- results + save
+- ghost replay
+- portrait HUD row
+- daily seed determinism
+- kids style
+- shop confirm-then-buy
+
+`test/party_runner.js`: the phone stick moves exactly one lane, and phone A jumps and B slides.
+
+**Still open**
+- Real-phone feel and FPS are unverified: headless uses software rendering, and the draw-call numbers are the proxy.
+- The market zone is still the heaviest, at ~450 calls.
+- The reef seabed and path read slightly green under the teal fog.
+- Ghosts record position only (no obstacle smashes or power-up auras).
+- No online race against friends: ghost and daily only. Phones work as controllers.
