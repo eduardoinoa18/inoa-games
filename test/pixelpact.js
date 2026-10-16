@@ -42,6 +42,17 @@ module.exports = async (p, shot) => {
     console.log('boss', JSON.stringify(b));
     await shot('boss_' + name);
   }
+  // every hero: special + ultimate in a co-op level with a bot ally (exercise Pip's lantern + Sunrise, Bo's vine + Thornquake)
+  for (let h = 0; h < info.heroes; h++) {
+    const r = await p.evaluate(async h => {
+      const G = window.__GAME; G.start('adventure', 0, { hero: h }); G.update(150);
+      const pl = G.players[0]; pl.x = 13 * 32; pl.y = 300; G.update(20);
+      G.force(0, 'spec'); G.update(12); const mid = G.players[0].anim; G.update(40); G.force(0, 'ult'); G.update(80);
+      return { hero: pl.hero.id, anim: mid, hp: pl.hp, ok: Number.isFinite(pl.x) && G.G.scene === 'play' };
+    }, h);
+    console.log('hero', JSON.stringify(r));
+    if (h >= 4) { await p.evaluate(() => { const G = window.__GAME; G.force(0, 'spec'); G.update(9); }); await shot('hero_' + r.hero); }
+  }
   const r1 = await p.evaluate(() => { const G = window.__GAME; G.start('adventure', 3); G.update(60); G.results(true); return { scene: G.G.scene, prof: JSON.parse(localStorage.getItem('inoa.profile') || '{}').games?.pixelpact, recent: JSON.parse(localStorage.getItem('inoa.profile') || '{}').recent, reward: G.G.lastReward }; });
   console.log('adventure results', JSON.stringify(r1));
   await p.waitForTimeout(1500); await shot('results');
