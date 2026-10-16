@@ -29,7 +29,7 @@ const ES_GAMES = {
   brew: ['Cultiva hierbas en tiempo real, incluso cuando no estás, prepara 16 tés para clientes con pequeñas historias y sube tu café hasta el nivel 10: plantas de temporada, un pianito y un perrito. Aquí nadie se enoja.', ['Solo', 'Visitas cortas']],
   trivia: ['Un concurso en 3D con más de 470 preguntas en 11 categorías: a pulsar, relámpago de verdadero o falso, tú eliges la categoría, el número más cercano y la apuesta final. Reto diario de 10, teléfonos como pulsadores, inglés y español.', ['1–4 jugadores', '6 min']],
   draw: ['Pasa el dispositivo, dibuja la palabra secreta y que los demás adivinen. También Boceto Rápido y Teléfono.', ['2–8 jugadores', '5 min']],
-  runner: ['Un corredor por el paseo con una ruta diaria igual para todos. Compite contra el fantasma de tu mejor carrera.', ['Solo', '1–2 min']]
+  runner: ['Corre del paseo al atardecer a los muelles del puerto, un mercado de playa, un muelle de noche y un túnel de cristal bajo el arrecife. Misiones, una tienda de estelas y tablas con tu alcancía, una ruta diaria y el fantasma de tu mejor carrera.', ['Solo', '2–5 min']]
 };
 const HUB_ES = { // static page text: English source → Spanish (applied by setLang)
   'Games': 'Juegos', 'Your hero': 'Tu héroe', 'Party': 'En grupo', 'FAQ': 'Preguntas', 'Play': 'Jugar',
