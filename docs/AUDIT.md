@@ -745,7 +745,7 @@ Engine and `net.js` unchanged.
   - **1-9 Ember Steps**: steam vents launch you up (no damage), plus lava pools and crumbling planks.
   - **1-10 Molten Crown Keep**: a gauntlet, then the **Magma Claw finale**. It is Big Claw rebuilt in lava, and its slams raise telegraphed lava pillars under the heroes.
   
-  Every level was checked with a reachability script: start → 3 Pact Shells → Sun Gem → levers → exit. The script is not committed; the in-game test tours every chunk.
+  `test/pixelpact.js` runs a conservative reachability check on every level before the game tests: start → 3 Pact Shells → Sun Gem → levers → boss gate → exit, with no wall jumps or glides. It fails the run if a new island (1-4 to 1-10) breaks. The three original islands only report: the check is stricter than real play, and their long running double jumps are flagged but have been played through.
 - **Sun Gems**: one per island, usually behind a hidden wall that fades as you walk in ("SECRET!", hinted by a faint glint). The three original islands got a gem in a high, out-of-the-way spot. Secrets and gems survive checkpoint restarts.
 - **World map**: islands on a sea map (16:9, or a vertical zigzag on phones) with a dotted path. Each node shows its stars and gem, a lock until the island before it is cleared, and a boss badge. A detail line shows best time, rank, total stars and total gems. Tap the selected island again to play. Gamepad/keyboard navigation works.
 - **Match**: 2 new arenas and 2 new modes.
@@ -766,6 +766,7 @@ Engine and `net.js` unchanged.
 - **Saves**: `pixelpact3.settings` and `pixelpact3.progress` are unchanged in shape. Only additive fields (`mmode`, `lang`, `voice`, per-level `gem`), so old saves load as-is, and anyone who cleared 1-3 starts with 1-4 unlocked.
 
 **Tests** (`test/pixelpact.js`, `PP_QUICK=1` skips the chunk tour)
+- reachability of all 10 levels
 - content counts: 10 levels, 5 stages, 6 heroes
 - world map screenshot
 - every level started and toured every 600 px
@@ -783,5 +784,5 @@ Engine and `net.js` unchanged.
 - No online (separate-screen) mode; phones are local controllers only.
 - Still not on the 3D engine (Phase 5 "Pixel Pact 3D" keeps this as Classic).
 - A native speaker should read the Spanish.
-- The reachability checker lives outside the repo; porting it into `test/` would guard future level edits.
+- The original 1-1 to 1-3 rely on running double jumps of 6–7 tiles, the edge of what Rook can do. Play-test them with Rook on Normal.
 

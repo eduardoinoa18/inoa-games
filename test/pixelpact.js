@@ -1,7 +1,38 @@
 // Pixel Pact (2D) headless test: title → world map → every adventure level (sim + checkpoints of each chunk) → bosses → results/profile → match modes + arenas.
 // PP_QUICK=1 skips the per-chunk tour. Screenshots: test/out/pixelpact_*.png
 const sim = (p, n, chunk = 30) => p.evaluate(async ([n, chunk]) => { for (let i = 0; i < n; i += chunk) { window.__GAME.update(Math.min(chunk, n - i)); await new Promise(r => setTimeout(r, 0)); } }, [n, chunk]);
+// Conservative reachability check of a level (no wall jumps, no glide): start → 3 Pact Shells, the Sun Gem, every lever and the exit.
+// Up to 5 tiles up per double jump (6 tiles across), springs 7 up, vents 9 up, swim anywhere in a pool, levers open the gates of their 40-tile chunk.
+function reach(L) {
+  const H = 17, rows = []; for (let r = 0; r < H; r++) { let row = ''; for (const ch of L.chunks) row += ((ch[r] || '') + '.'.repeat(40)).slice(0, 40); rows.push(row); }
+  const W = rows[0].length, T = (x, y) => x < 0 || x >= W ? '#' : y < 0 ? '.' : rows[Math.min(y, H - 1)][x];
+  const opened = new Set(), solid = (x, y) => { const c = T(x, y); if (c === 'D' && opened.has(Math.floor(x / 40))) return false; if (c === 'G' && opened.has('boss')) return false; return '#RGD'.includes(c); };
+  const plat = new Set(); rows.forEach((r, y) => [...r].forEach((c, x) => { const add = (x0, x1, y0, y1) => { for (let xx = x0; xx <= x1; xx++) for (let yy = y0; yy <= y1; yy++) plat.add(xx + ',' + yy); }; if (c === 'L') add(x - 2, x + 3, y, y); if (c === 'M') add(x - 3, x + 6, y, y); if (c === 'l') add(x - 1, x + 1, y - 5, y); if (c === 'N') add(x - 1, x + 1, y - 8, y); }));
+  const stand = (x, y) => { if (solid(x, y) || solid(x, y - 1) || T(x, y) === 'W') return false; if (T(x, y) === 'w' || plat.has(x + ',' + y)) return true; return solid(x, y + 1) || 'PX'.includes(T(x, y + 1)); };
+  let start; rows.forEach((r, y) => { const x = r.indexOf('@'); if (x >= 0) start = [x, y]; });
+  const find = ch => { const o = []; rows.forEach((r, y) => [...r].forEach((c, x) => { if (ch.includes(c)) o.push([x, y]); })); return o; };
+  const levers = find('U'), bosses = find('ZAJ'); let seen;
+  for (let pass = 0; pass < 8; pass++) {
+    seen = new Set(); const fr = [start];
+    while (fr.length) {
+      const [x, y] = fr.pop(), k = x + ',' + y; if (seen.has(k)) continue; seen.add(k); const c = T(x, y);
+      if (c === 'w') { for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, -1], [-1, -1], [0, -2], [1, -2], [-1, -2], [2, -2], [-2, -2], [2, -3], [-2, -3], [1, -3], [-1, -3]]) if (stand(x + dx, y + dy)) fr.push([x + dx, y + dy]); continue; }
+      const up = c === 'B' ? 7 : c === 'g' ? 9 : 5, rch = c === 'g' ? 4 : 6;
+      for (let ny = Math.max(0, y - up); ny < H; ny++) { const du = y - ny, lim = du > 0 ? ('Bg'.includes(c) ? rch : rch - Math.max(0, du - 2)) : rch + Math.floor(-du / 2);
+        for (let nx = x - lim; nx <= x + lim; nx++) { if (nx < 0 || nx >= W || seen.has(nx + ',' + ny) || !stand(nx, ny)) continue; const top = Math.min(y, ny), st = nx > x ? 1 : -1; let ok = true;
+          for (let cx = x + st; cx !== nx && ok; cx += st) if (solid(cx, top) || solid(cx, top - 1)) ok = false; const vx = ny < y ? x : nx;
+          for (let cy = Math.min(y, ny); cy <= Math.max(y, ny) && ok; cy++) if (!((vx === x && cy === y) || (vx === nx && cy === ny)) && solid(vx, cy)) ok = false; if (ok) fr.push([nx, ny]); } }
+    }
+    let changed = false; for (const [sx, sy] of levers) if (seen.has(sx + ',' + sy) && !opened.has(Math.floor(sx / 40))) { opened.add(Math.floor(sx / 40)); changed = true; }
+    for (const [bx, by] of bosses) if (!opened.has('boss') && [...seen].some(s => { const [x, y] = s.split(',').map(Number); return Math.abs(bx - x) < 12 && Math.abs(by - y) < 6; })) { opened.add('boss'); changed = true; }
+    if (!changed) break;
+  }
+  const pts = [...seen].map(s => s.split(',').map(Number)), touched = (tx, ty) => pts.some(([x, y]) => (Math.abs(x - tx) <= 2 && y - ty >= 0 && y - ty <= 5) || (T(x, y) === 'w' && Math.abs(x - tx) <= 1 && Math.abs(y - ty) <= 1));
+  return find('KkQEU').filter(([x, y]) => !touched(x, y)).map(([x, y]) => `${T(x, y)}@chunk${Math.floor(x / 40)}:${x % 40},${y}`);
+}
 module.exports = async (p, shot) => {
+  const lv = await p.evaluate(() => window.__GAME.levels.map(L => ({ id: L.id, chunks: L.chunks })));
+  for (const [i, L] of lv.entries()) { const miss = reach(L); console.log('reach', L.id, miss.length ? 'MISSING ' + miss.join(' ') : 'OK'); if (miss.length && i >= 3) throw new Error('unreachable in ' + L.id + ': ' + miss.join(' ')); }
   await shot('title');
   const info = await p.evaluate(() => ({ levels: window.__GAME.levels.length, stages: window.__GAME.stages.length, heroes: window.__GAME.heroes.length }));
   console.log('content', JSON.stringify(info));
