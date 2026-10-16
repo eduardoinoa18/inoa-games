@@ -75,6 +75,11 @@ module.exports = async (p, rawShot) => {
     check(tour.filter(t => t.stack > 0).length >= L - 2, 'bot delivers something on (almost) every course');
   }
 
+  // tile art: Aisle Style (wedding cake on the steps) with the HUD hidden
+  if (process.env.TRAY_THUMB) { await clean(); await p.evaluate(() => { window.__GAME.S.diff = 'chill'; window.__GAME.begin({ players: 1, level: 11 }); }); await sim(2.6); const s0 = await p.evaluate(() => window.__GAME.C.segs.find(s => s.t === 'stairs').s0 - 1.4); await sim(20, { auto: true, untilS: s0 });
+    await p.evaluate(() => { for (const q of ['.ig-top', '.ig-pad', '#ftMeter', '#ftStack', '#ftTurn', '.ig-toast', '.ig-float', '.ig-big']) document.querySelectorAll(q).forEach(e => e.style.visibility = 'hidden'); }); await shot('thumb');
+    await p.evaluate(() => { for (const q of ['.ig-top', '.ig-pad', '#ftMeter', '#ftStack', '#ftTurn']) document.querySelectorAll(q).forEach(e => e.style.visibility = ''); }); }
+
   // hot-seat: 2 players on course 5 (beams)
   await clean();
   await p.evaluate(() => { document.querySelector('.ig-title')?.remove(); window.__GAME.begin({ players: 2, level: 4, cup: 'one' }); });

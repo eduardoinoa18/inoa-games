@@ -24,7 +24,7 @@ const ES_GAMES = {
   tide: ['Batallas de pintura con cañones de agua en tres arenas: un muelle soleado, un jardín en la azotea y un mercado isleño. Cubre más suelo o domina las tres pozas de marea. Bots o hasta 8 teléfonos.', ['1–8 jugadores', '2,5 min', '8+ años']],
   drift: ['Derrapa para turbos, usa objetos y compite contra cinco rivales en cuatro pistas, gana la Copa Isla o corre contra el fantasma de tu mejor vuelta.', ['Solo vs 5 bots', '3 min']],
   fit: ['Un cajón desordenado, huecos perfectos y un clic satisfactorio cada vez que algo encaja. Modo Zen para relajarte.', ['Solo', '1–2 min']],
-  tray: ['Lleva una torre tambaleante de comida por una pista de obstáculos. Caerse es lo divertido. Turnos con amigos.', ['1–4 jugadores', '45 s']],
+  tray: ['Lleva una torre tambaleante de comida por 18 pistas locas: una fiesta en el jardín, un café del puerto, una boda, un crucero y un refugio de esquí. Caerse es lo divertido. Turnos con amigos.', ['1–4 jugadores', '45 s']],
   junk: ['Lava, lija, pinta y pule 16 coches y barcos oxidados con el dedo. Añade rayas, estrellas y ruedas brillantes, cumple pedidos y saca tarjetas con foto.', ['Solo', '2–4 min']],
   brew: ['Cultiva hierbas en tiempo real, incluso cuando no estás, prepara 16 tés para clientes con pequeñas historias y sube tu café hasta el nivel 10: plantas de temporada, un pianito y un perrito. Aquí nadie se enoja.', ['Solo', 'Visitas cortas']],
   trivia: ['Un plató de concurso en 3D con pulsadores para hasta cuatro jugadores en un dispositivo, o juega contra bots. Inglés y español.', ['1–4 jugadores', '5 min']],
