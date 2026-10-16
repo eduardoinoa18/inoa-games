@@ -45,7 +45,7 @@ It is a **static site**: `index.html` (hub) + `games/*.html` (one page per game)
 | `games/brew.html` | **Brew and Bloom** — cozy idle café + greenhouse: café levels 1–10, 16 teas, regulars' daily requests + story chapters, café journal (collection book), seasonal plants, decor | Elevation pass done 2026-10-15 (docs/AUDIT.md). Open: real-phone feel, native ES read-through of stories |
 | `games/builders.html` | **Driftwood Builders** — island sandbox, 3 islands, islanders, postcards | Elevation pass done: 21-quest chain unlocking 7 new pieces (flowers, tree, market stall, cottage, bridge, glow lamp, lighthouse), Shell Cay + Glowmoss Isle by boat, fishing/shells/crystals, islanders with wishes, postcards, wrap-up results; v1 saves migrate. Real-phone feel unverified |
 | `games/tray.html` | **Fail Tray** — wobble physics courses, slow-mo replay, hot-seat | Passing; P3 polish deferred |
-| `games/trivia.html` | **Pact Trivia** — 3D game show, 160+ EN/ES questions | Phase 1 done (portrait board framing, kids mode never subtracts). Fact-check in Phase 5 |
+| `games/trivia.html` | **Pact Trivia** — 3D game show, 473 fact-checked EN/ES questions in 11 categories (bank in `games/trivia-questions.js`): Full show (buzz-in, true/false lightning, your pick, closest number, All In), Classic, Daily 10 with share line | Elevation pass done 2026-10-16 (docs/AUDIT.md, audit-notes/trivia.md): fair bot buzzing, bot skill, no-repeat history, per-category stats. Open: native ES read-through, phone buzz latency |
 | `games/draw.html` | **Draw the Pact** — pass-and-play draw & guess, Speed Sketch, Telephone | Phase 1 done (pointer accuracy, gamepad, consistent language) |
 
 ## How to work
@@ -86,7 +86,7 @@ Hub **Party** section and every title screen open a room (QR + 4-letter code). P
 6. **Pixel Pact 3D** (Phase 5): rebuild adventure + Match on the engine, 10 levels in World 1, keep 2D as Classic.
 7. **Multiplayer (built 2026-10-14, see `docs/MULTIPLAYER.md`)**: phones as controllers in every engine game + Pixel Pact 2D, per-player phones in Trivia/Depths/Tide Lines/Draw, Island Drift online races on separate screens. Next: TURN relay for strict networks, self-hosted signaling or Cloudflare Durable Object rooms, online modes for Tide Lines/Depths (host-authoritative like Drift), Safari phone support, spectator view, real-device latency tuning.
 8. **Store readiness — in progress (free beta)**: Capacitor iOS/Android wrappers in `app/`, vendored three.js, store listing + screenshots in `store/`, full path in `docs/APP_STORES.md`. No payments in the apps during the beta.
-9. **Content (Phase 5)**: ~~Drift tracks + ghost + cup~~ (done); Depths rooms/enemies/2nd boss; Runner/Tide Lines zones + maps; Fit/Tray +8 levels each; Trivia fact-check + 300 EN/ES; Draw 500+ words.
+9. **Content (Phase 5)**: ~~Drift tracks + ghost + cup~~ (done); Depths rooms/enemies/2nd boss; Runner/Tide Lines zones + maps; Fit/Tray +8 levels each; ~~Trivia fact-check + 300 EN/ES~~ (done); Draw 500+ words.
 10. **Ship-readiness (Phase 6)**: accessibility pass, SEO/Open Graph per page, privacy page (404 done), docs/LAUNCH.md.
 
 ## Deploy

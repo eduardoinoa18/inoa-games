@@ -433,3 +433,24 @@ Perfect Fit (`games/fit.html`) re-audited and extended by one game agent. Tested
 - Colour-blind aid is a shape sticker per colour (● ▲ ★ ■ ◆ ✚ ♥ ⬢) on the item and in its slot; not yet checked with colour-blind players.
 - Spanish item names are agent-written; a native read-through is recommended.
 - Engine: none changed.
+
+## Pact Trivia elevation pass (2026-10-16)
+Pact Trivia (`games/trivia.html`) re-audited and extended by one game agent. The question bank moved to `games/trivia-questions.js` (ES module). Full fact-check log and per-question changes: `docs/audit-notes/trivia.md`. Tested with `test/trivia.js` at 1000×560 and 390×844 and `test/party.js test/party_trivia.js` (phones).
+
+**Fact-check**: all 173 existing questions checked (EN = ES, exactly one answer, timeless, kid-safe). 0 removed, 2 rewritten (hat trick was not unique to one sport; "Bollywood" means the Hindi industry), 3 ES distractor/wording fixes, 1 regional ES term, 3 difficulty re-tags.
+
+**Bank**: 473 questions in 11 categories (new: History to 1950, Math, Words). 342 multiple choice (121 kids / 139 everyone / 82 hard), 99 true/false (balanced per round), 32 closest-number. No living people, brands, franchises or school-system-dependent facts; no fact repeated across formats.
+
+**Bugs fixed**
+- Bots could buzz before the question had been read (0.9 s after the buzzers opened): bots now wait for the read time (≈16 chars/s) before reacting.
+- Kids mode raised bot accuracy (×1.05); now Kids mode sets Easy bots.
+- Phone wager card showed `undefined` on its 5th button (`pad.html` choice labels); fixed in one line.
+- Portrait: faded buzzer showed through the answer panel; camera shot cache ignored the panel type (taller panels could cover the board).
+- XP fractional/unbounded; share link carried query strings.
+
+**Added**
+- Show picker: Full show (Buzz-in → Lightning true/false → Your pick (last place picks the category) → Closest number (open guesses, last place first, number dial with keys/slider/gamepad/phone) → All In), Classic (old 8 + final), **Daily 10** (date-seeded, same for everyone, speed bonus, streak, saved once, emoji share line).
+- Bot skill Easy/Normal/Hard (measured accuracy in the test), per-category stats on the title + best category after results, no-repeat history with stable ids (0 repeats in the next show).
+- Hub tile copy (EN/ES) updated.
+
+**Still open**: no timestamp arbitration for phone vs local buzzes; native ES read-through of the new lines; Daily 10 is big-screen solo only.

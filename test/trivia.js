@@ -8,14 +8,15 @@ module.exports = async (p) => {
   const SUF = process.env.SUFFIX ?? (Number(process.env.H || 560) > Number(process.env.W || 1000) ? '_p' : '');
   const shot = async (n) => { await p.evaluate(() => { window.__HOLD = true; window.__GAME.warm(); }); await p.screenshot({ path: __dirname + '/out/trivia_' + n + SUF + '.png', timeout: 0 }); await p.evaluate(() => { window.__HOLD = false; }); };
   // run the game loop until a predicate (source string, sees g = __GAME and G) is true
-  const until = (sec, pred) => p.evaluate(async ({ sec, pred }) => { const g = window.__GAME, f = new Function('g', 'G', 'return ' + (pred || 'false')); for (let i = 0; i < sec * 30; i++) { g.update(1 / 30); if (g.G && f(g, g.G)) break; if (i % 120 === 0) await new Promise(r => setTimeout(r, 0)); } const G = g.G; return G ? { phase: G.phase, qi: G.qi, round: G.seq[G.qi]?.round, scores: G.players.map(x => x.score) } : null; }, { sec, pred });
+  const until = (sec, pred) => p.evaluate(async ({ sec, pred }) => { const g = window.__GAME, f = new Function('g', 'G', 'return ' + (pred || 'false')); for (let i = 0; i < sec * 20; i++) { g.update(1 / 20); if (g.G && f(g, g.G)) break; if (i % 100 === 0) await new Promise(r => setTimeout(r, 0)); } const G = g.G; return G ? { phase: G.phase, qi: G.qi, round: G.seq[G.qi]?.round, scores: G.players.map(x => x.score) } : null; }, { sec, pred });
   const sim = (sec, phases) => until(sec, phases ? `${JSON.stringify(phases)}.includes(G.phase) || (${JSON.stringify(phases)}.includes('card') && !!(G.wagerCard || G.fcard))` : null);
   const log = (k, v) => console.log(k, typeof v === 'string' ? v : JSON.stringify(v));
   const fail = m => console.error('FAIL ' + m);
 
   log('bank', await p.evaluate(() => { const g = window.__GAME, by = {}; g.Q.forEach(r => { by[r[0]] = (by[r[0]] || 0) + 1; }); return { mc: g.Q.length, tf: g.TF.length, num: g.NUM.length, kidsMC: g.Q.filter(r => r[1] === 1).length, cats: Object.keys(by).length, ids: new Set(g.BANK.m.map(o => o.id)).size }; }));
   await shot('title');
-
+  const PORTRAIT = SUF === '_p';
+  if (!PORTRAIT) {
   // ---------- Classic: solo vs 3 bots ----------
   await p.evaluate(() => { localStorage.removeItem('inoa.trivia.seen2'); localStorage.removeItem('inoa.trivia.stats'); window.__GAME.S.lang = 'en'; window.__GAME.S.botSkill = 'normal'; document.querySelector('#pS [data-s=classic]').click(); document.querySelector('.ig-title [data-a=play]').click(); });
   log('classic intro', await sim(12, ['buzz']));
@@ -148,8 +149,9 @@ module.exports = async (p) => {
   log('es results', await p.evaluate(() => ({ count: window.__GAME.resultsCount, cards: document.querySelectorAll('.ig-results').length, title: document.querySelector('.ig-results h2')?.textContent, kicker: document.querySelector('.ig-results .ig-kicker')?.textContent })));
   await shot('es_results');
 
-  // ---------- portrait phone ----------
-  await p.setViewportSize({ width: 390, height: 844 });
+  }
+  if (!PORTRAIT) return;
+  // ---------- portrait phone (W=390 H=844 run) ----------
   await p.evaluate(() => { document.querySelectorAll('.ig-results,.ig-screen,.tv-card').forEach(e => e.remove()); window.__GAME.setAuto(false); window.__GAME.start({ humans: 1, lang: 'en', kids: false, mode: 'full' }); });
   log('p q', await until(12, "G.phase === 'buzz'"));
   await shot('p_question');
