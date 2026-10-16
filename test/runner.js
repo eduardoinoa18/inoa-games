@@ -7,6 +7,7 @@ module.exports = async (p, shot) => {
   const fails = []; const check = (ok, msg) => { console.log((ok ? 'OK   ' : 'FAIL ') + msg); if (!ok) fails.push(msg); };
   const sim = (sec, until) => p.evaluate(async ({ sec, until }) => { const g = window.__GAME; window.__HOLD = true; const f = until ? new Function('G', 'return ' + until) : null; for (let i = 0; i < sec * 60; i++) { g.update(1 / 60); g.updateCamera(1 / 60); if (f && f(g.G)) { window.__HOLD = false; return i; } if (i % 20 === 0) await new Promise(r => setTimeout(r, 0)); } window.__HOLD = false; return -1; }, { sec, until });
 
+  const solid = () => p.evaluate(() => { const g = window.__GAME; g.G.invT = 0; g.update(1 / 60); g.updateCamera(1 / 60); }); // no invulnerability blink in shots
   // ---- title ----
   await S('title');
   const vis = await p.evaluate(() => { const b = document.querySelector('.ig-title [data-a=play]').getBoundingClientRect(); return { bottom: Math.round(b.bottom), h: innerHeight }; });
@@ -38,7 +39,7 @@ module.exports = async (p, shot) => {
   await p.mouse.move(cx + 200, cy, { steps: 8 }); await p.mouse.up();
   const lane2 = await p.evaluate(() => { const g = window.__GAME; g.update(1 / 60); g.update(1 / 60); return g.G.lane; });
   check(lane2 === lane1 + 1 || lane2 === 2, `swipe: one long drag = at most one more lane (${lane1} → ${lane2})`);
-  await p.evaluate(() => { const G = window.__GAME.G; G.lane = 1; G.x = 0; });
+  await p.evaluate(() => { const G = window.__GAME.G; G.lane = 1; G.x = 0; G.invT = 3; });
   await p.mouse.move(cx, cy); await p.mouse.down(); await p.mouse.move(cx + 14, cy - 26, { steps: 3 });
   const j0 = await p.evaluate(() => { const g = window.__GAME; g.update(1 / 60); return { vy: g.G.vy, lane: g.G.lane }; }); await p.mouse.up();
   check(j0.vy > 0 && j0.lane === 1, `swipe: up-right diagonal = jump, no lane change (vy ${j0.vy.toFixed(1)}, lane ${j0.lane})`);
@@ -58,22 +59,22 @@ module.exports = async (p, shot) => {
     await sim(1.2);
     const info = await p.evaluate((i) => { const g = window.__GAME, G = g.G, Z = g.ZONES[i]; const allowed = new Set([...Z.jump, ...Z.block, ...Z.slide, Z.allJump, Z.allSlide]); const near = G.obs.filter(o => o.d0 > G.d && o.d0 < G.d + 150); const bad = near.filter(o => !allowed.has(o.type)).map(o => o.type); const ch = g.chunks.filter(c => c.k * 36 >= G.d - 10 && c.k * 36 < G.d + 150).map(c => c.z); return { n: near.length, bad, chunksOk: ch.every(z => z === i), types: [...new Set(near.map(o => o.type))].join(' ') }; }, i);
     check(info.n > 3 && !info.bad.length && info.chunksOk, `zone ${r.zone}: ${info.n} obstacles of its own set (${info.types})${info.bad.length ? ' BAD ' + info.bad : ''}, dressing ok ${info.chunksOk}`);
-    await p.waitForTimeout(300); await S('zone_' + r.zone);
+    await p.evaluate(() => { const g = window.__GAME; g.G.invT = 0; g.update(1 / 60); g.updateCamera(1 / 60); }); await p.waitForTimeout(300); await S('zone_' + r.zone);
   }
   // reef close-up of a jellyfish row (slide)
   await p.evaluate(() => { const G = window.__GAME.G; G.invT = 99; });
-  const jf = await sim(25, "G.obs.some(o => (o.type === 'jelly' || o.type === 'jellies') && o.d0 - G.d < 9 && o.d0 > G.d + 4)"); console.log('jelly frame', jf); await p.waitForTimeout(250); await S('reef_jelly');
+  const jf = await sim(25, "G.obs.some(o => (o.type === 'jelly' || o.type === 'jellies') && o.d0 - G.d < 9 && o.d0 > G.d + 4)"); console.log('jelly frame', jf); await solid(); await p.waitForTimeout(250); await S('reef_jelly');
   // checkpoint: friendly refills hearts when crossing a gate; the zone, music and look change
   const cp = await p.evaluate(async () => { const g = window.__GAME, G = g.G; g.warp(5 * g.ZL - 40); G.hearts = 1; G.invT = 99; const z0 = G.zoneN; for (let i = 0; i < 60 * 6 && G.zoneN === z0; i++) { g.update(1 / 60); if (i % 30 === 0) await new Promise(r => setTimeout(r, 0)); } return { hearts: G.hearts, zone: G.zoneN, fog: Math.round(g.E && document && 0), song: G.song }; });
   check(cp.hearts === 3 && cp.zone === 5 && cp.song === 'bright', `checkpoint at lap 2: hearts refilled to ${cp.hearts}, zone ${cp.zone}, song ${cp.song}`);
-  await sim(.4); await p.waitForTimeout(200); await S('lap2');
+  await sim(.4); await solid(); await p.waitForTimeout(200); await S('lap2');
 
   // ---- missions ----
   const m = await p.evaluate(() => { const g = window.__GAME, G = g.G, S = g.S; S.missions = [{ k: 'jump', n: 3, base: 0, tier: 0, done: false }, { k: 'coinsT', n: 999999, base: S.tot.coins, tier: 0, done: false }, { k: 'dist', n: 999999, base: 0, tier: 0, done: false }]; const jar0 = S.jar, xp0 = G.mxp; G.st.jump = 3; g.checkMissions(); return { done: S.missions[0].done, jar: S.jar - jar0, xp: G.mxp - xp0, banner: document.querySelector('#rnMis').classList.contains('show') }; });
   check(m.done && m.jar === 50 && m.xp === 30 && m.banner, `missions: completing one pays +${m.xp} XP and +${m.jar} coins with a banner`);
 
   // ---- power-ups: wave ride smashes through obstacles without costing hearts ----
-  const wv = await p.evaluate(async () => { const g = window.__GAME, G = g.G; g.auto = false; G.invT = 0; G.hearts = 3; G.pw.wave = 6; let smashed = 0; for (let i = 0; i < 60 * 5; i++) { g.update(1 / 60); g.updateCamera(1 / 60); if (i === 30) window.__shotNow = true; if (i % 30 === 0) await new Promise(r => setTimeout(r, 0)); } smashed = G.obs.filter(o => o.hit).length; return { hearts: G.hearts, smashed, inv: G.invT > 0 }; });
+  const wv = await p.evaluate(async () => { const g = window.__GAME, G = g.G; g.auto = false; G.invT = 0; G.hearts = 3; G.pw.wave = 6; G.smashN = 0; for (let i = 0; i < 60 * 8 && G.pw.wave; i++) { g.update(1 / 60); g.updateCamera(1 / 60); if (i % 30 === 0) await new Promise(r => setTimeout(r, 0)); } return { hearts: G.hearts, smashed: G.smashN, inv: G.invT > 0 }; });
   check(wv.hearts === 3 && wv.smashed > 0, `wave ride: ${wv.smashed} obstacles smashed, hearts kept (${wv.hearts}), grace after (${wv.inv})`);
   await p.evaluate(() => { const G = window.__GAME.G; G.pw.wave = 6; G.invT = 99; window.__GAME.auto = true; }); await sim(.7); await p.waitForTimeout(250); await S('wave');
   await p.evaluate(() => { const G = window.__GAME.G; delete G.pw.wave; G.pw.shield = 14; G.pw.magnet = 9; G.pw.double = 10; window.__GAME.showShield(); }); await sim(.8); await p.waitForTimeout(250); await S('power');

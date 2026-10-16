@@ -87,7 +87,7 @@ const POWERS = {
 };
 const TRAILS = [
   { id: 'none', e: '⛔', name: { en: 'No trail', es: 'Sin estela' }, cost: 0 },
-  { id: 'foam', e: '🌊', name: { en: 'Sea foam', es: 'Espuma' }, cost: 0, cols: [0xffffff, 0x8fe3ff] },
+  { id: 'foam', e: '🌊', name: { en: 'Sea foam', es: 'Espuma' }, cost: 0, cols: [0xd8fbff, 0x3fc8ff] },
   { id: 'sunset', e: '🌅', name: { en: 'Sunset', es: 'Atardecer' }, cost: 300, cols: [0xffd166, 0xff5b5b] },
   { id: 'mint', e: '🍃', name: { en: 'Mint breeze', es: 'Brisa menta' }, cost: 500, cols: [0xc8ffe4, 0x22b07d] },
   { id: 'bubbles', e: '🫧', name: { en: 'Bubbles', es: 'Burbujas' }, cost: 900, cols: [0xd8f7ff, 0x4aa8ff], fx: 'bubbles' },
@@ -111,19 +111,19 @@ const pick2 = (r, a) => a[Math.floor(r() * a.length)];
 /* ---------- zones: rotate every 432 m (Boardwalk → Docks → Market → Night Pier → Reef Tunnel → Boardwalk…) ---------- */
 // look: sky/fog/light; water: [shallow, deep, sky reflection, sun glint]; stars/clouds/sea/disc: 0..1 fades; lamp: lantern glow
 const ZONES = [
-  { id: 'walk', e: '🌴', name: { en: 'Sunset Boardwalk', es: 'Paseo del Atardecer' }, song: 'bright', tip: null,
+  { id: 'walk', short: { en: 'Boardwalk', es: 'Paseo' }, e: '🌴', name: { en: 'Sunset Boardwalk', es: 'Paseo del Atardecer' }, song: 'bright', tip: null,
     look: { skyTop: 0x4f86d4, skyHor: 0xffd2a6, skyGlow: 0xffb070, fog: 0xf6d6b8, fogNear: 70, fogFar: 260, sun: 2.3, sunColor: 0xffd2a0, hemi: .75, ground: 0xa58a6a, exposure: 1, env: .22, bloom: .16, bloomT: .92, stars: 0, clouds: 1, sea: 1, disc: 1, lamp: 1.3, water: [0x3aa7b8, 0x1d5f7a, 0xffc9a0, 0xffd9a8] },
     jump: ['barrel', 'rock', 'bench', 'crate', 'chest'], block: ['van', 'cream', 'hatch'], slide: ['beam'], allJump: 'log', allSlide: 'arch' },
-  { id: 'dock', e: '⚓', name: { en: 'Harbor Docks', es: 'Muelles del Puerto' }, song: 'race', tip: { en: 'Jump the ropes, dodge the containers!', es: '¡Salta las cuerdas y esquiva los contenedores!' },
+  { id: 'dock', short: { en: 'Docks', es: 'Muelles' }, e: '⚓', name: { en: 'Harbor Docks', es: 'Muelles del Puerto' }, song: 'race', tip: { en: 'Jump the ropes, dodge the containers!', es: '¡Salta las cuerdas y esquiva los contenedores!' },
     look: { skyTop: 0x4f8ad6, skyHor: 0xd9ecf5, skyGlow: 0xfff4d0, fog: 0xd3e5ee, fogNear: 60, fogFar: 240, sun: 2.4, sunColor: 0xfff1dc, hemi: .8, ground: 0x7d8a8c, exposure: 1, env: .22, bloom: .13, bloomT: .94, stars: 0, clouds: 1, sea: 1, disc: .5, lamp: 1, water: [0x2f8fb0, 0x154a6c, 0xd9ecf5, 0xffffff] },
     jump: ['crate', 'fishbox', 'coil', 'pod', 'barrel'], block: ['container', 'dtruck', 'pickup'], slide: ['hook'], allJump: 'hawser', allSlide: 'girder' },
-  { id: 'market', e: '🍉', name: { en: 'Beach Market', es: 'Mercado de Playa' }, song: 'bright', tip: { en: 'Hop the fruit, slide under the awnings!', es: '¡Salta la fruta y deslízate bajo los toldos!' },
+  { id: 'market', short: { en: 'Market', es: 'Mercado' }, e: '🍉', name: { en: 'Beach Market', es: 'Mercado de Playa' }, song: 'bright', tip: { en: 'Hop the fruit, slide under the awnings!', es: '¡Salta la fruta y deslízate bajo los toldos!' },
     look: { skyTop: 0x3b88e0, skyHor: 0xc6e9ff, skyGlow: 0xffffff, fog: 0xdcefF6, fogNear: 65, fogFar: 250, sun: 2.5, sunColor: 0xfff8ec, hemi: .85, ground: 0xb59a70, exposure: 1, env: .22, bloom: .12, bloomT: .95, stars: 0, clouds: 1, sea: 1, disc: .3, lamp: 1, water: [0x34c0c8, 0x1a7e96, 0xc6e9ff, 0xffffff] },
     jump: ['melon', 'fruitbox', 'coco', 'pine'], block: ['stall', 'cream'], slide: ['bunting'], allJump: 'rug', allSlide: 'awning' },
-  { id: 'night', e: '🎡', name: { en: 'Night Pier', es: 'Muelle de Noche' }, song: 'chill', tip: { en: 'Duck under the light strings!', es: '¡Agáchate bajo las luces!' },
+  { id: 'night', short: { en: 'Night Pier', es: 'Muelle nocturno' }, e: '🎡', name: { en: 'Night Pier', es: 'Muelle de Noche' }, song: 'chill', tip: { en: 'Duck under the light strings!', es: '¡Agáchate bajo las luces!' },
     look: { skyTop: 0x0b1236, skyHor: 0x3b3d78, skyGlow: 0xb9a8ff, fog: 0x262a55, fogNear: 45, fogFar: 210, sun: .7, sunColor: 0xa8bcff, hemi: .55, ground: 0x2c2840, exposure: 1.12, env: .12, bloom: .2, bloomT: .82, stars: 1, clouds: .15, sea: 1, disc: 0, lamp: 3, water: [0x1d3a6a, 0x0b1a36, 0x4a4f8a, 0xc8d4ff] },
     jump: ['prize', 'barrel', 'chest'], block: ['booth', 'cream'], slide: ['lights'], allJump: 'neon', allSlide: 'lanterns' },
-  { id: 'reef', e: '🐠', name: { en: 'Coral Reef Tunnel', es: 'Túnel del Arrecife' }, song: 'chill', tip: { en: 'Slide under the jellyfish!', es: '¡Deslízate bajo las medusas!' },
+  { id: 'reef', short: { en: 'Reef', es: 'Arrecife' }, e: '🐠', name: { en: 'Coral Reef Tunnel', es: 'Túnel del Arrecife' }, song: 'chill', tip: { en: 'Slide under the jellyfish!', es: '¡Deslízate bajo las medusas!' },
     look: { skyTop: 0x053a58, skyHor: 0x1a86a2, skyGlow: 0x9ff4ff, fog: 0x1a7c94, fogNear: 14, fogFar: 92, sun: 1.7, sunColor: 0xc4f6ff, hemi: 1, ground: 0x2a6a70, exposure: 1, env: .2, bloom: .16, bloomT: .9, stars: 0, clouds: 0, sea: 0, disc: 0, lamp: 1.5, water: [0x1d8aa0, 0x0a4a6a, 0x1a86a2, 0xc4f6ff] },
     jump: ['clam', 'coral', 'rock'], block: ['pillar', 'wreck'], slide: ['jelly'], allJump: 'ridge', allSlide: 'jellies' }
 ];
@@ -520,9 +520,9 @@ const magnetRing = new THREE.Mesh(new THREE.TorusGeometry(.8, .045, 6, 36), new 
 const halo = new THREE.Mesh(new THREE.TorusGeometry(.3, .05, 6, 24), new THREE.MeshStandardMaterial({ color: 0xffd166, emissive: 0xffb000, emissiveIntensity: 1, metalness: .6, roughness: .3 })); halo.rotation.x = Math.PI / 2; halo.position.y = 2.15; halo.visible = false; player.root.add(halo);
 const board = new THREE.Group(); const boardMat = new THREE.MeshStandardMaterial({ roughness: .35 }); { const b = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 10), boardMat); b.scale.set(.36, .05, 1.0); b.castShadow = true; board.add(b); const fin = new THREE.Mesh(new THREE.ConeGeometry(.12, .25, 3), E.mat(0x1b2430)); fin.position.set(0, -.12, .7); fin.rotation.x = Math.PI; board.add(fin); } board.position.y = .08; board.visible = false; player.root.add(board);
 function setBoard() { const B = BOARDS.find(b => b.id === S.board) || BOARDS[0]; const c = document.createElement('canvas'); c.width = 64; c.height = 256; const g = c.getContext('2d'); g.fillStyle = B.a; g.fillRect(0, 0, 64, 256); g.fillStyle = B.b; g.fillRect(24, 0, 16, 256); g.fillRect(0, 110, 64, 12); if (B.id === 'galaxy') { g.fillStyle = '#fff'; for (let i = 0; i < 40; i++) g.fillRect(Math.random() * 64, Math.random() * 256, 2, 2); } const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; if (boardMat.map) boardMat.map.dispose(); boardMat.map = t; boardMat.needsUpdate = true; }
-const waveMesh = (() => { const geo = new THREE.CylinderGeometry(1.8, 1.8, 6.2, 24, 1, true, Math.PI, Math.PI * .75); geo.rotateZ(Math.PI / 2); const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0x3fb6d8, emissive: 0x1f7fa8, emissiveIntensity: .4, transparent: true, opacity: .72, roughness: .15, side: THREE.DoubleSide, depthWrite: false })); m.position.set(0, 1.2, 2.2); m.visible = false; player.root.add(m); return m; })();
+const waveMesh = (() => { const g = new THREE.Group(); const m = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0x3fb6d8, emissive: 0x1f7fa8, emissiveIntensity: .35, transparent: true, opacity: .5, roughness: .12, depthWrite: false })); m.scale.set(.9, .3, 1.6); m.position.z = -.7; g.add(m); g.visible = false; player.root.add(g); return g; })();
 // trail ribbon: positions sampled by distance; colors fade to black (additive blending → transparent)
-const TN = 24, tPos = new Float32Array(TN * 6), tCol = new Float32Array(TN * 6), tHist = [];
+const TN = 12, tPos = new Float32Array(TN * 6), tCol = new Float32Array(TN * 6), tHist = [];
 const trailGeo = new THREE.BufferGeometry(); trailGeo.setAttribute('position', new THREE.BufferAttribute(tPos, 3)); trailGeo.setAttribute('color', new THREE.BufferAttribute(tCol, 3));
 { const idx = []; for (let i = 0; i < TN - 1; i++) { const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); } trailGeo.setIndex(idx); }
 const trail = new THREE.Mesh(trailGeo, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false })); trail.frustumCulled = false; trail.visible = false; scene.add(trail);
@@ -720,13 +720,13 @@ function enterZone(n) {
   if (Z.tip && !G.hinted['z' + Z.id]) { G.hinted['z' + Z.id] = true; line += ' ' + L(Z.tip); }
   E.say(line, { interrupt: false });
 }
-function closeCall() { G.st.close++; G.coinsN += G.mult; E.noise(.32, .1, 2600, .7); E.tone(620, .22, 'sine', .04, 500); if (!E.reducedMotion()) G.fovKick = Math.max(G.fovKick, 3.5); const sp = E.toScreen(tmp.set(G.x, G.y + 2.1, -G.d), camera); E.floatText(L('CLOSE!', '¡POR UN PELO!'), sp.x, sp.y, 'gold'); }
+function closeCall() { G.st.close++; G.coinsN += G.mult; if (G.runT - (G.closeT || -9) < .6) return; G.closeT = G.runT; E.noise(.32, .1, 2600, .7); E.tone(620, .22, 'sine', .04, 500); if (!E.reducedMotion()) G.fovKick = Math.max(G.fovKick, 3.5); const sp = E.toScreen(tmp.set(G.x, G.y + 2.1, -G.d), camera); E.floatText(L('CLOSE!', '¡POR UN PELO!'), sp.x, sp.y, 'gold'); }
 function takeCoin(c) {
   c.taken = true; const v = G.mult * (G.pw.double ? 2 : 1); G.coinsN += v; G.st.coins += v; G.cstreak++; G.coinPitch = Math.min(24, G.coinPitch + 1); G.coinPitchT = .55;
   const f = Math.pow(2, G.coinPitch / 24); E.tone(988 * f, .07, 'square', .045); E.tone(1319 * f, .12, 'square', .04, 0, .05);
   PT.burst(new THREE.Vector3(c.x, c.y, -c.d), { color: 0xffd76a, n: 6, speed: 1.6, up: 2, size: .3, life: .45, gravity: 4 });
-  if (G.cstreak % 10 === 0) { const sp = E.toScreen(tmp.set(c.x, c.y + .8, -c.d), camera); E.floatText(`${G.cstreak} ${L('streak', 'seguidas')}!`, sp.x, sp.y, 'gold'); E.tone(1568 * f, .18, 'triangle', .05, 0, .1); }
-  else if (v > 1 && Math.random() < .25) { const sp = E.toScreen(tmp.set(c.x, c.y + .6, -c.d), camera); E.floatText('+' + v, sp.x, sp.y, 'gold'); }
+  if ([10, 25, 50, 100, 150, 200].includes(G.cstreak)) { const sp = E.toScreen(tmp.set(c.x, c.y + .8, -c.d), camera); E.floatText(`${G.cstreak} ${L('streak', 'seguidas')}!`, sp.x, sp.y, 'gold'); E.tone(1568 * f, .18, 'triangle', .05, 0, .1); }
+  else if (v > 1 && !G.pw.magnet && Math.random() < .2) { const sp = E.toScreen(tmp.set(c.x, c.y + .6, -c.d), camera); E.floatText('+' + v, sp.x, sp.y, 'gold'); }
 }
 function stumble(o) {
   o.hit = true;
@@ -740,12 +740,14 @@ function stumble(o) {
   E.toast(G.hearts > 0 ? L(`Oops! ${G.hearts} ♥ left`, `¡Uy! Quedan ${G.hearts} ♥`) : L('Careful! Last chance!', '¡Cuidado! ¡Última oportunidad!'), 1500);
   if (G.hearts === 0) E.say(L('Careful! Last chance!', '¡Cuidado! ¡Última oportunidad!'), { interrupt: false });
 }
-function knock(o, smash) { if (smash && o.lanes.length === 3) o.obj.visible = false; else if (o.lanes.length < 3) o.fly = { t: 0, vx: (o.obj.position.x >= G.x ? 1 : -1) * rnd(3, 5) * (smash ? 1.6 : 1), vy: smash ? 9 : 6 }; if (smash) { SFX.hit(); G.coinsN += 2 * G.mult; G.shake = Math.max(G.shake, .15); } PT.burst(new THREE.Vector3(G.x, .8, -G.d - .6), { color: smash ? 0xbff4ff : 0xfff1d0, n: 18, speed: 3, up: 4, size: .5, life: .6, additive: false, gravity: 10 }); }
+function knock(o, smash) { if (smash && o.lanes.length === 3) o.obj.visible = false; else if (o.lanes.length < 3) o.fly = { t: 0, vx: (o.obj.position.x >= G.x ? 1 : -1) * rnd(3, 5) * (smash ? 1.6 : 1), vy: smash ? 9 : 6 }; if (smash) { SFX.hit(); G.smashN = (G.smashN || 0) + 1; G.coinsN += 2 * G.mult; G.shake = Math.max(G.shake, .15); } PT.burst(new THREE.Vector3(G.x, .8, -G.d - .6), { color: smash ? 0xbff4ff : 0xfff1d0, n: 18, speed: 3, up: 4, size: .5, life: .6, additive: false, gravity: 10 }); }
 function powerFx(dt) {
-  G.fxT += dt; if (G.fxT < .07) return; G.fxT = 0; const p = tmp.set(G.x, G.y + .2, -G.d + .3);
+  G.fxT += dt; if (G.fxT < .045) return; G.fxT = 0; const p = tmp.set(G.x, G.y + .2, -G.d + .3);
   if (G.pw.double) PT.burst(tmp.set(G.x + rnd(-.5, .5), G.y + 1 + rnd(-.3, .8), -G.d + rnd(-.3, .3)), { color: 0xffd166, n: 2, speed: .5, up: .8, size: .22, life: .5, gravity: 0 });
-  if (G.pw.wave) PT.burst(p.set(G.x + rnd(-.8, .8), .3, -G.d + 1.2), { color: 0xdff8ff, n: 5, speed: 2.2, up: 3, size: .35, life: .5, additive: false, gravity: 9 });
-  const T = TRAILS.find(t => t.id === S.trail); if (T && T.fx === 'sparkle') PT.burst(tmp.set(G.x + rnd(-.25, .25), G.y + .35, -G.d + .5), { color: T.cols[Math.random() < .5 ? 0 : 1], n: 2, speed: .4, up: .6, size: .25, life: .6, gravity: 0 });
+  if (G.pw.wave) { PT.burst(p.set(G.x + rnd(-.6, .6), .25, -G.d + .9), { color: 0xffffff, n: 4, speed: 2, up: 2.6, size: .32, life: .45, additive: false, gravity: 9 }); PT.burst(p.set(G.x + rnd(-.5, .5), .1, -G.d + .4), { color: 0x7fd8ff, n: 2, speed: 1, up: 1, size: .5, life: .5, gravity: 4 }); }
+  const T = TRAILS.find(t => t.id === S.trail);
+  if (T && (T.cols || T.rainbow)) for (const sx of [-.16, .16]) PT.burst(tmp.set(G.x + sx, G.y + (G.pw.wave ? .25 : .12), -G.d + .35), { color: T.rainbow ? _c1.setHSL((G.t * .7 + sx) % 1, .9, .6).getHex() : T.cols[Math.random() < .5 ? 0 : 1], n: 1, speed: .25, up: .25, size: .26 * (T.wide || 1), life: .42, gravity: 0 });
+  if (T && T.fx === 'sparkle') PT.burst(tmp.set(G.x + rnd(-.25, .25), G.y + .35, -G.d + .5), { color: T.cols[Math.random() < .5 ? 0 : 1], n: 2, speed: .4, up: .6, size: .25, life: .6, gravity: 0 });
   if (T && T.fx === 'bubbles') PT.burst(tmp.set(G.x + rnd(-.3, .3), G.y + .4, -G.d + .6), { color: 0xd8f7ff, n: 1, speed: .2, up: 1.4, size: .35, life: .9, gravity: -1 });
 }
 function overStep(dt) {
@@ -759,7 +761,7 @@ function overStep(dt) {
 function poseRunner(dt, sliding) {
   const t = G.runT; player.root.position.set(G.x, G.y, -G.d);
   let tilt = .08, py = 0, pz = 0, ry = -G.lean * .6;
-  if (G.pw.wave) { tilt = 0; py = .16 + Math.sin(t * 3) * .04; ry += .5; cpose(player.rig, player.model, PZ.surf(t)); board.rotation.set(Math.sin(t * 3) * .05, 0, -G.lean * .8); board.position.y = .08 + Math.sin(t * 3) * .04; waveMesh.scale.y = 1 + Math.sin(t * 4) * .06; }
+  if (G.pw.wave) { tilt = 0; py = .16 + Math.sin(t * 3) * .04; ry += .5; cpose(player.rig, player.model, PZ.surf(t)); board.rotation.set(Math.sin(t * 3) * .05, 0, -G.lean * .8); board.position.y = .08 + Math.sin(t * 3) * .04; waveMesh.scale.set(1 + Math.sin(t * 5) * .05, 1 + Math.sin(t * 4) * .12, 1); }
   else if (G.stumbleT > 0) { const k = G.stumbleT / .75; tilt = Math.sin((1 - k) * Math.PI) * .45; cpose(player.rig, player.model, PZ.stumble(t)); }
   else if (sliding) { tilt = -1.12; py = .16; pz = .2; cpose(player.rig, player.model, PZ.slide()); }
   else if (G.y > .01) { tilt = G.vy > 0 ? -.05 : .12; cpose(player.rig, player.model, PZ.jump()); }
@@ -772,13 +774,13 @@ function poseRunner(dt, sliding) {
 }
 function updateTrail() {
   const T = TRAILS.find(t => t.id === S.trail); if (!G || !T || !T.cols && !T.rainbow || G.state !== 'run') { trail.visible = false; if (G && G.state !== 'run') tHist.length = 0; return; }
-  trail.visible = true; const sliding = G.slideT > 0 && G.y < .3; const head = { x: G.x, y: G.y + (sliding ? .18 : .32) + (G.pw.wave ? .1 : 0), z: -G.d + .35 };
-  if (!tHist.length || tHist[1] && Math.abs(tHist[1].z - head.z) > .17 || tHist.length === 1) tHist.unshift(head); else tHist[0] = head; if (tHist.length > TN) tHist.length = TN;
-  const w = .13 * (T.wide || 1), N = tHist.length;
+  trail.visible = true; const sliding = G.slideT > 0 && G.y < .3; const head = { x: G.x, y: G.y + (sliding ? .2 : .5) + (G.pw.wave ? .1 : 0), z: -G.d + .3 };
+  if (!tHist.length || tHist[1] && Math.abs(tHist[1].z - head.z) > .13 || tHist.length === 1) tHist.unshift(head); else tHist[0] = head; if (tHist.length > TN) tHist.length = TN;
+  const w = .08 * (T.wide || 1), N = tHist.length;
   for (let i = 0; i < TN; i++) { const p = tHist[Math.min(i, N - 1)], f = 1 - i / (TN - 1), ww = w * (.35 + .65 * f), k = i * 6;
     tPos[k] = p.x - ww; tPos[k + 1] = p.y; tPos[k + 2] = p.z; tPos[k + 3] = p.x + ww; tPos[k + 4] = p.y; tPos[k + 5] = p.z;
     if (T.rainbow) _c1.setHSL((i / TN + G.t * .4) % 1, .9, .6); else _c1.setHex(T.cols[0]).lerp(_c2.setHex(T.cols[1]), i / (TN - 1));
-    const a = (i >= N ? 0 : f * f * .62); tCol[k] = tCol[k + 3] = _c1.r * a; tCol[k + 1] = tCol[k + 4] = _c1.g * a; tCol[k + 2] = tCol[k + 5] = _c1.b * a; }
+    const a = (i >= N ? 0 : Math.pow(f, 1.6) * .32); tCol[k] = tCol[k + 3] = _c1.r * a; tCol[k + 1] = tCol[k + 4] = _c1.g * a; tCol[k + 2] = tCol[k + 5] = _c1.b * a; }
   trailGeo.attributes.position.needsUpdate = trailGeo.attributes.color.needsUpdate = true;
 }
 function updateGhost() {
@@ -867,7 +869,7 @@ function finish() {
   const Z = ZONES[G.zoneN % 5];
   const ghostLine = G.ghost ? (G.beatGhost ? L('You beat your ghost!', '¡Superaste a tu fantasma!') : L(`Ghost was ${Math.max(0, Math.round(G.ghost.best - d))} m ahead`, `El fantasma iba ${Math.max(0, Math.round(G.ghost.best - d))} m adelante`)) : (newBest ? L('Your ghost will race you next time', 'Tu fantasma correrá contigo la próxima vez') : '');
   const xp = Math.round(Math.max(10, d / 10) + G.mxp);
-  const res = E.results({ gameId: 'runner', title: newBest ? (G.ghost ? L('New record — ghost beaten!', '¡Nuevo récord, fantasma superado!') : L('New best run!', '¡Tu mejor carrera!')) : L('Run complete', 'Carrera terminada'), stats: [[L('Distance', 'Distancia'), d + ' m'], [L('Coins', 'Monedas'), G.coinsN], [L('Reached', 'Llegaste a'), `${Z.e} ${L(Z.name).split(' ').slice(-1)[0]}`]], xp, coins: Math.min(G.coinsN, 250), best: d, bestLabel: L('Best distance (m)', 'Mejor distancia (m)'), onAgain: () => startRun(), won: newBest, share: L(`I ran ${d} m on ${G.daily ? 'the Tide Runner daily run (' + G.date + ')' : 'Tide Runner'} and reached the ${Z.name.en} in Inoa Games!`, `¡Corrí ${d} m en ${G.daily ? 'la carrera del día de Tide Runner (' + G.date + ')' : 'Tide Runner'} y llegué al ${Z.name.es} en Inoa Games!`) + ' ' + location.href.split('?')[0] });
+  const res = E.results({ gameId: 'runner', title: newBest ? (G.ghost ? L('New record — ghost beaten!', '¡Nuevo récord, fantasma superado!') : L('New best run!', '¡Tu mejor carrera!')) : L('Run complete', 'Carrera terminada'), stats: [[L('Distance', 'Distancia'), d + ' m'], [L('Coins', 'Monedas'), G.coinsN], [L(Z.short) + (G.zoneN >= 5 ? ' · ' + L('lap', 'vuelta') + ' ' + (Math.floor(G.zoneN / 5) + 1) : ''), Z.e]], xp, coins: Math.min(G.coinsN, 250), best: d, bestLabel: L('Best distance (m)', 'Mejor distancia (m)'), onAgain: () => startRun(), won: newBest, share: L(`I ran ${d} m on ${G.daily ? 'the Tide Runner daily run (' + G.date + ')' : 'Tide Runner'} and reached the ${Z.name.en} in Inoa Games!`, `¡Corrí ${d} m en ${G.daily ? 'la carrera del día de Tide Runner (' + G.date + ')' : 'Tide Runner'} y llegué al ${Z.name.es} en Inoa Games!`) + ' ' + location.href.split('?')[0] });
   const card = res.querySelector('.ig-card'), rw = card.querySelector('.ig-reward'); const add = html => { const el = document.createElement('div'); el.innerHTML = html; card.insertBefore(el.firstElementChild, rw); };
   if (ghostLine) add(`<p class="ig-sub">👻 ${ghostLine}</p>`);
   if (G.mDone.length) add(`<div class="rn-mlist">${G.mDone.map(m => `<div class="rn-m done"><span>✅</span><span>${MDEF[m.k].t(m.n)}</span><small>+${mReward(m).xp} XP</small></div>`).join('')}</div>`);
