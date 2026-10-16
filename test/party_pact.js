@@ -14,4 +14,10 @@ module.exports = async ({ open, shot, wait, log }) => {
   }
   const slots = await host.evaluate(() => [...document.querySelectorAll('.slot .src')].map(e => e.textContent));
   await shot(host, 'lobby'); log('lobby sources', JSON.stringify(slots)); if (!slots.some(t => t.includes('📱'))) throw new Error('phone did not join lobby');
+  // P1 readies on the host; the phone presses A to ready up, then A again to start the match
+  await host.evaluate(() => { const s = window.__GAME.lobby.slots[0]; if (!s.ready) document.querySelector('.slot .ready').click(); });
+  const tap = async () => { await pad.locator('#bA').dispatchEvent('pointerdown'); await host.waitForTimeout(700); await pad.locator('#bA').dispatchEvent('pointerup'); await host.waitForTimeout(700); };
+  for (let i = 0; i < 6 && (await host.evaluate(() => window.__GAME.G.scene)) !== 'play'; i++) await tap();
+  const st = await host.evaluate(() => ({ scene: window.__GAME.G.scene, srcs: window.__GAME.players.map(p => p.src).join(',') }));
+  log('match start', JSON.stringify(st)); if (st.scene !== 'play' || !/net\d/.test(st.srcs)) throw new Error('phone could not ready up and start');
 };

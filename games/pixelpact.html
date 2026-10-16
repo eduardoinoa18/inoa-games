@@ -2691,9 +2691,9 @@ function drawHUD() {
   ctx.save();
   if (G.mode === 'match') {
     // Smash-style damage panels along the bottom
-    const n = players.length, pw = Math.min(150 * u, (W - s.l * d - s.r * d - 40 * u) / n), total = pw * n, x0 = (W - total) / 2, by = H - s.b * d - 70 * u;
+    const n = players.length, cols = G.portrait && n > 2 ? 2 : n, rows = Math.ceil(n / cols), pw = Math.min(150 * u, (W - s.l * d - s.r * d - 24 * u) / cols), total = pw * cols, x0 = (W - total) / 2;
     players.forEach((p, i) => {
-      const x = x0 + i * pw + 6 * u, w = pw - 12 * u;
+      const x = x0 + (i % cols) * pw + 6 * u, w = pw - 12 * u, by = H - s.b * d - 70 * u - (rows - 1 - Math.floor(i / cols)) * 64 * u;
       ctx.fillStyle = p.out ? 'rgba(6,24,33,.4)' : 'rgba(6,24,33,.78)'; ctx.beginPath(); rr(ctx, x, by, w, 58 * u, 8 * u); ctx.fill();
       ctx.fillStyle = p.col; ctx.fillRect(x, by, w, 3 * u);
       const R = 16 * u, cx = x + R + 8 * u, cy = by + 29 * u;
