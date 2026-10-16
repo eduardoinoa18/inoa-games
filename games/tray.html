@@ -37,8 +37,10 @@
 .board small{color:#e0a100;letter-spacing:1px}
 .ttl-scroll{max-height:calc(100dvh - 32px);overflow:auto}
 .tt-wide .tt-col{display:grid;gap:12px;align-content:start}
-.tt-wide .tt-col>.ig-row{position:sticky;bottom:-26px;background:var(--paper);padding:10px 0 14px;margin-bottom:-14px;z-index:2;box-shadow:0 -10px 12px -8px rgba(0,0,0,.08)}
+.tt-wide .tt-col>.ig-row,.tt-wide>.ig-row{position:sticky;bottom:-26px;background:var(--paper);padding:10px 0 14px;margin-bottom:-14px;z-index:2;box-shadow:0 -10px 12px -8px rgba(0,0,0,.08)}
 @media (min-width:760px) and (orientation:landscape){.tt-wide{width:min(980px,100%);grid-template-columns:1fr 1.25fr;column-gap:22px}}
+@media not all and (min-width:760px) and (orientation:landscape){.tt-wide .tt-col{display:contents}}
+.tt-wide .o1{order:1}.tt-wide .o2{order:2}.tt-wide .o3{order:3}.tt-wide .o4{order:4}.tt-wide .ig-phones,.tt-wide .ig-row,.tt-wide .ig-setbtn{order:5}
 .map{display:grid;gap:8px}
 .vrow{border-radius:16px;padding:7px 9px 8px;background:color-mix(in srgb,var(--vc) 16%,#fff);border:2px solid color-mix(in srgb,var(--vc) 45%,#fff)}
 .vrow .vh{display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:13px;margin-bottom:5px;color:var(--ink)}
@@ -70,6 +72,7 @@
 <div class="ft-meter" id="ftMeter" hidden><div class="ft-hint" id="ftHint"></div><div class="ft-bar"><i id="ftNeedle"></i></div></div>
 <script type="module">
 import * as E from '../engine/inoa3d.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 const { THREE, clamp, lerp, rnd, pick, hash, damp, SFX, $ } = E;
 
 /* ================= language (spoken + key UI) ================= */
@@ -140,7 +143,7 @@ const VENUES = {
   ski: { n: ['Ski Lodge', 'Refugio de esquí'], e: '🏔️', col: '#5b7fc7', song: 'chill',
     look: { skyTop: 0x5f8fcf, skyHor: 0xe8eef8, skyGlow: 0xfff1dc, sunDir: [.4, .3, -.8], fog: 0xe4ebf4, fogNear: 40, fogFar: 150, sun: 1.55, sunColor: 0xfff0e0, hemi: .6, ground: 0xdfe8f2, exposure: .86, env: .22, bloom: .1, clouds: true },
     ground: ['snow', 0xf2f6fb], path: ['wood', 0xb78657], trim: 0x5a3a22, post: 0x5a3a22,
-    props: [['low-poly-tree', 5.5], ['low-poly-tree', 4.2], ['formation-rock', 2.4], ['barrel', 1.0], ['low-poly-tree', 6.5], ['bench', 1.6]], houses: ['house-4', 'house-3'], start: 'house-4', sign: ['FIRESIDE', 'JUNTO AL FUEGO'], snow: true }
+    props: [['tree-big', 6.5], ['low-poly-tree', 5.5], ['formation-rock', 2.4], ['barrel', 1.0], ['tree-big', 5], ['bench', 1.6]], houses: ['house-4', 'house-3'], start: 'house-4', sign: ['FIRESIDE', 'JUNTO AL FUEGO'], snow: true }
 };
 const VORDER = ['garden', 'cafe', 'wedding', 'cruise', 'ski'];
 // Course segments: st straight, turn (a degrees, + = left, r radius), ramp (len, dy), bumps, puddle, seesaw, mover, beam, wind,
@@ -353,10 +356,10 @@ function buildCourse(L) {
   const chair = new THREE.Group(); const seat = new THREE.Mesh(new THREE.BoxGeometry(.5, .06, .5), E.pbr('wood', 0x8a5a36, [1, 1])); seat.position.y = .5; chair.add(seat); const back = new THREE.Mesh(new THREE.BoxGeometry(.5, .6, .06), E.pbr('wood', 0x8a5a36, [1, 1])); back.position.set(0, .8, -.25); chair.add(back); for (const [lx, lz] of [[-.2, -.2], [.2, -.2], [-.2, .2], [.2, .2]]) { const l = new THREE.Mesh(new THREE.BoxGeometry(.05, .5, .05), E.mat(0x5a3a22)); l.position.set(lx, .25, lz); chair.add(l); } chair.traverse(m => { if (m.isMesh) m.castShadow = true; });
   const cp = new THREE.Vector3(fe.x + Math.sin(fe.h) * 1.15, fe.y, fe.z + Math.cos(fe.h) * 1.15); chair.position.copy(cp); chair.rotation.y = fe.h + Math.PI; course.add(chair); C.chairPos = cp; C.chairH = fe.h + Math.PI;
   // finish arch
-  const fa = frameAt(C.end - .2); const arch = new THREE.Group(); for (const sd of [-1, 1]) { const lg = new THREE.Mesh(new THREE.CylinderGeometry(.08, .08, 3.2, 8), E.mat(0xf4f1e8)); lg.position.set(sd * (PATH_W / 2 + .3), 1.6, 0); arch.add(lg); } const ban = E.tag('🏁', NM(V.sign), { width: 3.2, bg: '#ffd166' }); ban.position.y = 3.3; arch.add(ban); arch.position.set(fa.x, fa.y, fa.z); arch.rotation.y = fa.h; course.add(arch);
+  const fa = frameAt(C.end - .2); const arch = new THREE.Group(); for (const sd of [-1, 1]) { const lg = new THREE.Mesh(new THREE.CylinderGeometry(.08, .08, 3.2, 8), E.mat(0xf4f1e8)); lg.position.set(sd * (PATH_W / 2 + .3), 1.6, 0); arch.add(lg); } const ban = E.tag('🏁', NM(V.sign), { width: 3.2, bg: '#ffd166' }); ban.position.y = 3.3; arch.add(ban); C.archBan = ban; arch.position.set(fa.x, fa.y, fa.z); arch.rotation.y = fa.h; course.add(arch);
   // string lights across the course (one instanced bulb mesh + one line set for every wire)
   { const bulbs = new THREE.InstancedMesh(new THREE.SphereGeometry(.07, 8, 6), new THREE.MeshStandardMaterial({ color: 0xfff2c8, emissive: 0xffc96a, emissiveIntensity: 1.6 }), 400); let bi = 0; const ob = new THREE.Object3D(); const wires = []; const poleM = E.pbr('wood', V.deck ? 0xf4f1e8 : 0x5a3a22, [1, 1]);
-    for (let s = 3; s < C.end - 1; s += 6.5) { const sg = segAt(s); if (sg.t === 'revolve' || sg.t === 'doors' || sg.t === 'beam') continue; const fr = frameAt(s); const top = fr.y + 4.3; const ends = []; for (const sd of [-1, 1]) { const p = latPos(s, sd * (PATH_W / 2 + .9)); const lp = new THREE.Mesh(new THREE.CylinderGeometry(.05, .07, top, 6), poleM); lp.position.set(p.x, top / 2, p.z); lp.castShadow = true; course.add(lp); ends.push(new THREE.Vector3(p.x, top, p.z)); }
+    for (let s = 3; s < C.end - 1; s += 6.5) { const sg = segAt(s); if (sg.t === 'revolve' || sg.t === 'doors' || sg.t === 'beam') continue; const fr = frameAt(s); const top = fr.y + 4.3; const ends = []; for (const sd of [-1, 1]) { const p = latPos(s, sd * (PATH_W / 2 + .9)); const lp = new THREE.Mesh(new THREE.CylinderGeometry(.05, .07, top, 6), poleM); lp.position.set(p.x, top / 2, p.z); lp.castShadow = true; course.add(lp); (C.poles = C.poles || []).push(lp); ends.push(new THREE.Vector3(p.x, top, p.z)); }
       const n = 9; let prev = null; for (let k = 0; k <= n; k++) { const t = k / n; const q = ends[0].clone().lerp(ends[1], t); q.y -= Math.sin(t * Math.PI) * .45; if (k > 0 && k < n && bi < 400) { ob.position.copy(q); ob.position.y -= .06; ob.updateMatrix(); bulbs.setMatrixAt(bi++, ob.matrix); } if (prev) wires.push(prev.x, prev.y, prev.z, q.x, q.y, q.z); prev = q; }
       if (V.arches && Math.round(s / 6.5) % 2 === 0) course.add(flowerArch(fr, s)); }
     bulbs.count = bi; course.add(bulbs); const wg = new THREE.BufferGeometry(); wg.setAttribute('position', new THREE.Float32BufferAttribute(wires, 3)); course.add(new THREE.LineSegments(wg, new THREE.LineBasicMaterial({ color: 0x2b2420 }))); }
@@ -364,11 +367,27 @@ function buildCourse(L) {
   const bx = smp.reduce((a, s) => [Math.min(a[0], s.x), Math.max(a[1], s.x), Math.min(a[2], s.z), Math.max(a[3], s.z)], [1e9, -1e9, 1e9, -1e9]);
   if (V.deck) buildDeck(bx);
   // scenery: keep clear of the path, the start mat and the finish (arch, table, umbrella)
-  let placed = 0; const PROPS = V.props; const keep = [[fa.x, fa.z, 5.5], [fe.x, fe.z, 6], [f0.x, f0.z, 3]]; const mrg = V.deck ? 4 : 14;
-  for (let i = 0; i < 600 && placed < (V.deck ? 26 : 70); i++) { const px = lerp(bx[0] - mrg, bx[1] + mrg, hash(i, 1 + L.name[0].length)), pz = lerp(bx[2] - mrg * .7, bx[3] + mrg, hash(i, 2 + L.name[0].length)); const pr = PROPS[Math.floor(hash(i, 3) * PROPS.length)]; const big = pr[1] > 3; const rad = 2.4 + pr[1] * (big ? .42 : .3); let ok = true; for (let k = 0; k < smp.length; k += 5) { const s = smp[k]; if ((s.x - px) ** 2 + (s.z - pz) ** 2 < rad * rad) { ok = false; break; } } for (const [kx, kz, kr] of keep) if ((kx - px) ** 2 + (kz - pz) ** 2 < (kr + (big ? pr[1] * .35 : 0)) ** 2) ok = false; if (!ok) continue; const m = sceneryProp(pr, i); m.position.set(px, 0, pz); m.rotation.y = hash(i, 5) * 6.3; course.add(m); C.scenery.push(m); placed++; }
-  if (V.houses.length) for (let k = 0; k < 4; k++) { const hm = inst(V.houses[k % V.houses.length], { scale: 11 }); const a = k / 4 * Math.PI * 2 + .6; hm.position.set((bx[0] + bx[1]) / 2 + Math.cos(a) * 45, 0, (bx[2] + bx[3]) / 2 + Math.sin(a) * 45); hm.rotation.y = -a - Math.PI / 2; course.add(hm); }
+  let placed = 0; const far = []; const PROPS = V.props; const keep = [[fa.x, fa.z, 5.5], [fe.x, fe.z, 6], [f0.x, f0.z, 3]]; const mrg = V.deck ? 4 : 14;
+  for (let i = 0; i < 600 && placed < (V.deck ? 26 : 70); i++) { const px = lerp(bx[0] - mrg, bx[1] + mrg, hash(i, 1 + L.name[0].length)), pz = lerp(bx[2] - mrg * .7, bx[3] + mrg, hash(i, 2 + L.name[0].length)); const pr = PROPS[Math.floor(hash(i, 3) * PROPS.length)]; const big = pr[1] > 3; const rad = 2.4 + pr[1] * (big ? .42 : .3); let ok = true; for (let k = 0; k < smp.length; k += 5) { const s = smp[k]; if ((s.x - px) ** 2 + (s.z - pz) ** 2 < rad * rad) { ok = false; break; } } for (const [kx, kz, kr] of keep) if ((kx - px) ** 2 + (kz - pz) ** 2 < (kr + (big ? pr[1] * .35 : 0)) ** 2) ok = false; if (!ok) continue; const m = sceneryProp(pr, i); m.position.set(px, 0, pz); m.rotation.y = hash(i, 5) * 6.3; course.add(m); let dmin = 1e9; for (let k = 0; k < smp.length; k += 5) dmin = Math.min(dmin, Math.hypot(smp[k].x - px, smp[k].z - pz)); (dmin > 7 ? far : C.scenery).push(m); placed++; }
+  if (V.houses.length) for (let k = 0; k < 4; k++) { const hm = inst(V.houses[k % V.houses.length], { scale: 11 }); const a = k / 4 * Math.PI * 2 + .6; hm.position.set((bx[0] + bx[1]) / 2 + Math.cos(a) * 45, 0, (bx[2] + bx[3]) / 2 + Math.sin(a) * 45); hm.rotation.y = -a - Math.PI / 2; course.add(hm); far.push(hm); }
+  // far scenery and houses never block the replay camera: bake them into one mesh per material (hundreds of draw calls → a few dozen)
+  mergeStatic(far.concat(C.poles || []));
   snow.visible = !!V.snow; leaves.material.color.set(V.snow ? 0xffffff : 0xd98a2b);
   return C;
+}
+// merge static meshes by material (pack models use quantised attributes, so everything is converted to float first)
+function floatGeo(g, mtx) {
+  const out = new THREE.BufferGeometry();
+  for (const k of ['position', 'normal', 'uv', 'color']) { const a = g.attributes[k]; if (!a) continue; const n = a.count, sz = a.itemSize, arr = new Float32Array(n * sz); for (let i = 0; i < n; i++) { arr[i * sz] = a.getX(i); if (sz > 1) arr[i * sz + 1] = a.getY(i); if (sz > 2) arr[i * sz + 2] = a.getZ(i); if (sz > 3) arr[i * sz + 3] = a.getW(i); } out.setAttribute(k, new THREE.BufferAttribute(arr, sz)); }
+  if (g.index) out.setIndex(Array.from(g.index.array)); out.applyMatrix4(mtx); if (!out.attributes.normal) out.computeVertexNormals(); return out;
+}
+function mergeStatic(objs) {
+  const groups = new Map(), done = []; course.updateMatrixWorld(true);
+  for (const o of objs) { let ok = true; o.traverse(m => { if (m.isInstancedMesh || m.isSkinnedMesh || m.isSprite || (m.isMesh && Array.isArray(m.material))) ok = false; }); if (!ok) continue; done.push(o);
+    o.traverse(m => { if (!m.isMesh || !m.visible || m.userData.outline) return; /* far props skip the toon outline (half the triangles) */ const g = m.geometry, attrs = ['position', 'normal', 'uv', 'color'].filter(k => g.attributes[k]).join(','); const key = m.material.uuid + '|' + attrs + '|' + (g.index ? 1 : 0) + '|' + (+m.castShadow) + (+m.receiveShadow) + '|' + m.renderOrder; let e = groups.get(key); if (!e) groups.set(key, e = { mat: m.material, cs: m.castShadow, rs: m.receiveShadow, ro: m.renderOrder, geos: [] }); e.geos.push(floatGeo(g, m.matrixWorld)); }); }
+  for (const o of done) { o.parent && o.parent.remove(o); disposeOwn(o); }
+  for (const e of groups.values()) { const mg = e.geos.length > 1 ? mergeGeometries(e.geos, false) : e.geos[0]; if (e.geos.length > 1) e.geos.forEach(g => g.dispose()); if (!mg) continue; const mesh = new THREE.Mesh(mg, e.mat); mesh.castShadow = false; /* far from the path: outside the player-following shadow camera anyway */ mesh.receiveShadow = e.rs; mesh.renderOrder = e.ro; mesh.matrixAutoUpdate = false; course.add(mesh); }
+  return groups.size;
 }
 function sceneryProp(pr, i) {
   const [name, sc, tint] = pr;
@@ -503,6 +522,7 @@ function newRun(level, pi) {
   const L = LEVELS[level]; if (!C || C.L !== L) buildCourse(L);
   dropRun();
   for (const s of C.seesaws) { s.ang = s.slope; s.av = 0; s.flipped = false; }
+  if (C.archBan) C.archBan.visible = true;
   for (const b of C.beams) b.hitDone = false; for (const d of C.doors) { d.hitDone = false; d.force = 0; } for (const p of C.pets) p.hitT = -9; for (const r of C.revolves) r.bonkT = 0;
   const rn = makeRunner(pi);
   const items = L.stack.map(makeItem);
@@ -877,7 +897,7 @@ function endReplay() {
 /* ================= flow ================= */
 function later(sec, fn) { (G.sched = G.sched || []).push({ t: G.time + sec, fn }); }
 function runSched() { if (!G || !G.sched) return; const due = G.sched.filter(e => e.t <= G.time); if (!due.length) return; G.sched = G.sched.filter(e => e.t > G.time); due.forEach(e => e.fn()); }
-function startDeliver() { if (G.mode !== 'play') return; G.mode = 'deliver'; G.finishT = G.time; G.deliverK = 0; SFX.good(); }
+function startDeliver() { if (G.mode !== 'play') return; G.mode = 'deliver'; if (C.archBan) C.archBan.visible = false; /* keeps the side-on delivery shot clear */ G.finishT = G.time; G.deliverK = 0; SFX.good(); }
 // stars: ★ arrive (always) · ★ deliver 70%+ · ★ deliver everything under par time
 function starsFor(n, tot, t, par) { const pct = Math.round(n / tot * 100); return 1 + (pct >= 70 ? 1 : 0) + (n === tot && t <= par ? 1 : 0); }
 function tally() {
@@ -950,7 +970,7 @@ function updateCamera(dt) {
   const p = latPos(G.s, G.lat * .5); const fwd = new THREE.Vector3(Math.sin(f.h), 0, Math.cos(f.h)), right = new THREE.Vector3(-Math.cos(f.h), 0, Math.sin(f.h));
   let want = new THREE.Vector3(p.x, y + up, p.z).addScaledVector(fwd, -back).addScaledVector(right, side);
   let look = new THREE.Vector3(p.x, y + (portrait ? 2.05 : 2.3), p.z).addScaledVector(fwd, 1.0);
-  if (G.mode === 'deliver' || G.mode === 'done') { const rp = G.rn.g.position; want = C.tableTop.clone().addScaledVector(fwd, -1.3).addScaledVector(right, 3.5).add(new THREE.Vector3(0, 1.55, 0)); look = C.tableTop.clone().lerp(rp, .35).add(new THREE.Vector3(0, .5, 0)); if (portrait) want.addScaledVector(right, 1.5).y += .6; } // side-on: runner, table and customer all in view
+  if (G.mode === 'deliver' || G.mode === 'done') { const rp = G.rn.g.position; want = C.tableTop.clone().addScaledVector(fwd, .3).addScaledVector(right, 3.5).add(new THREE.Vector3(0, 1.55, 0)); look = C.tableTop.clone().lerp(rp, .35).add(new THREE.Vector3(0, .5, 0)); if (portrait) want.addScaledVector(right, 1.3).y += .6; } // side-on: runner, table and customer all in view
   G.camPos.lerp(want, 1 - Math.pow(.008, dt)); G.camLook.lerp(look, 1 - Math.pow(.002, dt));
   G.shake = Math.max(0, G.shake - dt * 1.8); const sh = Math.min(.6, G.shake) * .12 * (E.reducedMotion() ? .3 : 1);
   camera.position.copy(G.camPos).add(new THREE.Vector3(rnd(-sh, sh), rnd(-sh, sh), rnd(-sh, sh))); camera.lookAt(G.camLook);
@@ -980,11 +1000,11 @@ let titleEl = null, nav = null;
 function title() {
   clearRun(); if (music) music.stop(); music = null; S.level = clamp(S.level || 0, 0, LEVELS.length - 1); if (!unlocked(S.level)) S.level = 0; buildCourse(LEVELS[S.level]);
   const DL = { chill: L2('🙂 Chill', '🙂 Tranqui'), normal: L2('😀 Normal', '😀 Normal'), wild: L2('😈 Wild', '😈 Salvaje') };
-  const extra = `<div><p class="ig-sub" style="margin-bottom:6px">${L2('Course map', 'Mapa de pistas')}</p>${courseMap()}</div><div class="lvinfo tt-left" id="lvInfo">${lvInfo(S.level)}</div>
-  <div class="tt-left"><p class="ig-sub" style="margin-bottom:6px">${L2('Wobble', 'Bamboleo')} · <small id="dTip">${diffTip()}</small></p><div class="pk" id="pD">${Object.keys(DIFF).map(k => `<button data-d="${k}" class="${S.diff === k ? 'on' : ''}">${DL[k]}</button>`).join('')}</div></div>
-  <div><p class="ig-sub" style="margin-bottom:6px">${L2('Players (hot-seat: take turns)', 'Jugadores (por turnos)')}</p><div class="pk" id="pP">${[1, 2, 3, 4].map(n => `<button data-n="${n}" class="${n === S.players ? 'on' : ''}">${n === 1 ? L2('🙂 Solo', '🙂 Solo') : '👥 ' + n}</button>`).join('')}</div></div>
-  <div id="pN" ${S.players > 1 ? '' : 'hidden'}><div class="names">${[0, 1, 2, 3].map(i => `<input data-i="${i}" maxlength="10" value="${esc(S.names[i])}" style="border-left:6px solid ${seatCol(i)}" ${i < S.players ? '' : 'hidden'} aria-label="${L2('Player', 'Jugador')} ${i + 1}">`).join('')}</div><div class="pk" id="pC" style="margin-top:6px"><button data-c="one" class="${S.cup === 'one' ? 'on' : ''}">${L2('This course', 'Esta pista')}</button><button data-c="cup" class="${S.cup === 'cup' ? 'on' : ''}">${L2('🏆 Party Cup (3 courses)', '🏆 Copa fiesta (3 pistas)')}</button></div></div>
-  ${showTilt() ? `<div class="pk"><button id="pT" class="${S.tilt ? 'on' : ''}">📱 ${L2('Tilt the phone to lean', 'Inclina el teléfono para equilibrar')}: ${S.tilt ? L2('on', 'sí') : L2('off', 'no')}</button></div>` : ''}`;
+  const extra = `<div class="o1"><p class="ig-sub" style="margin-bottom:6px">${L2('Course map', 'Mapa de pistas')}</p>${courseMap()}</div><div class="lvinfo tt-left o2" id="lvInfo">${lvInfo(S.level)}</div>
+  <div class="tt-left o3"><p class="ig-sub" style="margin-bottom:6px">${L2('Wobble', 'Bamboleo')} · <small id="dTip">${diffTip()}</small></p><div class="pk" id="pD">${Object.keys(DIFF).map(k => `<button data-d="${k}" class="${S.diff === k ? 'on' : ''}">${DL[k]}</button>`).join('')}</div></div>
+  <div class="o4"><p class="ig-sub" style="margin-bottom:6px">${L2('Players (hot-seat: take turns)', 'Jugadores (por turnos)')}</p><div class="pk" id="pP">${[1, 2, 3, 4].map(n => `<button data-n="${n}" class="${n === S.players ? 'on' : ''}">${n === 1 ? L2('🙂 Solo', '🙂 Solo') : '👥 ' + n}</button>`).join('')}</div></div>
+  <div id="pN" class="o4" ${S.players > 1 ? '' : 'hidden'}><div class="names">${[0, 1, 2, 3].map(i => `<input data-i="${i}" maxlength="10" value="${esc(S.names[i])}" style="border-left:6px solid ${seatCol(i)}" ${i < S.players ? '' : 'hidden'} aria-label="${L2('Player', 'Jugador')} ${i + 1}">`).join('')}</div><div class="pk" id="pC" style="margin-top:6px"><button data-c="one" class="${S.cup === 'one' ? 'on' : ''}">${L2('This course', 'Esta pista')}</button><button data-c="cup" class="${S.cup === 'cup' ? 'on' : ''}">${L2('🏆 Party Cup (3 courses)', '🏆 Copa fiesta (3 pistas)')}</button></div></div>
+  ${showTilt() ? `<div class="pk o4"><button id="pT" class="${S.tilt ? 'on' : ''}">📱 ${L2('Tilt the phone to lean', 'Inclina el teléfono para equilibrar')}: ${S.tilt ? L2('on', 'sí') : L2('off', 'no')}</button></div>` : ''}`;
   const d = E.titleScreen({ title: 'Fail Tray', kicker: L2('Inoa Games · Party physics', 'Inoa Games · Física de fiesta'), lead: L2('Carry a wobbly tower of food through silly obstacle courses in five venues. You always reach the table — but how much of the order survives?', 'Lleva una torre tambaleante de comida por pistas locas en cinco lugares. Siempre llegas a la mesa, pero ¿cuánto del pedido sobrevive?'), how: [['◀▶', L2('Lean against the wobble: A/D, arrows, stick or ◀ ▶', 'Inclínate contra el bamboleo: A/D, flechas, palanca o ◀ ▶')], ['⏩', L2('Faster: W/↑/Space or ⏩ · Slower: S/↓/Shift or 🐢', 'Rápido: W/↑/Espacio o ⏩ · Lento: S/↓/Shift o 🐢')], ['🎬', L2('Every collapse gets a slow-motion replay', 'Cada desastre tiene repetición en cámara lenta')]], extra, onPlay: () => { save(); E.say(TX.how()); begin(); } });
   wideTitle(d); titleEl = d;
   const pickLv = i => { S.level = i; d.querySelectorAll('#pL button').forEach(x => x.classList.toggle('on', +x.dataset.i === i)); $('lvInfo').innerHTML = lvInfo(i); buildCourse(LEVELS[i]); SFX.click(); };
