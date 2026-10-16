@@ -142,7 +142,8 @@ Each game below was changed by one game agent and then **re-tested by the lead**
 | Tide Lines | Tested + visually verified | Camera keeps ≥3.2 m from player and lifts out of props; props fade when blocking; close-up mode; name-tag clutter cut; EN/ES; results once with `won` | One map; blaster follows aim not forearm |
 | Island Drift | Tested + visually verified | Chase camera keeps the kart in frame while drifting; compact name tags; hero default + kart tint | Kart sits right of centre in portrait drifts |
 | Pixel Pact (2D) | Tested | `__GAME`/`__READY` hooks + `test/pixelpact.js`; best level recorded; results de-duped | Not on the engine (Phase 5 rebuild) |
-| Tide Runner, Fail Tray | Tested (baseline) | — | P3 polish (hearts chip wrap; sign clipping) deferred to Phase 5 |
+| Tide Runner | Tested (baseline) | — | P3 polish (hearts chip wrap) deferred to Phase 5 |
+| Fail Tray | Tested + visually verified (elevation pass 2026-10-16, below) | Sign clipping fixed; portrait Play button; 18 courses | Real-phone feel/FPS |
 
 ### Allergist review required (Snack Squad Safari)
 Every safety-relevant string (EN + ES) is listed verbatim in `docs/audit-notes/safari.md` → "For allergist review": the drill card, rescue steps (tell a grown-up, epinephrine auto-injector "blue cap off, orange to the outer thigh", hold and count, call 9-1-1, lie down and wait), symptom lists, disclaimers and friend-offer lessons. **None of it has been medically reviewed.** The game states it "teaches habits, not medicine" and to follow one's own action plan. Do not market it to families until a board-certified allergist signs off; the missing Spanish rescue steps must be translated and reviewed together.
@@ -396,3 +397,89 @@ One game agent re-audited and extended Junkyard to Jewel (`games/junk.html`). Te
 - On some Kenney models `_defaultMat` covers a small grille part as well as the hubs, so the wheel finish tints that part too.
 - Orders use local midnight. There is no streak or weekly order yet.
 - Engine: unchanged.
+
+## Fail Tray elevation pass (2026-10-16)
+One game agent re-audited and extended Fail Tray (`games/tray.html`). Tested with `test/tray.js` at 1000×560 and 390×844 (both `NO_ERRORS`, `ALL CHECKS PASSED`, every screenshot reviewed) and the hub (`test/index.js`, `NO_ERRORS`). Engine unchanged.
+
+**Bugs fixed**
+- **Portrait title hid the Play button** below the fold: the sticky-row selector (`.ig-row:last-child`) stopped matching once the engine added the ⚙️ settings button after the row. Fixed, and the portrait title now lists the course map first. Test: `portrait title: Play button visible without scrolling`.
+- **"TABLE 7" sign clipped into a tree** (known P3): scenery keeps 5.5–6 m clear of the finish arch, table and start mat, and big trees reserve room for their canopy. Checked in `tray_fall`, `tray_play` and the tile art.
+- **Bonks were teleports**: hits that cut your speed (and walkway edges) produced near-infinite longitudinal acceleration, so one hit slid every plate off. Longitudinal load is now clamped to ±7 m/s², so a hit is a jolt and the pitch kick does the comedy.
+- **Frame-rate checks**: a still tray settles (max tilt 2e-7 rad, no drift); course 2 driven by the bot at 30/60/144 fps reaches the table every time and delivers 5/4/4 items (within 1); no NaN across the 18-course tour.
+- **Hot-seat**: the Party Cup drew from 8 hard-coded courses, locked ones included; it now draws from unlocked courses. Ties now break on points, then items delivered, then total time. The board explains each run's points (`+345 = 300 food + 45 time`).
+- **Leaks**: switching courses never freed course geometry; every splat and shard made a new geometry and material. Course and run meshes are disposed (pack models skipped) and splats and shards share cached geometry.
+- **Wrong-arm cache**: the customer's mirrored-arm solve shared one cache key across different character models. It is now keyed per model.
+- **Kids**: the carried mug showed a 🍺 emoji; it is now ☕ (hot cocoa).
+- **Language**: the game read the language once and most text was English only. All UI, signs, results, the board and commentary are EN/ES, and the title re-renders when the language changes in settings.
+
+**Added**
+- **18 courses in 5 venues (was 8)**, unlocked in order, on a **course map** (venue rows with star counts, a 🔒 on locked courses, a course card with items, star goals and best score). The venues:
+  - **Garden Party**: the original 8 courses.
+  - **Seaside Café** (beach boardwalk, parasols): Morning Rush, Soup of the Day, Kitchen Chaos.
+  - **Wedding Garden** (carpet aisle, flower arches): Aisle Style, Glass Pyramid, Grand Reception.
+  - **Cruise Deck** (a ship's hull over the sea, railings, deck chairs, lifebuoys, a distant liner): Captain's Table, Rough Seas.
+  - **Ski Lodge** (snow ground, snowfall): Cocoa Run, Summit Supper.
+- Each venue has its own sky, ground, path surface, trim, props, finish sign, table cloth and music.
+- **New obstacles**:
+  - **Swinging kitchen doors**: walk in while they are shut and you BONK, then they hold open for you.
+  - **Revolving door**: walks you round its post. Push faster than the door turns and you bonk the glass.
+  - **Slippery floor**: mopped in the café, icy at the lodge. Weak grip and slow braking, you drift, and the rail bounces you back.
+  - **Stairs** up and down: each riser kicks the tower.
+  - **Moving walkways**: a fast lane, plus a "wrong way" belt that runs backwards. Stepping on and off is a jolt.
+  - **Pet crossings**: a puppy or a bunny dashes across; bump into it and you trip.
+  - **Rolling ship deck**: the whole tower leans with the swell and the horizon rocks.
+  - Every obstacle has an EN/ES sign.
+- **New carry items with their own physics**:
+  - **Soup bowl** and **iced drink**: slow, heavily damped wobble, and they slosh droplets over the rim when tipped.
+  - **Three-tier wedding cake**: tall and heavy, with a big lever arm.
+  - **Glass pyramid**: six glasses on a board that shatter spectacularly and rattle louder.
+  - Croissant, waffle, muffin, cookies, sushi.
+- **Stars**, explained on the course card and in the results: ★ arrive · ★ deliver 70%+ · ★ everything under par. Par accounts for the new obstacles and the difficulty.
+- **Difficulty**: Chill (new players' default; gentler wobble, relaxed par), Normal, and Wild (tippier, tighter par, and a fall takes everything above it; this replaces the old Chaos toggle).
+- **Optional phone tilt** to lean (touch devices; iOS permission asked on tap). "Level" is wherever you hold the phone during the countdown.
+- **Comedy and juice**:
+  - squash and stretch on every item
+  - a cartoon "whoa!" stagger on hits and drops
+  - a "Phew!" chime when you save a near-fall
+  - EN/ES crash words
+  - **slow-motion commentary**: a caption read aloud, picked by what knocked the tower over ("The door won that round.", "Not the soup! Anything but the soup!").
+- **Perfect delivery celebration**:
+  - the runner cheers and hops
+  - the customer waves both arms and bounces
+  - confetti volleys and a fanfare
+  - a random perfect line read aloud
+  - a side-on camera that frames the runner, table and customer (the finish banner hides for that shot).
+- **Hub hero**: player 1 carries as the hub hero (model, plus their colour on the tray).
+- Gamepad focus ring on the title and the party board (`E.menuNav`).
+- **Save v2** with migration: v1 stars and best scores are kept, Chaos becomes Wild, names are sanitised, garbage saves fall back to defaults.
+- **Performance**:
+  - far scenery and houses are baked into one mesh per material, without outlines or shadow casting
+  - string-light wires are one line set
+  - the ski venue avoids the 9k-triangle tree
+  - Garden course 1 went from 815 to ~360 draw calls (374k to 271k triangles); Ski 930 to ~290.
+- Pack: +16 CC0 models already in `assets/models`: bowl-soup, glass, frappe, croissant, waffle, muffin, cookie, sushi-salmon, dogue, bunny, ship-light, palm-long, house-4/6/7, house1, plus skater-female and survivor-male for heroes. The manifest has 47 models (1.73 MB) and every file is present in `packs/assets`.
+- New tile art (`thumbs/tray.jpg`, wedding steps). Hub tile copy updated in EN/ES.
+
+**Tests** (`test/tray.js`; `TRAY_QUICK=1` skips the tour, `TRAY_THUMB=1` writes the tile shot)
+- course map
+- locked-course toast
+- forced collapse, replay and commentary caption
+- results star goals
+- still-tower jitter
+- frame-rate agreement (30/60/144 fps)
+- v1 migration and garbage saves
+- all 18 courses driven by the bot, with obstacle screenshots (`tray_c9_doors` … `tray_c18_summit`)
+- hot-seat board breakdown and party final
+- Chill perfect delivery (`tray_deliver`)
+- Spanish title
+- portrait: Play button visible, HUD on one row
+
+**Still open**
+- Real-phone feel and FPS, and the device-tilt control, are unverified: headless has no sensors and software rendering.
+- Near scenery still costs ~200–360 draw calls with shadows.
+- The carried mug model is 23k triangles.
+- Pets hop but have no walk animation (non-rigged models).
+- The revolving door's panels follow the runner, but a very fast player can visually clip a panel during a bonk.
+- The bot is deterministic, so the hot-seat test ends in a tie (the tie-break is shown).
+- No separate-screen online mode (phones as controllers work as before).
+
