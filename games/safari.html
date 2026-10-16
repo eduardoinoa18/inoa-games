@@ -116,6 +116,39 @@ input[type=text]{font:inherit;font-weight:800;font-size:16px;padding:12px 14px;b
 /* results: the shared engine card (E.results) with the Safari extras */
 .ig-results .ig-card{margin-top:30px;gap:9px;padding:18px 18px}.ig-results .bigstars{font-size:32px;margin-bottom:-4px}.ig-results .ig-stats div{padding:7px 6px}.ig-results .learn{gap:4px}.ig-results .learn div{font-size:13px;padding:5px 10px}.ig-results .ig-row .ig-btn{min-height:48px}.ig-results.wait{visibility:hidden}
 @media (max-height:640px){.ig-results .ig-card h2{font-size:20px}.ig-results .learn div:nth-child(n+4){display:none}.ig-results .ig-sub{display:none}}
+/* elevation pass: room for the hub chip, notes, profiles, sticker book, toggles, accessibility */
+.screen{padding-top:max(54px,calc(env(safe-area-inset-top) + 46px))}
+/* tall cards scroll from their top (flex centering used to cut the heading off under the hub chip) */
+.screen:not(.rescue){align-items:flex-start}.screen:not(.rescue)>.card{margin-block:auto}
+a.btn{text-decoration:none}
+.note{font-size:13px;font-weight:800;color:#0f5c48;background:#e4f7ef;border-radius:12px;padding:8px 12px;margin:0}
+.row.sticky{position:sticky;bottom:-26px;background:var(--paper);padding:10px 0 12px;margin-bottom:-12px;z-index:2;box-shadow:0 -12px 12px -10px rgba(27,36,48,.18)}
+.profiles{display:flex;gap:8px;flex-wrap:wrap}.chip.prof{min-height:44px}.chip.add{border-style:dashed}
+.avs{display:flex;gap:6px;flex-wrap:wrap}
+.av{width:48px;height:48px;border-radius:14px;border:2px solid var(--line);background:#fff;font-size:24px;cursor:pointer;display:grid;place-items:center;line-height:1;padding:0}
+.av.rider{width:auto;padding:0 10px;display:flex;gap:6px;font-size:22px}.av.rider small{font-size:12px;font-weight:800}
+.av.on{border-color:var(--mint-ink);background:var(--mint)}.av:focus-visible{outline:3px solid var(--berry)}
+.btn.small{min-height:44px;font-size:13px}
+.chips.tgl{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}.chips.tgl .chip{font-size:13px}
+.label{cursor:zoom-in}.label.zoom{font-size:24px;cursor:zoom-out}.label.zoom .ing{font-size:24px}.label.zoom .nm{font-size:25px}
+.book{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
+.stk-b{display:grid;justify-items:center;align-content:start;gap:4px;padding:10px 6px;border-radius:16px;border:2px dashed var(--line);background:#f4efe6;cursor:pointer;font:inherit}
+.stk-b .e{font-size:30px;filter:grayscale(1);opacity:.35}.stk-b small{font-size:11px;font-weight:800;color:#6b7482;text-align:center;line-height:1.2}
+.stk-b.got{border:2px solid var(--sun);background:#fff;box-shadow:0 3px 0 #d9a92e}.stk-b.got .e{filter:none;opacity:1}.stk-b.got small{color:var(--ink)}
+.stk{position:fixed;left:50%;top:max(8px,env(safe-area-inset-top));transform:translate(-50%,-10px) scale(.9);background:#fff;border:3px solid var(--sun);border-radius:18px;padding:5px 14px;display:flex;gap:10px;align-items:center;box-shadow:0 10px 30px rgba(27,36,48,.2);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:70;max-width:min(340px,70%)}
+.stk.show{opacity:1;transform:translate(-50%,0) scale(1)}.stk .e{font-size:32px}.stk small{display:block;font-size:11px;font-weight:800;color:#b07f12;text-transform:uppercase;letter-spacing:.06em}.stk b{font-family:var(--f-d);font-size:15px}
+.stkrow span{font-size:20px}
+#scrLevels .card{width:min(860px,100%)}
+@media (min-width:760px){#levels{grid-template-columns:1fr 1fr}}
+.lv small{font-size:13px}.lv{font:inherit}
+/* play: the hub chip lives in the pause menu so it never covers the HUD pills */
+body.playing .inoa-home,body.playing .inoa-party{display:none}
+/* rescue: lane controls hide; the drill card stays compact (details shown for the current step only) */
+body.rescue #hud .bottom{visibility:hidden}
+.screen.rescue .step:not(.now) small,.screen.rescue .step:not(.now) br{display:none}
+/* accessibility: big text + high contrast */
+body.big .card{font-size:18px}body.big .sub,body.big .lv small{font-size:16px}body.big h2{font-size:26px}body.big .chip,body.big .chips.tgl .chip{font-size:16px}body.big .btn{font-size:17px}body.big .label,body.big .label .ing{font-size:22px}body.big .label .nm{font-size:23px}body.big .pill,body.big #goal{font-size:17px}body.big #tip{font-size:19px}body.big .lens{font-size:16px}body.big .disc{font-size:14px}body.big .note{font-size:15px}body.big .learn div{font-size:16px}body.big #btnRead{font-size:18px}body.big .step small{font-size:14px}body.big .stk-b small{font-size:13px}
+body.hc{--line:rgba(0,0,0,.6)}body.hc .screen:not(.rescue){background:rgba(0,0,0,.55);backdrop-filter:none;-webkit-backdrop-filter:none}body.hc .card{background:#fff;box-shadow:0 0 0 3px #000}body.hc .sub,body.hc .disc,body.hc .lv small,body.hc .lens,body.hc .stk-b small{color:#000}body.hc .label{border-width:4px}body.hc .label mark{background:#ffe066;outline:2px solid #000}body.hc .label mark.hid{background:#ffb3a8}body.hc .label .may{color:#5a2e00}body.hc .chip,body.hc .lv,body.hc .step,body.hc .av{border-color:#000}body.hc .pill,body.hc #goal{background:#fff;box-shadow:0 0 0 2px #000}body.hc #tip{background:#000}body.hc .btn.ghost{box-shadow:inset 0 0 0 3px #000}body.hc .ctl button{background:#fff;box-shadow:0 0 0 3px #000}body.hc .note{background:#fff;color:#000;outline:2px solid #000}body.hc .row.sticky{background:#fff}
 </style>
 </head><body>
 <a href="../index.html" aria-label="Back to Inoa Games" class="ig-chip ig-home inoa-home">⌂ Hub</a>
@@ -123,11 +156,12 @@ input[type=text]{font:inherit;font-weight:800;font-size:16px;padding:12px 14px;b
   <canvas id="gl"></canvas>
   <div id="loading" style="position:absolute;inset:0;display:grid;place-items:center;background:linear-gradient(180deg,#ffd7b0,#bfe8ff);z-index:5"><div style="text-align:center;display:grid;gap:12px"><div style="font-size:54px" id="ldE">🥚</div><h1 style="font-size:32px">Snack Squad <span style="color:var(--mint-ink)">Safari</span></h1><div class="bar" style="width:220px;margin:0 auto"><i id="ldBar" style="width:0"></i></div><p class="sub" id="ldTxt">Packing the cart…</p></div></div>
   <div id="float"></div>
-  <div id="tip"></div>
+  <div id="tip" role="status" aria-live="polite"></div>
+  <div id="stk" class="stk" role="status" aria-live="polite"></div>
 
   <div id="hud" hidden>
     <div class="top">
-      <div style="display:grid;gap:8px"><div class="pill"><span id="hScore">0</span> ★ <span id="hBuddy">🥚 Buddy lv 1</span> <span class="hearts" id="hHearts">😊</span></div><div id="goal"><span id="gText">Feed your buddy 12 safe snacks</span><div class="bar"><i id="gBar"></i></div></div></div>
+      <div style="display:grid;gap:8px"><div class="pill"><span id="hScore">0</span> ★ <span id="hBuddy">🥚 Buddy 1</span> <span class="hearts" id="hHearts">😊</span></div><div id="goal"><span id="gText">Feed your buddy 12 safe snacks</span><div class="bar"><i id="gBar"></i></div></div></div>
       <button class="btnp pill" id="btnPause" aria-label="Pause">⏸</button>
     </div>
     <div class="bottom">
@@ -141,51 +175,69 @@ input[type=text]{font:inherit;font-weight:800;font-size:16px;padding:12px 14px;b
     <div class="card">
       <div><p class="sub" style="font-size:13px;letter-spacing:.08em;text-transform:uppercase" data-i="tag">An Allergy Safe Safari game · kids + grown-ups</p><h1>Snack Squad <span>Safari</span></h1></div>
       <p class="sub" data-i="lead">Your buddy is hungry. Roll down the 3D aisle, catch the snacks that are safe for <b>you</b>, read the labels like a detective, and practice the rescue plan with a grown-up. Feed your buddy and watch it grow.</p>
-      <div class="row"><button class="btn" id="btnPlay" data-i="play">Let's play</button><button class="btn ghost" id="btnHow" data-i="how">How it works</button></div><div class="row"><button class="chip" id="btnLang"><span class="e">🌎</span>Español</button></div>
+      <div class="row"><button class="btn" id="btnPlay" data-i="play">Let's play</button><button class="btn ghost" id="btnHow" data-i="how">How it works</button></div>
+      <div class="row"><button class="chip" id="btnBook">📒 Sticker book</button><button class="chip" id="btnLang"><span class="e">🌎</span>Español</button></div>
+      <p class="note" data-i="note">⚕️ Practice game — not medical advice. Follow your doctor's allergy action plan.</p>
       <p class="disc" data-i="disc">Snack Squad Safari teaches habits, not medicine. Always follow the action plan from your own doctor or allergist.</p>
     </div>
   </div>
 
   <div class="screen" id="scrHow" hidden>
     <div class="card">
-      <h2>How it works</h2>
+      <h2 data-i="howT">How it works</h2>
       <div class="learn">
-        <div>🥚 Your <b>buddy</b> rides in the cart. Catch snacks that are safe for you to feed it; it hatches and grows as you go.</div><div>🛒 Move left and right to <b>catch safe food</b> and dodge foods with your allergens. Mistakes just mean "let's look again".</div>
-        <div>📦 Packaged foods show a <b>?</b>. Press <b>Read label</b> to open the ingredients and decide: safe or not safe.</div>
-        <div>🧑‍🍳 A grown-up can play the <b>Scanner</b>: hold the purple button (or Shift) to reveal label hints early.</div>
-        <div>🚨 <b>Buddy Rescue:</b> if an allergen slips through, your buddy needs you. Practice the 3-step plan: tell a grown-up, auto-injector, call 911. Calm and clear.</div><div>🎁 Every 10 safe snacks opens a <b>Mystery Snack</b>: a rare safe treat for your collection.</div>
-        <div>🎮 Keyboard: A/D or ← → to move, Space to read, Shift for Scanner. Touch: the big buttons.</div>
+        <div data-i="how1">🥚 Your <b>buddy</b> rides in the cart. Catch snacks that are safe for you to feed it; it hatches and grows as you go.</div><div data-i="how2">🛒 Move left and right to <b>catch safe food</b> and dodge foods with your allergens. Mistakes just mean "let's look again".</div>
+        <div data-i="how3">📦 Packaged foods show a <b>?</b>. Press <b>Read label</b> to open the ingredients and decide: safe or not safe. Tap the label to make the words bigger.</div>
+        <div data-i="how4">🧑‍🍳 A grown-up can play the <b>Scanner</b>: hold the purple button (or Shift) to reveal label hints early.</div>
+        <div data-i="how5">🚨 <b>Buddy Rescue:</b> if an allergen slips through, your buddy needs you. Practice the 3-step plan: tell a grown-up, auto-injector, call 911. Calm and clear.</div><div data-i="how6">🎁 Every 10 safe snacks opens a <b>Mystery Snack</b> for your collection. What you learn goes in your <b>sticker book</b>.</div>
+        <div data-i="how7">🎮 Keyboard: A/D or ← → to move, Space to read, Shift for Scanner. Gamepad: stick, A reads, B scans. Touch: the big buttons. 📱 A phone can be the controller too.</div>
       </div>
-      <button class="btn" id="btnHowBack">Got it</button>
+      <p class="note" data-i="howNote">⚕️ Practice game — not medical advice. Follow your doctor's allergy action plan.</p>
+      <div class="row"><button class="btn ghost" id="btnHowSay">🔊 Read it to me</button><button class="btn" id="btnHowBack">Got it</button></div>
     </div>
   </div>
 
   <div class="screen" id="scrSetup" hidden>
     <div class="card">
-      <h2>Who is playing?</h2>
-      <input type="text" id="kidName" maxlength="14" placeholder="Your name (optional)" autocomplete="off">
-      <div><p class="sub" style="margin-bottom:8px">Pick the allergies to practice with</p><div class="chips" id="allergens"></div></div>
-      <div><p class="sub" style="margin-bottom:8px">Help</p><div class="seg"><button class="chip on" id="voiceOn"><span class="e">🗣️</span>Read everything aloud</button><button class="chip" id="voiceOff"><span class="e">🤫</span>Quiet, I can read</button></div></div>
-      <div><p class="sub" style="margin-bottom:8px">Mode</p><div class="seg"><button class="chip on" id="modeSolo"><span class="e">🧒</span>Just me</button><button class="chip" id="modeDuo"><span class="e">🧒🧑</span>Me + a grown-up</button></div></div>
-      <div class="row"><button class="btn ghost" id="btnSetupBack">Back</button><button class="btn" id="btnSetupGo">Choose a level</button></div>
+      <h2 data-i="whoT">Who is playing?</h2>
+      <div class="profiles" id="profiles"></div>
+      <input type="text" id="kidName" maxlength="14" placeholder="Your name (optional)" autocomplete="off" aria-label="Name">
+      <div><p class="sub" style="margin-bottom:8px" data-i="avT">Pick your look</p><div class="avs" id="avatars"></div></div>
+      <div><p class="sub" style="margin-bottom:8px" data-i="pickAl">Pick the allergies to practice with</p><div class="chips" id="allergens"></div><p class="disc" style="margin-top:6px" data-i="pickAlNote">Grown-ups: pick the same allergens as your child's allergy action plan.</p></div>
+      <div><p class="sub" style="margin-bottom:8px" data-i="helpT">Help</p><div class="seg"><button class="chip on" id="voiceOn"><span class="e">🗣️</span>Read everything aloud</button><button class="chip" id="voiceOff"><span class="e">🤫</span>Quiet, I can read</button></div><div class="chips tgl" style="margin-top:8px"><button class="chip" data-t="hints"></button><button class="chip" data-t="big"></button><button class="chip" data-t="hc"></button></div></div>
+      <div><p class="sub" style="margin-bottom:8px" data-i="modeT">Mode</p><div class="seg"><button class="chip on" id="modeSolo"><span class="e">🧒</span>Just me</button><button class="chip" id="modeDuo"><span class="e">🧒🧑</span>Me + a grown-up</button></div></div>
+      <button class="btn ghost small" id="btnDelProf" hidden>🗑️ Remove this player</button>
+      <div class="row sticky"><button class="btn ghost" id="btnSetupBack">Back</button><button class="btn" id="btnSetupGo">Choose a level</button></div>
     </div>
   </div>
 
   <div class="screen" id="scrLevels" hidden>
     <div class="card">
-      <h2>Where are we going?</h2>
+      <h2 data-i="lvT">Where are we going?</h2>
       <div class="levels" id="levels"></div>
-      <div class="row"><button class="btn ghost" id="btnLvBack">Back</button><button class="btn" id="btnLvGo">Start</button></div>
+      <div class="row sticky"><button class="btn ghost" id="btnLvBack">Back</button><button class="btn ghost" id="btnLvBook">📒 Sticker book</button><button class="btn" id="btnLvGo">Start</button></div>
+    </div>
+  </div>
+
+  <div class="screen" id="scrBook" hidden>
+    <div class="card">
+      <h2 data-i="bookT">Sticker book</h2>
+      <p class="sub" id="bookSub"></p>
+      <div class="book" id="book"></div>
+      <div class="lens" id="bookInfo" role="status" aria-live="polite"></div>
+      <p class="sub" id="bookTreats" style="font-size:14px"></p>
+      <div class="row sticky"><button class="btn" id="btnBookBack">Back</button></div>
     </div>
   </div>
 
   <div class="screen" id="scrLabel" hidden>
     <div class="card">
       <h2 id="lblTitle">Read the label</h2>
-      <div class="label" id="lblBox"></div>
+      <div class="label" id="lblBox" role="button" tabindex="-1"></div>
+      <p class="disc" style="margin-top:-8px" data-i="lblZoom">Tap the label to make the words bigger.</p>
       <div class="lens" id="lblLens" hidden></div><button class="btn ghost" id="btnSay" style="min-height:48px">🔊 Read it to me</button>
       <div class="row"><button class="btn coral" id="btnNotSafe">🚫 Not safe for me</button><button class="btn" id="btnSafe">✅ Safe, take it</button></div>
-      <p class="disc">When you are not sure, the safe move is to skip it and ask a grown-up.</p>
+      <p class="disc" data-i="lblFoot">When you are not sure, the safe move is to skip it and ask a grown-up.</p>
     </div>
   </div>
 
@@ -199,23 +251,23 @@ input[type=text]{font:inherit;font-weight:800;font-size:16px;padding:12px 14px;b
 
   <div class="screen rescue" id="scrDrill" hidden>
     <div class="card">
-      <h2 id="drillTitle">Buddy Rescue!</h2>
-      <p class="sub" id="drillSub">Itchy mouth, hives, a swollen lip, trouble breathing: those are the signs. Stay calm and follow the plan, in order.</p>
+      <h2 id="drillTitle" data-i="drillTitle">Buddy Rescue!</h2>
+      <p class="sub" id="drillSub" data-i="drillSub">Itchy mouth, hives, a swollen lip, trouble breathing: those are the signs. Stay calm and follow the plan, in order.</p>
       <div class="drill">
-        <div class="step now" id="st1"><div class="n">1</div><div><b>Tell a grown-up right away</b><br><small>Say: "I ate something and I feel sick."</small></div></div>
-        <div class="step" id="st2"><div class="n">2</div><div><b>Use the epinephrine auto-injector</b><br><small>Outer thigh, hold it there and count.</small></div></div>
-        <div class="step" id="st3"><div class="n">3</div><div><b>Call 911</b><br><small>Even if you feel better. Then lie down and wait.</small></div></div>
+        <div class="step now" id="st1"><div class="n">1</div><div><b data-i="st1b">Tell a grown-up right away</b><br><small data-i="st1s">Say: "I ate something and I feel sick."</small></div></div>
+        <div class="step" id="st2"><div class="n">2</div><div><b data-i="st2b">Use the epinephrine auto-injector</b><br><small data-i="st2s">Outer thigh, hold it there and count.</small></div></div>
+        <div class="step" id="st3"><div class="n">3</div><div><b data-i="st3b">Call 911</b><br><small data-i="st3s">Even if you feel better. Then lie down and wait.</small></div></div>
       </div>
       <button class="btn" id="drillA">🗣️ "I need help!"</button><button class="btn ghost" id="btnDrillSay" style="min-height:44px">🔊 Read this step</button>
       <button class="hold" id="drillB" hidden><i></i><span>Hold on the thigh: 3… 2… 1…</span></button>
       <div id="dial" hidden style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:260px;margin:0 auto"></div><button class="btn coral" id="drillC" hidden>📞 Call 911</button><button class="btn" id="drillD" hidden>🛏️ Lie down, legs up, wait together</button>
-      <p class="disc">Practice only. Your real plan comes from your doctor or allergist; grown-ups, keep two auto-injectors nearby.</p>
+      <p class="disc" data-i="drillFoot">Practice only. Your real plan comes from your doctor or allergist; grown-ups, keep two auto-injectors nearby.</p>
     </div>
   </div>
 
   <div class="screen" id="scrMystery" hidden>
     <div class="card" style="text-align:center">
-      <p class="sub" style="font-size:13px;letter-spacing:.08em;text-transform:uppercase">Mystery Snack</p>
+      <p class="sub" style="font-size:13px;letter-spacing:.08em;text-transform:uppercase" data-i="mysT">Mystery Snack</p>
       <div id="mysE" style="font-size:72px;line-height:1">🎁</div>
       <h2 id="mysName">…</h2>
       <p class="sub" id="mysRar">Rare</p>
@@ -224,9 +276,9 @@ input[type=text]{font:inherit;font-weight:800;font-size:16px;padding:12px 14px;b
   </div>
   <div class="screen" id="scrPause" hidden>
     <div class="card">
-      <h2>Paused</h2>
-      <div class="row"><button class="btn" id="btnResume">Keep going</button><button class="btn ghost" id="btnQuit">Back to levels</button></div>
-      <div class="row"><button class="chip" id="tglSound"><span class="e">🔊</span>Sound on</button><button class="chip" id="tglMotion"><span class="e">🎢</span>Camera sway on</button><button class="chip" id="tglVoice"><span class="e">🗣️</span>Read aloud on</button></div>
+      <h2 data-i="pauseT">Paused</h2>
+      <div class="row"><button class="btn" id="btnResume">Keep going</button><button class="btn ghost" id="btnQuit">Back to levels</button><a class="btn ghost" id="btnPauseHub" href="../index.html">⌂ Hub</a></div>
+      <div class="chips tgl"><button class="chip" data-t="sound"></button><button class="chip" data-t="motion"></button><button class="chip" data-t="voice"></button><button class="chip" data-t="hints"></button><button class="chip" data-t="big"></button><button class="chip" data-t="hc"></button></div>
     </div>
   </div>
 
@@ -237,60 +289,145 @@ input[type=text]{font:inherit;font-weight:800;font-size:16px;padding:12px 14px;b
 import * as E from '../engine/inoa3d.js';
 const { THREE, clamp, lerp, rnd, pick, hash, smooth, $ } = E;
 /* ---------------- Data ---------------- */
+// Allergen facts (names, hidden names, food tags) are listed for the allergist review in docs/audit-notes/safari.md.
+// hiddenEs is index-aligned with hidden (ES translations: need allergist + native review).
 const ALLERGENS = [
-  { id: 'peanut', name: 'Peanut', e: '🥜', hidden: ['arachis oil', 'groundnut', 'mandelonas'] },
-  { id: 'treenut', name: 'Tree nuts', e: '🌰', hidden: ['marzipan', 'praline', 'almond paste', 'pesto'] },
-  { id: 'milk', name: 'Milk', e: '🥛', hidden: ['whey', 'casein', 'lactose', 'ghee'] },
-  { id: 'egg', name: 'Egg', e: '🥚', hidden: ['albumin', 'lysozyme', 'meringue', 'mayonnaise'] },
-  { id: 'wheat', name: 'Wheat', e: '🌾', hidden: ['semolina', 'durum', 'spelt', 'farina'] },
-  { id: 'soy', name: 'Soy', e: '🫘', hidden: ['edamame', 'tofu', 'soy lecithin', 'miso'] },
-  { id: 'fish', name: 'Fish', e: '🐟', hidden: ['anchovy', 'worcestershire sauce', 'surimi'] },
-  { id: 'shellfish', name: 'Shellfish', e: '🦐', hidden: ['prawn', 'scampi', 'krill'] },
-  { id: 'sesame', name: 'Sesame', e: '⚪', hidden: ['tahini', 'benne seed', 'halva'] }
+  { id: 'peanut', name: 'Peanut', es: 'Cacahuate (maní)', esw: 'cacahuate', e: '🥜', hidden: ['arachis oil', 'groundnut', 'mandelonas'], hiddenEs: ['aceite de arachis', 'cacahuete', 'mandelonas'] },
+  { id: 'treenut', name: 'Tree nuts', es: 'Nueces de árbol', esw: 'nueces de árbol', e: '🌰', hidden: ['marzipan', 'praline', 'almond paste', 'pesto'], hiddenEs: ['mazapán', 'praliné', 'pasta de almendra', 'pesto'] },
+  { id: 'milk', name: 'Milk', es: 'Leche', esw: 'leche', e: '🥛', hidden: ['whey', 'casein', 'lactose', 'ghee'], hiddenEs: ['suero de leche', 'caseína', 'lactosa', 'ghee'] },
+  { id: 'egg', name: 'Egg', es: 'Huevo', esw: 'huevo', e: '🥚', hidden: ['albumin', 'lysozyme', 'meringue', 'mayonnaise'], hiddenEs: ['albúmina', 'lisozima', 'merengue', 'mayonesa'] },
+  { id: 'wheat', name: 'Wheat', es: 'Trigo', esw: 'trigo', e: '🌾', hidden: ['semolina', 'durum', 'spelt', 'farina'], hiddenEs: ['sémola', 'durum', 'espelta', 'farina'] },
+  { id: 'soy', name: 'Soy', es: 'Soya', esw: 'soya', e: '🫘', hidden: ['edamame', 'tofu', 'soy lecithin', 'miso'], hiddenEs: ['edamame', 'tofu', 'lecitina de soya', 'miso'] },
+  { id: 'fish', name: 'Fish', es: 'Pescado', esw: 'pescado', e: '🐟', hidden: ['anchovy', 'worcestershire sauce', 'surimi'], hiddenEs: ['anchoa', 'salsa inglesa', 'surimi'] },
+  { id: 'shellfish', name: 'Shellfish', es: 'Mariscos', esw: 'mariscos', e: '🦐', hidden: ['prawn', 'scampi', 'krill'], hiddenEs: ['langostino', 'scampi', 'kril'] },
+  { id: 'sesame', name: 'Sesame', es: 'Ajonjolí (sésamo)', esw: 'ajonjolí', e: '⚪', hidden: ['tahini', 'benne seed', 'halva'], hiddenEs: ['tahini', 'semilla de benne', 'halva'] }
 ];
 const AL = Object.fromEntries(ALLERGENS.map(a => [a.id, a]));
-// Plain foods: [name, emoji, allergens, mesh]
+const isES = () => S.lang === 'es';
+const tx = (en, es) => isES() ? es : en;
+const alName = id => isES() ? AL[id].es : AL[id].name; // display name ("Tree nuts" / "Nueces de árbol")
+const alWord = id => isES() ? AL[id].esw : AL[id].name.toLowerCase(); // as written inside an ingredient list
+const hidName = (id, i) => (isES() ? AL[id].hiddenEs : AL[id].hidden)[i];
+const listJoin = arr => arr.length < 2 ? (arr[0] || '') : arr.slice(0, -1).join(', ') + tx(' and ', ' y ') + arr[arr.length - 1];
+// Plain foods: [name, emoji, allergens, mesh, nameEs]
 const FOODS = [
-  ['Apple', '🍎', [], 'apple'], ['Strawberries', '🍓', [], 'apple'], ['Orange', '🍊', [], 'apple'], ['Pear', '🍐', [], 'apple'], ['Corn', '🌽', [], 'apple'], ['Watermelon', '🍉', [], 'apple'], ['Muffin', '🧁', ['wheat', 'egg', 'milk'], 'cupcake'], ['Donut', '🍩', ['wheat', 'egg', 'milk', 'soy'], 'cookie'], ['Birthday cake', '🎂', ['wheat', 'egg', 'milk'], 'cupcake'], ['Chocolate', '🍫', ['milk', 'soy'], 'bar'], ['Carrot', '🥕', [], 'carrot'], ['Broccoli', '🥦', [], 'broccoli'], ['Banana', '🍌', [], 'banana'], ['Rice bowl', '🍚', [], 'bowl'], ['Grapes', '🍇', [], 'grapes'], ['Water', '💧', [], 'bottle'],
-  ['Milk', '🥛', ['milk'], 'carton'], ['Cheese', '🧀', ['milk'], 'cheese'], ['Yogurt', '🍦', ['milk'], 'cup'],
-  ['Egg', '🥚', ['egg'], 'egg'], ['Omelet', '🍳', ['egg'], 'plate'],
-  ['Peanut butter', '🥜', ['peanut'], 'jar'], ['Peanuts', '🥜', ['peanut'], 'bag'],
-  ['Almonds', '🌰', ['treenut'], 'bag'], ['Cashew bar', '🍫', ['treenut'], 'bar'],
-  ['Bread', '🍞', ['wheat'], 'bread'], ['Pasta', '🍝', ['wheat', 'egg'], 'plate'], ['Pretzel', '🥨', ['wheat'], 'pretzel'],
-  ['Soy milk', '🫘', ['soy'], 'carton'], ['Tofu', '🫘', ['soy'], 'cheese'], ['Edamame', '🫛', ['soy'], 'bag'],
-  ['Fish sticks', '🐟', ['fish', 'wheat'], 'plate'], ['Salmon', '🐟', ['fish'], 'fish'],
-  ['Shrimp', '🦐', ['shellfish'], 'shrimp'], ['Crab cake', '🦀', ['shellfish', 'wheat', 'egg'], 'plate'],
-  ['Sesame bun', '🍔', ['sesame', 'wheat'], 'bun'], ['Hummus', '🫓', ['sesame'], 'cup'],
-  ['Cookie', '🍪', ['wheat', 'egg', 'milk'], 'cookie'], ['Cupcake', '🧁', ['wheat', 'egg', 'milk'], 'cupcake']
+  ['Apple', '🍎', [], 'apple', 'Manzana'], ['Strawberries', '🍓', [], 'apple', 'Fresas'], ['Orange', '🍊', [], 'apple', 'Naranja'], ['Pear', '🍐', [], 'apple', 'Pera'], ['Corn', '🌽', [], 'apple', 'Elote'], ['Watermelon', '🍉', [], 'apple', 'Sandía'], ['Muffin', '🧁', ['wheat', 'egg', 'milk'], 'cupcake', 'Panqué'], ['Donut', '🍩', ['wheat', 'egg', 'milk', 'soy'], 'cookie', 'Dona'], ['Birthday cake', '🎂', ['wheat', 'egg', 'milk'], 'cupcake', 'Pastel de cumpleaños'], ['Chocolate', '🍫', ['milk', 'soy'], 'bar', 'Chocolate'], ['Carrot', '🥕', [], 'carrot', 'Zanahoria'], ['Broccoli', '🥦', [], 'broccoli', 'Brócoli'], ['Banana', '🍌', [], 'banana', 'Plátano'], ['Rice bowl', '🍚', [], 'bowl', 'Tazón de arroz'], ['Grapes', '🍇', [], 'grapes', 'Uvas'], ['Water', '💧', [], 'bottle', 'Agua'],
+  ['Milk', '🥛', ['milk'], 'carton', 'Leche'], ['Cheese', '🧀', ['milk'], 'cheese', 'Queso'], ['Yogurt', '🍦', ['milk'], 'cup', 'Yogur'],
+  ['Egg', '🥚', ['egg'], 'egg', 'Huevo'], ['Omelet', '🍳', ['egg'], 'plate', 'Omelet'],
+  ['Peanut butter', '🥜', ['peanut'], 'jar', 'Crema de cacahuate'], ['Peanuts', '🥜', ['peanut'], 'bag', 'Cacahuates'],
+  ['Almonds', '🌰', ['treenut'], 'bag', 'Almendras'], ['Cashew bar', '🍫', ['treenut'], 'bar', 'Barra de nuez de la India'],
+  ['Bread', '🍞', ['wheat'], 'bread', 'Pan'], ['Pasta', '🍝', ['wheat', 'egg'], 'plate', 'Pasta'], ['Pretzel', '🥨', ['wheat'], 'pretzel', 'Pretzel'],
+  ['Soy milk', '🫘', ['soy'], 'carton', 'Leche de soya'], ['Tofu', '🫘', ['soy'], 'cheese', 'Tofu'], ['Edamame', '🫛', ['soy'], 'bag', 'Edamame'],
+  ['Fish sticks', '🐟', ['fish', 'wheat'], 'plate', 'Palitos de pescado'], ['Salmon', '🐟', ['fish'], 'fish', 'Salmón'],
+  ['Shrimp', '🦐', ['shellfish'], 'shrimp', 'Camarones'], ['Crab cake', '🦀', ['shellfish', 'wheat', 'egg'], 'plate', 'Pastelito de cangrejo'],
+  ['Sesame bun', '🍔', ['sesame', 'wheat'], 'bun', 'Pan con ajonjolí'], ['Hummus', '🫓', ['sesame'], 'cup', 'Hummus'],
+  ['Cookie', '🍪', ['wheat', 'egg', 'milk'], 'cookie', 'Galleta'], ['Cupcake', '🧁', ['wheat', 'egg', 'milk'], 'cupcake', 'Panquecito'],
+  // added in the elevation pass (tags listed for the allergist review)
+  ['Lemon', '🍋', [], 'lemon', 'Limón'], ['Tomato', '🍅', [], 'tomato', 'Tomate'], ['Cherries', '🍒', [], 'cherries', 'Cerezas'], ['Avocado', '🥑', [], 'avocado', 'Aguacate'], ['Pineapple', '🍍', [], 'pineapple', 'Piña'], ['Cabbage', '🥬', [], 'cabbage', 'Repollo'], ['Eggplant', '🍆', [], 'eggplant', 'Berenjena'],
+  ['Pancakes', '🥞', ['wheat', 'egg', 'milk'], 'pancakes', 'Panqueques'], ['Waffle', '🧇', ['wheat', 'egg', 'milk'], 'waffle', 'Wafle'], ['Pizza slice', '🍕', ['wheat', 'milk'], 'pizza', 'Rebanada de pizza'], ['Croissant', '🥐', ['wheat', 'milk', 'egg'], 'croissant', 'Cuernito'], ['Apple pie', '🥧', ['wheat', 'milk', 'egg'], 'pie', 'Pay de manzana'], ['Ice cream cone', '🍦', ['milk', 'wheat'], 'ice-cream-cone', 'Cono de helado'], ['Fruit ice pop', '🍧', [], 'popsicle', 'Paleta de fruta']
 ];
-// Packaged products: name, base ingredients, mesh
+const foodName = f => isES() ? f[4] : f[0];
+// Packaged products (fictional names, no real brands): [name, base ingredients (no allergens; labelFor adds them), mesh, nameEs, themes]
 const PRODUCTS = [
-  ['Sunny Crunch cereal', ['corn', 'sugar', 'salt', 'vitamin D'], 'box'], ['Choco Puffs', ['rice', 'cocoa', 'sugar'], 'box'], ['Veggie chips', ['potato', 'sunflower oil', 'salt'], 'bag'],
-  ['Fruit snacks', ['apple juice', 'pectin', 'citric acid'], 'bag'], ['Granola bar', ['oats', 'honey', 'raisins'], 'bar'], ['Trail mix', ['raisins', 'pumpkin seeds', 'dried cranberries'], 'bag'],
-  ['Birthday cake mix', ['sugar', 'baking powder', 'vanilla'], 'box'], ['Tomato soup', ['tomatoes', 'water', 'onion', 'salt'], 'can'], ['Salad dressing', ['vinegar', 'olive oil', 'herbs'], 'bottle'],
-  ['Ice pops', ['water', 'fruit juice', 'sugar'], 'box'], ['Crackers', ['corn flour', 'oil', 'salt'], 'box'], ['Taco shells', ['corn masa', 'oil'], 'box']
+  ['Sunny Crunch cereal', ['corn', 'sugar', 'salt', 'vitamin D'], 'box', 'Cereal Sol Crujiente'], ['Choco Puffs', ['rice', 'cocoa', 'sugar'], 'box', 'Bolitas de Choco'], ['Veggie chips', ['potato', 'sunflower oil', 'salt'], 'bag', 'Chips de verduras'],
+  ['Fruit snacks', ['apple juice', 'pectin', 'citric acid'], 'bag', 'Gomitas de fruta'], ['Granola bar', ['oats', 'honey', 'raisins'], 'bar', 'Barra de granola'], ['Trail mix', ['raisins', 'pumpkin seeds', 'dried cranberries'], 'bag', 'Mezcla de excursión'],
+  ['Birthday cake mix', ['sugar', 'baking powder', 'vanilla'], 'box', 'Mezcla para pastel'], ['Tomato soup', ['tomatoes', 'water', 'onion', 'salt'], 'can', 'Sopa de tomate'], ['Salad dressing', ['vinegar', 'olive oil', 'herbs'], 'bottle', 'Aderezo para ensalada'],
+  ['Ice pops', ['water', 'fruit juice', 'sugar'], 'box', 'Paletas heladas'], ['Crackers', ['corn flour', 'oil', 'salt'], 'box', 'Galletas saladas'], ['Taco shells', ['corn masa', 'oil'], 'box', 'Tostadas para tacos'],
+  ['Lunchbox Crackers', ['rice flour', 'sunflower oil', 'salt'], 'box', 'Galletas para lonchera', ['school']], ['Apple Sauce Cups', ['apples', 'water', 'cinnamon'], 'can', 'Vasitos de puré de manzana', ['school', 'picnic']], ['Raisin Snack Box', ['raisins'], 'box', 'Cajita de pasas', ['school']],
+  ['Party Sprinkles', ['sugar', 'corn starch', 'food coloring'], 'bottle', 'Chispitas de fiesta', ['party']], ['Rainbow Frosting', ['sugar', 'palm oil', 'water', 'vanilla'], 'can', 'Betún arcoíris', ['party']], ['Fizzy Fruit Punch', ['water', 'fruit juice', 'sugar'], 'bottle', 'Ponche de frutas', ['party', 'picnic']], ['Party Popcorn', ['popcorn', 'sunflower oil', 'salt'], 'bag', 'Palomitas de fiesta', ['party']],
+  ['Moon Oat Rings', ['oats', 'sugar', 'salt'], 'box', 'Aros de avena Luna', ['store']], ['Starfish Crackers', ['corn flour', 'oil', 'salt'], 'box', 'Galletas estrella de mar', ['store', 'school']], ['Garden Veggie Soup', ['water', 'carrots', 'potatoes', 'peas', 'salt'], 'can', 'Sopa de verduras del huerto', ['store']], ['Sunrise Pancake Mix', ['rice flour', 'sugar', 'baking powder'], 'box', 'Mezcla para panqueques Amanecer', ['store']], ['Crispy Rice Bites', ['rice', 'sugar', 'salt'], 'bag', 'Bocaditos de arroz', ['store']], ['Berry Jam', ['strawberries', 'sugar', 'pectin'], 'can', 'Mermelada de fresa', ['store']],
+  ['Picnic Potato Chips', ['potato', 'sunflower oil', 'salt'], 'bag', 'Papitas de picnic', ['picnic']], ['Lemon Fizz', ['water', 'lemon juice', 'sugar'], 'bottle', 'Limonada burbujeante', ['picnic']], ['Sunny Salsa', ['tomatoes', 'onion', 'peppers', 'lime juice'], 'can', 'Salsa Soleada', ['picnic', 'rest']], ['Fruit Leather', ['apples', 'pears', 'lemon juice'], 'bar', 'Rollitos de fruta', ['picnic', 'school']],
+  ['Crunchy Croutons', ['corn flour', 'olive oil', 'garlic', 'herbs'], 'bag', 'Crutones crujientes', ['rest']], ['Kids Menu Juice', ['water', 'apple juice'], 'carton', 'Jugo del menú infantil', ['rest']], ['Dipping Sauce', ['tomatoes', 'vinegar', 'sugar', 'spices'], 'bottle', 'Salsa para mojar', ['rest']]
 ];
+const ING_ES = { corn: 'maíz', sugar: 'azúcar', salt: 'sal', 'vitamin D': 'vitamina D', rice: 'arroz', cocoa: 'cacao', potato: 'papa', 'sunflower oil': 'aceite de girasol', 'apple juice': 'jugo de manzana', pectin: 'pectina', 'citric acid': 'ácido cítrico', oats: 'avena', honey: 'miel', raisins: 'pasas', 'pumpkin seeds': 'semillas de calabaza', 'dried cranberries': 'arándanos secos', 'baking powder': 'polvo para hornear', vanilla: 'vainilla', tomatoes: 'tomates', water: 'agua', onion: 'cebolla', vinegar: 'vinagre', 'olive oil': 'aceite de oliva', herbs: 'hierbas', 'fruit juice': 'jugo de fruta', 'corn flour': 'harina de maíz', oil: 'aceite', 'corn masa': 'masa de maíz', 'rice flour': 'harina de arroz', apples: 'manzanas', cinnamon: 'canela', 'corn starch': 'fécula de maíz', 'food coloring': 'colorante', 'palm oil': 'aceite de palma', popcorn: 'palomitas', carrots: 'zanahorias', potatoes: 'papas', peas: 'chícharos', strawberries: 'fresas', 'lemon juice': 'jugo de limón', peppers: 'pimientos', 'lime juice': 'jugo de lima', pears: 'peras', garlic: 'ajo', spices: 'especias' };
+const ing = w => isES() ? (ING_ES[w] || w) : w;
+// theme: scenery set; place: where the 911 call script sends help (non-medical: only the place name changes per level)
 const LEVELS = [
-  { id: 0, name: 'Dawn trail', e: '🌴', desc: 'Plain foods and simple labels', goal: 12, speed: 7, mystery: .22, hidden: 0, may: 0, offers: 0, hdri: 'dawn', exposure: .9, fog: 0xcfe3f2, sand: 0xe6cf9f, grass: 0x62b25f, grass2: 0x4f9a51, water: 0x3fb6c9, waterDeep: 0x1a6f8a, sun: 2.4, sunColor: 0xfff0d6, bgI: .85, envI: .12, night: false, skyTop: 0x2f7fd0, skyHor: 0xbfdcee, skyGlow: 0xfff0c0 },
-  { id: 1, name: 'Sunset boardwalk', e: '🌅', desc: 'Longer labels and a friend with snacks', goal: 16, speed: 8.5, mystery: .32, hidden: .35, may: .25, offers: 2, hdri: 'sunset', exposure: .9, fog: 0xf0bf98, sand: 0xe8bd86, grass: 0x86b55c, grass2: 0x6e9b48, water: 0xe9955e, waterDeep: 0x5a3f7a, sun: 2.4, sunColor: 0xffb070, bgI: .9, envI: .14, night: false, skyTop: 0x5a3f9a, skyHor: 0xf7a97a, skyGlow: 0xffd27a },
-  { id: 2, name: 'Lantern night party', e: '🏮', desc: 'Hidden names, "may contain", fast carts', goal: 20, speed: 10, mystery: .4, hidden: .7, may: .5, offers: 3, hdri: 'sunset', exposure: .62, fog: 0x1a1f3a, sand: 0xc2a985, grass: 0x4a7f5c, grass2: 0x3c6a4c, water: 0x2c5a8f, waterDeep: 0x14244a, sun: 1.1, sunColor: 0x9fb4ff, bgI: .25, envI: .22, night: true, skyTop: 0x070b1e, skyHor: 0x1a2550, skyGlow: 0x2a3a7a },
-  { id: 3, name: 'Rainy market day', e: '🌧️', desc: 'Grey skies, slippery labels, sneaky "natural flavors"', goal: 22, speed: 10.5, mystery: .44, hidden: .8, may: .6, offers: 3, hdri: 'dawn', exposure: .8, fog: 0x9fb0bd, sand: 0xa89a82, grass: 0x4e8a55, grass2: 0x3f7446, water: 0x5f7f8f, waterDeep: 0x2e4653, sun: 1.1, sunColor: 0xdde8f0, bgI: .5, envI: .18, night: false, skyTop: 0x5f6f7f, skyHor: 0xb9c4cc, skyGlow: 0xcfd8de, weather: 'rain' },
-  { id: 4, name: 'Snow cabin trail', e: '❄️', desc: 'Everything hidden under a different name; the final test', goal: 24, speed: 11, mystery: .48, hidden: .9, may: .7, offers: 3, hdri: 'dawn', exposure: .95, fog: 0xe6eef8, sand: 0xeef3fa, grass: 0xe3ebf5, grass2: 0xd5e0ee, water: 0x6fa8d6, waterDeep: 0x2f5f8e, sun: 1.6, sunColor: 0xeef4ff, bgI: .8, envI: .2, night: false, skyTop: 0x7fb0e0, skyHor: 0xe4edf7, skyGlow: 0xffffff, weather: 'snow' }
+  { id: 0, theme: 'trail', name: 'Dawn trail', nameEs: 'Sendero del amanecer', e: '🌴', desc: 'Plain foods and simple labels', descEs: 'Comidas sencillas y etiquetas fáciles', place: ['the Dawn Trail picnic area', 'al área de picnic del sendero'], goal: 12, speed: 7, mystery: .22, hidden: 0, may: 0, offers: 0, hdri: 'dawn', exposure: .9, fog: 0xcfe3f2, sand: 0xe6cf9f, grass: 0x62b25f, grass2: 0x4f9a51, water: 0x3fb6c9, waterDeep: 0x1a6f8a, sun: 2.4, sunColor: 0xfff0d6, bgI: .85, envI: .12, night: false, skyTop: 0x2f7fd0, skyHor: 0xbfdcee, skyGlow: 0xfff0c0 },
+  { id: 1, theme: 'trail', name: 'Sunset boardwalk', nameEs: 'Malecón al atardecer', e: '🌅', desc: 'Longer labels and a friend with snacks', descEs: 'Etiquetas más largas y un amigo con snacks', place: ['the Sunset Boardwalk', 'al malecón del atardecer'], goal: 16, speed: 8.5, mystery: .32, hidden: .35, may: .25, offers: 2, hdri: 'sunset', exposure: .9, fog: 0xf0bf98, sand: 0xe8bd86, grass: 0x86b55c, grass2: 0x6e9b48, water: 0xe9955e, waterDeep: 0x5a3f7a, sun: 2.4, sunColor: 0xffb070, bgI: .9, envI: .14, night: false, skyTop: 0x5a3f9a, skyHor: 0xf7a97a, skyGlow: 0xffd27a },
+  { id: 2, theme: 'trail', name: 'Lantern night party', nameEs: 'Fiesta de faroles', e: '🏮', desc: 'Hidden names, "may contain", fast carts', descEs: 'Nombres escondidos, "puede contener", carritos rápidos', place: ['the Lantern Night Party', 'a la fiesta de faroles'], goal: 20, speed: 10, mystery: .4, hidden: .7, may: .5, offers: 3, hdri: 'sunset', exposure: .62, fog: 0x1a1f3a, sand: 0xc2a985, grass: 0x4a7f5c, grass2: 0x3c6a4c, water: 0x2c5a8f, waterDeep: 0x14244a, sun: 1.1, sunColor: 0x9fb4ff, bgI: .25, envI: .22, night: true, skyTop: 0x070b1e, skyHor: 0x1a2550, skyGlow: 0x2a3a7a },
+  { id: 3, theme: 'trail', name: 'Rainy market day', nameEs: 'Mercado bajo la lluvia', e: '🌧️', desc: 'Grey skies, slippery labels, sneaky "natural flavors"', descEs: 'Cielo gris, etiquetas resbalosas, "sabores naturales" tramposos', place: ['the Rainy Day Market', 'al mercado'], goal: 22, speed: 10.5, mystery: .44, hidden: .8, may: .6, offers: 3, hdri: 'dawn', exposure: .8, fog: 0x9fb0bd, sand: 0xa89a82, grass: 0x4e8a55, grass2: 0x3f7446, water: 0x5f7f8f, waterDeep: 0x2e4653, sun: 1.1, sunColor: 0xdde8f0, bgI: .5, envI: .18, night: false, skyTop: 0x5f6f7f, skyHor: 0xb9c4cc, skyGlow: 0xcfd8de, weather: 'rain' },
+  { id: 4, theme: 'trail', name: 'Snow cabin trail', nameEs: 'Sendero de la cabaña nevada', e: '❄️', desc: 'Everything hidden under a different name; the final test', descEs: 'Todo escondido bajo otro nombre; la gran prueba', place: ['the Snow Cabin Trail', 'al sendero de la cabaña'], goal: 24, speed: 11, mystery: .48, hidden: .9, may: .7, offers: 3, hdri: 'dawn', exposure: .95, fog: 0xe6eef8, sand: 0xeef3fa, grass: 0xe3ebf5, grass2: 0xd5e0ee, water: 0x6fa8d6, waterDeep: 0x2f5f8e, sun: 1.6, sunColor: 0xeef4ff, bgI: .8, envI: .2, night: false, skyTop: 0x7fb0e0, skyHor: 0xe4edf7, skyGlow: 0xffffff, weather: 'snow' },
+  { id: 5, theme: 'school', name: 'School lunch day', nameEs: 'Día de almuerzo escolar', e: '🏫', desc: 'Lunch line trays and a classmate who wants to trade', descEs: 'Bandejas del comedor y un compañero que quiere cambiar', place: ['Sunny Hill School', 'a la escuela Sunny Hill'], goal: 20, speed: 9, mystery: .4, hidden: .55, may: .45, offers: 2, menus: 2, menuKind: 'lunch', hdri: 'dawn', exposure: .92, fog: 0xd6e8f4, sand: 0xd8d3c6, grass: 0x6cbb5e, grass2: 0x58a650, water: null, field: 0x7ccf6a, sun: 2.3, sunColor: 0xfff3dc, envI: .14, night: false, skyTop: 0x3a8ae0, skyHor: 0xcfe6f6, skyGlow: 0xfff3c8 },
+  { id: 6, theme: 'party', name: 'Birthday party garden', nameEs: 'Jardín de cumpleaños', e: '🎈', desc: 'Cake, goodie bags and lots of labels to check', descEs: 'Pastel, bolsitas de dulces y muchas etiquetas', place: ['the birthday garden on Maple Street', 'al jardín de cumpleaños de la calle Maple'], goal: 22, speed: 9.5, mystery: .45, hidden: .65, may: .55, offers: 3, hdri: 'sunset', exposure: .92, fog: 0xf6d6b8, sand: 0xf0d2b4, grass: 0x7cc06a, grass2: 0x68aa58, water: 0x58b6d6, waterDeep: 0x2a6f9a, sun: 2.2, sunColor: 0xffd29a, envI: .14, night: false, skyTop: 0x5a7fd8, skyHor: 0xffd2b0, skyGlow: 0xffe0a0 },
+  { id: 7, theme: 'store', name: 'Grocery store aisles', nameEs: 'Pasillos del supermercado', e: '🛒', desc: 'Shelves full of packages: read, read, read', descEs: 'Estantes llenos de paquetes: lee, lee, lee', place: ['the Corner Market on Pine Road', 'al supermercado de la calle Pine'], goal: 22, speed: 9, mystery: .68, hidden: .75, may: .6, offers: 2, hdri: 'dawn', exposure: .95, fog: 0xf1ece2, background: 0xf1ece2, sand: 0xe9e3d6, grass: 0xe2dccd, grass2: 0xd9d2c1, water: null, sun: 1.2, sunColor: 0xfff6e6, hemi: .95, envI: .25, night: false, indoor: true },
+  { id: 8, theme: 'picnic', name: 'Picnic in the park', nameEs: 'Picnic en el parque', e: '🧺', desc: 'Shared baskets, a lake and sneaky snack swaps', descEs: 'Canastas compartidas, un lago y cambios de snacks', place: ['the Willow Park picnic lawn', 'al pasto de picnic del parque Willow'], goal: 24, speed: 10, mystery: .5, hidden: .8, may: .65, offers: 3, hdri: 'dawn', exposure: .92, fog: 0xd2e9f2, sand: 0xdccb9a, grass: 0x5fb35a, grass2: 0x4c9c4b, water: 0x47b0d0, waterDeep: 0x1f6d8e, sun: 2.4, sunColor: 0xfff0d0, envI: .13, night: false, skyTop: 0x2f86d8, skyHor: 0xc4e2f2, skyGlow: 0xfff2c4 },
+  { id: 9, theme: 'rest', name: 'Restaurant night out', nameEs: 'Cena en el restaurante', e: '🍽️', desc: 'Menus to read and a server to ask: the big finale', descEs: 'Menús que leer y un mesero a quien preguntar: el gran final', place: ['the Harbor Lights restaurant', 'al restaurante Harbor Lights'], goal: 26, speed: 10.5, mystery: .5, hidden: .9, may: .7, offers: 2, menus: 3, menuKind: 'rest', hdri: 'sunset', exposure: .72, fog: 0x3a2f4f, sand: 0x9a8f86, grass: 0x58705c, grass2: 0x4a6150, water: 0x3a5f8f, waterDeep: 0x1a2a4f, sun: 1.2, sunColor: 0xffb98a, envI: .2, night: true, dusk: true, skyTop: 0x1c1a44, skyHor: 0x8a5a7a, skyGlow: 0xffa070 }
 ];
+const lvName = L => isES() ? L.nameEs : L.name;
+const lvDesc = L => isES() ? L.descEs : L.desc;
+// Friend offers / "ask a grown-up" moments. c: [choice, good?, lesson, choiceEs, lessonEs]. th: level themes ('any' = trail levels + fallback).
+// The original four are verbatim; every lesson (EN + ES) is listed for the allergist review.
 const OFFERS = [
-  { t: 'A friend offers you a cookie', s: '"Want one? My mom made them!"', c: [['Ask: "What\'s in it? I have a food allergy."', 1, 'Asking is always the right first move.'], ['Eat it, it looks great', 0, 'Homemade treats can hide allergens. Always ask first.'], ['"No thanks, I brought my own snack."', 1, 'Saying no politely is a superpower.']] },
-  { t: 'Grandma brings a surprise dessert', s: '"I made your favorite, but with a new recipe!"', c: [['Ask a grown-up to check the ingredients', 1, 'A new recipe means new ingredients. Check first.'], ['Take a tiny bite to test', 0, 'Even a tiny bite can cause a reaction. Never test with your mouth.'], ['Say "Can we read the recipe together?"', 1, 'Reading together makes everyone safer.']] },
-  { t: 'The class is sharing a bag of trail mix', s: '"Everyone grab a handful!"', c: [['Grab a handful, it\'s just fruit', 0, 'Trail mix often has nuts, and hands spread crumbs. Skip shared bags.'], ['Skip it and eat my safe snack', 1, 'Your own snack is the safest snack.'], ['Ask the teacher to read the bag', 1, 'Teachers can check labels with you.']] },
-  { t: 'Someone used the same knife for peanut butter and jelly', s: '"Here, I made you a jelly sandwich."', c: [['Eat it, there is no peanut butter on mine', 0, 'A shared knife carries traces. That is cross-contact.'], ['Say "Can you use a clean knife and a new jar?"', 1, 'Clean tools and fresh jars stop cross-contact.'], ['Ask for a grown-up to make it', 1, 'Good call: a grown-up can make it safely.']] }
+  { th: ['any'], t: 'A friend offers you a cookie', s: '"Want one? My mom made them!"', tEs: 'Un amigo te ofrece una galleta', sEs: '"¿Quieres una? ¡Las hizo mi mamá!"', c: [['Ask: "What\'s in it? I have a food allergy."', 1, 'Asking is always the right first move.', 'Pregunta: "¿Qué tiene? Tengo una alergia a alimentos."', 'Preguntar siempre es el primer paso correcto.'], ['Eat it, it looks great', 0, 'Homemade treats can hide allergens. Always ask first.', 'Comerla, se ve deliciosa', 'Los postres caseros pueden esconder alérgenos. Pregunta siempre primero.'], ['"No thanks, I brought my own snack."', 1, 'Saying no politely is a superpower.', '"No, gracias, traje mi propio snack."', 'Decir que no con amabilidad es un superpoder.']] },
+  { th: ['any'], t: 'Grandma brings a surprise dessert', s: '"I made your favorite, but with a new recipe!"', tEs: 'La abuela trae un postre sorpresa', sEs: '"¡Hice tu favorito, pero con una receta nueva!"', c: [['Ask a grown-up to check the ingredients', 1, 'A new recipe means new ingredients. Check first.', 'Pedirle a un adulto que revise los ingredientes', 'Una receta nueva significa ingredientes nuevos. Revisa primero.'], ['Take a tiny bite to test', 0, 'Even a tiny bite can cause a reaction. Never test with your mouth.', 'Probar un pedacito para ver', 'Hasta un pedacito puede causar una reacción. Nunca pruebes con la boca.'], ['Say "Can we read the recipe together?"', 1, 'Reading together makes everyone safer.', 'Decir "¿Podemos leer la receta juntos?"', 'Leer juntos nos hace a todos más seguros.']] },
+  { th: ['any', 'school'], t: 'The class is sharing a bag of trail mix', s: '"Everyone grab a handful!"', tEs: 'La clase comparte una bolsa de mezcla de excursión', sEs: '"¡Todos tomen un puñado!"', c: [['Grab a handful, it\'s just fruit', 0, 'Trail mix often has nuts, and hands spread crumbs. Skip shared bags.', 'Tomar un puñado, solo es fruta', 'La mezcla de excursión suele tener nueces, y las manos riegan migajas. No comas de bolsas compartidas.'], ['Skip it and eat my safe snack', 1, 'Your own snack is the safest snack.', 'No tomar y comer mi snack seguro', 'Tu propio snack es el snack más seguro.'], ['Ask the teacher to read the bag', 1, 'Teachers can check labels with you.', 'Pedirle a la maestra que lea la bolsa', 'Los maestros pueden revisar etiquetas contigo.']] },
+  { th: ['any', 'picnic'], t: 'Someone used the same knife for peanut butter and jelly', s: '"Here, I made you a jelly sandwich."', tEs: 'Alguien usó el mismo cuchillo para la crema de cacahuate y la mermelada', sEs: '"Toma, te hice un sándwich de mermelada."', c: [['Eat it, there is no peanut butter on mine', 0, 'A shared knife carries traces. That is cross-contact.', 'Comerlo, el mío no tiene crema de cacahuate', 'Un cuchillo compartido lleva restos. Eso es contacto cruzado.'], ['Say "Can you use a clean knife and a new jar?"', 1, 'Clean tools and fresh jars stop cross-contact.', 'Decir "¿Puedes usar un cuchillo limpio y un frasco nuevo?"', 'Utensilios limpios y frascos nuevos evitan el contacto cruzado.'], ['Ask for a grown-up to make it', 1, 'Good call: a grown-up can make it safely.', 'Pedir que un adulto lo prepare', 'Buena idea: un adulto puede prepararlo de forma segura.']] },
+  // new "ask a grown-up / check the label" moments (elevation pass) — need allergist review
+  { th: ['school'], t: 'A classmate wants to trade lunches', s: '"I\'ll give you my sandwich for your apple!"', tEs: 'Un compañero quiere cambiar almuerzos', sEs: '"¡Te doy mi sándwich por tu manzana!"', c: [['"No thanks, I eat my own lunch."', 1, 'Your own lunch is the safest lunch.', '"No, gracias, yo como mi propio almuerzo."', 'Tu propio almuerzo es el almuerzo más seguro.'], ['Trade, the sandwich looks yummy', 0, 'Trading food can bring allergens you cannot see. Keep your own lunch.', 'Cambiar, el sándwich se ve rico', 'Cambiar comida puede traer alérgenos que no ves. Quédate con tu almuerzo.'], ['Ask the lunch helper first', 1, 'Grown-ups at school can help you check.', 'Preguntarle primero al encargado del comedor', 'Los adultos de la escuela pueden ayudarte a revisar.']] },
+  { th: ['school', 'party'], t: 'Cupcakes for a class birthday', s: '"Everyone gets one!"', tEs: 'Panquecitos para un cumpleaños en clase', sEs: '"¡Hay uno para cada quien!"', c: [['Ask the teacher if there is a safe treat for me', 1, 'Asking first keeps the party fun and safe.', 'Preguntarle a la maestra si hay un dulce seguro para mí', 'Preguntar primero hace que la fiesta sea divertida y segura.'], ['Take one and eat it fast', 0, 'Treats can hide allergens. Always ask first.', 'Tomar uno y comerlo rápido', 'Los dulces pueden esconder alérgenos. Pregunta siempre primero.'], ['Eat the safe treat from my backpack', 1, 'Bringing your own treat means you never miss out.', 'Comer el dulce seguro de mi mochila', 'Si traes tu propio dulce, nunca te quedas fuera.']] },
+  { th: ['party'], t: 'The birthday cake comes out', s: '"Who wants a big slice?"', tEs: 'Llega el pastel de cumpleaños', sEs: '"¿Quién quiere una rebanada grande?"', c: [['Ask a grown-up to check what is in it', 1, 'A grown-up can check the recipe or the box.', 'Pedirle a un adulto que revise qué tiene', 'Un adulto puede revisar la receta o la caja.'], ['Take a slice, it smells great', 0, 'Cake can hide allergens. Check first.', 'Tomar una rebanada, huele delicioso', 'El pastel puede esconder alérgenos. Revisa primero.'], ['Have the safe treat my family packed', 1, 'A packed treat lets you join the fun safely.', 'Comer el dulce seguro que empacó mi familia', 'Un dulce empacado te deja unirte a la diversión sin riesgo.']] },
+  { th: ['party'], t: 'Goodie bags full of candy', s: '"One for every guest!"', tEs: 'Bolsitas llenas de dulces', sEs: '"¡Una para cada invitado!"', c: [['Read every label with a grown-up first', 1, 'Candy can have allergens too. Read the label.', 'Leer cada etiqueta primero con un adulto', 'Los dulces también pueden tener alérgenos. Lee la etiqueta.'], ['Eat the candy that has no wrapper', 0, 'No wrapper means no label. When you cannot check, skip it.', 'Comer el dulce que no tiene envoltura', 'Sin envoltura no hay etiqueta. Si no puedes revisar, no lo comas.'], ['Save it and check at home', 1, 'It is okay to wait until a grown-up can check.', 'Guardarla y revisarla en casa', 'Está bien esperar a que un adulto pueda revisar.']] },
+  { th: ['store'], t: 'A free sample table', s: '"Try our new cookie!"', tEs: 'Una mesa de muestras gratis', sEs: '"¡Prueba nuestra galleta nueva!"', c: [['Ask to read the package first', 1, 'Samples come from packages with labels. Read it first.', 'Pedir leer el paquete primero', 'Las muestras vienen de paquetes con etiqueta. Léela primero.'], ['Grab a sample', 0, 'Samples can hide allergens. Check before you taste.', 'Tomar una muestra', 'Las muestras pueden esconder alérgenos. Revisa antes de probar.'], ['"No thanks!"', 1, 'Saying no politely is a superpower.', '"¡No, gracias!"', 'Decir que no con amabilidad es un superpoder.']] },
+  { th: ['store'], t: 'Your favorite snack has a new package', s: '"New look, same great taste!"', tEs: 'Tu snack favorito tiene un empaque nuevo', sEs: '"¡Nuevo empaque, el mismo gran sabor!"', c: [['Read the label again, even if I ate it before', 1, 'Recipes can change. Read the label every time.', 'Leer la etiqueta otra vez, aunque ya lo haya comido', 'Las recetas pueden cambiar. Lee la etiqueta cada vez.'], ['Skip reading, I know this one', 0, 'A new package can have new ingredients. Read every time.', 'No leer, ya lo conozco', 'Un empaque nuevo puede tener ingredientes nuevos. Lee cada vez.'], ['Ask a grown-up to read it with me', 1, 'Reading together makes everyone safer.', 'Pedirle a un adulto que la lea conmigo', 'Leer juntos nos hace a todos más seguros.']] },
+  { th: ['picnic'], t: 'A box of cookies with no label', s: '"Help yourself, they\'re from the bake sale!"', tEs: 'Una caja de galletas sin etiqueta', sEs: '"¡Sírvete, son de la venta de pasteles!"', c: [['Skip them: no label, no way to check', 1, 'When you cannot check, skip it.', 'No comerlas: sin etiqueta no se puede revisar', 'Si no puedes revisar, no lo comas.'], ['Eat one, they look plain', 0, 'Plain-looking food can still hide allergens. Ask first.', 'Comer una, se ven sencillas', 'La comida que se ve sencilla también puede esconder alérgenos. Pregunta primero.'], ['Ask a grown-up who made them', 1, 'Asking is always the right first move.', 'Preguntarle a un adulto quién las hizo', 'Preguntar siempre es el primer paso correcto.']] },
+  { th: ['picnic'], t: 'A friend shares from a big snack bowl', s: '"Dig in, everyone is!"', tEs: 'Un amigo comparte de un tazón grande de snacks', sEs: '"¡Sírvete, todos lo están haciendo!"', c: [['Use my own snack bag', 1, 'Your own snack is the safest snack.', 'Usar mi propia bolsa de snacks', 'Tu propio snack es el snack más seguro.'], ['Reach in with everyone', 0, 'Many hands in one bowl spread crumbs. Skip shared bowls.', 'Meter la mano con todos', 'Muchas manos en un tazón riegan migajas. No comas de tazones compartidos.'], ['Ask a grown-up to check the snack bag', 1, 'Grown-ups can read the label with you.', 'Pedirle a un adulto que revise la bolsa', 'Los adultos pueden leer la etiqueta contigo.']] },
+  { th: ['rest'], t: 'The server brings a free dessert', s: '"On the house, enjoy!"', tEs: 'El mesero trae un postre gratis', sEs: '"¡Cortesía de la casa, disfrútalo!"', c: [['Say: "I have a food allergy. What is in it?"', 1, 'Telling the server about your allergy is a great habit.', 'Decir: "Tengo una alergia a alimentos. ¿Qué tiene?"', 'Decirle al mesero sobre tu alergia es un gran hábito.'], ['Eat it, it is free', 0, 'Free food can still hide allergens. Ask first.', 'Comerlo, es gratis', 'La comida gratis también puede esconder alérgenos. Pregunta primero.'], ['Ask my grown-up to check with the server', 1, 'A grown-up can talk to the kitchen for you.', 'Pedirle a mi adulto que pregunte al mesero', 'Un adulto puede hablar con la cocina por ti.']] }
 ];
-/* ---------------- Settings / progress ---------------- */
+// Menu moments (school lunch line + restaurant). [emoji, name, nameEs, ingredients, ingredientsEs, allergens, kind] — tags listed for the allergist review.
+const DISHES = [
+  ['🍚', 'Garden rice bowl', 'Tazón de arroz del huerto', 'rice, black beans, corn, avocado', 'arroz, frijoles negros, elote, aguacate', [], 'rest'],
+  ['🍜', 'Peanut noodle bowl', 'Fideos con cacahuate', 'rice noodles, peanut sauce, carrots, soy sauce (soy, wheat)', 'fideos de arroz, salsa de cacahuate, zanahorias, salsa de soya (soya, trigo)', ['peanut', 'soy', 'wheat'], 'rest'],
+  ['🧀', 'Cheesy pasta bake', 'Pasta gratinada', 'pasta (wheat), cheese (milk), tomato sauce', 'pasta (trigo), queso (leche), salsa de tomate', ['wheat', 'milk'], 'rest'],
+  ['🌮', 'Grilled fish tacos', 'Tacos de pescado', 'fish, corn tortillas, cabbage, lime', 'pescado, tortillas de maíz, repollo, limón', ['fish'], 'rest'],
+  ['🍤', 'Shrimp fried rice', 'Arroz frito con camarón', 'shrimp, rice, egg, soy sauce (soy, wheat)', 'camarón, arroz, huevo, salsa de soya (soya, trigo)', ['shellfish', 'egg', 'soy', 'wheat'], 'rest'],
+  ['🍗', 'Sesame chicken', 'Pollo con ajonjolí', 'chicken, sesame seeds, rice, soy sauce (soy, wheat)', 'pollo, semillas de ajonjolí, arroz, salsa de soya (soya, trigo)', ['sesame', 'soy', 'wheat'], 'rest'],
+  ['🌿', 'Pesto pasta', 'Pasta al pesto', 'pasta (wheat), pesto with pine nuts (tree nut) and cheese (milk)', 'pasta (trigo), pesto con piñones (nuez de árbol) y queso (leche)', ['wheat', 'treenut', 'milk'], 'rest'],
+  ['🥔', 'Baked potato', 'Papa al horno', 'potato, olive oil, chives', 'papa, aceite de oliva, cebollín', [], 'rest'],
+  ['🐟', 'Grilled salmon plate', 'Plato de salmón', 'salmon, potatoes, green beans', 'salmón, papas, ejotes', ['fish'], 'rest'],
+  ['🥗', 'Fruit salad', 'Ensalada de frutas', 'melon, grapes, strawberries', 'melón, uvas, fresas', [], 'rest'],
+  ['🍕', 'Pizza day tray', 'Bandeja de pizza', 'pizza (wheat, milk), apple slices', 'pizza (trigo, leche), rebanadas de manzana', ['wheat', 'milk'], 'lunch'],
+  ['🍛', 'Rice and beans tray', 'Bandeja de arroz y frijoles', 'rice, beans, corn, orange slices', 'arroz, frijoles, elote, gajos de naranja', [], 'lunch'],
+  ['🥪', 'Turkey sandwich tray', 'Bandeja de sándwich de pavo', 'bread (wheat), turkey, mayonnaise (egg)', 'pan (trigo), pavo, mayonesa (huevo)', ['wheat', 'egg'], 'lunch'],
+  ['🐟', 'Fish nuggets tray', 'Bandeja de nuggets de pescado', 'fish, breading (wheat, egg), carrots', 'pescado, empanizado (trigo, huevo), zanahorias', ['fish', 'wheat', 'egg'], 'lunch'],
+  ['🥜', 'PB and jelly tray', 'Bandeja de sándwich de cacahuate', 'peanut butter, jelly, bread (wheat)', 'crema de cacahuate, mermelada, pan (trigo)', ['peanut', 'wheat'], 'lunch'],
+  ['🥕', 'Veggies and hummus tray', 'Bandeja de verduras con hummus', 'carrots, cucumbers, hummus (sesame)', 'zanahorias, pepinos, hummus (ajonjolí)', ['sesame'], 'lunch'],
+  ['🍗', 'Chicken and rice tray', 'Bandeja de pollo con arroz', 'chicken, rice, broccoli', 'pollo, arroz, brócoli', [], 'lunch'],
+  ['🥛', 'Yogurt and fruit tray', 'Bandeja de yogur con fruta', 'yogurt (milk), berries, granola (oats, wheat)', 'yogur (leche), moras, granola (avena, trigo)', ['milk', 'wheat'], 'lunch']
+];
+// Sticker book: things learned and places visited (per player). Lines reuse lessons already in the game.
+const STICKERS = [
+  ...LEVELS.map((L, i) => ({ id: 'lv' + i, e: L.e, en: L.name, es: L.nameEs, fen: 'Cleared level ' + (i + 1) + '.', fes: 'Completaste el nivel ' + (i + 1) + '.' })),
+  { id: 'label1', e: '🔍', en: 'First label', es: 'Primera etiqueta', fen: 'Always read the label on packaged food', fes: 'Siempre lee la etiqueta de los empaques' },
+  { id: 'label25', e: '🕵️', en: 'Label detective', es: 'Detective de etiquetas', fen: 'You read 25 labels.', fes: 'Leíste 25 etiquetas.' },
+  { id: 'may', e: '⚠️', en: '"May contain"', es: '"Puede contener"', fen: '"May contain" counts as not safe', fes: '"Puede contener" cuenta como no seguro' },
+  { id: 'hidden', e: '🎭', en: 'Hidden name hunter', es: 'Cazador de nombres escondidos', fen: 'Allergens can hide under other names on a label.', fes: 'Los alérgenos pueden esconderse con otros nombres en una etiqueta.' },
+  ...ALLERGENS.map(a => ({ id: 'hid-' + a.id, e: a.e, en: a.name + ' detective', es: 'Detective: ' + a.es, fen: 'You spotted a hidden name for ' + a.name.toLowerCase() + '.', fes: 'Encontraste un nombre escondido de: ' + a.esw + '.', hid: a.id })),
+  { id: 'ask', e: '💬', en: 'Ask first', es: 'Pregunta primero', fen: 'Asking is always the right first move.', fes: 'Preguntar siempre es el primer paso correcto.' },
+  { id: 'menu', e: '🍽️', en: 'Menu reader', es: 'Lector de menús', fen: 'You picked a dish that fits your list, or asked a grown-up.', fes: 'Elegiste un platillo que va con tu lista, o le preguntaste a un adulto.' },
+  { id: 'rescue', e: '🚨', en: 'Rescue practice', es: 'Práctica de rescate', fen: 'Reaction plan: tell a grown-up, auto-injector, call 911, lie down and wait', fes: 'Plan de reacción: avisar a un adulto, autoinyector, llamar al 911, acostarse y esperar' },
+  { id: 'buddy', e: '🐣', en: 'Buddy hatched', es: 'Amiguito nacido', fen: 'Your buddy hatched from its egg.', fes: 'Tu amiguito salió del huevo.' },
+  { id: 'mystery', e: '🎁', en: 'Mystery snack', es: 'Snack misterioso', fen: 'You earned a mystery snack.', fes: 'Ganaste un snack misterioso.' },
+  { id: 'team', e: '🧑‍🍳', en: 'Team scanner', es: 'Equipo escáner', fen: 'You played with a grown-up as the Scanner.', fes: 'Jugaste con un adulto como Escáner.' },
+  { id: 'perfect', e: '🌟', en: 'Perfect run', es: 'Carrera perfecta', fen: 'You finished a level with no oops.', fes: 'Terminaste un nivel sin errores.' },
+  { id: 'champ', e: '🏆', en: 'Safari champion', es: 'Campeón del safari', fen: 'You cleared all 10 levels.', fes: 'Completaste los 10 niveles.' }
+];
+/* ---------------- Settings / progress (save v3: one profile per child, so siblings keep their own allergens + stars + stickers) ---------------- */
+const NLV = LEVELS.length;
 const save = E.store.get('snacksquad', {}) || {};
-const S = { name: save.name || '', allergens: save.allergens || ['peanut', 'milk'], duo: !!save.duo, sound: save.sound !== false, motion: save.motion !== false, stars: (save.stars && save.stars.length >= 5) ? save.stars : [...(save.stars || []), 0, 0, 0, 0, 0].slice(0, 5), collection: save.collection || [], lang: save.lang || 'en', voice: save.voice !== false, v: 2 };
+const AVATARS = ['🦁', '🐼', '🦊', '🐢', '🦄', '🐸', '🐙', '🦉'];
+const newProfile = (o = {}) => ({ name: String(o.name || '').slice(0, 14), allergens: (Array.isArray(o.allergens) && o.allergens.filter(a => AL[a]).length ? o.allergens.filter(a => AL[a]) : ['peanut', 'milk']), stars: [...(Array.isArray(o.stars) ? o.stars : []), ...Array(NLV).fill(0)].slice(0, NLV).map(n => clamp(n | 0, 0, 3)), collection: Array.isArray(o.collection) ? o.collection : [], stickers: Array.isArray(o.stickers) ? o.stickers : [], avatar: AVATARS.includes(o.avatar) ? o.avatar : AVATARS[0], kid: o.kid === 'skater-male' ? 'skater-male' : 'skater-female', labels: o.labels | 0 });
+const S = { profiles: [], cur: 0, duo: !!save.duo, sound: save.sound !== false, motion: save.motion !== false, big: !!save.big, hc: !!save.hc, hints: save.hints !== false, lang: save.lang || 'en', voice: save.voice !== false, v: 3 };
+// v1/v2 saves had one player at the top level: it becomes player 1 (name, allergens, 5 level stars, collection kept)
+S.profiles = Array.isArray(save.profiles) && save.profiles.length ? save.profiles.slice(0, 6).map(newProfile) : [newProfile(save)];
+S.cur = clamp(save.cur | 0, 0, S.profiles.length - 1);
+// the current player's fields read and write through S (S.name, S.allergens, S.stars, S.collection keep working for old code + tests)
+for (const k of ['name', 'allergens', 'stars', 'collection', 'stickers', 'avatar', 'kid', 'labels']) Object.defineProperty(S, k, { get: () => S.profiles[S.cur][k], set: v => { S.profiles[S.cur][k] = v; }, enumerable: false });
 // One-time move of this game's old sound / voice / language choices into the shared profile, then the profile is the source of truth
 // (every game and the hub read the same settings; engine audio + speech respect them).
-if (save.v !== 2) { const patch = {}; if (save.lang === 'es') patch.lang = 'es'; if (save.voice === false) patch.voice = false; if (save.sound === false) patch.sound = false; if (Object.keys(patch).length) E.setProfile(patch); }
+if (save.v !== 2 && save.v !== 3) { const patch = {}; if (save.lang === 'es') patch.lang = 'es'; if (save.voice === false) patch.voice = false; if (save.sound === false) patch.sound = false; if (Object.keys(patch).length) E.setProfile(patch); }
 { const pf = E.profile(); S.lang = pf.lang === 'es' ? 'es' : 'en'; S.voice = pf.voice !== false; S.sound = pf.sound !== false; }
-const persist = () => { E.store.set('snacksquad', S); E.setProfile({ lang: S.lang, voice: S.voice, sound: S.sound }); };
+const persist = () => { E.store.set('snacksquad', { v: 3, profiles: S.profiles, cur: S.cur, duo: S.duo, sound: S.sound, motion: S.motion, big: S.big, hc: S.hc, hints: S.hints, lang: S.lang, voice: S.voice }); E.setProfile({ lang: S.lang, voice: S.voice, sound: S.sound }); };
 /* ---------------- Audio (engine synth; Safari-only sounds built on E.tone) ---------------- */
 const ac = () => E.audio();
 const tone = (f, d, type = 'sine', g = .18, slide = 0, delay = 0) => { if (S.sound) E.tone(f, d, type, g, slide, delay); };
@@ -324,55 +461,106 @@ const WATER_SHADER = {
   vertexShader: 'uniform float uTime;varying vec2 vUv;varying float vH;void main(){vUv=uv;vec3 p=position;float h=sin(p.x*.6+uTime*1.3)*.12+sin(p.y*.9-uTime*1.7)*.1+sin((p.x+p.y)*.35+uTime*.8)*.08;p.z+=h;vH=h;gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.);}',
   fragmentShader: 'uniform vec3 uColor;uniform vec3 uDeep;uniform vec3 uFoam;uniform float uTime;varying vec2 vUv;varying float vH;void main(){float k=smoothstep(-.2,.3,vH);vec3 c=mix(uDeep,uColor,k);float f=smoothstep(.22,.3,vH+sin(vUv.x*80.+uTime*2.)*.02);c=mix(c,uFoam,f*.7);float edge=smoothstep(.0,.08,vUv.x);c=mix(uFoam,c,edge);gl_FragColor=vec4(c,.92);}'
 };
+// shared geometries for small procedural props (one copy each; meshes reuse them)
+const GEO = { stone: new THREE.SphereGeometry(.18, 7, 5), box: new THREE.BoxGeometry(1, 1, 1), cyl: new THREE.CylinderGeometry(.5, .5, 1, 12), ball: new THREE.SphereGeometry(.35, 14, 10), lamp: new THREE.SphereGeometry(.26, 14, 12), pole: new THREE.CylinderGeometry(.06, .08, 2.6, 8), str: new THREE.CylinderGeometry(.008, .008, 1, 4) };
+const boxM = (w, h, d, color, x = 0, y = 0, z = 0, extra) => { const m = new THREE.Mesh(GEO.box, mat(color, extra)); m.scale.set(w, h, d); m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; return m; };
+const BAL_COLS = [0xff6b7a, 0xffd166, 0x6fd8bf, 0x8c6cff, 0x5bb8ff, 0xff9bd2];
+let balloons = [];
+function lunchTable(col) { const g = new THREE.Group(); g.add(boxM(2.6, .1, 1.1, col, 0, .78, 0), boxM(.1, .76, .9, 0x6b7380, -1.05, .38, 0), boxM(.1, .76, .9, 0x6b7380, 1.05, .38, 0), boxM(2.6, .08, .34, col, 0, .45, -.9), boxM(2.6, .08, .34, col, 0, .45, .9), boxM(.08, .45, .3, 0x6b7380, -1.1, .22, -.9), boxM(.08, .45, .3, 0x6b7380, 1.1, .22, -.9), boxM(.08, .45, .3, 0x6b7380, -1.1, .22, .9), boxM(.08, .45, .3, 0x6b7380, 1.1, .22, .9)); addOutline(g, 1.03); return g; }
+function balloonBunch(seed) { const g = new THREE.Group(); for (let i = 0; i < 3; i++) { const b = new THREE.Mesh(GEO.ball, mat(BAL_COLS[(seed + i) % BAL_COLS.length], { roughness: .35 })); b.scale.set(1, 1.18, 1); b.position.set((i - 1) * .42, 2.9 + (i % 2) * .4, (i - 1) * .1); b.castShadow = true; g.add(b); const s = new THREE.Mesh(GEO.str, mat(0xffffff)); const top = b.position.clone().add(new THREE.Vector3(0, -.4, 0)), bot = new THREE.Vector3(0, .5, 0); s.position.copy(top).add(bot).multiplyScalar(.5); s.scale.y = top.distanceTo(bot); s.lookAt(top); s.rotateX(Math.PI / 2); g.add(s); } g.add(boxM(.3, .5, .3, 0xffffff, 0, .25, 0)); g.userData.ph = seed * 1.7; balloons.push(g); return g; }
+function present(col, rib) { const g = new THREE.Group(); const s = .55 + (col % 7) * .04; g.add(boxM(s, s * .8, s, col, 0, s * .4, 0, { roughness: .5 }), boxM(s + .02, s * .82, .1, rib, 0, s * .41, 0), boxM(.1, s * .82, s + .02, rib, 0, s * .41, 0)); addOutline(g, 1.04); return g; }
+function partyTable(seed) { const g = new THREE.Group(); g.add(boxM(2.2, .08, 1.2, 0xffffff, 0, .8, 0), boxM(2.24, .3, 1.24, BAL_COLS[seed % 6], 0, .66, 0, { roughness: .9 })); for (const [x, z] of [[-.95, -.5], [.95, -.5], [-.95, .5], [.95, .5]]) g.add(boxM(.08, .8, .08, 0xd9d2c1, x, .4, z)); const top = instance(seed % 2 ? 'cake-birthday' : 'cupcake', { scale: seed % 2 ? .9 : .5 }); top.position.set(0, .84, 0); g.add(top); addOutline(g, 1.03); return g; }
+let _checker = {}; const checkerTex = col => { if (_checker[col]) return _checker[col]; const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); g.fillStyle = '#fff8ee'; g.fillRect(0, 0, 64, 64); g.fillStyle = col; for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) if ((x + y) % 2) g.fillRect(x * 16, y * 16, 16, 16); g.globalAlpha = .35; g.fillRect(0, 0, 64, 4); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(2, 2); t.magFilter = THREE.NearestFilter; return (_checker[col] = new THREE.MeshStandardMaterial({ map: t, roughness: .95 })); };
+function blanket(i) { const g = new THREE.Group(); const b = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.8), checkerTex(['#ff6b6b', '#5bb8ff', '#ffb347', '#6fbf73'][i % 4])); b.rotation.x = -Math.PI / 2; b.position.y = .04; b.receiveShadow = true; g.add(b); const basket = instance('chest', { scale: .75, tint: 0xd9a066 }); basket.position.set(-.6, .04, -.3); basket.rotation.y = .4; g.add(basket); const f = instance(['apple', 'watermelon', 'sandwich', 'grapes'][i % 4], { scale: .45 }); f.position.set(.5, .05, .2); g.add(f); return g; }
+function shelfUnit(seed, side) { // a grocery shelf: frame + 4 planks + instanced boxes of colourful products
+  const g = new THREE.Group(); g.add(boxM(.25, 3.4, 6.4, 0xd8dee6, side * .55, 1.7, 0, { roughness: .6 })); for (let r = 0; r < 4; r++) g.add(boxM(1.1, .06, 6.4, 0xb9c2cc, 0, .25 + r * .85, 0, { roughness: .5 })); for (const z of [-3.15, 3.15]) g.add(boxM(1.15, 3.4, .1, 0xc2cad3, 0, 1.7, z));
+  const n = 4 * 9, im = new THREE.InstancedMesh(GEO.box, mat(0xffffff, { roughness: .55 }), n); const o = new THREE.Object3D(), c = new THREE.Color(); const cols = [0xff6b6b, 0xffd166, 0x6fd8bf, 0x5bb8ff, 0x8c6cff, 0xffa36b, 0x9fe3cf, 0xff9bd2, 0xf4f1e8];
+  for (let i = 0; i < n; i++) { const r = Math.floor(i / 9), k = i % 9; const h = .45 + hash(seed + i, 3) * .3; o.position.set(-side * .05, .28 + r * .85 + h / 2, -2.8 + k * .7); o.scale.set(.5, h, .5 + hash(i, seed) * .12); o.rotation.set(0, 0, 0); o.updateMatrix(); im.setMatrixAt(i, o.matrix); im.setColorAt(i, c.set(cols[Math.floor(hash(seed, i) * cols.length)])); }
+  im.castShadow = true; im.receiveShadow = true; g.add(im); return g; }
+function cafeTable(seed) { const g = new THREE.Group(); const top = new THREE.Mesh(GEO.cyl, mat(0xf4efe6, { roughness: .5 })); top.scale.set(1.5, .08, 1.5); top.position.y = .8; top.castShadow = true; g.add(top); const leg = new THREE.Mesh(GEO.cyl, mat(0x3a3f47, { metalness: .4, roughness: .5 })); leg.scale.set(.1, .8, .1); leg.position.y = .4; g.add(leg); for (const sx of [-1, 1]) g.add(boxM(.5, .06, .5, 0x8a5a3a, sx * 1.05, .48, 0), boxM(.06, .55, .5, 0x8a5a3a, sx * 1.3, .75, 0), boxM(.06, .48, .06, 0x3a3f47, sx * 1.05, .24, 0)); const pl = instance('plate-dinner', { scale: .55 }); pl.position.set(-.2, .85, 0); g.add(pl); const fd = instance(['pizza', 'pancakes', 'waffle', 'bowl-soup', 'cup-tea'][seed % 5], { scale: .38 }); fd.position.set(.3, .86, .15); g.add(fd); addOutline(g, 1.03); return g; }
+function lampPost(L, x, z, light) { const post = new THREE.Group(); const pole = new THREE.Mesh(GEO.pole, mat(0x5a3b1e)); pole.position.y = 1.3; post.add(pole); const lamp = new THREE.Mesh(GEO.lamp, new THREE.MeshStandardMaterial({ color: 0xffe9b0, emissive: 0xffc25a, emissiveIntensity: L.night ? 1.9 : .25, roughness: .4 })); lamp.position.y = 2.75; post.add(lamp); if (light) { const pl = new THREE.PointLight(0xffb85a, 2.6, 11, 2); pl.position.y = 2.7; post.add(pl); } post.position.set(x, 0, z); world.add(post); scrollers.push(post); lanterns.push(lamp); return post; }
 function buildWorld(L) {
-  while (world.children.length) world.remove(world.children[0]); scrollers = []; lanterns = [];
+  while (world.children.length) world.remove(world.children[0]); scrollers = []; lanterns = []; balloons = []; water = null;
+  const theme = L.theme || 'trail', indoor = !!L.indoor;
   ENG.setEnv(ASSETS.hdri[L.hdri] || ASSETS.hdri.dawn);
-  ENG.setLook({ skyTop: L.skyTop, skyHor: L.skyHor, skyGlow: L.skyGlow, sunDir: [.35, .25, -.9], fog: L.fog, fogNear: L.night ? 24 : (L.weather ? 30 : 70), fogFar: L.night ? 80 : (L.weather ? 95 : 150), sun: L.sun * .62, sunColor: L.sunColor, hemi: L.night ? .14 : .4, ground: L.sand, exposure: L.exposure * .92, env: L.envI, bloom: L.night ? .45 : .14, bloomThreshold: L.night ? .8 : .97, stars: false, clouds: false });
-  if (L.night) { const n = 500, sp = new Float32Array(n * 3); for (let i = 0; i < n; i++) { const a = Math.random() * Math.PI * 2, e = Math.random() * .9 + .08, r = 150; sp[i * 3] = Math.cos(a) * Math.cos(e) * r; sp[i * 3 + 1] = Math.sin(e) * r; sp[i * 3 + 2] = Math.sin(a) * Math.cos(e) * r; } const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.BufferAttribute(sp, 3)); const stars = new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xfff6d8, size: 1.6, sizeAttenuation: true, transparent: true, opacity: .9, fog: false })); world.add(stars); const moon = new THREE.Mesh(new THREE.SphereGeometry(6, 20, 16), new THREE.MeshBasicMaterial({ color: 0xfff1c8, fog: false })); moon.position.set(50, 60, -120); world.add(moon); }
-  else { for (let i = 0; i < 9; i++) { const cl = new THREE.Group(); const hh = hash(i, 7); for (let k = 0; k < 5; k++) { const puff = new THREE.Mesh(new THREE.SphereGeometry(4 + hash(i, k) * 4, 10, 8), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1, fog: false, transparent: true, opacity: .92 })); puff.position.set(k * 5 - 10, hash(k, i) * 2, hash(i + 3, k) * 3); puff.scale.y = .55; cl.add(puff); } cl.position.set(-70 + i * 18 + hh * 10, 34 + hh * 14, -110 - hash(i, 9) * 30); world.add(cl); } }
-  // ground: path + grass with vertex colors and gentle bumps
-  const geo = new THREE.PlaneGeometry(40, 180, 60, 180); const pos = geo.attributes.position; const col = new Float32Array(pos.count * 3); const sand = new THREE.Color(L.sand), grass = new THREE.Color(L.grass), grass2 = new THREE.Color(L.grass2);
-  for (let i = 0; i < pos.count; i++) { const x = pos.getX(i), y = pos.getY(i); const d = Math.abs(x); const onPath = d < 4.6; const bump = onPath ? 0 : (hash(Math.round(x * 2), Math.round(y)) - .5) * .5 + Math.max(0, d - 6) * .08; pos.setZ(i, bump); const c = onPath ? sand.clone().lerp(grass, smooth(3.6, 4.6, d)) : (hash(Math.round(x), Math.round(y * 2)) > .5 ? grass : grass2); col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b; }
-  geo.setAttribute('color', new THREE.BufferAttribute(col, 3)); geo.computeVertexNormals();
-  const ground = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .96, map: grainTex() })); ground.rotation.x = -Math.PI / 2; ground.position.set(0, 0, -60); ground.receiveShadow = true; world.add(ground);
-  // lane marks: small stones every few meters
-  for (let z = 6; z > -120; z -= 4) for (const x of [-3.9, 3.9]) { const st = new THREE.Mesh(new THREE.SphereGeometry(.18, 7, 5), mat(0xd9cdb5)); st.position.set(x + (hash(z, x) - .5) * .4, .05, z); st.scale.y = .5; st.castShadow = true; world.add(st); scrollers.push(st); }
-  // water on the left
-  const wgeo = new THREE.PlaneGeometry(40, 200, 40, 100); water = new THREE.Mesh(wgeo, new THREE.ShaderMaterial({ uniforms: THREE.UniformsUtils.clone(WATER_SHADER.uniforms), vertexShader: WATER_SHADER.vertexShader, fragmentShader: WATER_SHADER.fragmentShader, transparent: true })); water.material.uniforms.uColor.value.set(L.water); water.material.uniforms.uDeep.value.set(L.waterDeep); water.rotation.x = -Math.PI / 2; water.position.set(-28, .12, -60); world.add(water);
-  // scenery recycled along z
-  const place = (name, x, z, s, ry) => { if (L.weather === 'snow' && (name.startsWith('palm') || name === 'tree-big' || name === 'plant')) { name = 'low-poly-tree'; s = Math.max(4, s * .8); } const m = instance(name, { scale: s, tint: L.weather === 'snow' && name === 'low-poly-tree' ? 0xd8e4ee : null }); m.position.set(x, 0, z); m.rotation.y = ry; world.add(m); scrollers.push(m); return m; };
-  for (let z = 8; z > -120; z -= 7) {
-    const h1 = hash(z, 1), h2 = hash(z, 2), h3 = hash(z, 3);
-    place(h1 < .5 ? 'palm-detailed-short' : 'palm-long', 7.5 + h2 * 4, z, 5 + h3 * 2.5, h1 * 6.3);
-    if (h2 > .45) place(h3 < .5 ? 'formation-rock' : 'formation-stone', 6 + h1 * 2, z - 3, 1.2 + h2, h3 * 6);
-    if (h1 > .7) place(L.weather === 'snow' ? 'low-poly-tree' : 'tree-big', 12 + h3 * 5, z - 2, 6 + h1 * 3, h2 * 6); if (h2 > .6 && !L.night) place(L.weather === 'snow' ? 'low-poly-tree' : 'plant', -6.2 - h1 * 1.5, z + 2.2, L.weather === 'snow' ? 4 : 1.3, h2 * 6); if (h1 < .18) place('bench', 5.6, z - 1, 1.6, Math.PI / 2);
-    if (h3 > .8) place('house-3', 15 + h1 * 4, z, 6, Math.PI * 1.1 + h2);
-    place(h2 < .5 ? 'palm-detailed-short' : 'palm-long', -7 - h3 * 2.5, z - 3.5, 4.5 + h1 * 2.5, h3 * 6.3);
-    if (h1 > .55) place('formation-stone', -5.6 - h2, z + 1, .9 + h3 * .8, h1 * 6);
-    if (h3 > .66) place(h1 < .5 ? 'barrel' : 'chest', 5.2 + h2 * .6, z + 2, 1, h3 * 6);
-    if (L.night || h2 > .82) { const post = new THREE.Group(); const pole = new THREE.Mesh(new THREE.CylinderGeometry(.06, .08, 2.6, 8), mat(0x5a3b1e)); pole.position.y = 1.3; post.add(pole); const lamp = new THREE.Mesh(new THREE.SphereGeometry(.26, 14, 12), new THREE.MeshStandardMaterial({ color: 0xffe9b0, emissive: 0xffc25a, emissiveIntensity: L.night ? 1.9 : .25, roughness: .4 })); lamp.position.y = 2.75; post.add(lamp); if (L.night) { const pl = new THREE.PointLight(0xffb85a, 2.6, 11, 2); pl.position.y = 2.7; post.add(pl); } post.position.set(h1 > .5 ? 5.4 : -5.4, 0, z + 3); world.add(post); scrollers.push(post); lanterns.push(lamp); }
+  ENG.setLook({ skyTop: L.skyTop, skyHor: L.skyHor ?? L.fog, skyGlow: L.skyGlow, sunDir: [.35, .25, -.9], fog: L.fog, fogNear: indoor ? 40 : L.night ? 24 : (L.weather ? 30 : 70), fogFar: indoor ? 120 : L.night ? 80 : (L.weather ? 95 : 150), sun: L.sun * .62, sunColor: L.sunColor, hemi: L.hemi ?? (L.night ? .14 : .4), ground: L.sand, exposure: L.exposure * .92, env: L.envI, bloom: L.night ? (L.dusk ? .25 : .45) : .14, bloomThreshold: L.night ? .8 : .97, stars: false, clouds: false, background: L.background });
+  if (L.night) { const n = 500, sp = new Float32Array(n * 3); for (let i = 0; i < n; i++) { const a = Math.random() * Math.PI * 2, e = Math.random() * .9 + .08, r = 150; sp[i * 3] = Math.cos(a) * Math.cos(e) * r; sp[i * 3 + 1] = Math.sin(e) * r; sp[i * 3 + 2] = Math.sin(a) * Math.cos(e) * r; } const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.BufferAttribute(sp, 3)); const stars = new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xfff6d8, size: 1.6, sizeAttenuation: true, transparent: true, opacity: L.dusk ? .55 : .9, fog: false })); world.add(stars); if (!L.dusk) { const moon = new THREE.Mesh(new THREE.SphereGeometry(6, 20, 16), new THREE.MeshBasicMaterial({ color: 0xfff1c8, fog: false })); moon.position.set(50, 60, -120); world.add(moon); } }
+  else if (!indoor) { for (let i = 0; i < 9; i++) { const cl = new THREE.Group(); const hh = hash(i, 7); for (let k = 0; k < 5; k++) { const puff = new THREE.Mesh(new THREE.SphereGeometry(4 + hash(i, k) * 4, 10, 8), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1, fog: false, transparent: true, opacity: .92 })); puff.position.set(k * 5 - 10, hash(k, i) * 2, hash(i + 3, k) * 3); puff.scale.y = .55; cl.add(puff); } cl.position.set(-70 + i * 18 + hh * 10, 34 + hh * 14, -110 - hash(i, 9) * 30); world.add(cl); } }
+  // ground: path + grass with vertex colors and gentle bumps (indoors: a flat tiled floor)
+  if (indoor) { const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 180), E.pbr('tile', L.sand, [10, 45])); floor.rotation.x = -Math.PI / 2; floor.position.set(0, 0, -60); floor.receiveShadow = true; world.add(floor); }
+  else {
+    const geo = new THREE.PlaneGeometry(40, 180, 60, 180); const pos = geo.attributes.position; const col = new Float32Array(pos.count * 3); const sand = new THREE.Color(L.sand), grass = new THREE.Color(L.grass), grass2 = new THREE.Color(L.grass2), field = L.field != null ? new THREE.Color(L.field) : null;
+    for (let i = 0; i < pos.count; i++) { const x = pos.getX(i), y = pos.getY(i); const d = Math.abs(x); const onPath = d < 4.6; const bump = onPath ? 0 : (field && x < 0 ? 0 : (hash(Math.round(x * 2), Math.round(y)) - .5) * .5 + Math.max(0, d - 6) * .08); pos.setZ(i, bump); const c = onPath ? sand.clone().lerp(grass, smooth(3.6, 4.6, d)) : field && x < -5 ? (Math.round(y / 6) % 2 ? field : grass) : (hash(Math.round(x), Math.round(y * 2)) > .5 ? grass : grass2); col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b; }
+    geo.setAttribute('color', new THREE.BufferAttribute(col, 3)); geo.computeVertexNormals();
+    const ground = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .96, map: grainTex() })); ground.rotation.x = -Math.PI / 2; ground.position.set(0, 0, -60); ground.receiveShadow = true; world.add(ground);
   }
-  tuftGroups = [makeTufts(L, -60), makeTufts(L, -188)]; for (const tg of tuftGroups) world.add(tg);
+  // lane marks: small stones every few meters (indoors: yellow floor stripes)
+  const stoneMat = mat(theme === 'school' ? 0xf4f1e8 : theme === 'rest' ? 0xc9c2b8 : 0xd9cdb5);
+  for (let z = 6; z > -120; z -= 4) for (const x of [-3.9, 3.9]) { let st; if (indoor) st = boxM(.12, .02, 1.6, 0xffd166, x, .012, z); else { st = new THREE.Mesh(GEO.stone, stoneMat); st.position.set(x + (hash(z, x) - .5) * .4, .05, z); st.scale.y = .5; st.castShadow = true; } world.add(st); scrollers.push(st); }
+  // water on the left (lake / harbor / sea), not at school or indoors
+  if (L.water != null) { const wgeo = new THREE.PlaneGeometry(40, 200, 40, 100); water = new THREE.Mesh(wgeo, new THREE.ShaderMaterial({ uniforms: THREE.UniformsUtils.clone(WATER_SHADER.uniforms), vertexShader: WATER_SHADER.vertexShader, fragmentShader: WATER_SHADER.fragmentShader, transparent: true })); water.material.uniforms.uColor.value.set(L.water); water.material.uniforms.uDeep.value.set(L.waterDeep); water.rotation.x = -Math.PI / 2; water.position.set(-28, .12, -60); world.add(water); }
+  // scenery recycled along z
+  const place = (name, x, z, s, ry, tint) => { if (L.weather === 'snow' && (name.startsWith('palm') || name === 'tree-big' || name === 'plant')) { name = 'low-poly-tree'; s = Math.max(4, s * .8); } const m = instance(name, { scale: s, tint: tint ?? (L.weather === 'snow' && name === 'low-poly-tree' ? 0xd8e4ee : null) }); m.position.set(x, 0, z); m.rotation.y = ry; world.add(m); scrollers.push(m); return m; };
+  const add = (o, x, z, ry = 0) => { o.position.set(x, o.position.y, z); o.rotation.y = ry; world.add(o); scrollers.push(o); return o; };
+  let lightBudget = 6; // point lights cost a lot on phones: only a few lanterns get a real light, the rest glow
+  for (let z = 8, k = 0; z > -120; z -= 7, k++) {
+    const h1 = hash(z, 1), h2 = hash(z, 2), h3 = hash(z, 3);
+    if (theme === 'trail') {
+      place(h1 < .5 ? 'palm-detailed-short' : 'palm-long', 7.5 + h2 * 4, z, 5 + h3 * 2.5, h1 * 6.3);
+      if (h2 > .45) place(h3 < .5 ? 'formation-rock' : 'formation-stone', 6 + h1 * 2, z - 3, 1.2 + h2, h3 * 6);
+      if (h1 > .7) place(L.weather === 'snow' ? 'low-poly-tree' : 'tree-big', 12 + h3 * 5, z - 2, 6 + h1 * 3, h2 * 6); if (h2 > .6 && !L.night) place(L.weather === 'snow' ? 'low-poly-tree' : 'plant', -6.2 - h1 * 1.5, z + 2.2, L.weather === 'snow' ? 4 : 1.3, h2 * 6); if (h1 < .18) place('bench', 5.6, z - 1, 1.6, Math.PI / 2);
+      if (h3 > .8) place('house-3', 15 + h1 * 4, z, 6, Math.PI * 1.1 + h2);
+      place(h2 < .5 ? 'palm-detailed-short' : 'palm-long', -7 - h3 * 2.5, z - 3.5, 4.5 + h1 * 2.5, h3 * 6.3);
+      if (h1 > .55) place('formation-stone', -5.6 - h2, z + 1, .9 + h3 * .8, h1 * 6);
+      if (h3 > .66) place(h1 < .5 ? 'barrel' : 'chest', 5.2 + h2 * .6, z + 2, 1, h3 * 6);
+      if (L.night || h2 > .82) lampPost(L, h1 > .5 ? 5.4 : -5.4, z + 3, L.night && lightBudget-- > 0 && k % 3 === 0);
+    } else if (theme === 'school') {
+      if (k % 4 === 0) place('library-large', 16 + h1 * 2, z - 2, 13, -Math.PI / 2); else if (k % 4 === 2) place(h1 < .5 ? 'house-4' : 'house-5', 15 + h2 * 3, z, 7, -Math.PI / 2 + (h3 - .5) * .3);
+      add(lunchTable([0x5bb8ff, 0xff9f6b, 0x6fd8bf, 0xffd166][k % 4]), 7.6, z - 1, Math.PI / 2 * (k % 2));
+      if (h2 > .4) place('tree-big', 10.5 + h3 * 2, z - 4, 6 + h1 * 2, h2 * 6); if (h1 < .25) place('bench', 5.6, z + 2.5, 1.6, Math.PI / 2);
+      for (let f = 0; f < 3; f++) add(boxM(.12, .9, .12, 0xf4f1e8, -5.4, .45, z - f * 2.33)); add(boxM(.06, .08, 7, 0xf4f1e8, -5.4, .82, z - 2.33));
+      if (h3 > .5) place('low-poly-tree', -9 - h1 * 6, z - 2, 5 + h2 * 2, h3 * 6); if (k % 5 === 1) { const ball = new THREE.Mesh(GEO.ball, mat(0xff6b6b, { roughness: .5 })); ball.position.y = .35; ball.castShadow = true; add(ball, -8 - h2 * 4, z); }
+    } else if (theme === 'party') {
+      add(partyTable(k), 7.8, z - 1, (h1 - .5) * .4); add(balloonBunch(k), 5.8, z + 2.2); if (h2 > .35) add(present(BAL_COLS[k % 6], 0xffffff), 6.2 + h3, z - 3.2, h1 * 6);
+      if (h1 > .5) place('tree-big', 12 + h3 * 4, z - 2, 6 + h1 * 2, h2 * 6); else place('plant', 10 + h2 * 2, z, 1.4, h3 * 6);
+      if (k % 2 === 0) add(balloonBunch(k + 3), -5.8, z - 1.5); if (h3 > .55) place('palm-detailed-short', -8 - h2 * 3, z - 3, 5, h1 * 6); if (h2 < .3) add(present(BAL_COLS[(k + 2) % 6], 0xffd166), -6.3, z + 1, h3 * 6);
+      if (k % 3 === 0) lampPost(L, -5.4, z + 3, false);
+    } else if (theme === 'store') {
+      add(shelfUnit(k, 1), 6.2, z - 3.5); add(shelfUnit(k + 50, -1), -6.2, z - 3.5);
+      const lt = new THREE.Mesh(GEO.box, new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfff6e0, emissiveIntensity: .9 })); lt.scale.set(1.4, .06, 3.2); lt.position.y = 7.6; add(lt, 0, z - 3.5);
+      if (k % 4 === 1) { const sg = new THREE.Sprite(E.tagMaterial('🛒', tx('Aisle ', 'Pasillo ') + (k + 3) / 4 * 1, '#ffffff', '#1b2430', true)); sg.scale.set(.9 * sg.material.userData.aspect, .9, 1); sg.position.set(0, 4.9, z - 3.5); sg.userData.sign = true; world.add(sg); scrollers.push(sg); }
+    } else if (theme === 'picnic') {
+      if (h1 > .3) add(blanket(k), 8 + h2 * 2.5, z - 1, (h3 - .5) * .6); if (k % 5 === 2) { const d = place('dogue', 6.4, z + 2, 1.1, -Math.PI / 2 + h1); d.userData.dog = true; }
+      place(h2 < .5 ? 'tree-big' : 'low-poly-tree', 13 + h3 * 4, z - 3, 6.5 + h1 * 2.5, h2 * 6); if (h3 > .6) place('bench', 5.6, z - 3, 1.6, Math.PI / 2); if (h2 > .7) place('plant', 6, z + 1, 1.2, h1 * 6);
+      place(h1 < .5 ? 'tree-big' : 'low-poly-tree', -7.5 - h2 * 2, z - 3.5, 5 + h3 * 2, h1 * 6); if (h1 > .6) place('formation-stone', -5.8 - h2, z + 1, .9 + h3 * .8, h1 * 6);
+    } else if (theme === 'rest') {
+      if (k % 2 === 0) place(['house-4', 'house-5', 'house-6'][k % 3], 14 + h1 * 2, z - 1, 7.5, -Math.PI / 2); add(cafeTable(k), 7.4, z - 2, h1 * 6);
+      if (h2 > .5) place('plant', 5.7, z + 1.5, 1.3, h3 * 6);
+      lampPost(L, 5.3, z + 3, lightBudget-- > 0 && k % 3 === 0); lampPost(L, -5.3, z - .5, false);
+      if (h3 > .7) place('barrel', -6, z + 2, 1, h1 * 6);
+    }
+  }
+  if (theme === 'party') { const fw = instance('ferris-wheel', { scale: 30 }); fw.position.set(42, 0, -105); fw.rotation.y = -.5; world.add(fw); }
+  if (!indoor) { tuftGroups = [makeTufts(L, -60), makeTufts(L, -188)]; for (const tg of tuftGroups) world.add(tg); } else tuftGroups = [];
   if (weather) { scene.remove(weather); weather = null; } if (L.weather) { weather = makeWeather(L.weather); scene.add(weather); }
-  if (L.weather === 'snow') { const snowc = new THREE.Mesh(new THREE.PlaneGeometry(40, 180), mat(0xf4f8ff, { roughness: 1, transparent: true, opacity: .0 })); snowc.visible = false; world.add(snowc); }
   // boat drifting on the water
-  const boat = instance('boat-small', { scale: 4 }); boat.position.set(-12, .1, -30); boat.rotation.y = .4; world.add(boat); boat.userData.boat = true; scrollers.push(boat);
+  if (water) { const boat = instance('boat-small', { scale: 4 }); boat.position.set(-12, .1, -30); boat.rotation.y = .4; world.add(boat); boat.userData.boat = true; scrollers.push(boat); }
 }
 /* ---------- Cart, kid, grown-up, buddy ---------- */
 const cart = new THREE.Group(); scene.add(cart);
-let kidRig = null, grownRig = null;
+let kidRig = null, grownRig = null, wheels = [];
 const findBones = E.bones;
 function buildCart() {
-  while (cart.children.length) cart.remove(cart.children[0]);
+  while (cart.children.length) cart.remove(cart.children[0]); wheels = [];
   const wood = mat(0xa0683a, { roughness: .8 }), wood2 = mat(0x7a4b26), iron = mat(0x3a3f47, { metalness: .4, roughness: .5 });
   const body = new THREE.Group();
   const base = new THREE.Mesh(new THREE.BoxGeometry(2, .18, 1.9), wood2); base.position.y = .62; body.add(base);
   for (const [x, z, rx, rz] of [[-1, 0, 0, 0], [1, 0, 0, 0], [0, -.95, 0, 0], [0, .95, 0, 0]]) { const wall = new THREE.Mesh(new THREE.BoxGeometry(x ? .1 : 2.1, .7, z ? .1 : 1.9), wood); wall.position.set(x, 1.05, z); body.add(wall); for (let i = 0; i < 3; i++) { const slat = new THREE.Mesh(new THREE.BoxGeometry(x ? .12 : 2.14, .14, z ? .12 : 1.94), i % 2 ? wood2 : wood); slat.position.set(x, .78 + i * .24, z); body.add(slat); } }
   const handle = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, 2.1, 10), iron); handle.rotation.z = Math.PI / 2; handle.position.set(0, 1.75, 1.15); body.add(handle); for (const x of [-.9, .9]) { const st = new THREE.Mesh(new THREE.CylinderGeometry(.04, .04, .9, 8), iron); st.position.set(x, 1.35, 1.1); st.rotation.x = .25; body.add(st); }
   body.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); addOutline(body, 1.03); cart.add(body);
-  for (const [x, z] of [[-1.05, -.6], [1.05, -.6], [-1.05, .6], [1.05, .6]]) { const w = new THREE.Group(); const tire = new THREE.Mesh(new THREE.TorusGeometry(.3, .12, 10, 20), mat(0x23272e)); const hub = new THREE.Mesh(new THREE.CylinderGeometry(.2, .2, .12, 12), mat(0xd9a21b)); hub.rotation.z = Math.PI / 2; w.add(tire, hub); w.rotation.y = Math.PI / 2; w.position.set(x, .4, z); w.name = 'wheel'; w.traverse(o => { if (o.isMesh) o.castShadow = true; }); cart.add(w); }
+  for (const [x, z] of [[-1.05, -.6], [1.05, -.6], [-1.05, .6], [1.05, .6]]) { const w = new THREE.Group(); const tire = new THREE.Mesh(new THREE.TorusGeometry(.3, .12, 10, 20), mat(0x23272e)); const hub = new THREE.Mesh(new THREE.CylinderGeometry(.2, .2, .12, 12), mat(0xd9a21b)); hub.rotation.z = Math.PI / 2; w.add(tire, hub); w.rotation.y = Math.PI / 2; w.position.set(x, .4, z); w.name = 'wheel'; w.traverse(o => { if (o.isMesh) o.castShadow = true; }); cart.add(w); wheels.push(w); }
   // kid: a skater model, feet on the cart floor
-  const kid = instance('skater-female', { scale: 1.7, outline: false }); kid.position.set(.1, .7, .25); kid.rotation.y = Math.PI; kid.name = 'kid'; cart.add(kid); kidRig = findBones(kid);
+  const kid = instance(S.kid || 'skater-female', { scale: 1.7, outline: false }); kid.position.set(.1, .7, .25); kid.rotation.y = Math.PI; kid.name = 'kid'; cart.add(kid); kidRig = findBones(kid);
   // grown-up pushes the cart in duo mode
   const grown = instance('skater-male', { scale: 2.15, outline: false }); grown.traverse(o => { if (o.isMesh && o.material) { o.material = o.material.clone(); o.material.color.multiply(new THREE.Color(0x9fd0ff)); } }); grown.position.set(-.55, 0, 2.5); grown.rotation.y = Math.PI; grown.rotation.y = 0; grown.name = 'grown'; grown.visible = !!S.duo; cart.add(grown); grownRig = findBones(grown);
   // buddy
@@ -385,14 +573,14 @@ function buildCart() {
 const laneGlow = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 60), new THREE.MeshBasicMaterial({ color: 0xfff1b8, transparent: true, opacity: .18, depthWrite: false })); laneGlow.rotation.x = -Math.PI / 2; laneGlow.position.set(0, .03, -28); scene.add(laneGlow);
 const beam = new THREE.Mesh(new THREE.CylinderGeometry(.08, 1.8, 18, 20, 1, true), new THREE.MeshBasicMaterial({ color: 0xb49cff, transparent: true, opacity: .16, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending })); beam.rotation.x = Math.PI / 2; beam.position.set(0, 2.2, -10); beam.visible = false; scene.add(beam);
 /* ---------- Food instances ---------- */
-const FOOD_MODEL = { 'Apple': 'apple', 'Carrot': 'carrot', 'Broccoli': 'broccoli', 'Banana': 'banana', 'Rice bowl': 'bowl-cereal', 'Grapes': 'grapes', 'Water': 'bottle', 'Milk': 'carton', 'Cheese': 'cheese', 'Yogurt': 'carton-small', 'Egg': 'egg', 'Omelet': 'egg', 'Peanut butter': 'peanut-butter', 'Peanuts': 'bag', 'Almonds': 'bag', 'Cashew bar': 'candy-bar', 'Bread': 'bread', 'Pasta': 'bowl-cereal', 'Pretzel': 'loaf', 'Soy milk': 'soy', 'Tofu': 'cheese', 'Edamame': 'bag', 'Fish sticks': 'fish', 'Salmon': 'sushi-salmon', 'Shrimp': 'mussel', 'Crab cake': 'taco', 'Sesame bun': 'sandwich', 'Hummus': 'can', 'Cookie': 'cookie', 'Cupcake': 'cupcake', 'Strawberries': 'strawberry', 'Orange': 'orange', 'Pear': 'pear', 'Corn': 'corn', 'Watermelon': 'watermelon', 'Muffin': 'muffin', 'Donut': 'donut-sprinkles', 'Birthday cake': 'cake-birthday', 'Chocolate': 'chocolate' };
+const FOOD_MODEL = { 'Apple': 'apple', 'Carrot': 'carrot', 'Broccoli': 'broccoli', 'Banana': 'banana', 'Rice bowl': 'bowl-cereal', 'Grapes': 'grapes', 'Water': 'bottle', 'Milk': 'carton', 'Cheese': 'cheese', 'Yogurt': 'carton-small', 'Egg': 'egg', 'Omelet': 'egg', 'Peanut butter': 'peanut-butter', 'Peanuts': 'bag', 'Almonds': 'bag', 'Cashew bar': 'candy-bar', 'Bread': 'bread', 'Pasta': 'bowl-cereal', 'Pretzel': 'loaf', 'Soy milk': 'soy', 'Tofu': 'cheese', 'Edamame': 'bag', 'Fish sticks': 'fish', 'Salmon': 'sushi-salmon', 'Shrimp': 'mussel', 'Crab cake': 'taco', 'Sesame bun': 'sandwich', 'Hummus': 'can', 'Cookie': 'cookie', 'Cupcake': 'cupcake', 'Strawberries': 'strawberry', 'Orange': 'orange', 'Pear': 'pear', 'Corn': 'corn', 'Watermelon': 'watermelon', 'Muffin': 'muffin', 'Donut': 'donut-sprinkles', 'Birthday cake': 'cake-birthday', 'Chocolate': 'chocolate', 'Lemon': 'lemon', 'Tomato': 'tomato', 'Cherries': 'cherries', 'Avocado': 'avocado', 'Pineapple': 'pineapple', 'Cabbage': 'cabbage', 'Eggplant': 'eggplant', 'Pancakes': 'pancakes', 'Waffle': 'waffle', 'Pizza slice': 'pizza', 'Croissant': 'croissant', 'Apple pie': 'pie', 'Ice cream cone': 'ice-cream-cone', 'Fruit ice pop': 'popsicle' };
 const PACK_MODEL = { box: 'pizza-box', bag: 'bag', bar: 'candy-bar', can: 'can', bottle: 'bottle', carton: 'carton' };
 const qSprite = (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'); g.fillStyle = '#fff'; g.beginPath(); g.arc(64, 64, 56, 0, Math.PI * 2); g.fill(); g.lineWidth = 8; g.strokeStyle = '#1b2430'; g.stroke(); g.fillStyle = '#1b2430'; g.font = '900 78px Unbounded, Manrope, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('?', 64, 70); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return new THREE.SpriteMaterial({ map: t, depthTest: true }); })();
 const tagSprite = (emoji, text, bg) => E.tagMaterial(emoji, text, bg);
-function foodMesh(kind, col, name, pack, emoji) {
+function foodMesh(kind, col, name, pack, emoji, display) {
   const model = pack ? (PACK_MODEL[kind] || 'pizza-box') : (FOOD_MODEL[name] || 'apple');
   const g = instance(model, { scale: pack ? 1.5 : 1.4, tint: pack && col ? col : null });
-  const tag = new THREE.Sprite(tagSprite(pack ? '📦' : (emoji || '🍽️'), pack ? name : name, pack ? '#ffe9a8' : '#ffffff')); tag.scale.set(4, 1.25, 1); tag.position.y = 2.3; tag.name = 'tag'; tag.renderOrder = 5; g.add(tag);
+  const tag = new THREE.Sprite(tagSprite(pack ? '📦' : (emoji || '🍽️'), display || name, pack ? '#ffe9a8' : '#ffffff')); tag.scale.set(4, 1.25, 1); tag.position.y = 2.3; tag.name = 'tag'; tag.renderOrder = 5; g.add(tag);
   const blob = new THREE.Mesh(new THREE.CircleGeometry(.55, 20), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: .22 })); blob.rotation.x = -Math.PI / 2; blob.position.y = -.17; g.add(blob);
   if (pack) { const q = new THREE.Sprite(qSprite); q.scale.setScalar(1); q.position.y = 3.1; q.name = 'q'; g.add(q); }
   return g;
@@ -409,10 +597,15 @@ const updateSparks = dt => PARTS.update(dt);
 /* ---------- Buddy Rescue cutscene (3D) ---------- */
 const R = { ring: null, amb: null, ambLights: [], sweat: [], capSnapped: false, lastTick: 0, active: false, phase: 'none', t: 0, kidPos: new THREE.Vector3(), grownPos: new THREE.Vector3(), pen: null, phone: null, hives: [], bubble: null, dialStep: 0, holdK: 0, camA: new THREE.Vector3(), camB: new THREE.Vector3(), lying: false };
 function makePen() { const g = new THREE.Group(); const body = new THREE.Mesh(new THREE.CylinderGeometry(.09, .09, .9, 16), mat(0xff8a3d, { roughness: .45 })); body.position.y = .45; g.add(body); const label = new THREE.Mesh(new THREE.CylinderGeometry(.092, .092, .3, 16), mat(0xffffff)); label.position.y = .5; g.add(label); const cap = new THREE.Mesh(new THREE.CylinderGeometry(.1, .1, .16, 16), mat(0x2b6fb0, { roughness: .4 })); cap.position.y = .98; cap.name = 'cap'; g.add(cap); const tip = new THREE.Mesh(new THREE.CylinderGeometry(.08, .1, .12, 16), mat(0xff5a1f)); tip.position.y = -.06; tip.name = 'tip'; g.add(tip); g.traverse(o => { if (o.isMesh) o.castShadow = true; }); addOutline(g, 1.08); g.scale.setScalar(1.3); return g; }
-function phoneScreen(step) { const c = document.createElement('canvas'); c.width = 256; c.height = 512; const g = c.getContext('2d'); g.fillStyle = '#0f1a2b'; g.fillRect(0, 0, 256, 512); g.fillStyle = '#fff'; g.font = '900 54px Unbounded, Manrope, sans-serif'; g.textAlign = 'center'; const digits = ['9', '1', '1']; g.fillText(digits.slice(0, step).join(' '), 128, 90); if (step >= 3) { g.fillStyle = '#2fbf8a'; g.font = '800 26px Manrope, sans-serif'; g.fillText('Calling 911…', 128, 140); } const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#']; keys.forEach((k, i) => { const x = 44 + (i % 3) * 84, y = 200 + Math.floor(i / 3) * 76; const hot = (step === 0 && k === '9') || (step >= 1 && step < 3 && k === '1'); g.fillStyle = hot ? '#ffd166' : '#1e2d44'; g.beginPath(); g.arc(x, y, 30, 0, Math.PI * 2); g.fill(); g.fillStyle = hot ? '#1b2430' : '#fff'; g.font = '800 30px Manrope, sans-serif'; g.fillText(k, x, y + 11); }); g.fillStyle = step >= 3 ? '#ff5a5a' : '#2fbf8a'; g.beginPath(); g.arc(128, 470, 30, 0, Math.PI * 2); g.fill(); g.fillStyle = '#fff'; g.font = '30px serif'; g.fillText('📞', 128, 481); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; }
+function phoneScreen(step) { const c = document.createElement('canvas'); c.width = 256; c.height = 512; const g = c.getContext('2d'); g.fillStyle = '#0f1a2b'; g.fillRect(0, 0, 256, 512); g.fillStyle = '#fff'; g.font = '900 54px Unbounded, Manrope, sans-serif'; g.textAlign = 'center'; const digits = ['9', '1', '1']; g.fillText(digits.slice(0, step).join(' '), 128, 90); if (step >= 3) { g.fillStyle = '#2fbf8a'; g.font = '800 26px Manrope, sans-serif'; g.fillText(T('calling'), 128, 140); } const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#']; keys.forEach((k, i) => { const x = 44 + (i % 3) * 84, y = 200 + Math.floor(i / 3) * 76; const hot = (step === 0 && k === '9') || (step >= 1 && step < 3 && k === '1'); g.fillStyle = hot ? '#ffd166' : '#1e2d44'; g.beginPath(); g.arc(x, y, 30, 0, Math.PI * 2); g.fill(); g.fillStyle = hot ? '#1b2430' : '#fff'; g.font = '800 30px Manrope, sans-serif'; g.fillText(k, x, y + 11); }); g.fillStyle = step >= 3 ? '#ff5a5a' : '#2fbf8a'; g.beginPath(); g.arc(128, 470, 30, 0, Math.PI * 2); g.fill(); g.fillStyle = '#fff'; g.font = '30px serif'; g.fillText('📞', 128, 481); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; }
 function makePhone() { const g = new THREE.Group(); const body = new THREE.Mesh(new THREE.BoxGeometry(.5, 1, .06), mat(0x1b2430, { roughness: .4, metalness: .3 })); g.add(body); const scr = new THREE.Mesh(new THREE.PlaneGeometry(.44, .9), new THREE.MeshBasicMaterial({ map: phoneScreen(0), toneMapped: false })); scr.position.z = .032; scr.name = 'screen'; g.add(scr); addOutline(g, 1.05); return g; }
 function setPhoneStep(step) { if (!R.phone) return; const scr = R.phone.getObjectByName('screen'); scr.material.map.dispose(); scr.material.map = phoneScreen(step); scr.material.needsUpdate = true; }
-function bubble(text, emoji) { if (R.bubble) { R.bubble.parent && R.bubble.parent.remove(R.bubble); } const sp = new THREE.Sprite(tagSprite(emoji, text, '#ffffff')); sp.material = sp.material.clone(); sp.material.fog = false; sp.scale.set(3.4, 1.06, 1); sp.renderOrder = 9; R.bubble = sp; return sp; }
+// speech bubble with word wrap (2-3 short lines stay readable on a phone; the old single line shrank long tips to a tiny font)
+function bubbleMat(text, emoji) { const W = 512, fs = 40, lh = 50, maxW = W - (emoji ? 150 : 60); const c = document.createElement('canvas'); let g = c.getContext('2d'); g.font = `800 ${fs}px Manrope, sans-serif`; const lines = []; let line = ''; for (const w of String(text).split(' ')) { const t = line ? line + ' ' + w : w; if (g.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t; } if (line) lines.push(line); const H = Math.max(140, 44 + lines.length * lh); c.width = W; c.height = H + 26; g = c.getContext('2d');
+  g.fillStyle = '#ffffff'; g.strokeStyle = '#1b2430'; g.lineWidth = 7; g.beginPath(); g.roundRect(6, 6, W - 12, H - 12, 34); g.fill(); g.stroke(); g.beginPath(); g.moveTo(W / 2 - 22, H - 9); g.lineTo(W / 2, H + 20); g.lineTo(W / 2 + 22, H - 9); g.closePath(); g.fill(); g.stroke(); g.fillRect(W / 2 - 18, H - 16, 36, 8);
+  let x = 36; if (emoji) { g.font = '80px serif'; g.textBaseline = 'middle'; g.fillText(emoji, 26, H / 2); x = 126; } g.fillStyle = '#1b2430'; g.font = `800 ${fs}px Manrope, sans-serif`; g.textBaseline = 'middle'; lines.forEach((l, i) => g.fillText(l, x, H / 2 + (i - (lines.length - 1) / 2) * lh));
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; const m = new THREE.SpriteMaterial({ map: t, depthTest: false, transparent: true, toneMapped: false, fog: false }); m.userData.aspect = c.width / c.height; return m; }
+function bubble(text, emoji) { if (R.bubble) { R.bubble.parent && R.bubble.parent.remove(R.bubble); R.bubble.material.map.dispose(); R.bubble.material.dispose(); } const sp = new THREE.Sprite(bubbleMat(text, emoji)); const w = innerHeight > innerWidth ? 2.7 : 3.2; sp.scale.set(w, w / sp.material.userData.aspect, 1); sp.renderOrder = 9; R.bubble = sp; return sp; }
 function startRescue() {
   R.active = true; R.phase = 'symptoms'; R.t = 0; R.dialStep = 0; R.lying = false;
   const kid = cart.getObjectByName('kid'), grown = cart.getObjectByName('grown'); grown.visible = true;
@@ -454,7 +647,7 @@ function rescueUpdate(dt) {
   const k = 1 - Math.pow(.02, dt); const SIT_Y = -.62;
   if (R.phase === 'symptoms' || R.phase === 'help') for (let i = 0; i < R.sweat.length; i++) { const s = R.sweat[i]; const ph = (R.t * .9 + i * .33) % 1; s.position.y = 1.95 - ph * .6; s.position.x = -.25 + i * .25 + ph * .1; s.visible = ph < .8; }
   if (R.phase === 'symptoms') { for (let i = 0; i < R.hives.length; i++) R.hives[i].scale.setScalar(clamp((R.t - i * .25) * 1.5, 0, 1)); poseKid(kidRig, 'sick', R.t); kid.position.lerp(new THREE.Vector3(R.kidPos.x, SIT_Y, R.kidPos.z), k); kid.rotation.y = lerp(kid.rotation.y, .35, k);
-    grown.position.lerp(new THREE.Vector3(G.x - 1.2, 0, 2.6), k * .6); faceTo(grown, new THREE.Vector3(G.x - 1.2, 0, 2.6)); grown.rotation.y = Math.PI * .5; animateRig(grownRig, R.t, 5, 0, 'walk'); }
+    const gT = new THREE.Vector3(G.x - 5.6, 0, .4); grown.position.lerp(gT, k * .6); if (grown.position.distanceTo(gT) > .2) faceTo(grown, gT); else faceTo(grown, R.kidPos); animateRig(grownRig, R.t, 5, 0, 'walk'); }
   if (R.phase === 'help') { poseKid(kidRig, R.t < 1.6 ? 'arms-up' : 'sit', R.t); kid.position.lerp(new THREE.Vector3(R.kidPos.x, SIT_Y, R.kidPos.z), k); grown.position.lerp(R.grownPos, k * .8); faceTo(grown, grown.position.distanceTo(R.grownPos) > .3 ? R.grownPos : R.kidPos); if (grown.position.distanceTo(R.grownPos) > .3) animateRig(grownRig, R.t, 8, 0, 'walk'); else poseKid(grownRig, 'kneel', R.t); kid.rotation.y = lerp(kid.rotation.y, .35, k); }
   if (R.phase === 'pen') { poseKid(kidRig, 'sit', R.t); poseKid(grownRig, 'kneel', R.t); kid.position.y = SIT_Y;
     const cap = R.pen.getObjectByName('cap'); const capOff = clamp((R.t - .4) / .6, 0, 1); cap.position.set(-capOff * .5, .98 + capOff * .9 - capOff * capOff * .6, 0); cap.rotation.z = -capOff * 2.5; cap.visible = capOff < 1 || R.t < 1.2;
@@ -462,14 +655,19 @@ function rescueUpdate(dt) {
     if (capOff >= 1 && !R.capSnapped) { R.capSnapped = true; SFX.snap(); }
     R.ring.visible = travel >= 1; if (R.ring.visible) { const press = R.holdK; R.ring.position.copy(thigh).add(new THREE.Vector3(0, .9, .2)); R.ring.lookAt(camera.position); R.ring.geometry.dispose(); R.ring.geometry = new THREE.RingGeometry(.5, .62, 40, 1, Math.PI / 2, Math.max(.01, press * Math.PI * 2)); R.ring.material.color.set(press >= 1 ? 0xffd166 : 0x2fbf8a); const sec = Math.floor(press * 3); if (press > 0 && sec !== R.lastTick) { R.lastTick = sec; SFX.tick(); } R.pen.position.y = target.y - press * .12; R.pen.rotation.x = Math.sin(R.t * 40) * .02 * press; } }
   if (R.phase === 'call') { poseKid(kidRig, 'sit', R.t); poseKid(grownRig, 'kneel', R.t); kid.position.y = SIT_Y; R.ring.visible = false; const hand = grownRig && grownRig.RightHand; if (hand) { hand.updateWorldMatrix(true, false); hand.getWorldPosition(R.phone.position); R.phone.position.y += .9; R.phone.position.z += .5; R.phone.position.x -= .2; } else R.phone.position.set(R.grownPos.x - 1.2, 2.6, R.grownPos.z + 1.0); R.phone.rotation.y = .35; R.phone.scale.setScalar(1.25); }
-  if (R.phase === 'lie') { for (const h of R.hives) h.scale.setScalar(Math.max(0, 1 - R.t * .25)); for (const s of R.sweat) s.visible = false; if (R.amb) { R.amb.visible = true; const k2 = clamp(R.t / 4.5, 0, 1), ease = 1 - Math.pow(1 - k2, 3); R.amb.position.set(G.x + 2.6, 0, lerp(-70, -7, ease)); R.amb.rotation.y = 0; const on = Math.floor(R.t * 4) % 2; R.ambLights[0].intensity = on ? 6 : 0; R.ambLights[1].intensity = on ? 0 : 6; R.amb.getObjectByName('bulbR').material.emissiveIntensity = on ? 4 : .2; R.amb.getObjectByName('bulbB').material.emissiveIntensity = on ? .2 : 4; if (k2 >= 1 && !R.doneLie) { R.doneLie = true; const b = bubble(T('helpHere'), '🚑'); b.position.set(0, 3.6, 0); R.amb.add(b); } if (R.t < 4.5 && Math.floor(R.t * 2.5) !== R.lastTick) { R.lastTick = Math.floor(R.t * 2.5); SFX.siren(); } } poseKid(kidRig, 'lie', R.t); kid.rotation.y = lerp(kid.rotation.y, 0, k); kid.rotation.z = lerp(kid.rotation.z, Math.PI / 2, k); kid.position.y = lerp(kid.position.y, .32, k); kid.position.x = lerp(kid.position.x, R.kidPos.x + .4, k); kid.position.z = lerp(kid.position.z, R.kidPos.z + .6, k); poseKid(grownRig, 'kneel', R.t); }
+  if (R.phase === 'lie') { for (const h of R.hives) h.scale.setScalar(Math.max(0, 1 - R.t * .25)); for (const s of R.sweat) s.visible = false; if (R.amb) { R.amb.visible = true; const k2 = clamp(R.t / 4.5, 0, 1), ease = 1 - Math.pow(1 - k2, 3); R.amb.position.set(G.x - .2, 0, lerp(-70, -7, ease)); R.amb.rotation.y = 0; const on = Math.floor(R.t * 4) % 2; R.ambLights[0].intensity = on ? 6 : 0; R.ambLights[1].intensity = on ? 0 : 6; R.amb.getObjectByName('bulbR').material.emissiveIntensity = on ? 4 : .2; R.amb.getObjectByName('bulbB').material.emissiveIntensity = on ? .2 : 4; if (k2 >= 1 && !R.doneLie) { R.doneLie = true; const b = bubble(T('helpHere'), '🚑'); b.position.set(0, 3.6, 0); R.amb.add(b); } if (R.t < 4.5 && Math.floor(R.t * 2.5) !== R.lastTick) { R.lastTick = Math.floor(R.t * 2.5); SFX.siren(); } } poseKid(kidRig, 'lie', R.t); kid.rotation.y = lerp(kid.rotation.y, 0, k); kid.rotation.z = lerp(kid.rotation.z, Math.PI / 2, k); kid.position.y = lerp(kid.position.y, .32, k); kid.position.x = lerp(kid.position.x, R.kidPos.x + .4, k); kid.position.z = lerp(kid.position.z, R.kidPos.z + .6, k); poseKid(grownRig, 'kneel', R.t); }
   if (R.bubble) R.bubble.material.opacity = .92 + Math.sin(R.t * 3) * .08;
 }
-function rescueCamera(dt) { const kk = 1 - Math.pow(.03, dt || .016); const portrait = innerHeight > innerWidth; const target = new THREE.Vector3(G.x - 3.4, 1.0, 1.4); const pos = portrait ? new THREE.Vector3(G.x - 3.0, 5.6, 10.5) : new THREE.Vector3(G.x - 2.4, 3.2, 9.0); camera.position.lerp(pos, kk); const look = camera.userData.look || (camera.userData.look = target.clone()); look.lerp(target, kk); camera.lookAt(look); }
+function rescueCamera(dt) { // frames the kid + grown-up beside the drill card (landscape: card on the right; portrait: card at the bottom)
+  const kk = 1 - Math.pow(.03, dt || .016); const portrait = innerHeight > innerWidth; const target = portrait ? new THREE.Vector3(G.x - 3.2, -1.3, 1.4) : new THREE.Vector3(G.x - 1.5, 1.0, 1.2); const pos = portrait ? new THREE.Vector3(G.x - 3.0, 5.0, 12.8) : new THREE.Vector3(G.x - 1.3, 3.3, 9.6); camera.position.lerp(pos, kk); const look = camera.userData.look || (camera.userData.look = target.clone()); look.lerp(target, kk); camera.lookAt(look); }
 /* ---------------- Game state ---------------- */
-const G = { scene: 'title', level: 0, lane: 1, x: 0, items: [], t: 0, score: 0, hearts: 3, oops: 0, mood: 1, nextMystery: 10, fed: 0, got: 0, labels: 0, dodged: 0, learned: new Set(), paused: false, spawnT: 0, speed: 7, mult: 1, offersDone: 0, nextOfferAt: 0, scan: false, drilled: false, lastTip: 0, combo: 0, shake: 0, goalDone: false, done: false };
+const G = { scene: 'title', level: 0, lane: 1, x: 0, items: [], t: 0, score: 0, hearts: 3, oops: 0, mood: 1, nextMystery: 10, fed: 0, got: 0, labels: 0, dodged: 0, learned: new Map(), paused: false, spawnT: 0, speed: 7, mult: 1, offersDone: 0, nextOfferAt: 0, moments: [], scan: false, drilled: false, lastTip: 0, combo: 0, shake: 0, goalDone: false, done: false, newStickers: [] };
+// "Things you learned" keep both languages, so the results card follows a language switch
+const learn = (en, es) => { G.learned.set(en, [en, es ?? en]); };
+const both = f => { const l = S.lang; try { S.lang = 'en'; const en = f(); S.lang = 'es'; const es = f(); return [en, es]; } finally { S.lang = l; } };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 // Keyboard (A/D/arrows, Space/J/Enter or E = read, Shift/K = Scanner, Esc/P = pause) + gamepad (stick/d-pad, A, X/Y, B/R2, Start)
-// come from the engine's unified input, polled every frame in pollInput(). Touch keeps the big on-screen buttons and canvas taps.
+// + phones as controllers (engine/net.js merges any phone into player 1) come from the engine's unified input, polled every frame.
 const input = E.createInput({ surface: canvas });
 function move(d) { if (G.scene !== 'play' || G.paused) return; const n = clamp(G.lane + d, 0, 2); if (n !== G.lane) { G.lane = n; SFX.pop(); } }
 $('btnL').addEventListener('pointerdown', e => { e.preventDefault(); ac(); move(-1); });
@@ -481,23 +679,32 @@ let touchScan = false; const scanTouch = v => { touchScan = v; scanOn(v && S.duo
 scanBtn.addEventListener('pointerdown', e => { e.preventDefault(); scanTouch(true); }); scanBtn.addEventListener('pointerup', () => scanTouch(false)); scanBtn.addEventListener('pointercancel', () => scanTouch(false)); scanBtn.addEventListener('pointerleave', () => scanTouch(false));
 // swipe on the canvas
 let sw = null; canvas.addEventListener('pointerdown', e => { sw = { x: e.clientX, t: performance.now() }; ac(); }); canvas.addEventListener('pointerup', e => { if (!sw) return; const dx = e.clientX - sw.x; if (Math.abs(dx) > 30) move(dx > 0 ? 1 : -1); else if (G.scene === 'play') { if (e.clientX < innerWidth / 3) move(-1); else if (e.clientX > innerWidth * 2 / 3) move(1); else tryRead(); } sw = null; });
+/* ---------------- Stickers (sticker book of things learned) ---------------- */
+const STK = Object.fromEntries(STICKERS.map(s => [s.id, s]));
+function award(id) { if (!STK[id] || S.stickers.includes(id)) return false; S.stickers.push(id); persist(); G.newStickers.push(id); stickerToast(STK[id]); return true; }
+let stkTO = 0;
+function stickerToast(s) { const el = $('stk'); el.innerHTML = `<span class="e">${s.e}</span><span><small>${T('newSticker')}</small><b>${esc(tx(s.en, s.es))}</b></span>`; el.classList.remove('show'); void el.offsetWidth; el.classList.add('show'); clearTimeout(stkTO); stkTO = setTimeout(() => el.classList.remove('show'), 2600); tone(880, .08, 'sine', .07); tone(1320, .14, 'sine', .06, 0, .09); }
 /* ---------------- Items ---------------- */
-function labelFor(item) { // builds ingredient list for a packaged product
-  const L = LEVELS[G.level], mine = S.allergens, base = item.base.slice(); let contains = [], may = [], hiddenUsed = [];
+// Label tokens: an ingredient key (string) or {al, hid} (hid -1 = the plain allergen word, else index into hidden / hiddenEs)
+const tokText = t => typeof t === 'string' ? ing(t) : t.hid < 0 ? alWord(t.al) : hidName(t.al, t.hid);
+function labelFor(item) { // builds the ingredient list for a packaged product
+  const L = LEVELS[G.level], mine = S.allergens, base = item.base.slice(); const contains = [], may = [], hiddenUsed = [];
   const r = Math.random();
-  if (r < .5) { // contains one of the player's allergens (sometimes hidden)
-    const a = AL[pick(mine)]; contains.push(a.id); if (Math.random() < L.hidden) { const h = pick(a.hidden); base.splice(1 + Math.floor(Math.random() * base.length), 0, h); hiddenUsed.push([h, a]); } else base.splice(1 + Math.floor(Math.random() * base.length), 0, a.name.toLowerCase());
-  } else if (r < .5 + L.may * .5) { may.push(AL[pick(mine)].id); }
+  if (r < .5) { // contains one of the player's allergens (sometimes under a hidden name)
+    const a = AL[pick(mine)]; contains.push(a.id); const at = 1 + Math.floor(Math.random() * base.length); if (Math.random() < L.hidden) { const hi = Math.floor(Math.random() * a.hidden.length); base.splice(at, 0, { al: a.id, hid: hi }); hiddenUsed.push([a.id, hi]); } else base.splice(at, 0, { al: a.id, hid: -1 });
+  } else if (r < .5 + L.may * .5) { may.push(pick(mine)); }
   else { // contains an allergen the player does not have (decoy), or clean
-    const others = ALLERGENS.filter(a => !mine.includes(a.id)); if (others.length && Math.random() < .6) { const a = pick(others); base.splice(1, 0, a.name.toLowerCase()); contains.push(a.id); }
+    const others = ALLERGENS.filter(a => !mine.includes(a.id)); if (others.length && Math.random() < .6) { const a = pick(others); base.splice(1, 0, { al: a.id, hid: -1 }); contains.push(a.id); }
   }
   const unsafe = contains.some(c => mine.includes(c)) || may.some(c => mine.includes(c));
   return { base, contains, may, hiddenUsed, unsafe };
 }
+const prodPool = th => { const own = PRODUCTS.filter(p => p[4] && p[4].includes(th)); return own.length && Math.random() < .6 ? own : PRODUCTS.filter(p => !p[4]); };
+const prodName = it => isES() ? it.prod[3] : it.prod[0];
 function spawn() {
   const L = LEVELS[G.level], lane = Math.floor(Math.random() * 3), it = { lane, z: -70, mesh: null, kind: 'food', taken: false, read: false };
-  if (Math.random() < L.mystery) { const p = pick(PRODUCTS); it.kind = 'pack'; it.name = p[0]; it.base = p[1]; it.mesh = foodMesh(p[2], [0xffffff, 0xffe9a8, 0xd5f0ff, 0xffd1e8][Math.floor(Math.random() * 4)], p[0], true); it.label = labelFor(it); it.unsafe = it.label.unsafe; }
-  else { const pool = FOODS.filter(f => Math.random() < (f[2].some(a => S.allergens.includes(a)) ? .45 : .6)); const f = pick(pool.length ? pool : FOODS); it.name = f[0]; it.e = f[1]; it.al = f[2]; it.unsafe = f[2].some(a => S.allergens.includes(a)); it.mesh = foodMesh(f[3], null, f[0], false, f[1]); }
+  if (Math.random() < L.mystery) { const p = pick(prodPool(L.theme)); it.kind = 'pack'; it.prod = p; it.name = p[0]; it.base = p[1]; it.mesh = foodMesh(p[2], [0xffffff, 0xffe9a8, 0xd5f0ff, 0xffd1e8][Math.floor(Math.random() * 4)], prodName(it), true); it.label = labelFor(it); it.unsafe = it.label.unsafe; }
+  else { const pool = FOODS.filter(f => Math.random() < (f[2].some(a => S.allergens.includes(a)) ? .45 : .6)); const f = pick(pool.length ? pool : FOODS); it.f = f; it.name = f[0]; it.e = f[1]; it.al = f[2]; it.unsafe = f[2].some(a => S.allergens.includes(a)); it.mesh = foodMesh(f[3], null, f[0], false, f[1], foodName(f)); }
   it.mesh.position.set(LANES[lane], .35, it.z); it.spin = rnd(-.6, .6); scene.add(it.mesh); G.items.push(it);
 }
 function removeItem(it) { scene.remove(it.mesh); G.items.splice(G.items.indexOf(it), 1); }
@@ -507,32 +714,44 @@ const tipEl = $('tip'); let tipTO = 0;
 function tip(t, ms = 2200) { tipEl.textContent = t; tipEl.classList.add('show'); clearTimeout(tipTO); tipTO = setTimeout(() => tipEl.classList.remove('show'), ms); if (ms >= 2000) say(t); }
 function floatText(t, bad) { const d = document.createElement('div'); d.className = 'ft' + (bad ? ' bad' : ''); d.textContent = t; d.style.left = (50 + (G.lane - 1) * 18) + '%'; d.style.top = '58%'; d.style.transform = 'translateX(-50%)'; $('float').appendChild(d); setTimeout(() => d.remove(), 1000); }
 function buddyLevel() { return 1 + Math.floor(G.got / 5); }
-function hud() { $('hScore').textContent = G.score; $('hHearts').textContent = G.mood > .66 ? '😊' : G.mood > .33 ? '😐' : '🥺'; $('hBuddy').textContent = (G.got < 4 ? '🥚' : '🐣') + ' ' + T('buddy') + ' lv ' + buddyLevel(); const L = LEVELS[G.level]; $('gText').textContent = `${Math.min(G.got, L.goal)} / ${L.goal} ${T('safeSnacks')}`; $('gBar').style.width = Math.min(100, G.got / L.goal * 100) + '%'; }
+function hud() { $('hScore').textContent = G.score; $('hHearts').textContent = G.mood > .66 ? '😊' : G.mood > .33 ? '😐' : '🥺'; $('hBuddy').textContent = (G.got < 4 ? '🥚' : '🐣') + ' ' + T('buddy') + ' ' + buddyLevel(); const L = LEVELS[G.level]; $('gText').textContent = `${Math.min(G.got, L.goal)} / ${L.goal} ${T('safeSnacks')}`; $('gBar').style.width = Math.min(100, G.got / L.goal * 100) + '%'; if (G.got >= 4 && G.scene === 'play') award('buddy'); }
 /* ---------------- Label modal ---------------- */
 let reading = null;
 function tryRead() { if (G.scene !== 'play' || G.paused) return; const p = nearestPack(); if (!p) { tip(T('noPack'), 1500); return; } openLabel(p); }
+function labelHTML(p) {
+  const lab = p.label, mine = S.allergens, hints = S.hints || S.duo, nm = prodName(p);
+  const ingHtml = lab.base.map(t => { const w = esc(tokText(t)); if (typeof t === 'string' || !hints || !mine.includes(t.al)) return w; return t.hid >= 0 ? `<mark class="hid">${w}</mark>` : `<mark>${w}</mark>`; }).join(', ');
+  const con = lab.contains.length ? `<div class="con">${T('containsUp')}: ${lab.contains.map(c => alName(c).toUpperCase()).join(', ')}</div>` : '';
+  const may = lab.may.length ? `<div class="may">${T('mayContain')} ${lab.may.map(alWord).join(', ')}.</div>` : '';
+  return `<div class="nm">${esc(nm)}</div><div class="ing"><b>${T('ingrUp')}:</b> ${ingHtml}.</div>${con}${may}`;
+}
+function scannerHint(p) { const lab = p.label, mine = S.allergens; const hidMine = lab.hiddenUsed.filter(h => mine.includes(h[0])); const decoy = lab.contains.find(c => !mine.includes(c));
+  return '🧑‍🍳 ' + T('scanner') + ': ' + (hidMine.length ? tx(`<b>${hidName(...hidMine[0])}</b> is another name for <b>${alWord(hidMine[0][0])}</b>.`, `<b>${hidName(...hidMine[0])}</b> es otro nombre de <b>${alWord(hidMine[0][0])}</b>.`)
+    : lab.may.some(c => mine.includes(c)) ? tx('"May contain" means the factory also handles it. Treat it as not safe.', '"Puede contener" significa que la fábrica también lo usa. Tómalo como no seguro.')
+    : decoy && !lab.unsafe ? tx(`${alWord(decoy)} is not on <b>your</b> list. Is anything from your list in there?`, `${alWord(decoy)} no está en <b>tu</b> lista. ¿Hay algo de tu lista ahí?`)
+    : tx('read the CONTAINS line first, then the full list.', 'lee primero la línea CONTIENE y luego toda la lista.')); }
+function labelSpoken(p) { const lab = p.label; return `${prodName(p)}. ${T('ingr')}: ${lab.base.map(tokText).join(', ')}. ${lab.contains.length ? T('contains') + ': ' + lab.contains.map(alName).join(', ') + '.' : ''} ${lab.may.length ? T('mayContain') + ' ' + lab.may.map(alName).join(', ') + '.' : ''} ${T('askSafe')}`; }
 function openLabel(p) {
   reading = p; G.paused = true; SFX.snap();
-  const lab = p.label, mine = S.allergens;
-  const ing = lab.base.map(w => { const hid = lab.hiddenUsed.find(h => h[0] === w); const plain = ALLERGENS.find(a => a.name.toLowerCase() === w && mine.includes(a.id)); if (hid && mine.includes(hid[1].id)) return `<mark class="hid">${w}</mark>`; if (plain) return `<mark>${w}</mark>`; return w; }).join(', ');
-  const con = lab.contains.length ? `<div class="con">CONTAINS: ${lab.contains.map(c => AL[c].name.toUpperCase()).join(', ')}</div>` : '';
-  const may = lab.may.length ? `<div class="may">May contain ${lab.may.map(c => AL[c].name.toLowerCase()).join(', ')}.</div>` : '';
-  $('lblTitle').textContent = `Read the label: ${p.name}`;
-  $('lblBox').innerHTML = `<div class="nm">${p.name}</div><div class="ing"><b>INGREDIENTS:</b> ${ing}.</div>${con}${may}`;
-  const lens = $('lblLens'); const hidMine = lab.hiddenUsed.filter(h => mine.includes(h[1].id));
-  if (S.duo || p.scanned) { lens.hidden = false; const decoy = lab.contains.find(c => !mine.includes(c)); lens.innerHTML = hidMine.length ? `🧑‍🍳 Scanner: <b>${hidMine[0][0]}</b> is another name for <b>${hidMine[0][1].name.toLowerCase()}</b>.` : lab.may.some(c => mine.includes(c)) ? '🧑‍🍳 Scanner: "May contain" means the factory also handles it. Treat it as not safe.' : decoy && !lab.unsafe ? `🧑‍🍳 Scanner: ${AL[decoy].name.toLowerCase()} is not on <b>your</b> list. Is anything from your list in there?` : '🧑‍🍳 Scanner: read the CONTAINS line first, then the full list.'; }
-  else lens.hidden = true;
-  const spoken = `${p.name}. ${T('ingr')}: ${lab.base.join(', ')}. ${lab.contains.length ? T('contains') + ': ' + lab.contains.map(c => AL[c].name).join(', ') + '.' : ''} ${lab.may.length ? T('mayContain') + ' ' + lab.may.map(c => AL[c].name).join(', ') + '.' : ''} ${T('askSafe')}`; p.spoken = spoken; say(spoken); $('btnSay').onclick = () => say(spoken);
+  $('lblTitle').textContent = `${T('readLabel')}: ${prodName(p)}`;
+  const box = $('lblBox'); box.innerHTML = labelHTML(p); box.classList.remove('zoom');
+  const lens = $('lblLens'); if (S.duo || p.scanned) { lens.hidden = false; lens.innerHTML = scannerHint(p); } else lens.hidden = true;
+  const spoken = labelSpoken(p); p.spoken = spoken; say(spoken); $('btnSay').onclick = () => say(labelSpoken(p));
   show('scrLabel');
 }
+$('lblBox').addEventListener('click', () => { $('lblBox').classList.toggle('zoom'); SFX.pop(); }); // tap the label to zoom the text (phones)
 function answerLabel(safe) {
-  const p = reading; if (!p) return; p.read = true; G.labels++;
-  const right = safe !== p.unsafe; const lab = p.label;
-  if (right) { G.score += 30; G.combo++; floatText('+30 ' + T('labelPro')); SFX.good(); if (safe) { G.got++; p.taken = true; G.mood = Math.min(1, G.mood + .08); } else G.dodged++; lab.hiddenUsed.forEach(h => { if (S.allergens.includes(h[1].id)) G.learned.add(`"${h[0]}" is a hidden name for ${h[1].name.toLowerCase()}`); }); if (lab.may.some(c => S.allergens.includes(c))) G.learned.add('"May contain" counts as not safe'); }
+  const p = reading; if (!p) return; p.read = true; G.labels++; S.labels = (S.labels | 0) + 1; award('label1'); if (S.labels >= 25) award('label25');
+  const right = safe !== p.unsafe; const lab = p.label, mine = S.allergens;
+  if (right) { G.score += 30; G.combo++; floatText('+30 ' + T('labelPro')); SFX.good(); if (safe) { G.got++; p.taken = true; G.mood = Math.min(1, G.mood + .08); } else G.dodged++;
+    lab.hiddenUsed.forEach(h => { if (mine.includes(h[0])) { learn(...both(() => tx(`"${hidName(...h)}" is a hidden name for ${alWord(h[0])}`, `"${hidName(...h)}" es un nombre escondido de ${alWord(h[0])}`))); award('hid-' + h[0]); award('hidden'); } });
+    if (lab.may.some(c => mine.includes(c))) { learn('"May contain" counts as not safe', '"Puede contener" cuenta como no seguro'); award('may'); } }
   else { G.combo = 0; SFX.bad(); if (safe) { // took an unsafe product
-      const why = lab.hiddenUsed.length && S.allergens.includes(lab.hiddenUsed[0][1].id) ? `"${lab.hiddenUsed[0][0]}" means ${lab.hiddenUsed[0][1].name.toLowerCase()}.` : lab.may.some(c => S.allergens.includes(c)) ? '"May contain" is a warning. Skip it.' : 'Your allergen was on the list.'; G.learned.add(why.replace(/\.$/, '')); hurt(why); }
+      const h = lab.hiddenUsed.find(x => mine.includes(x[0]));
+      const whyF = () => h ? tx(`"${hidName(...h)}" means ${alWord(h[0])}.`, `"${hidName(...h)}" significa ${alWord(h[0])}.`) : lab.may.some(c => mine.includes(c)) ? tx('"May contain" is a warning. Skip it.', '"Puede contener" es una advertencia. No lo comas.') : tx('Your allergen was on the list.', 'Tu alérgeno estaba en la lista.');
+      const [en, es] = both(whyF); learn(en.replace(/\.$/, ''), es.replace(/\.$/, '')); hurt(whyF()); }
     else { G.score = Math.max(0, G.score - 5); tip(T('skipSafe'), 2600); G.dodged++; } }
-  removeItem(p); reading = null; G.paused = false; hud(); hide('scrLabel'); if (G.got >= LEVELS[G.level].goal) endLevel(true); else if (G.got >= G.nextMystery) { G.nextMystery += 10; mystery(); }
+  removeItem(p); reading = null; hide('scrLabel'); if ($('scrDrill').hidden) G.paused = false; hud(); if (G.got >= LEVELS[G.level].goal) endLevel(true); else if (G.got >= G.nextMystery) { G.nextMystery += 10; mystery(); }
 }
 $('btnSafe').addEventListener('click', () => answerLabel(true)); $('btnNotSafe').addEventListener('click', () => answerLabel(false));
 /* ---------------- Hurt / drill ---------------- */
@@ -542,87 +761,111 @@ function hurt(why) {
   tip(`${why} ${T('lookAgain')}`, 3200);
 }
 let drillStep = 0, holdT = 0, holdOn = false;
-function startDrill(why) { G.paused = true; drillStep = 1; startRescue(); ['st1', 'st2', 'st3'].forEach((s, i) => { const el = $(s); el.classList.toggle('done', false); el.classList.toggle('now', i === 0); }); $('drillA').hidden = false; $('drillB').hidden = true; $('drillC').hidden = true; tip(why, 3000); const stepSay = () => say(['', $('st1').textContent, $('st2').textContent, $('st3').textContent][drillStep]); $('btnDrillSay').onclick = stepSay; setTimeout(stepSay, 3200); show('scrDrill'); }
-$('drillA').addEventListener('click', () => { SFX.good(); rescueStep(1); $('st1').classList.add('done'); $('st1').classList.remove('now'); $('st2').classList.add('now'); $('drillA').hidden = true; say(T('gotYou')); setTimeout(() => { $('drillB').hidden = false; drillStep = 2; rescueStep(2); say($('st2').textContent); }, 2600); });
+const stepText = n => { const el = $('st' + n); return el ? [...el.querySelectorAll('b, small')].map(x => x.textContent.trim()).join('. ') : ''; };
+function setRescueMode(on) { document.body.classList.toggle('rescue', on); if (on) musicOff(); else if (G.scene === 'play') musicOn(); }
+function startDrill(why) { G.paused = true; drillStep = 1; setRescueMode(true); startRescue(); ['st1', 'st2', 'st3'].forEach((s, i) => { const el = $(s); el.classList.toggle('done', false); el.classList.toggle('now', i === 0); }); $('drillA').hidden = false; $('drillB').hidden = true; $('drillC').hidden = true; $('drillD').hidden = true; $('dial').hidden = true; tip(why, 3000); const stepSay = () => say(stepText(drillStep)); $('btnDrillSay').onclick = stepSay; setTimeout(stepSay, 3200); show('scrDrill'); }
+$('drillA').addEventListener('click', () => { SFX.good(); rescueStep(1); $('st1').classList.add('done'); $('st1').classList.remove('now'); $('st2').classList.add('now'); $('drillA').hidden = true; say(T('gotYou')); setTimeout(() => { $('drillB').hidden = false; drillStep = 2; rescueStep(2); say(stepText(2)); }, 2600); });
 const hb = $('drillB'), hbFill = hb.querySelector('i'), hbTxt = hb.querySelector('span');
-const holdStart = e => { if (e) e.preventDefault(); holdOn = true; holdT = performance.now(); }; const holdEnd = () => { holdOn = false; hbFill.style.width = '0'; hbTxt.textContent = 'Hold on the thigh: 3… 2… 1…'; };
+const holdStart = e => { if (e) e.preventDefault(); holdOn = true; holdT = performance.now(); }; const holdEnd = () => { holdOn = false; hbFill.style.width = '0'; hbTxt.textContent = T('holdIdle'); };
 hb.addEventListener('pointerdown', holdStart); hb.addEventListener('pointerup', holdEnd); hb.addEventListener('pointerleave', holdEnd); hb.addEventListener('pointercancel', holdEnd);
-function drillTick() { if (drillStep !== 2) return; if (!holdOn) { R.holdK = Math.max(0, R.holdK - .05); return; } const k = (performance.now() - holdT) / 3000; R.holdK = Math.min(1, k); hbFill.style.width = Math.min(100, k * 100) + '%'; const n = 3 - Math.min(3, Math.floor(k * 3)); hbTxt.textContent = n > 0 ? `Hold… ${n}` : 'Done!'; if (k >= 1) { holdOn = false; drillStep = 3; SFX.good(); $('st2').classList.add('done'); $('st2').classList.remove('now'); $('st3').classList.add('now'); hb.hidden = true; say(T('penDone')); setTimeout(() => { rescueStep(3); buildDial(); say($('st3').textContent); }, 2200); } }
+function drillTick() { if (drillStep !== 2) return; if (!holdOn) { R.holdK = Math.max(0, R.holdK - .05); return; } const k = (performance.now() - holdT) / 3000; R.holdK = Math.min(1, k); hbFill.style.width = Math.min(100, k * 100) + '%'; const n = 3 - Math.min(3, Math.floor(k * 3)); hbTxt.textContent = n > 0 ? `${T('holdN')} ${n}` : T('holdDone'); if (k >= 1) { holdOn = false; drillStep = 3; SFX.good(); $('st2').classList.add('done'); $('st2').classList.remove('now'); $('st3').classList.add('now'); hb.hidden = true; say(T('penDone')); setTimeout(() => { rescueStep(3); buildDial(); say(stepText(3)); }, 2200); } }
 function buildDial() { const d = $('dial'); d.innerHTML = ''; d.hidden = false; const seq = ['9', '1', '1']; let idx = 0; ['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'].forEach(kk => { const b = document.createElement('button'); b.className = 'dialBtn' + (kk === '9' ? ' hot' : ''); b.textContent = kk; b.addEventListener('click', () => { if (kk !== seq[idx]) { SFX.bad(); say(T('tryKey') + ' ' + seq[idx]); return; } SFX.tick(); b.classList.remove('hot'); b.classList.add('done'); idx++; setPhoneStep(idx); say(kk); [...d.children].forEach(x => x.classList.remove('hot')); if (idx < 3) { [...d.children].find(x => x.textContent === seq[idx]).classList.add('hot'); } else { d.hidden = true; $('drillC').hidden = false; $('drillC').classList.add('hot'); say(T('nowCall')); } }); d.appendChild(b); }); }
-$('drillC').addEventListener('click', () => { SFX.good(); $('drillC').hidden = true; setPhoneStep(3); say(T('callScript')); tip(T('callScript'), 6000); setTimeout(() => { $('st3').classList.add('done'); $('st3').classList.remove('now'); rescueStep(4); say(T('lieTip')); setTimeout(() => { $('drillD').hidden = false; say(T('helpHere')); }, 5000); }, 5200); });
-$('drillD').addEventListener('click', () => { SFX.win(); $('drillD').hidden = true; G.learned.add('Reaction plan: tell a grown-up, auto-injector, call 911, lie down and wait'); G.score += 50; setTimeout(() => { hide('scrDrill'); endRescue(); G.paused = false; G.mood = Math.min(1, G.mood + .34); hud(); tip(T('drillDone'), 2600); }, 400); });
-/* ---------------- Offers ---------------- */
-let offer = null;
-function startOffer() { offer = pick(OFFERS); G.paused = true; $('offTitle').textContent = offer.t; $('offText').textContent = offer.s; const box = $('offChoices'); box.innerHTML = ''; offer.c.slice().sort(() => Math.random() - .5).forEach(ch => { const b = document.createElement('button'); b.className = 'lv'; b.innerHTML = `<div class="ic">${ch[1] ? '💬' : '🍪'}</div><div><b>${ch[0]}</b></div><div></div>`; b.addEventListener('click', () => { if (ch[1]) { SFX.good(); G.score += 40; G.learned.add(ch[2]); tip(ch[2], 2800); } else { SFX.bad(); hurt(ch[2]); if (G.drilled && G.hearts > 0) tip(ch[2], 3000); } hide('scrOffer'); if (!$('scrDrill').hidden) return; G.paused = false; }); box.appendChild(b); }); const spokenOffer = () => say(`${offer.t}. ${offer.s} ${T('options')}: ` + [...box.children].map((b, i) => `${i + 1}. ${b.querySelector('b').textContent}`).join('. ')); $('btnOffSay').onclick = spokenOffer; spokenOffer(); show('scrOffer'); }
+const callScript = () => { const pl = LEVELS[G.level].place; return tx(`Say: my friend had an allergic reaction. We used the epinephrine. Please come to ${pl[0]}.`, `Di: mi amigo tuvo una reacción alérgica. Usamos la epinefrina. Vengan ${pl[1]}.`); };
+$('drillC').addEventListener('click', () => { SFX.good(); $('drillC').hidden = true; setPhoneStep(3); say(callScript()); tip(callScript(), 6000); setTimeout(() => { $('st3').classList.add('done'); $('st3').classList.remove('now'); rescueStep(4); say(T('lieTip')); setTimeout(() => { $('drillD').hidden = false; say(T('helpHere')); }, 5000); }, 5200); });
+$('drillD').addEventListener('click', () => { SFX.win(); $('drillD').hidden = true; learn('Reaction plan: tell a grown-up, auto-injector, call 911, lie down and wait', 'Plan de reacción: avisar a un adulto, autoinyector, llamar al 911, acostarse y esperar'); G.score += 50; award('rescue'); setTimeout(() => { hide('scrDrill'); endRescue(); drillStep = 0; setRescueMode(false); G.paused = false; G.mood = Math.min(1, G.mood + .34); hud(); tip(T('drillDone'), 2600); }, 400); });
+/* ---------------- Offers + menu moments ("ask a grown-up / check the label") ---------------- */
+let offer = null; const usedOffers = new Set();
+function pickOffer(th) { const fits = o => o.th.includes(th) && !usedOffers.has(o); let pool = OFFERS.filter(fits); if (!pool.length) pool = OFFERS.filter(o => o.th.includes('any') && !usedOffers.has(o)); if (!pool.length) { usedOffers.clear(); pool = OFFERS.filter(o => o.th.includes(th) || o.th.includes('any')); } const o = pick(pool); usedOffers.add(o); return o; }
+function choiceCard(title, text, choices, spokenHead) { // choices: [{icon, label, small, good, onPick}]
+  G.paused = true; $('offTitle').textContent = title; $('offText').textContent = text; const box = $('offChoices'); box.innerHTML = '';
+  choices.forEach(ch => { const b = document.createElement('button'); b.className = 'lv'; b.dataset.good = ch.good ? '1' : '0'; b.innerHTML = `<div class="ic">${ch.icon}</div><div><b>${esc(ch.label)}</b>${ch.small ? `<small>${esc(ch.small)}</small>` : ''}</div><div></div>`; b.addEventListener('click', () => { hide('scrOffer'); ch.onPick(); if (!$('scrDrill').hidden || !$('scrMystery').hidden || G.scene !== 'play') return; G.paused = false; }); box.appendChild(b); });
+  const spoken = () => say(`${spokenHead || title}. ${text} ${T('options')}: ` + choices.map((c, i) => `${i + 1}. ${c.label}${c.small ? ': ' + c.small : ''}`).join('. ')); $('btnOffSay').onclick = spoken; spoken(); show('scrOffer');
+}
+function startOffer() { const L = LEVELS[G.level]; offer = pickOffer(L.theme === 'trail' ? 'any' : L.theme);
+  const ch = offer.c.slice().sort(() => Math.random() - .5).map((c, i) => ({ icon: 'ABC'[i], label: tx(c[0], c[3]), good: !!c[1], onPick: () => { learn(c[2], c[4]); if (c[1]) { SFX.good(); G.score += 40; award('ask'); tip(tx(c[2], c[4]), 2800); } else { SFX.bad(); hurt(tx(c[2], c[4])); } } }));
+  choiceCard(tx(offer.t, offer.tEs), tx(offer.s, offer.sEs), ch); }
+function startMenu() { const L = LEVELS[G.level], kind = L.menuKind || 'rest', mine = S.allergens; const pool = DISHES.filter(d => d[6] === kind); const isSafe = d => !d[5].some(a => mine.includes(a));
+  const safe = pool.filter(isSafe), risky = pool.filter(d => !isSafe(d)); const picks = [pick(safe.length ? safe : pool)]; picks.push(...(risky.length >= 2 ? risky : pool).filter(d => !picks.includes(d)).sort(() => Math.random() - .5).slice(0, 2)); picks.sort(() => Math.random() - .5);
+  const lunch = kind === 'lunch';
+  const ch = picks.map(d => ({ icon: d[0], label: tx(d[1], d[2]), small: tx(d[3], d[4]), good: isSafe(d), onPick: () => { if (isSafe(d)) { SFX.good(); G.score += 40; award('menu'); const [en, es] = lunch ? ['Good pick! The lunch helper can double-check with you.', '¡Buena elección! El encargado del comedor puede revisar otra vez contigo.'] : ['Good pick! A grown-up should still tell the server about your allergy.', '¡Buena elección! Aun así, un adulto debe decirle al mesero sobre tu alergia.']; learn(en, es); tip(tx(en, es), 3000); }
+    else { SFX.bad(); const bad = d[5].filter(a => mine.includes(a)); const [en, es] = both(() => tx(`${d[1]} has ${listJoin(bad.map(alWord))} in it.`, `${d[2]} tiene ${listJoin(bad.map(alWord))}.`)); learn(en.replace(/\.$/, ''), es.replace(/\.$/, '')); hurt(tx(en, es)); } } }));
+  const [aen, aes] = lunch ? ['Grown-ups at school can help you check.', 'Los adultos de la escuela pueden ayudarte a revisar.'] : ['Telling the server about your allergy is a great habit.', 'Decirle al mesero sobre tu alergia es un gran hábito.'];
+  ch.push({ icon: '🙋', label: lunch ? tx('Ask the lunch helper what is safe for me', 'Preguntarle al encargado del comedor qué es seguro para mí') : tx('Ask my grown-up to tell the server about my allergy', 'Pedirle a mi adulto que le diga al mesero sobre mi alergia'), good: true, onPick: () => { SFX.good(); G.score += 40; award('menu'); award('ask'); learn(aen, aes); tip(tx(aen, aes), 3000); } });
+  choiceCard(lunch ? tx('Lunch line: pick a tray', 'Fila del comedor: elige una bandeja') : tx('Menu time: what will you order?', 'Hora del menú: ¿qué vas a pedir?'), tx('Read what is in each dish. Pick one that is safe for you, or ask a grown-up.', 'Lee qué tiene cada platillo. Elige uno seguro para ti o pregúntale a un adulto.'), ch); }
+/* ---------------- Music (soft, only while rolling) ---------------- */
+let song = null;
+const musicOn = () => { if (!song) song = E.music(E.SONGS.chill); };
+const musicOff = () => { if (song) { song.stop(); song = null; } };
 /* ---------------- Level flow ---------------- */
+function setScene(s) { G.scene = s; document.body.classList.toggle('playing', s === 'play'); }
 function startLevel(i) {
   if (resCard) { resCard.remove(); resCard = null; }
   G.level = i; const L = LEVELS[i]; buildWorld(L); buildCart(); for (const it of G.items.slice()) removeItem(it);
-  Object.assign(G, { scene: 'play', lane: 1, x: 0, t: 0, score: 0, hearts: 3, oops: 0, mood: 1, nextMystery: 10, got: 0, labels: 0, dodged: 0, learned: new Set(), paused: false, spawnT: 1, speed: L.speed, offersDone: 0, nextOfferAt: 8, drilled: false, combo: 0, shake: 0, done: false });
-  scanBtn.hidden = !S.duo; hud(); hideAll(); $('hud').hidden = false; tip((S.name ? S.name + '! ' : '') + T('go'), 2400);
+  const moments = [...Array(L.offers || 0).fill('o'), ...Array(L.menus || 0).fill('m')].sort(() => Math.random() - .5); if (L.menus) { moments.splice(moments.indexOf('m'), 1); moments.unshift('m'); } // menu levels open with a menu
+  Object.assign(G, { lane: 1, x: 0, t: 0, score: 0, hearts: 3, oops: 0, mood: 1, nextMystery: 10, got: 0, labels: 0, dodged: 0, learned: new Map(), paused: false, spawnT: 1, speed: L.speed, offersDone: 0, nextOfferAt: 8, moments, drilled: false, combo: 0, shake: 0, done: false, newStickers: [] }); usedOffers.clear(); setScene('play');
+  scanBtn.hidden = !S.duo; hud(); hideAll(); $('hud').hidden = false; drillStep = 0; setRescueMode(false); musicOn(); tip((S.name ? S.name + '! ' : '') + T('go'), 2400);
 }
 let resCard = null;
-function shareText() { const L = LEVELS[G.level]; return `${S.name || 'We'} cleared "${L.name}" in Snack Squad Safari: ${G.got} safe foods, ${G.labels} labels read, ${G.dodged} allergens dodged. Practicing ${S.allergens.map(a => AL[a].name.toLowerCase()).join(', ')} safety. ${location.href}`; }
+function shareText() { const L = LEVELS[G.level]; return tx(`${S.name || 'We'} cleared "${L.name}" in Snack Squad Safari: ${G.got} safe foods, ${G.labels} labels read, ${G.dodged} allergens dodged. Practicing ${S.allergens.map(alWord).join(', ')} safety. ${location.href}`, `${S.name || 'Completamos'} "${L.nameEs}" en Snack Squad Safari: ${G.got} comidas seguras, ${G.labels} etiquetas leídas, ${G.dodged} alérgenos esquivados. Practicando con: ${S.allergens.map(alWord).join(', ')}. ${location.href}`); }
 function endLevel(won) {
-  if (G.done) return; G.done = true; G.scene = 'results'; G.paused = true;
-  const L = LEVELS[G.level]; let stars = G.oops === 0 ? 3 : G.oops <= 2 ? 2 : 1; S.stars[G.level] = Math.max(S.stars[G.level], stars); persist();
-  const title = stars === 3 ? T('perfect') : T('clear'), es = S.lang === 'es', lvl = G.level;
+  if (G.done) return; G.done = true; setScene('results'); G.paused = true; musicOff();
+  const L = LEVELS[G.level]; let stars = G.oops === 0 ? 3 : G.oops <= 2 ? 2 : 1; S.stars[G.level] = Math.max(S.stars[G.level], stars); award('lv' + G.level); if (stars === 3) award('perfect'); if (S.stars.every(s => s > 0)) award('champ'); persist();
+  const title = stars === 3 ? T('perfect') : T('clear'), es = isES(), lvl = G.level;
   // E.results grants XP + coins to the shared hero profile (once, here) and builds the shared card; it stays invisible for 0.6 s like before
   if (resCard) resCard.remove();
-  const card = resCard = E.results({ gameId: 'safari', title, stats: [[T('rFed'), G.got], [T('rLabels'), G.labels], [T('rDodged'), G.dodged], [T('rScore'), G.score]], xp: 40 + G.got * 3, coins: 10 + G.got, best: G.score, bestLabel: T('bestScore'), onAgain: () => startLevel(lvl), share: shareText() });
+  const card = resCard = E.results({ gameId: 'safari', title, stats: [[T('rFed'), G.got], [T('rLabels'), G.labels], [T('rDodged'), G.dodged], [T('rScore'), G.score]], xp: 40 + G.got * 3, coins: 10 + G.got, best: G.score, bestLabel: T('bestScore'), onAgain: () => startLevel(lvl), share: shareText(), won: true });
   card.classList.add('wait');
   const box = card.querySelector('.ig-card'), kick = box.querySelector('.ig-kicker');
   const st = document.createElement('div'); st.className = 'bigstars'; st.id = 'resStars'; st.textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars); box.insertBefore(st, kick);
   if (es) kick.textContent = kick.textContent === 'NEW BEST' ? 'NUEVO RÉCORD' : 'NIVEL TERMINADO';
   const learnWrap = document.createElement('div'); learnWrap.innerHTML = `<p class="sub" style="margin-bottom:6px">${T('learned')}</p><div class="learn" id="resLearn"></div>`; box.querySelector('.ig-stats').after(learnWrap);
-  const learn = learnWrap.querySelector('.learn'); const items = [...G.learned]; (items.length ? items : ['Catch what is safe, dodge what is not, and read every ? label']).slice(0, 5).forEach(t => { const d = document.createElement('div'); d.textContent = '✓ ' + t; learn.appendChild(d); });
-  if (S.collection.length) { const col = document.createElement('div'); col.className = 'learn'; col.id = 'resCollect'; col.innerHTML = `<div>🎁 ${T('collection')}: ${S.collection.slice(-6).map(c => c.e + ' ' + c.n).join(' · ')} (${S.collection.length})</div>`; box.querySelector('.ig-reward').before(col); }
+  const learnBox = learnWrap.querySelector('.learn'); const items = [...G.learned.values()].map(v => es ? v[1] : v[0]); (items.length ? items : [tx('Catch what is safe, dodge what is not, and read every ? label', 'Atrapa lo seguro, esquiva lo que no, y lee cada etiqueta ?')]).slice(0, 5).forEach(t => { const d = document.createElement('div'); d.textContent = '✓ ' + t; learnBox.appendChild(d); });
+  if (G.newStickers.length) { const sk = document.createElement('div'); sk.className = 'learn'; sk.id = 'resStickers'; sk.innerHTML = `<div class="stkrow">📒 ${T('newStickers')}: ${G.newStickers.map(id => `<span title="${esc(tx(STK[id].en, STK[id].es))}">${STK[id].e}</span>`).join(' ')}</div>`; learnWrap.after(sk); }
+  if (S.collection.length) { const col = document.createElement('div'); col.className = 'learn'; col.id = 'resCollect'; col.innerHTML = `<div>🎁 ${T('collection')}: ${S.collection.slice(-6).map(c => c.e + ' ' + esc(treatName(c))).join(' · ')} (${S.collection.length})</div>`; box.querySelector('.ig-reward').before(col); }
   const again = card.querySelector('[data-a=again]'); again.id = 'btnAgain'; again.textContent = es ? 'Jugar de nuevo' : 'Play again';
   if (lvl < LEVELS.length - 1) { again.classList.add('ghost'); const nx = document.createElement('button'); nx.className = 'ig-btn'; nx.id = 'btnNext'; nx.textContent = es ? 'Siguiente nivel' : 'Next level'; nx.onclick = async () => { if (!(await E.platformStart('safari'))) return; card.remove(); startLevel(lvl + 1); }; again.after(nx); }
+  const bk = document.createElement('button'); bk.className = 'ig-btn ghost'; bk.id = 'btnResBook'; bk.textContent = '📒 ' + T('stickersT'); bk.onclick = () => { card.remove(); resCard = null; $('hud').hidden = true; setScene('menu'); openBook('levels'); };
   const sh = card.querySelector('[data-a=share]'); if (sh) { sh.id = 'btnShare'; sh.textContent = es ? '📣 Compartir mi carrera' : '📣 Share my run'; again.parentNode.appendChild(sh); } // share sits in the button row so the card fits a landscape phone
+  again.parentNode.appendChild(bk);
   SFX.win(); say(`${title} ${G.got} ${T('safeSnacks')}.`);
   setTimeout(() => { if (resCard !== card) return; $('hud').hidden = true; card.classList.remove('wait'); }, 600);
 }
 /* ---------------- Mystery Snack (earned, never bought) ---------------- */
-const TREATS = [['Golden Mango Pop', '🥭', 3], ['Rainbow Rice Cake', '🍘', 2], ['Sunflower Butter Cup', '🌻', 2], ['Coconut Cloud', '🥥', 2], ['Berry Blast Bar', '🫐', 1], ['Crispy Chickpea Pack', '🫘', 1], ['Watermelon Stars', '🍉', 1], ['Oat Moon Cookie', '🌙', 2], ['Dragonfruit Gem', '🐉', 3], ['Honey Pear Chips', '🍐', 1]];
+// Treat names are fictional; whether a treat fits the player's list is NOT modelled (listed for the allergist review).
+const TREATS = [['Golden Mango Pop', '🥭', 3, 'Paleta de mango dorado'], ['Rainbow Rice Cake', '🍘', 2, 'Pastelito de arroz arcoíris'], ['Sunflower Butter Cup', '🌻', 2, 'Copita de crema de girasol'], ['Coconut Cloud', '🥥', 2, 'Nube de coco'], ['Berry Blast Bar', '🫐', 1, 'Barra explosión de moras'], ['Crispy Chickpea Pack', '🫘', 1, 'Garbanzos crujientes'], ['Watermelon Stars', '🍉', 1, 'Estrellas de sandía'], ['Oat Moon Cookie', '🌙', 2, 'Galleta lunar de avena'], ['Dragonfruit Gem', '🐉', 3, 'Gema de pitahaya'], ['Honey Pear Chips', '🍐', 1, 'Chips de pera con miel']];
+const treatName = c => { const t = TREATS.find(x => x[0] === c.n); return isES() && t ? t[3] : c.n; };
 const RAR = ['', 'Common', 'Rare', 'Legendary'], RAR_ES = ['', 'Común', 'Raro', 'Legendario'];
-function mystery() { G.paused = true; const roll = Math.random(), want = roll < .1 ? 3 : roll < .4 ? 2 : 1; const t = pick(TREATS.filter(x => x[2] === want)); $('mysE').textContent = t[1]; $('mysName').textContent = t[0]; $('mysRar').textContent = (S.lang === 'es' ? RAR_ES : RAR)[t[2]] + (t[2] === 3 ? ' ✨' : ''); S.collection.push({ n: t[0], e: t[1], r: t[2] }); persist(); SFX.win(); say(`${T('mysteryTitle')}: ${t[0]}`); show('scrMystery'); }
-$('btnMysOk').addEventListener('click', () => { hide('scrMystery'); G.paused = false; });
+function mystery() { G.paused = true; const roll = Math.random(), want = roll < .1 ? 3 : roll < .4 ? 2 : 1; const t = pick(TREATS.filter(x => x[2] === want)); const c = { n: t[0], e: t[1], r: t[2] }; $('mysE').textContent = t[1]; $('mysName').textContent = treatName(c); $('mysRar').textContent = (isES() ? RAR_ES : RAR)[t[2]] + (t[2] === 3 ? ' ✨' : ''); S.collection.push(c); persist(); SFX.win(); say(`${T('mysteryTitle')}: ${treatName(c)}`); show('scrMystery'); award('mystery'); }
+$('btnMysOk').addEventListener('click', () => { hide('scrMystery'); if ($('scrDrill').hidden && $('scrOffer').hidden) G.paused = false; });
 /* ---------------- i18n (EN / ES) ---------------- */
+// Medical lines (drill card, rescue bubbles, call script) were EN-only; their ES versions are new translations, marked
+// "needs allergist + native review" in docs/audit-notes/safari.md.
 const STR = {
   buddy: ['Buddy', 'Amiguito'], safeSnacks: ['safe snacks', 'snacks seguros'], oops: ['let\'s look again', 'miremos otra vez'], lookAgain: ['No problem, let\'s look again.', 'No pasa nada, miremos otra vez.'], drillDone: ['Perfect. That is exactly the plan. Your buddy feels better.', 'Perfecto. Ese es el plan. Tu amiguito ya se siente mejor.'],
   perfect: ['Perfect run! Your buddy is glowing.', '¡Carrera perfecta! Tu amiguito brilla.'], clear: ['Level clear! Your buddy grew.', '¡Nivel completado! Tu amiguito creció.'], collection: ['Collection', 'Colección'], go: ['Feed your buddy. Catch what is safe, dodge your allergens.', 'Alimenta a tu amiguito. Atrapa lo seguro, esquiva tus alérgenos.'], labelPro: ['label pro', 'experto en etiquetas'],
   noPack: ['No package close by. Get in the lane of a ? box first.', 'No hay paquete cerca. Ponte en el carril de una caja ?.'], lucky: ['Lucky! That one was fine, but read the label next time.', '¡Suerte! Ese estaba bien, pero lee la etiqueta la próxima vez.'], skipSafe: ['That one was actually safe. Skipping when unsure is still a good habit.', 'Ese sí era seguro. Saltarlo cuando dudas sigue siendo un buen hábito.'],
-  helpHere: ['Help is here! You did everything right.', '¡Llegó la ayuda! Hiciste todo bien.'], kidHelp: ['I feel itchy and sick', 'Me pica y me siento mal'], gotYou: ['I am here. Let me see you.', 'Aquí estoy. Déjame verte.'], penTip: ['Blue cap off, orange to the outer thigh, hold', 'Tapa azul fuera, naranja al muslo, sostén'], penDone: ['Done! Now rub the spot for 10 seconds.', '¡Listo! Ahora frota el lugar 10 segundos.'], dialTip: ['Press 9, then 1, then 1', 'Marca 9, luego 1, luego 1'], tryKey: ['Not that one. Press', 'Ese no. Marca el'], nowCall: ['Now press the green call button.', 'Ahora presiona el botón verde de llamar.'], callScript: ['Say: my friend had an allergic reaction. We used the epinephrine. Please come to the Dawn Trail picnic area.', 'Di: mi amigo tuvo una reacción alérgica. Usamos la epinefrina. Vengan al área de picnic del sendero.'], lieTip: ['Lie down, legs up, stay together until help comes', 'Acuéstate, piernas arriba, juntos hasta que llegue la ayuda'], ingr: ['Ingredients', 'Ingredientes'], contains: ['Contains', 'Contiene'], mayContain: ['May contain', 'Puede contener'], askSafe: ['Is it safe for you?', '¿Es seguro para ti?'], options: ['Your choices', 'Tus opciones'], mysteryTitle: ['Mystery snack', 'Snack misterioso'],
+  helpHere: ['Help is here! You did everything right.', '¡Llegó la ayuda! Hiciste todo bien.'], kidHelp: ['I feel itchy and sick', 'Me pica y me siento mal'], gotYou: ['I am here. Let me see you.', 'Aquí estoy. Déjame verte.'], penTip: ['Blue cap off, orange to the outer thigh, hold', 'Tapa azul fuera, naranja al muslo, sostén'], penDone: ['Done! Now rub the spot for 10 seconds.', '¡Listo! Ahora frota el lugar 10 segundos.'], dialTip: ['Press 9, then 1, then 1', 'Marca 9, luego 1, luego 1'], tryKey: ['Not that one. Press', 'Ese no. Marca el'], nowCall: ['Now press the green call button.', 'Ahora presiona el botón verde de llamar.'], lieTip: ['Lie down, legs up, stay together until help comes', 'Acuéstate, piernas arriba, juntos hasta que llegue la ayuda'], ingr: ['Ingredients', 'Ingredientes'], contains: ['Contains', 'Contiene'], mayContain: ['May contain', 'Puede contener'], askSafe: ['Is it safe for you?', '¿Es seguro para ti?'], options: ['Your choices', 'Tus opciones'], mysteryTitle: ['Mystery snack', 'Snack misterioso'],
   rFed: ['snacks fed', 'snacks dados'], rLabels: ['labels read', 'etiquetas leídas'], rDodged: ['allergens dodged', 'alérgenos esquivados'], rScore: ['score', 'puntos'], bestScore: ['Best score', 'Mejor puntuación'], learned: ['Things you learned', 'Lo que aprendiste'],
-  noRead: ['You grabbed a package without reading the label, and it had your allergen in it.', 'Tomaste un paquete sin leer la etiqueta y tenía tu alérgeno.'], alwaysRead: ['Always read the label on packaged food', 'Siempre lee la etiqueta de los empaques']
+  noRead: ['You grabbed a package without reading the label, and it had your allergen in it.', 'Tomaste un paquete sin leer la etiqueta y tenía tu alérgeno.'], alwaysRead: ['Always read the label on packaged food', 'Siempre lee la etiqueta de los empaques'],
+  holdIdle: ['Hold on the thigh: 3… 2… 1…', 'Sostén en el muslo: 3… 2… 1…'], holdN: ['Hold…', 'Sostén…'], holdDone: ['Done!', '¡Listo!'], calling: ['Calling 911…', 'Llamando al 911…'],
+  readLabel: ['Read the label', 'Lee la etiqueta'], ingrUp: ['INGREDIENTS', 'INGREDIENTES'], containsUp: ['CONTAINS', 'CONTIENE'], scanner: ['Scanner', 'Escáner'], newSticker: ['New sticker!', '¡Nueva calcomanía!'], newStickers: ['New stickers', 'Calcomanías nuevas'], stickersT: ['Sticker book', 'Álbum de calcomanías'],
+  player: ['Player', 'Jugador'], newPlayer: ['New player', 'Nuevo jugador'], removeP: ['Remove this player', 'Quitar a este jugador'], removeSure: ['Tap again to remove', 'Toca otra vez para quitar'], bookTap: ['Tap a sticker to hear what it means.', 'Toca una calcomanía para escuchar qué significa.'], notYet: ['Not yet', 'Todavía no'], got: ['stickers', 'calcomanías'], treatsT: ['Mystery snacks', 'Snacks misteriosos'], none: ['none yet', 'ninguno todavía'], rider: ['Rider', 'Jinete']
 };
-const T = k => STR[k] ? STR[k][S.lang === 'es' ? 1 : 0] : k;
-const UI_ES = { tag: 'Un juego Allergy Safe Safari · niños + adultos', lead: 'Tu amiguito tiene hambre. Rueda por el pasillo 3D, atrapa los snacks seguros para <b>ti</b>, lee las etiquetas como detective y practica el plan de rescate con un adulto. Alimenta a tu amiguito y míralo crecer.', play: 'A jugar', how: 'Cómo funciona', disc: 'Snack Squad Safari enseña hábitos, no medicina. Sigue siempre el plan de acción de tu médico o alergólogo.',
-  btnSafe: '✅ Seguro, lo tomo', btnNotSafe: '🚫 No es seguro para mí', btnSetupGo: 'Elegir nivel', btnSetupBack: 'Atrás', btnLvBack: 'Atrás', btnLvGo: 'Empezar', btnResume: 'Seguir', btnQuit: 'Volver a niveles', btnAgain: 'Jugar de nuevo', btnNext: 'Siguiente nivel', btnShare: '📣 Compartir mi carrera', btnMysOk: 'Añadir a mi colección', drillA: '🗣️ "¡Necesito ayuda!"', drillC: '📞 Llamar al 911', btnHowBack: 'Entendido', btnRead: '🔍 Leer etiqueta', btnSay: '🔊 Léemelo', btnOffSay: '🔊 Leer las opciones', btnDrillSay: '🔊 Leer este paso', voiceOn: '<span class="e">🗣️</span>Leer todo en voz alta', voiceOff: '<span class="e">🤫</span>Silencio, yo leo' };
+const T = k => STR[k] ? STR[k][isES() ? 1 : 0] : k;
+const UI_ES = { tag: 'Un juego Allergy Safe Safari · niños + adultos', lead: 'Tu amiguito tiene hambre. Rueda por el pasillo 3D, atrapa los snacks seguros para <b>ti</b>, lee las etiquetas como detective y practica el plan de rescate con un adulto. Alimenta a tu amiguito y míralo crecer.', play: 'A jugar', how: 'Cómo funciona', disc: 'Snack Squad Safari enseña hábitos, no medicina. Sigue siempre el plan de acción de tu médico o alergólogo.', note: '⚕️ Juego de práctica — no es consejo médico. Sigue el plan de acción para alergias de tu médico.',
+  btnSafe: '✅ Seguro, lo tomo', btnNotSafe: '🚫 No es seguro para mí', btnSetupGo: 'Elegir nivel', btnSetupBack: 'Atrás', btnLvBack: 'Atrás', btnLvGo: 'Empezar', btnResume: 'Seguir', btnQuit: 'Volver a niveles', btnPauseHub: '⌂ Inicio', btnMysOk: 'Añadir a mi colección', drillA: '🗣️ "¡Necesito ayuda!"', drillC: '📞 Llamar al 911', btnHowBack: 'Entendido', btnRead: '🔍 Leer etiqueta', btnSay: '🔊 Léemelo', btnOffSay: '🔊 Leer las opciones', btnDrillSay: '🔊 Leer este paso', btnHowSay: '🔊 Léemelo', btnBook: '📒 Álbum', btnLvBook: '📒 Álbum', btnBookBack: 'Atrás', voiceOn: '<span class="e">🗣️</span>Leer todo en voz alta', voiceOff: '<span class="e">🤫</span>Silencio, yo leo', modeSolo: '<span class="e">🧒</span>Solo yo', modeDuo: '<span class="e">🧒🧑</span>Yo + un adulto', scan: '🧑‍🍳 Escáner <small>(mantén)</small>',
+  howT: 'Cómo funciona', how1: '🥚 Tu <b>amiguito</b> va en el carrito. Atrapa snacks seguros para ti y dáselos; nace y crece mientras avanzas.', how2: '🛒 Muévete a la izquierda y derecha para <b>atrapar comida segura</b> y esquivar comidas con tus alérgenos. Los errores solo significan "miremos otra vez".', how3: '📦 Los alimentos empacados muestran un <b>?</b>. Presiona <b>Leer etiqueta</b> para ver los ingredientes y decidir: seguro o no seguro. Toca la etiqueta para agrandar la letra.', how4: '🧑‍🍳 Un adulto puede jugar como <b>Escáner</b>: mantén el botón morado (o Shift) para ver pistas de la etiqueta antes.', how5: '🚨 <b>Rescate del amiguito:</b> si se cuela un alérgeno, tu amiguito te necesita. Practica el plan de 3 pasos: avisar a un adulto, autoinyector, llamar al 911. Con calma y claridad.', how6: '🎁 Cada 10 snacks seguros se abre un <b>Snack misterioso</b> para tu colección. Lo que aprendes va a tu <b>álbum de calcomanías</b>.', how7: '🎮 Teclado: A/D o ← → para moverte, Espacio para leer, Shift para el Escáner. Control: palanca, A lee, B escanea. Táctil: los botones grandes. 📱 Un teléfono también sirve de control.', howNote: '⚕️ Juego de práctica — no es consejo médico. Sigue el plan de acción para alergias de tu médico.',
+  whoT: '¿Quién juega?', pickAl: 'Elige las alergias para practicar', pickAlNote: 'Adultos: elijan los mismos alérgenos del plan de acción para alergias de su hijo.', helpT: 'Ayuda', modeT: 'Modo', avT: 'Elige tu personaje', lvT: '¿A dónde vamos?', pauseT: 'Pausa', lblFoot: 'Cuando no estés seguro, lo más seguro es no comerlo y preguntarle a un adulto.', lblZoom: 'Toca la etiqueta para agrandar la letra.', mysT: 'Snack misterioso', bookT: 'Álbum de calcomanías',
+  drillTitle: '¡Rescate del amiguito!', drillSub: 'Picazón en la boca, ronchas, un labio hinchado, dificultad para respirar: esas son las señales. Mantén la calma y sigue el plan, en orden.', st1b: 'Avísale a un adulto enseguida', st1s: 'Di: "Comí algo y me siento mal."', st2b: 'Usa el autoinyector de epinefrina', st2s: 'En la parte externa del muslo, sostenlo ahí y cuenta.', st3b: 'Llama al 911', st3s: 'Aunque te sientas mejor. Luego acuéstate y espera.', drillD: '🛏️ Acuéstate, piernas arriba, esperen juntos', drillFoot: 'Solo es práctica. Tu plan real viene de tu médico o alergólogo; adultos, tengan dos autoinyectores cerca.' };
 const UI_EN = {};
-function applyLang() { document.querySelectorAll('[data-i]').forEach(el => { const k = el.dataset.i; if (!UI_EN[k]) UI_EN[k] = el.innerHTML; el.innerHTML = S.lang === 'es' ? UI_ES[k] : UI_EN[k]; }); Object.keys(UI_ES).forEach(k => { const el = $(k); if (!el || el.dataset.i) return; if (!UI_EN[k]) UI_EN[k] = el.innerHTML; el.innerHTML = S.lang === 'es' ? UI_ES[k] : UI_EN[k]; }); $('btnLang').innerHTML = `<span class="e">🌎</span>${S.lang === 'es' ? 'English' : 'Español'}`; document.documentElement.lang = S.lang; }
-$('btnLang').addEventListener('click', () => { S.lang = S.lang === 'es' ? 'en' : 'es'; persist(); applyLang(); });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+function applyLang() { document.querySelectorAll('[data-i]').forEach(el => { const k = el.dataset.i; if (!UI_EN[k]) UI_EN[k] = el.innerHTML; el.innerHTML = isES() && UI_ES[k] ? UI_ES[k] : UI_EN[k]; }); Object.keys(UI_ES).forEach(k => { const el = $(k); if (!el || el.dataset.i) return; if (!UI_EN[k]) UI_EN[k] = el.innerHTML; el.innerHTML = isES() ? UI_ES[k] : UI_EN[k]; }); $('btnLang').innerHTML = `<span class="e">🌎</span>${isES() ? 'English' : 'Español'}`; $('kidName').placeholder = tx('Your name (optional)', 'Tu nombre (opcional)'); document.documentElement.lang = S.lang; hbTxt.textContent = T('holdIdle'); renderToggles(); if (!$('scrSetup').hidden) refreshSetup(); if (!$('scrLevels').hidden) buildLevels(); if (!$('scrBook').hidden) buildBook(); if (G.scene === 'play') hud(); }
+$('btnLang').addEventListener('click', () => { S.lang = isES() ? 'en' : 'es'; persist(); applyLang(); say(tx('English', 'Español')); });
+// the shared settings panel (hub / other games) can change language, voice or sound: follow it
+addEventListener('inoa:settings', () => { const pf = E.profile(); const l = pf.lang === 'es' ? 'es' : 'en'; S.voice = pf.voice !== false; S.sound = pf.sound !== false; if (l !== S.lang) { S.lang = l; applyLang(); } else renderToggles(); });
+/* ---------------- Toggles: sound, camera sway, read aloud, label highlights, big text, high contrast ---------------- */
+const TOG = { sound: ['🔊', '🔇', 'Sound', 'Sonido'], motion: ['🎢', '🎢', 'Camera sway', 'Movimiento de cámara'], voice: ['🗣️', '🤫', 'Read aloud', 'Leer en voz alta'], hints: ['🔦', '🕵️', 'Label highlights', 'Resaltar en etiquetas'], big: ['🔠', '🔡', 'Big text', 'Letra grande'], hc: ['🌗', '🌗', 'High contrast', 'Alto contraste'] };
+function renderToggles() { document.querySelectorAll('[data-t]').forEach(el => { const k = el.dataset.t, d = TOG[k], on = !!S[k]; el.classList.toggle('on', on); el.setAttribute('aria-pressed', String(on)); el.innerHTML = `<span class="e">${on ? d[0] : d[1]}</span>${tx(d[2], d[3])}: ${on ? tx('on', 'sí') : tx('off', 'no')}`; }); document.body.classList.toggle('big', !!S.big); document.body.classList.toggle('hc', !!S.hc); $('voiceOn').classList.toggle('on', S.voice); $('voiceOff').classList.toggle('on', !S.voice); }
+document.addEventListener('click', e => { const el = e.target.closest('[data-t]'); if (!el) return; const k = el.dataset.t; S[k] = !S[k]; persist(); renderToggles(); SFX.pop(); if (k === 'voice' && S.voice) say(tx('I will read everything out loud for you.', 'Te leeré todo en voz alta.')); if (k === 'sound') { musicOff(); if (S.sound && G.scene === 'play' && !R.active) musicOn(); } if (k === 'big' || k === 'hc') say(tx(TOG[k][2], TOG[k][3])); });
 /* ================= Update / render ================= */
 let camSway = 0, wheelSpin = 0;
 function animateRig(rig, t, speed, lean, mode) {
@@ -636,27 +879,29 @@ function animateRig(rig, t, speed, lean, mode) {
     if (rig.Hips) rig.Hips.position.y = (rig.Hips.userData.y0 ?? (rig.Hips.userData.y0 = rig.Hips.position.y)) + Math.abs(Math.sin(ph)) * .05;
   }
 }
+function scrollWorld(v, dt) { for (const g of scrollers) { g.position.z += v * dt * (g.userData.boat ? .6 : 1); if (g.position.z > 14) g.position.z -= 128; if (g.userData.sign) g.visible = g.position.z < -4; } for (const tg of tuftGroups) { tg.position.z += v * dt; if (tg.position.z > 68) tg.position.z -= 256; } updateWeather(dt, v); for (const b of balloons) { b.rotation.z = Math.sin(G.t * 1.3 + b.userData.ph) * .06; b.rotation.x = Math.cos(G.t * 1.1 + b.userData.ph) * .04; } }
 function update(dt) {
   if (R.active) { rescueUpdate(dt); if (water) water.material.uniforms.uTime.value += dt; return; }
   if (G.scene !== 'play' || G.paused) return;
   const L = LEVELS[G.level]; G.t += dt;
   G.x = lerp(G.x, LANES[G.lane], 1 - Math.pow(.0005, dt)); const lean = (LANES[G.lane] - G.x); G.cheer = Math.max(0, (G.cheer || 0) - dt * 1.6); G.chomp = Math.max(0, (G.chomp || 0) - dt * 2.5); cart.position.x = G.x; cart.rotation.z = lean * .1; cart.rotation.y = lean * -.09; cart.position.y = Math.abs(Math.sin(G.t * 14)) * .025 + (G.chomp || 0) * .08;
-  const v = G.speed * (1 + Math.min(.6, G.t / 90)); wheelSpin += v * dt / .3; cart.traverse(o => { if (o.name === 'wheel') o.rotation.x = -wheelSpin; });
+  const v = G.speed * (1 + Math.min(.6, G.t / 90)); wheelSpin += v * dt / .3; for (const w of wheels) w.rotation.x = -wheelSpin;
   animateRig(kidRig, G.t, 9, lean, 'ride'); animateRig(grownRig, G.t, 7.5, lean, 'walk');
   const bd = cart.getObjectByName('buddy'); if (bd) { const hatched = G.got >= 4; bd.getObjectByName('egg').visible = !hatched; bd.getObjectByName('crit').visible = hatched; const sc = hatched ? .8 + Math.min(1.2, buddyLevel() * .18) : 1; const chomp = G.chomp || 0; bd.scale.set(sc * (1 + chomp * .18), sc * (1 - chomp * .12), sc * (1 + chomp * .18)); bd.position.y = 1.25 + Math.abs(Math.sin(G.t * 6)) * (hatched ? .14 : .03); bd.rotation.z = Math.sin(G.t * 4) * .08 * (G.mood + .3); bd.rotation.y = hatched ? Math.sin(G.t * 1.5) * .3 : G.t * .8; }
-  for (const g of scrollers) { g.position.z += v * dt * (g.userData.boat ? .6 : 1); if (g.position.z > 14) g.position.z -= 128; } for (const tg of tuftGroups) { tg.position.z += v * dt; if (tg.position.z > 68) tg.position.z -= 256; } updateWeather(dt, v);
+  scrollWorld(v, dt);
   if (water) water.material.uniforms.uTime.value = G.t;
   for (const l of lanterns) l.material.emissiveIntensity = (L.night ? 1.8 : .25) + Math.sin(G.t * 6 + l.position.z) * .15;
   G.spawnT -= dt; if (G.spawnT <= 0) { spawn(); if (Math.random() < .35) spawn(); G.spawnT = rnd(.9, 1.5) * (7 / v) * 1.6; }
-  if (G.offersDone < L.offers && G.t > G.nextOfferAt) { G.offersDone++; G.nextOfferAt = G.t + 14; startOffer(); return; }
+  if (G.moments.length && G.t > G.nextOfferAt) { const m = G.moments.shift(); G.offersDone++; G.nextOfferAt = G.t + 14; if (m === 'm') startMenu(); else startOffer(); return; }
+  if (G.scan && S.duo) award('team');
   for (const it of G.items.slice()) {
     it.z += v * dt; it.mesh.position.z = it.z; it.mesh.rotation.y += it.spin * dt; it.mesh.position.y = .35 + Math.sin(G.t * 3 + it.lane) * .06; const tg = it.mesh.getObjectByName('tag'); if (tg) { tg.material.opacity = clamp((it.z + 55) / 20, 0, 1); tg.scale.set(4, 1.25, 1).multiplyScalar(it.lane === G.lane ? 1.15 : .95); }
     if (G.scan && it.kind === 'pack' && !it.scanned && it.z > -30 && it.z < -4) { it.scanned = true; SFX.scan(); const a = it.label.unsafe; const ring = new THREE.Mesh(new THREE.RingGeometry(.75, .95, 28), new THREE.MeshBasicMaterial({ color: a ? 0xff6b6b : 0x2fbf8a, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.position.y = -.15; it.mesh.add(ring); }
     if (!it.taken && it.z > -1.2 && it.z < 1.2 && it.lane === G.lane) {
       it.taken = true;
-      if (it.kind === 'pack') { if (!it.read) { if (it.unsafe) { G.combo = 0; hurt(T('noRead')); G.learned.add(T('alwaysRead')); burst(G.x, 1.4, 0, 0xff6b6b); } else { G.score += 5; tip(T('lucky'), 2000); burst(G.x, 1.4, 0, 0xffd166, 8); } } }
-      else if (it.unsafe) { G.combo = 0; hurt(`${it.name} has ${it.al.filter(a => S.allergens.includes(a)).map(a => AL[a].name.toLowerCase()).join(' and ')} in it.`); G.learned.add(`${it.name} contains ${it.al.filter(a => S.allergens.includes(a)).map(a => AL[a].name.toLowerCase()).join(', ')}`); burst(G.x, 1.4, 0, 0xff6b6b); }
-      else { G.got++; G.combo++; const bonus = Math.min(5, G.combo) * 2; G.score += 10 + bonus; floatText(`+${10 + bonus} ${it.name}`); SFX.good(); G.mood = Math.min(1, G.mood + .08); burst(G.x, 1.4, 0, 0xffe9a8); G.cheer = 1; G.chomp = 1; if (G.combo % 3 === 1) say(it.name, { interrupt: false }); }
+      if (it.kind === 'pack') { if (!it.read) { if (it.unsafe) { G.combo = 0; hurt(T('noRead')); learn(STR.alwaysRead[0], STR.alwaysRead[1]); burst(G.x, 1.4, 0, 0xff6b6b); } else { G.score += 5; tip(T('lucky'), 2000); burst(G.x, 1.4, 0, 0xffd166, 8); } } }
+      else if (it.unsafe) { G.combo = 0; const mineAl = it.al.filter(a => S.allergens.includes(a)); const f = it.f; const [en, es] = both(() => tx(`${f[0]} has ${listJoin(mineAl.map(alWord))} in it.`, `${f[4]} tiene ${listJoin(mineAl.map(alWord))}.`)); const [len, les] = both(() => tx(`${f[0]} contains ${mineAl.map(alWord).join(', ')}`, `${f[4]} contiene ${mineAl.map(alWord).join(', ')}`)); hurt(isES() ? es : en); learn(len, les); burst(G.x, 1.4, 0, 0xff6b6b); }
+      else { G.got++; G.combo++; const bonus = Math.min(5, G.combo) * 2; G.score += 10 + bonus; const nm = foodName(it.f); floatText(`+${10 + bonus} ${nm}`); SFX.good(); G.mood = Math.min(1, G.mood + .08); burst(G.x, 1.4, 0, 0xffe9a8); G.cheer = 1; G.chomp = 1; if (G.combo % 3 === 1) say(nm, { interrupt: false }); }
       hud(); removeItem(it); if (G.got >= L.goal) { endLevel(true); return; } if (G.got >= G.nextMystery) { G.nextMystery += 10; mystery(); return; } continue;
     }
     if (it.z > 2.5) { if (!it.taken) { if (it.unsafe && it.kind === 'food') { G.dodged++; G.score += 3; } if (it.kind === 'pack' && !it.read && it.unsafe) G.dodged++; } removeItem(it); }
@@ -667,11 +912,11 @@ function update(dt) {
 function render(dt) {
   if (window.__camLock) return;
   if (R.active) { rescueCamera(dt); return; }
-  camera.userData.look = null; camSway = S.motion ? Math.sin(G.t * 1.1) * .14 : 0; G.shake = Math.max(0, G.shake - dt * 2.2); const sh = G.shake * .25;
+  camera.userData.look = null; camSway = S.motion && !E.reducedMotion() ? Math.sin(G.t * 1.1) * .14 : 0; G.shake = Math.max(0, G.shake - dt * 2.2); const sh = E.reducedMotion() ? 0 : G.shake * .25;
   const portrait = innerHeight > innerWidth; camera.position.set(G.x * .35 + camSway + rnd(-sh, sh), (portrait ? 6.2 : 5.2) + rnd(-sh, sh), portrait ? 11 : 9.5); camera.lookAt(G.x * .5, 1.3, -9);
   sunL.position.set(G.x + 8, 16, 6); sunL.target.position.set(G.x, 0, -8); sunL.target.updateMatrixWorld();
 }
-/* ---------- input polling (keyboard + gamepad via the engine) ---------- */
+/* ---------- input polling (keyboard + gamepad + phones via the engine) ---------- */
 let padDir = 0, padHold = false;
 function pollInput() {
   const st = input.poll(); let used = false;
@@ -680,87 +925,85 @@ function pollInput() {
     if (st.aPressed || st.cPressed) { tryRead(); used = true; }
     if (st.pausePressed) { pause(); used = true; }
   } else padDir = 0;
-  if (st.pausePressed && !used && !$('scrPause').hidden) { hide('scrPause'); G.paused = false; used = true; }
+  if (st.pausePressed && !used && !$('scrPause').hidden) { resume(); used = true; }
   const wantScan = S.duo && G.scene === 'play' && (st.b || touchScan); if (wantScan !== G.scan) scanOn(wantScan);
-  // rescue hold step: hold Space / gamepad A as well as the on-screen button
+  // rescue hold step: hold Space / gamepad A / phone A as well as the on-screen button
   if (drillStep === 2) { if (st.a && !holdOn && !padHold) { padHold = true; holdStart(); } else if (!st.a && padHold) { padHold = false; if (holdOn) holdEnd(); } used = used || st.a; } else padHold = false;
   padMenu(used);
 }
-// Gamepad menu navigation (local helper; the engine has none): d-pad/stick moves a focus ring over the open card's buttons, A presses.
+// Gamepad + phone menu navigation (local helper): d-pad/stick moves a focus ring over the open card's buttons, A presses.
 // With nothing focused yet, A presses the card's main button (on the label card that is "Not safe for me", the safe default).
 const GP = { prev: {}, el: null };
 function padMenu(consumed) {
-  const pads = navigator.getGamepads ? [...navigator.getGamepads()].filter(Boolean) : []; if (!pads.length) return;
+  const pads = navigator.getGamepads ? [...navigator.getGamepads()].filter(Boolean) : []; let phones = []; try { phones = E.net.role === 'host' ? E.net.pads('pad') : []; } catch (e) { }
+  if (!pads.length && !phones.length) return;
   const cur = { l: false, r: false, u: false, d: false, a: false };
   for (const p of pads) { const ax = p.axes[0] || 0, ay = p.axes[1] || 0; cur.l ||= ax < -.5 || !!p.buttons[14]?.pressed; cur.r ||= ax > .5 || !!p.buttons[15]?.pressed; cur.u ||= ay < -.5 || !!p.buttons[12]?.pressed; cur.d ||= ay > .5 || !!p.buttons[13]?.pressed; cur.a ||= !!p.buttons[0]?.pressed; }
-  const edge = k => cur[k] && !GP.prev[k]; const prev = GP.prev; GP.prev = cur; if (consumed) return;
+  for (const pl of phones) { const n = E.net.pad(pl.slot); if (!n) continue; cur.l ||= n.x < -.5; cur.r ||= n.x > .5; cur.u ||= n.y < -.5; cur.d ||= n.y > .5; cur.a ||= !!n.a; }
+  const edge = k => cur[k] && !GP.prev[k]; GP.prev = cur; if (consumed) return;
   const open = [...document.querySelectorAll('#app > .screen:not([hidden]), .ig-screen')]; const scr = open[open.length - 1];
   if (!scr) { if (GP.el) GP.el.classList.remove('gpf'); GP.el = null; return; }
   const btns = [...scr.querySelectorAll('button, a.btn, a.ig-btn')].filter(b => !b.hidden && !b.disabled && b.offsetParent !== null); if (!btns.length) return;
   let i = btns.indexOf(GP.el); const step = (edge('r') || edge('d')) ? 1 : (edge('l') || edge('u')) ? -1 : 0;
-  if (step) { i = i < 0 ? 0 : (i + step + btns.length) % btns.length; if (GP.el) GP.el.classList.remove('gpf'); GP.el = btns[i]; GP.el.classList.add('gpf'); GP.el.focus({ preventScroll: false }); }
+  if (step) { i = i < 0 ? 0 : (i + step + btns.length) % btns.length; if (GP.el) GP.el.classList.remove('gpf'); GP.el = btns[i]; GP.el.classList.add('gpf'); GP.el.focus({ preventScroll: false }); GP.el.scrollIntoView({ block: 'nearest' }); }
   if (edge('a')) { const b = i >= 0 ? btns[i] : (btns.find(x => x.matches('.btn:not(.ghost), .ig-btn:not(.ghost)')) || btns[0]); if (b && b.id !== 'drillB') b.click(); }
-  void prev;
 }
 /* ---------- one frame: input, simulation, rescue hold, particles, camera, title idle ---------- */
 function frame(dt) {
   pollInput(); update(dt); drillTick(); updateSparks(dt); render(dt);
-  if (G.scene === 'title' || G.scene === 'menu') { G.t += dt; for (const g of scrollers) { g.position.z += 2.5 * dt; if (g.position.z > 14) g.position.z -= 128; } for (const tg of tuftGroups) { tg.position.z += 2.5 * dt; if (tg.position.z > 68) tg.position.z -= 256; } updateWeather(dt, 2.5); if (water) water.material.uniforms.uTime.value = G.t; animateRig(kidRig, G.t, 3, 0, 'ride'); }
+  if (G.scene === 'title' || G.scene === 'menu') { G.t += dt; scrollWorld(2.5, dt); if (water) water.material.uniforms.uTime.value = G.t; animateRig(kidRig, G.t, 3, 0, 'ride'); }
 }
 /* ---------------- Screens ---------------- */
-const SCREENS = ['scrTitle', 'scrHow', 'scrSetup', 'scrLevels', 'scrLabel', 'scrOffer', 'scrDrill', 'scrPause', 'scrMystery'];
+const SCREENS = ['scrTitle', 'scrHow', 'scrSetup', 'scrLevels', 'scrLabel', 'scrOffer', 'scrDrill', 'scrPause', 'scrMystery', 'scrBook'];
 function hideAll() { SCREENS.forEach(s => { $(s).hidden = true; }); }
 function show(id) { $(id).hidden = false; } function hide(id) { $(id).hidden = true; }
-function goTitle() { if (resCard) { resCard.remove(); resCard = null; } G.scene = 'title'; hideAll(); $('hud').hidden = true; show('scrTitle'); }
-$('btnPlay').addEventListener('click', () => { ac(); if (voiceOK) speechSynthesis.getVoices(); G.scene = 'menu'; hideAll(); show('scrSetup'); });
+function goTitle() { if (resCard) { resCard.remove(); resCard = null; } setScene('title'); musicOff(); hideAll(); $('hud').hidden = true; show('scrTitle'); }
+$('btnPlay').addEventListener('click', () => { ac(); if (voiceOK) speechSynthesis.getVoices(); setScene('menu'); hideAll(); refreshSetup(); show('scrSetup'); say(tx('Who is playing? Pick your allergies, then choose a level.', '¿Quién juega? Elige tus alergias y luego un nivel.')); });
 $('btnHow').addEventListener('click', () => { hideAll(); show('scrHow'); }); $('btnHowBack').addEventListener('click', goTitle);
-// setup
+$('btnHowSay').addEventListener('click', () => say([...document.querySelectorAll('#scrHow .learn > div')].map(d => d.textContent).join(' ')));
+/* setup: player profiles, avatar, rider, allergens, help, mode */
 const alBox = $('allergens');
-ALLERGENS.forEach(a => { const b = document.createElement('button'); b.className = 'chip' + (S.allergens.includes(a.id) ? ' on' : ''); b.innerHTML = `<span class="e">${a.e}</span>${a.name}`; b.addEventListener('click', () => { const i = S.allergens.indexOf(a.id); if (i >= 0) { if (S.allergens.length > 1) S.allergens.splice(i, 1); } else S.allergens.push(a.id); b.classList.toggle('on', S.allergens.includes(a.id)); persist(); SFX.pop(); }); alBox.appendChild(b); });
-$('kidName').value = S.name; $('kidName').addEventListener('input', e => { S.name = e.target.value.trim(); persist(); });
-const setMode = d => { S.duo = d; $('modeSolo').classList.toggle('on', !d); $('modeDuo').classList.toggle('on', d); persist(); }; setMode(S.duo);
-$('modeSolo').addEventListener('click', () => setMode(false)); $('modeDuo').addEventListener('click', () => setMode(true));
-const setVoice = v => { S.voice = v; $('voiceOn').classList.toggle('on', v); $('voiceOff').classList.toggle('on', !v); persist(); }; setVoice(S.voice); $('voiceOn').addEventListener('click', () => { setVoice(true); say(S.lang === 'es' ? 'Te leeré todo en voz alta.' : 'I will read everything out loud for you.'); }); $('voiceOff').addEventListener('click', () => setVoice(false));
+function buildAllergenChips() { alBox.innerHTML = ''; ALLERGENS.forEach(a => { const b = document.createElement('button'); b.className = 'chip' + (S.allergens.includes(a.id) ? ' on' : ''); b.setAttribute('aria-pressed', String(S.allergens.includes(a.id))); b.innerHTML = `<span class="e">${a.e}</span>${alName(a.id)}`; b.addEventListener('click', () => { const i = S.allergens.indexOf(a.id); if (i >= 0) { if (S.allergens.length > 1) S.allergens.splice(i, 1); else tip(tx('Pick at least one to practice with.', 'Elige al menos uno para practicar.'), 1800); } else S.allergens.push(a.id); b.classList.toggle('on', S.allergens.includes(a.id)); b.setAttribute('aria-pressed', String(S.allergens.includes(a.id))); persist(); SFX.pop(); say(alName(a.id)); }); alBox.appendChild(b); }); }
+function buildProfiles() { const box = $('profiles'); box.innerHTML = ''; S.profiles.forEach((p, i) => { const b = document.createElement('button'); b.className = 'chip prof' + (i === S.cur ? ' on' : ''); b.setAttribute('aria-pressed', String(i === S.cur)); b.innerHTML = `<span class="e">${p.avatar}</span>${esc(p.name) || T('player') + ' ' + (i + 1)}`; b.addEventListener('click', () => { if (S.cur === i) return; S.cur = i; persist(); refreshSetup(); buildCart(); SFX.pop(); say(p.name || T('player') + ' ' + (i + 1)); }); box.appendChild(b); });
+  if (S.profiles.length < 6) { const b = document.createElement('button'); b.className = 'chip prof add'; b.id = 'btnAddProf'; b.innerHTML = `<span class="e">➕</span>${T('newPlayer')}`; b.addEventListener('click', () => { S.profiles.push(newProfile({ avatar: AVATARS[S.profiles.length % AVATARS.length] })); S.cur = S.profiles.length - 1; persist(); refreshSetup(); buildCart(); SFX.pop(); say(T('newPlayer')); }); box.appendChild(b); } }
+function buildAvatars() { const box = $('avatars'); box.innerHTML = ''; AVATARS.forEach(a => { const b = document.createElement('button'); b.className = 'av' + (S.avatar === a ? ' on' : ''); b.textContent = a; b.setAttribute('aria-label', 'avatar ' + a); b.addEventListener('click', () => { S.avatar = a; persist(); buildAvatars(); buildProfiles(); SFX.pop(); }); box.appendChild(b); });
+  [['skater-female', '👧'], ['skater-male', '👦']].forEach(([m, e], i) => { const b = document.createElement('button'); b.className = 'av rider' + (S.kid === m ? ' on' : ''); b.innerHTML = `${e}<small>${T('rider')} ${i + 1}</small>`; b.addEventListener('click', () => { S.kid = m; persist(); buildAvatars(); buildCart(); SFX.pop(); }); box.appendChild(b); }); }
+let delArm = 0;
+function refreshSetup() { buildProfiles(); $('kidName').value = S.name; buildAvatars(); buildAllergenChips(); const del = $('btnDelProf'); del.hidden = S.profiles.length < 2; delArm = 0; del.textContent = '🗑️ ' + T('removeP'); setMode(S.duo, true); renderToggles(); }
+$('btnDelProf').addEventListener('click', () => { const del = $('btnDelProf'); if (!delArm) { delArm = 1; del.textContent = '🗑️ ' + T('removeSure'); setTimeout(() => { if (delArm) { delArm = 0; del.textContent = '🗑️ ' + T('removeP'); } }, 3000); return; } S.profiles.splice(S.cur, 1); S.cur = 0; persist(); refreshSetup(); buildCart(); SFX.pop(); });
+$('kidName').addEventListener('input', e => { S.name = e.target.value.trim().slice(0, 14); persist(); buildProfiles(); });
+const setMode = (d, quiet) => { S.duo = d; $('modeSolo').classList.toggle('on', !d); $('modeDuo').classList.toggle('on', d); if (!quiet) persist(); };
+$('modeSolo').addEventListener('click', () => setMode(false)); $('modeDuo').addEventListener('click', () => { setMode(true); say(tx('A grown-up plays the Scanner: hold the purple button to see label hints.', 'Un adulto juega como Escáner: mantén el botón morado para ver pistas.')); });
+const setVoice = v => { S.voice = v; persist(); renderToggles(); }; $('voiceOn').addEventListener('click', () => { setVoice(true); say(tx('I will read everything out loud for you.', 'Te leeré todo en voz alta.')); }); $('voiceOff').addEventListener('click', () => setVoice(false));
 $('btnSetupBack').addEventListener('click', goTitle);
 let pickLv = 0;
-function buildLevels() { const box = $('levels'); box.innerHTML = ''; LEVELS.forEach((L, i) => { const locked = i > 0 && S.stars[i - 1] === 0; const b = document.createElement('button'); b.className = 'lv' + (locked ? ' lock' : '') + (i === pickLv ? ' on' : ''); b.innerHTML = `<div class="ic">${L.e}</div><div><b>${i + 1}. ${L.name}</b><small>${L.desc}</small></div><div class="stars">${'★'.repeat(S.stars[i])}${'☆'.repeat(3 - S.stars[i])}</div>`; b.disabled = locked; b.addEventListener('click', () => { pickLv = i; buildLevels(); SFX.pop(); }); box.appendChild(b); }); }
-$('btnSetupGo').addEventListener('click', () => { hideAll(); pickLv = Math.min(LEVELS.length - 1, S.stars.findIndex(s => s === 0) < 0 ? LEVELS.length - 1 : S.stars.findIndex(s => s === 0)); buildLevels(); show('scrLevels'); });
-$('btnLvBack').addEventListener('click', () => { hideAll(); show('scrSetup'); }); $('btnLvGo').addEventListener('click', async () => { if (!(await E.platformStart('safari'))) return; startLevel(pickLv); }); // account platform: a qualifying start (no-op when accounts are off)
-// pause
-function pause() { if (G.scene !== 'play' || G.paused) return; G.paused = true; $('tglVoice').innerHTML = `<span class="e">🗣️</span>Read aloud ${S.voice ? 'on' : 'off'}`; $('tglSound').innerHTML = `<span class="e">${S.sound ? '🔊' : '🔇'}</span>Sound ${S.sound ? 'on' : 'off'}`; $('tglMotion').innerHTML = `<span class="e">🎢</span>Camera sway ${S.motion ? 'on' : 'off'}`; show('scrPause'); }
-$('btnPause').addEventListener('click', pause); $('btnResume').addEventListener('click', () => { hide('scrPause'); G.paused = false; }); $('btnQuit').addEventListener('click', () => { hide('scrPause'); G.scene = 'menu'; $('hud').hidden = true; buildLevels(); show('scrLevels'); });
-$('tglSound').addEventListener('click', () => { S.sound = !S.sound; persist(); $('tglSound').innerHTML = `<span class="e">${S.sound ? '🔊' : '🔇'}</span>Sound ${S.sound ? 'on' : 'off'}`; });
-$('tglMotion').addEventListener('click', () => { S.motion = !S.motion; persist(); $('tglMotion').innerHTML = `<span class="e">🎢</span>Camera sway ${S.motion ? 'on' : 'off'}`; });
-$('tglVoice').addEventListener('click', () => { S.voice = !S.voice; persist(); $('tglVoice').innerHTML = `<span class="e">🗣️</span>Read aloud ${S.voice ? 'on' : 'off'}`; });
+function buildLevels() { const box = $('levels'); box.innerHTML = ''; LEVELS.forEach((L, i) => { const locked = i > 0 && S.stars[i - 1] === 0; const b = document.createElement('button'); b.className = 'lv' + (locked ? ' lock' : '') + (i === pickLv ? ' on' : ''); b.innerHTML = `<div class="ic">${locked ? '🔒' : L.e}</div><div><b>${i + 1}. ${lvName(L)}</b><small>${lvDesc(L)}</small></div><div class="stars">${'★'.repeat(S.stars[i])}${'☆'.repeat(3 - S.stars[i])}</div>`; b.disabled = locked; b.addEventListener('click', () => { pickLv = i; buildLevels(); SFX.pop(); say(`${lvName(L)}. ${lvDesc(L)}`); $('levels').children[i].focus({ preventScroll: true }); }); box.appendChild(b); }); }
+$('btnSetupGo').addEventListener('click', () => { hideAll(); const nx = S.stars.findIndex(s => s === 0); pickLv = nx < 0 ? LEVELS.length - 1 : nx; buildLevels(); show('scrLevels'); setTimeout(() => { const el = $('levels').children[pickLv]; if (el) el.scrollIntoView({ block: 'nearest' }); }, 0); });
+$('btnLvBack').addEventListener('click', () => { hideAll(); refreshSetup(); show('scrSetup'); }); $('btnLvGo').addEventListener('click', async () => { if (!(await E.platformStart('safari'))) return; startLevel(pickLv); }); // account platform: a qualifying start (no-op when accounts are off)
+/* sticker book */
+let bookFrom = 'title';
+function buildBook() { const box = $('book'); box.innerHTML = ''; const have = S.stickers.length; $('bookSub').textContent = `${S.avatar} ${S.name || T('player') + ' ' + (S.cur + 1)} · ${have} / ${STICKERS.length} ${T('got')}`;
+  STICKERS.forEach(s => { const got = S.stickers.includes(s.id); const b = document.createElement('button'); b.className = 'stk-b' + (got ? ' got' : ''); b.dataset.id = s.id; b.innerHTML = `<span class="e">${s.e}</span><small>${esc(tx(s.en, s.es))}</small>`; b.setAttribute('aria-label', tx(s.en, s.es) + (got ? '' : ' (' + T('notYet') + ')')); b.addEventListener('click', () => { const txt = got ? `${tx(s.en, s.es)}: ${tx(s.fen, s.fes)}` : `${T('notYet')}: ${tx(s.en, s.es)}`; $('bookInfo').textContent = (got ? s.e + ' ' : '🔒 ') + txt; say(txt); SFX.pop(); }); box.appendChild(b); });
+  $('bookTreats').textContent = `🎁 ${T('treatsT')}: ${S.collection.length ? [...new Map(S.collection.map(c => [c.n, c])).values()].map(c => c.e + ' ' + treatName(c)).join(' · ') : T('none')}`; $('bookInfo').textContent = T('bookTap'); }
+function openBook(from) { bookFrom = from; hideAll(); buildBook(); show('scrBook'); say(T('stickersT')); }
+$('btnBook').addEventListener('click', () => openBook('title')); $('btnLvBook').addEventListener('click', () => openBook('levels'));
+$('btnBookBack').addEventListener('click', () => { hideAll(); if (bookFrom === 'levels') { buildLevels(); show('scrLevels'); } else goTitle(); });
+/* pause */
+function pause() { if (G.scene !== 'play' || G.paused) return; G.paused = true; renderToggles(); show('scrPause'); }
+function resume() { hide('scrPause'); if ($('scrLabel').hidden && $('scrOffer').hidden && $('scrDrill').hidden && $('scrMystery').hidden) G.paused = false; }
+$('btnPause').addEventListener('click', pause); $('btnResume').addEventListener('click', resume); $('btnQuit').addEventListener('click', () => { hide('scrPause'); setScene('menu'); musicOff(); $('hud').hidden = true; buildLevels(); show('scrLevels'); });
 $('kidName').addEventListener('keydown', e => e.stopPropagation()); // let Space reach the name field (the shared input swallows it for gameplay)
 document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* boot */
 window.__AA = { G, S, startLevel, spawn, answerLabel, LEVELS, endLevel, move, tryRead, openLabel, nearestPack, ASSETS, buildCart, update, say, rig: () => kidRig, grig: () => grownRig, THREE, scene, camera, R, engine: ENG };
-window.__GAME = { G, S, R, LEVELS, update: frame, step: update, start(i = 0, opts = {}) { if (opts.duo != null) S.duo = !!opts.duo; startLevel(clamp(i | 0, 0, LEVELS.length - 1)); }, startLevel, endLevel, spawn, tryRead, openLabel, answerLabel, nearestPack, pause, state: () => ({ scene: G.scene, level: G.level, got: G.got, goal: LEVELS[G.level].goal, score: G.score, labels: G.labels, dodged: G.dodged, oops: G.oops, paused: G.paused, rescue: R.phase }) };
+window.__GAME = { G, S, R, LEVELS, STICKERS, OFFERS, DISHES, update: frame, step: update, award, startMenu, startOffer, openBook, applyLang, renderToggles, labelHTML, start(i = 0, opts = {}) { if (opts.duo != null) S.duo = !!opts.duo; startLevel(clamp(i | 0, 0, LEVELS.length - 1)); }, startLevel, endLevel, spawn, tryRead, openLabel, answerLabel, nearestPack, pause, state: () => ({ scene: G.scene, level: G.level, got: G.got, goal: LEVELS[G.level].goal, score: G.score, labels: G.labels, dodged: G.dodged, oops: G.oops, paused: G.paused, rescue: R.phase, theme: LEVELS[G.level].theme, stickers: S.stickers.length, profiles: S.profiles.length }) };
 {
   const bar = $('ldBar'), txt = $('ldTxt'), eggs = ['🥚', '🐣', '🍎', '🥦', '🧃'];
-  await E.loadPack('../packs/safari.json', ENG, p => { bar.style.width = Math.round(p * 100) + '%'; $('ldE').textContent = eggs[Math.min(eggs.length - 1, Math.floor(p * eggs.length))]; txt.textContent = p < .5 ? 'Packing the cart…' : p < .9 ? 'Waking up the buddy…' : 'Ready!'; });
+  await E.loadPack('../packs/safari.json', ENG, p => { bar.style.width = Math.round(p * 100) + '%'; $('ldE').textContent = eggs[Math.min(eggs.length - 1, Math.floor(p * eggs.length))]; txt.textContent = p < .5 ? tx('Packing the cart…', 'Empacando el carrito…') : p < .9 ? tx('Waking up the buddy…', 'Despertando al amiguito…') : tx('Ready!', '¡Listo!'); });
   buildWorld(LEVELS[0]); buildCart(); applyLang(); goTitle(); $('loading').hidden = true;
+  // phones as controllers: the engine's standard party widget (createInput already merges any phone into player 1)
+  try { E.NET.partyWidget({ hint: tx('Phones join as controllers: tilt the stick to change lanes, A reads a label, B holds the Scanner.', 'Los teléfonos se unen como controles: mueve la palanca para cambiar de carril, A lee una etiqueta, B mantiene el Escáner.') }); } catch (e) { }
   E.loop(dt => { frame(dt); ENG.render(dt); });
   window.__READY = true;
 }
