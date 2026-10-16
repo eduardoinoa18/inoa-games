@@ -615,3 +615,75 @@ Tests: `PORT=8891 node test/run.js draw test/draw.js` (120 checks) and `W=390 H=
 - The ES word list should get a native read-through for regional variants (carro/coche, papa/patata, maní/cacahuate).
 - At 844×390 landscape the tools panel scrolls a little when a mode has two action buttons.
 - The daily prompt sequence follows the word list order, so editing `draw-words.js` reshuffles future days.
+
+
+## Snack Squad Safari elevation pass (2026-10-16)
+Files: `games/safari.html`, `test/safari.js`, `packs/safari.json` + `packs/safari/manifest.json` (+3 new shared models in `packs/assets/models/`), `thumbs/safari.jpg`, hub copy (`hub-src/hub.js`, `hub-src/extras.js` → `index.html`), `docs/audit-notes/safari.md`, `docs/MULTIPLAYER.md` (Safari row). Engine unchanged.
+Tests: `PORT=8911 node test/run.js safari test/safari.js` and `W=390 H=844 PORT=8912 …` both end `SAFARI_CHECKS_PASSED`, `NO_ERRORS` (60+ checks). Hub test (`test/index.js`) `NO_ERRORS`.
+
+**Health-content rule.** No medical guidance was invented or changed: the English rescue lines are byte-identical. New Spanish translations of the existing medical lines, the new "ask a grown-up" lessons, the allergen tags of new foods and dishes, and a list of observations are in `docs/audit-notes/safari.md` → "Elevation pass — allergist review list". **Allergist review is still required before families use the game.**
+
+**Bugs fixed**
+- **Friend-offer icons gave the answer away.** Good choices showed 💬 and bad ones 🍪. Choices are now labelled A/B/C. Test: `offer icons do not reveal the answer`.
+- **The rescue card covered the scene.**
+  - The camera now frames the kid and the grown-up beside the card: to its left in landscape, above it in portrait.
+  - Lane buttons hide during the rescue.
+  - Each step shows its details only while it is the current step.
+  - In the symptoms phase the grown-up no longer walks into the camera.
+  - The ambulance stops where you can see it.
+- **Speech bubbles were tiny or cut off on phones.** Long lines shrank to a tiny font, and bubbles were clipped at 390 px. Bubbles now wrap onto 2–3 lines on a sized canvas.
+- **The Hub chip covered the HUD pills in portrait.** It is hidden while playing; ⌂ Hub moved into the pause menu.
+- **Tall cards cut off their heading.** With flex centering, the setup and How-it-works titles were unreachable under the hub chip. Cards now scroll from the top, and long cards keep a sticky button row.
+- **The 911 call script always named "the Dawn Trail picnic area".** Each level now names its own place. The EN/ES wording is unchanged on level 1.
+- **Spanish players saw English** in the rescue card, How it works, setup, pause, labels (ingredients and hidden names were English words read by a Spanish voice), food tags, products, offers, scanner hints, mistakes and "Things you learned". Everything is EN/ES now. The language can also change from the shared settings panel (`inoa:settings`). The new ES medical lines are pending review.
+- **Performance:**
+  - The night level had a point light on every lantern; that is now capped at 6 real lights, and the rest glow.
+  - Wheel spin no longer walks the whole cart tree every frame.
+  - Lane stones and props share one geometry each.
+- **Store level:** aisle signs used to fly through the camera in portrait. They now hide before they reach it, and the ceiling lights sit above the lens.
+
+**Added**
+- **5 new levels (10 in total), with themed scenery** built from CC0 models (26 added to the pack) and simple shapes:
+  - 6 School lunch day: library, houses, lunch tables, a field and fence. Has lunch-line menus.
+  - 7 Birthday party garden: balloons that sway, presents, party tables with cake, a Ferris wheel.
+  - 8 Grocery store aisles: indoors, with a tiled floor, shelves of instanced product boxes, ceiling lights and aisle signs. About 68% of items are packages.
+  - 9 Picnic in the park: checkered blankets, baskets, a dog, a lake.
+  - 10 Restaurant night out: dusk street, café tables with dishes, lanterns, the harbor. Has restaurant menus.
+- **Menu moments**: three dishes, each with its ingredients listed, and at least one fits the player's list. A fourth choice, "Ask a grown-up / the lunch helper", is always right.
+- **"Ask a grown-up / check the label" moments**: 9 new themed ones (trading lunches, class cupcakes, birthday cake, goodie bags, a free sample, a new package, unlabeled cookies, a shared snack bowl, a free dessert). Each level draws from its own theme, with no repeats in a level.
+- **More food**:
+  - 15 new plain foods
+  - 19 new fictional packaged products, weighted by theme
+  - every name has an EN/ES version
+- **Player profiles**, so each child in a family has their own list:
+  - up to 6 players, each with their own name, allergens, avatar, rider model, stars, stickers, collection and label count
+  - add, switch and remove (remove takes two taps)
+  - save v3; v1/v2 saves become player 1. Test: `v2 save migrates to player 1`.
+- **Sticker book** (31 stickers, one book per player):
+  - stickers for every level, first label, 25 labels, "may contain", hidden-name hunter, one per allergen's hidden names, ask first, menu reader, rescue practice, buddy hatched, mystery snack, team scanner, perfect run, champion
+  - a toast when you earn one; the results card lists new ones
+  - tap a sticker to hear what it means
+  - open it from the title, the level picker or the results card
+- **Accessibility**:
+  - Big text and High contrast toggles (setup and pause)
+  - Label highlights on/off ("detective mode" for older players)
+  - tap a label to zoom its text
+  - read-aloud on How it works, level choices, allergen chips, menus, sticker facts and setup
+  - reduced motion respected for camera sway and shake
+- **Practice-game note** on the title and in How it works (EN/ES): "Practice game — not medical advice. Follow your doctor's allergy action plan."
+- **Phones as controllers**, through the engine's standard party widget: stick = lanes, A = read a label, B = hold the Scanner. Phone and gamepad A/stick also move through the cards.
+- **Soft music** while rolling. It stops for the rescue so the speech is clear.
+- New tile art (party garden) and hub copy in EN/ES (10 levels, profiles, sticker book).
+
+**Screenshots reviewed** (landscape 1000×560 and portrait 390×844):
+- `safari_title`, `title_es`, `how_es`, `setup`, `setup_profiles`, `levels`, `lv1`–`lv10`, `duo_scanner`
+- `label`, `label_zoom`, `label_es`, `offer`, `menu`, `mystery`, `pause_a11y`
+- `rescue1`–`rescue5` (EN), `rescue*_es`, `after_rescue`, `results`, `book`
+
+**Still open**
+- **Allergist + native-speaker review** of every line in the review list (new ES translations, new lessons, food and dish tags, observations such as mystery treats not being checked against the player's list).
+- Real-phone feel and FPS are unverified (headless uses software GL).
+- Phone controllers are wired through the engine path but were not run in `test/party*`.
+- The grown-up and Rider 2 use the CC0 `skater-male` rig, whose shirt shows a small skull print. A texture clean-up like `tools/clean_textures.mjs` would suit this game.
+- Food name tags can overlap when two items arrive close together in neighbouring lanes.
+- The engine's results card still shows "Copied!" and a few labels in English (engine request 3 in the audit notes).

@@ -25,7 +25,7 @@ at ~16 Hz to stay inside the free plan's message rate). Config comes from `platf
 | Draw the Pact (Party mode) | Each phone is a player: the drawer gets the secret word on their phone, everyone else guesses from 4 options on theirs (first right answer scores). |
 | Pixel Pact (2D) | Each phone is its own input source (`net1`…`net8`): press A in the lobby to join. A jump · B attack · C special · D dodge · C+D ultimate. |
 | Fail Tray, Tide Runner, Perfect Fit, Junkyard, Brew, Builders | Phone acts as player 1's controller (hot-seat friendly in Fail Tray). |
-| Snack Squad Safari | Not wired yet (own embedded engine; migrate to `engine/` first). |
+| Snack Squad Safari | Phone acts as player 1's controller (stick = lanes, A = read label, B = hold the Scanner; A/stick also move through the cards). Party chip on landscape screens. |
 
 ## Code
 - `engine/net.js` — rooms, slots, layouts, QR, party widget/panel. Imported by `engine/inoa3d.js` (re-exported as `E.NET` and `E.net`), by `pad.html`, by the hub (`hub-src/party.js`) and by `games/pixelpact.html`.
