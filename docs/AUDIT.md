@@ -141,7 +141,7 @@ Each game below was changed by one game agent and then **re-tested by the lead**
 | Pact Trivia | Tested + visually verified | Every camera shot fits the board in portrait; score chips full width; toasts off the board; kids mode never subtracts; wager keys/gamepad; language follows profile; results once | Pause menu text refreshes on reopen only |
 | Tide Lines | Tested + visually verified | Camera keeps ≥3.2 m from player and lifts out of props; props fade when blocking; close-up mode; name-tag clutter cut; EN/ES; results once with `won` | One map; blaster follows aim not forearm |
 | Island Drift | Tested + visually verified | Chase camera keeps the kart in frame while drifting; compact name tags; hero default + kart tint | Kart sits right of centre in portrait drifts |
-| Pixel Pact (2D) | Tested | `__GAME`/`__READY` hooks + `test/pixelpact.js`; best level recorded; results de-duped | Not on the engine (Phase 5 rebuild) |
+| Pixel Pact (2D) | Tested + visually verified (elevation pass 2026-10-16, below) | 10 islands, world map, 6 heroes, 3 match modes × 5 arenas, EN/ES, read-aloud, drop-in | Not on the engine (Phase 5 rebuild); real-phone feel/FPS |
 | Tide Runner | Tested (baseline) | — | P3 polish (hearts chip wrap) deferred to Phase 5 |
 | Fail Tray | Tested + visually verified (elevation pass 2026-10-16, below) | Sign clipping fixed; portrait Play button; 18 courses | Real-phone feel/FPS |
 
@@ -701,3 +701,87 @@ One game agent re-audited and extended Tide Runner (`games/runner.html`). Tested
 - The reef seabed and path read slightly green under the teal fog.
 - Ghosts record position only (no obstacle smashes or power-up auras).
 - No online race against friends: ghost and daily only. Phones work as controllers.
+
+## Pixel Pact elevation pass (2026-10-16)
+One game agent re-audited and extended Pixel Pact 2D (`games/pixelpact.html`). **Source of truth:** `games/pixelpact.html` was edited directly. `legacy/pixelpact-src/` had already drifted (it has no phone input, test hooks, platform gate or reward shim) and has no build step, so it is a frozen snapshot of the first build.
+
+Tested with:
+- `test/pixelpact.js` at 1000×560 (full tour) and 390×844 (`PP_QUICK=1`). Both `NO_ERRORS`, and every screenshot was reviewed.
+- `test/party.js test/party_pact.js` (`PORT=8923 SIG=9923`, `NO_ERRORS`). The test now also readies the phone and starts the match from the phone.
+- The hub test, `test/index.js` (`NO_ERRORS`).
+
+Engine and `net.js` unchanged.
+
+**Bugs fixed**
+- **Rewards skipped the shared profile rules.** The inline `__inoaReward` wrote the guest key only, never updated `recent` (so Pixel Pact never showed in the hub Continue row), had no v2 fields and no de-dupe. It now matches `engine/inoa3d.js reward()`:
+  - signed-in profile key
+  - `recent`
+  - v2 fields
+  - 3 s de-dupe
+  - clamps
+  
+  XP now scales with stars and level, with +20 for a new Sun Gem. The results card shows +XP · +coins · hero level. Test: `adventure results … recent:["pixelpact"]`.
+- **Play-screen chrome overlaps.** The Phones pill covered the adventure timer, and the Hub pill covered the match timer and the portrait HP bar. Both pills are now hidden during play and come back on pause and menus.
+- **Lobby:** one A press on a gamepad or phone readied *and* started the game instantly. Now:
+  - The first Jump or Attack readies you.
+  - Jump, Enter or Start starts once everyone is ready.
+  - Attack or Back un-readies you.
+  - Back leaves the lobby for P1, or leaves the slot for P2–P4.
+  
+  Gamepads can now go back from the lobby.
+- **Results tip** said "Perfect run" when the shells star was missing. It now names the star you missed.
+- **Portrait framing.** In adventure the hero sat behind the touch pad (78% down the screen); it is now ~60%. In landscape with the touch pad on, the camera lifts the action above the buttons. The title heroes overlapped the logo in portrait. The portrait match HUD squeezed 4 panels into one row and the text overlapped; it is now a 2×2 grid.
+- **Reduced motion.** The zoom "punch" ignored the setting; it is now gated like shake and flashes.
+- **Water holes.** Coins, shells and jellies placed in a pool left dry holes. They now keep the water around them.
+- **Jelly Queen arena** clamped heroes inside the entry wall (found while adding the arena), and her hover was hidden behind the HUD. Both fixed, and the camera tracks her.
+
+**Added**
+- **World 1 grows from 3 to 10 islands.** New mechanics come in one at a time, each with its own EN/ES signs:
+  - **1-4 Springtide Shoals**: spring clams and the first secret wall.
+  - **1-5 Jellyglow Lagoon**: swimming in calm water that never hurts (jump to stroke, hop out at the surface) and the **Jelly Queen mid-boss**. She rains drops, zaps a telegraphed ring and dives; when she dives she lands stunned, and that is your opening.
+  - **1-6 Lever Ruins**: levers open stone gates in the same area.
+  - **1-7 Ferry Falls**: wide sliding ferries over the tide and a tall lift.
+  - **1-8 Neon Night Pier**: new night theme with moon, stars and neon towers; lasers, drones, a lever and ferries.
+  - **1-9 Ember Steps**: steam vents launch you up (no damage), plus lava pools and crumbling planks.
+  - **1-10 Molten Crown Keep**: a gauntlet, then the **Magma Claw finale**. It is Big Claw rebuilt in lava, and its slams raise telegraphed lava pillars under the heroes.
+  
+  Every level was checked with a reachability script: start → 3 Pact Shells → Sun Gem → levers → exit. The script is not committed; the in-game test tours every chunk.
+- **Sun Gems**: one per island, usually behind a hidden wall that fades as you walk in ("SECRET!", hinted by a faint glint). The three original islands got a gem in a high, out-of-the-way spot. Secrets and gems survive checkpoint restarts.
+- **World map**: islands on a sea map (16:9, or a vertical zigzag on phones) with a dotted path. Each node shows its stars and gem, a lock until the island before it is cleared, and a boss badge. A detail line shows best time, rank, total stars and total gems. Tap the selected island again to play. Gamepad/keyboard navigation works.
+- **Match**: 2 new arenas and 2 new modes.
+  - **Neon Rooftops**: two roofs, a sliding ferry over the gap and recovery lifts.
+  - **Crystal Grotto**: wall-jump pillars and falling crystals.
+  - **Coin Rush**: 90 s. Coins spawn on platforms, and a KO spills 3 of yours.
+  - **King of the Hill**: a zone that moves every 15 s, shown with a "moving soon" hint. Score while you stand in it alone. First to 30 points wins.
+  - Bots chase coins and the hill.
+  - There is a mode picker, and the HUD, results board and countdown are mode-aware.
+- **Two new original heroes**:
+  - **Pip Lumen** (support): her Lantern Lob bursts in a ring that hurts enemies and heals friends. Her Sunrise ult heals everyone, revives downed friends instantly and dazzles enemies. She revives twice as fast, and hearts heal her more.
+  - **Bo Bramble** (grappler): his Vine Lash is a 110 px whip that pulls enemies in. His Thornquake ult hits every grounded enemy 3 times. He clings to walls (slow slide, higher wall jump).
+  - Both are drawn procedurally like the original four (head, gear, body and poses). Lobby, bots and title support 6 heroes.
+- **Drop-in co-op**: a new gamepad or phone presses Jump mid-level and joins next to the leader, with +1 shared life. Keyboards still join in the lobby, so a stray arrow key never spawns a P2.
+- **Full EN/ES**: menus, map, every level, stage, sign, hero ability, boss, HUD and canvas text, results, pause and toasts. It follows the hub language, and there is a toggle in Settings that writes back to the shared profile.
+- **Read-aloud** (Web Speech, EN/ES, follows the profile voice switch, toggle in Settings). It reads the level goal, each sign the first time you reach it, boss names, ultimates, drop-ins and results.
+- **New sounds**: secret, gem, lever, door, vent and zap. New tile art (`thumbs/pixelpact.jpg`, four heroes vs the Jelly Queen). Hub tile copy updated in EN/ES, and the hub was rebuilt.
+- **Saves**: `pixelpact3.settings` and `pixelpact3.progress` are unchanged in shape. Only additive fields (`mmode`, `lang`, `voice`, per-level `gem`), so old saves load as-is, and anyone who cleared 1-3 starts with 1-4 unlocked.
+
+**Tests** (`test/pixelpact.js`, `PP_QUICK=1` skips the chunk tour)
+- content counts: 10 levels, 5 stages, 6 heroes
+- world map screenshot
+- every level started and toured every 600 px
+- lever opens its gate; swimming in 1-5
+- touch layout
+- gamepad drop-in + revive
+- each boss woken and its states listed (all three reach `stunned`)
+- every hero's special + ultimate
+- results → profile (`recent`, reward)
+- every stage with a different mode, and Coin Rush to the end
+- Spanish title, map and level
+
+**Still open**
+- Real-phone feel and FPS are unverified (headless canvas is not representative). Nothing heavy was added; auto-resolution drop is unchanged.
+- No online (separate-screen) mode; phones are local controllers only.
+- Still not on the 3D engine (Phase 5 "Pixel Pact 3D" keeps this as Classic).
+- A native speaker should read the Spanish.
+- The reachability checker lives outside the repo; porting it into `test/` would guard future level edits.
+
