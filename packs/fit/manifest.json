@@ -41,11 +41,43 @@
   "mechanical-keyboard": "models/mechanical-keyboard.glb?h=c50267c3",
   "nes-controller": "models/nes-controller.glb?h=3714e177",
   "tomato": "models/tomato.glb?h=f1f3283f",
-  "plant": "models/plant.glb?h=eb44ede4"
+  "plant": "models/plant.glb?h=eb44ede4",
+  "avocado": "models/avocado.glb?h=acbfc60e",
+  "eggplant": "models/eggplant.glb?h=73554d36",
+  "onion": "models/onion.glb?h=b8236a41",
+  "broccoli": "models/broccoli.glb?h=a2653e5f",
+  "carrot": "models/carrot.glb?h=a3e6e2cf",
+  "corn": "models/corn.glb?h=453a6a2a",
+  "mushroom": "models/mushroom.glb?h=ab63ca7d",
+  "pancakes": "models/pancakes.glb?h=bdc2b3ac",
+  "cup-saucer": "models/cup-saucer.glb?h=1363c9fc",
+  "waffle": "models/waffle.glb?h=97cd3609",
+  "candy-bar": "models/candy-bar.glb?h=49d80999",
+  "chocolate": "models/chocolate.glb?h=f259d593",
+  "lollypop": "models/lollypop.glb?h=efaec397",
+  "popsicle": "models/popsicle.glb?h=e0ec4db3",
+  "ice-cream-cone": "models/ice-cream-cone.glb?h=c52e540b",
+  "sushi-salmon": "models/sushi-salmon.glb?h=783822fa",
+  "soy": "models/soy.glb?h=401a1c8e",
+  "race-car": "models/race-car.glb?h=42b88dc0",
+  "taxi": "models/taxi.glb?h=70fc2165",
+  "police-car": "models/police-car.glb?h=6568d0e4",
+  "ambulance": "models/ambulance.glb?h=65d07053",
+  "truck": "models/truck.glb?h=0ec2e428",
+  "tractor": "models/tractor.glb?h=4ff7a9a1",
+  "boat-small": "models/boat-small.glb?h=95a1addc"
  },
  "hdri": {
   "interior": "hdri/interior.hdr?h=dd54c722"
  },
- "lazy": [],
- "bytes": 1397217
+ "lazy": [
+  "race-car",
+  "taxi",
+  "police-car",
+  "ambulance",
+  "truck",
+  "tractor",
+  "boat-small"
+ ],
+ "bytes": 1710597
 }

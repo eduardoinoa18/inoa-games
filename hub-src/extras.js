@@ -23,7 +23,7 @@ const ES_GAMES = {
   builders: ['Construye un hogar en tu isla, navega a dos islas nuevas, recibe vecinos en casitas, cumple sus deseos y completa tus postales. 21 misiones, compártela con un código.', ['Solo', '10–30 min', '8+ años']],
   tide: ['Batallas de pintura con cañones de agua en tres arenas: un muelle soleado, un jardín en la azotea y un mercado isleño. Cubre más suelo o domina las tres pozas de marea. Bots o hasta 8 teléfonos.', ['1–8 jugadores', '2,5 min', '8+ años']],
   drift: ['Derrapa para turbos, usa objetos y compite contra cinco rivales en cuatro pistas, gana la Copa Isla o corre contra el fantasma de tu mejor vuelta.', ['Solo vs 5 bots', '3 min']],
-  fit: ['Un cajón desordenado, huecos perfectos y un clic satisfactorio cada vez que algo encaja. Modo Zen para relajarte.', ['Solo', '1–2 min']],
+  fit: ['20 cajas en 4 cuartos acogedores: loncheras, cajas de herramientas, costureros y maletas. Cada cosa tiene su hueco perfecto y su propio clic. Modo Zen para relajarte.', ['Solo', '1–2 min']],
   tray: ['Lleva una torre tambaleante de comida por una pista de obstáculos. Caerse es lo divertido. Turnos con amigos.', ['1–4 jugadores', '45 s']],
   junk: ['Lava, lija, pinta y pule 16 coches y barcos oxidados con el dedo. Añade rayas, estrellas y ruedas brillantes, cumple pedidos y saca tarjetas con foto.', ['Solo', '2–4 min']],
   brew: ['Cultiva hierbas en tiempo real, incluso cuando no estás, prepara 16 tés para clientes con pequeñas historias y sube tu café hasta el nivel 10: plantas de temporada, un pianito y un perrito. Aquí nadie se enoja.', ['Solo', 'Visitas cortas']],

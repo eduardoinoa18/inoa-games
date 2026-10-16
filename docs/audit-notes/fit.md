@@ -29,3 +29,31 @@
 
 ## Engine requests
 - none
+
+# Elevation pass (2026-10-15)
+
+Full write-up: `docs/AUDIT.md` → "Perfect Fit elevation pass". Short version for the next agent:
+
+## Structure
+- `LEVELS` keeps a **stable index** per box (share codes store it as one base-36 char, so up to 36 boxes). New boxes are appended; the play order lives in `ROOMS` (4 rooms) and `ORDER`.
+- Unlock rule (`isOpen`): first box in `ORDER`, any box with stars, the box after a starred one, or `li < S.legacy` (v1 saves' old linear "unlocked" count).
+- Save v2 (`inoa.fit`): `{v:2, stars, best, zen, oneWrong, sel, legacy, rooms}`; everything is sanitised on load.
+- Procedural items: `B.*` builders + `defProc(name, build, en, es, tint)`; `registerProc()` puts them into `E.ASSETS.models` at start, shown at 1.5× (books/shirts 1×). `TINT[name]` tints the slot outline (colour matching).
+- Layout: `chooseLayout()` scores both box turns × 17 mat shapes by camera distance (`camFit`, pure); `rebuildContainer(turn)` swaps the box mid-level (orientation change) and re-links placed items. Slots store world-aligned x/z/w/d/yaw after the turn.
+- Sound: `MATERIAL(name)` → lift (`liftSound`) and landing (`thock`) recipes + a box-style layer + the streak chime (`PENTA`). Haptics via `buzz()` only after a touch gesture.
+- Input: `pollPad()` merges gamepads and phones (`input.pad(slot)`); menus use the engine focus ring.
+- Lazy models: the 7 toy vehicles (`--lazy fit:race-car,taxi,...` in `build_packs.mjs`); `startLevel` returns a promise when it has to fetch them.
+
+## Rebuild the pack
+```
+python3 tools/build_pack.py fit --models <the 63 names in packs/fit/manifest.json> --hdri interior
+node tools/build_packs.mjs fit --lazy fit:race-car,taxi,police-car,ambulance,truck,tractor,boat-small
+```
+
+## Known issues
+- Real-phone feel/haptics/FPS unverified (synthetic touch only).
+- Keyboard/pad slot choice is a 1-D cycle through free slots.
+- Colour pairs carry a shape sticker (`GLYPH`, `sticker()`) as a colour-blind aid; untested with colour-blind players.
+
+## Engine requests
+- none (engine unchanged)
