@@ -1007,7 +1007,7 @@ function startLevel(fromCheckpoint) {
       const e = makeEnemy(c, tx, ty); ents.push(e);
       if (c === 'm') { let gy = ty; while (gy < MH && !isSolid(tx, gy)) gy++; decor.push({ x: x + 12, y: gy * TS, hgt: gy * TS - (e.y + e.h) + 6, lean: 0, monkey: true }); }
     }
-    map[ty][tx] = '.';
+    map[ty][tx] = [[1, 0], [-1, 0], [0, 1], [0, -1]].filter(([ax, ay]) => tile(tx + ax, ty + ay) === 'w').length >= 2 ? 'w' : '.'; // items placed in a pool keep the water around them
   }
   for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) if (map[ty][tx] === 'G' && arena) arena.gate.push([tx, ty]);
   { const seen = {}; for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) { if (map[ty][tx] !== 'h' || seen[tx + ',' + ty]) continue; const grp = { tiles: [], set: {}, found: !!stats.got['s' + tx + ',' + ty], key: 's' + tx + ',' + ty, a: 1, x0: 1e9, x1: 0 }, st = [[tx, ty]]; seen[tx + ',' + ty] = 1;
