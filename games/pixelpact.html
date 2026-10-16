@@ -96,8 +96,8 @@ h2{font-family:var(--f-display);font-weight:800;font-size:clamp(19px,3.2vw,26px)
 .pickcard .stars i.on{opacity:1}
 .pickcard.locked{opacity:.45}
 
-.wmap{position:relative;width:100%;aspect-ratio:16/8.2;max-height:calc(100dvh - 270px);min-height:200px;border:1px solid var(--line);clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px);overflow:hidden;background:#0d4a5e}
-.wmap.tall{aspect-ratio:4/5;max-height:calc(100dvh - 300px);min-height:300px}
+.wmap{position:relative;width:100%;aspect-ratio:16/8.2;max-height:calc(100dvh - 330px);min-height:170px;border:1px solid var(--line);clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px);overflow:hidden;background:#0d4a5e}
+.wmap.tall{aspect-ratio:4/5;max-height:calc(100dvh - 340px);min-height:280px}
 .wmap canvas{position:absolute;inset:0;width:100%;height:100%}
 .node{position:absolute;transform:translate(-50%,-50%);width:42px;height:42px;border-radius:50%;border:3px solid #0a1a24;background:var(--foam);color:#0a1a24;font:900 14px var(--f-display);cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 #0a1a24,0 0 0 3px rgba(255,255,255,.25);transition:transform .15s}
 .node.done{background:var(--sun)}
@@ -219,8 +219,8 @@ body.playing .inoa-home,body.playing .inoa-party{display:none!important}
       <div class="eyebrow">World 1 · Emberwood Isles · 2050</div>
       <h1 class="logo">PIXEL<span>PACT</span></h1>
       <div class="modes">
-        <button class="mode" id="btnAdventure"><b>Adventure</b><span>1–4 players co-op. Clear levels, find Pact Shells, beat bosses.</span></button>
-        <button class="mode" id="btnMatch"><b>Match</b><span>2–4 fighters, last one standing. Bots fill empty slots.</span></button>
+        <button class="mode" id="btnAdventure"><b>Adventure</b><span>1–4 players co-op. Ten islands, Pact Shells, Sun Gems and bosses.</span></button>
+        <button class="mode" id="btnMatch"><b>Match</b><span>2–4 fighters: Stocks, Coin Rush or King of the Hill. Bots fill empty slots.</span></button>
       </div>
       <div class="row">
         <button class="btn glass sm" id="btnHow">Controls</button>
@@ -269,9 +269,9 @@ body.playing .inoa-home,body.playing .inoa-party{display:none!important}
         <tr><td>Dodge in any direction</td><td><kbd>L</kbd> / <kbd>Shift</kbd></td><td><kbd>,</kbd></td><td>RT / RB</td><td>Dodge</td></tr>
         <tr><td>Ultimate (full meter)</td><td><kbd>U</kbd></td><td><kbd>.</kbd></td><td>Y / Triangle</td><td>Ult</td></tr>
         <tr><td>Drop through planks</td><td><kbd>S</kbd> + Jump</td><td><kbd>↓</kbd> + Jump</td><td>Down + A</td><td>Stick down + Jump</td></tr>
-        <tr><td>Pause</td><td><kbd>Esc</kbd> / <kbd>P</kbd></td><td><kbd>Esc</kbd></td><td>Start</td><td>Pause button</td></tr>
+        <tr><td>Pause</td><td><kbd>Esc</kbd> / <kbd>P</kbd></td><td><kbd>Esc</kbd></td><td>Start / Options</td><td>Pause button</td></tr>
       </table></div>
-      <p class="muted">Up to 4 players on one screen: two keyboards layouts, up to four gamepads, and the phone's touch controls. In the lobby, press Jump on a new controller to join. Match mode: damage raises the % and the knockback; fall off the stage and you lose a stock.</p>
+      <p class="muted">Up to 4 players on one screen: two keyboard layouts, up to four gamepads, phones as controllers and the touch controls. In the lobby, press Jump on a new controller to join. Match mode: damage raises the % and the knockback; fall off the stage and you lose a stock.</p>
       <div class="row"><button class="btn" id="btnHowBack">Got it</button></div>
     </div>
   </div>
@@ -280,9 +280,11 @@ body.playing .inoa-home,body.playing .inoa-party{display:none!important}
     <div class="panel">
       <div><div class="eyebrow">Options</div><h2>Settings</h2></div>
       <div>
+        <div class="set"><label>Language</label><div class="seg" id="sLang"><button data-v="en">English</button><button data-v="es">Español</button></div></div>
+        <div class="set"><label>Read aloud<small>Key instructions are spoken</small></label><div class="seg" id="sVoice"><button data-v="1">On</button><button data-v="0">Off</button></div></div>
         <div class="set"><label for="sSfx">Sound effects</label><input type="range" id="sSfx" min="0" max="100"></div>
         <div class="set"><label for="sMusic">Music</label><input type="range" id="sMusic" min="0" max="100"></div>
-        <div class="set"><label>Difficulty<small>Friendly has unlimited continues</small></label><div class="seg" id="sDiff"><button data-v="0">Friendly</button><button data-v="1">Normal</button><button data-v="2">Brutal</button></div></div>
+        <div class="set"><label>Difficulty<small>Friendly has unlimited lives</small></label><div class="seg" id="sDiff"><button data-v="0">Friendly</button><button data-v="1">Normal</button><button data-v="2">Brutal</button></div></div>
         <div class="set"><label>Match stocks</label><div class="seg" id="sStocks"><button data-v="1">1</button><button data-v="3">3</button><button data-v="5">5</button></div></div>
         <div class="set"><label>Stage hazards</label><div class="seg" id="sHazards"><button data-v="1">On</button><button data-v="0">Off</button></div></div>
         <div class="set"><label>Graphics<small>Battery lowers resolution</small></label><div class="seg" id="sQuality"><button data-v="auto">Auto</button><button data-v="high">High</button><button data-v="battery">Battery</button></div></div>
@@ -413,8 +415,121 @@ const saveSettings = () => { try { localStorage.setItem('pixelpact3.settings', J
 const saveProgress = () => { try { localStorage.setItem('pixelpact3.progress', JSON.stringify(progress)); } catch (e) {} };
 const DIFF = [{ hp: .75, dmg: .6, bot: .45, name: 'Friendly', lives: 99 }, { hp: 1, dmg: 1, bot: .7, name: 'Normal', lives: 3 }, { hp: 1.35, dmg: 1.5, bot: 1, name: 'Brutal', lives: 3 }];
 const motionOK = () => settings.motion === 1;
-let LANG = ((window.__inoaProfile && window.__inoaProfile().lang) === 'es') ? 'es' : 'en';
-const ES = {};
+let LANG = (settings.lang || (window.__inoaProfile && window.__inoaProfile().lang)) === 'es' ? 'es' : 'en';
+const ES = {
+  // title + menus
+  'World 1 · Emberwood Isles · 2050': 'Mundo 1 · Islas Emberwood · 2050', 'Adventure': 'Aventura', 'Match': 'Duelo',
+  '1–4 players co-op. Ten islands, Pact Shells, Sun Gems and bosses.': '1–4 jugadores en equipo. Diez islas, Conchas del Pacto, Gemas Solares y jefes.',
+  '2–4 fighters: Stocks, Coin Rush or King of the Hill. Bots fill empty slots.': '2–4 luchadores: Vidas, Fiebre de Monedas o Rey de la Colina. Los bots llenan los huecos.',
+  'Controls': 'Controles', 'Settings': 'Ajustes', 'Continue': 'Continuar', 'Back': 'Atrás', 'PREVIEW': 'VISTA', 'Lobby': 'Sala', 'Choose your heroes': 'Elige tus héroes',
+  'Start': 'Empezar', 'Add bot': 'Añadir bot', 'Add bot ally': 'Añadir aliado bot', 'Pick your heroes': 'Elige tus héroes', 'Fighters, ready up': '¡Luchadores, a punto!',
+  'How to play': 'Cómo jugar', 'Action': 'Acción', 'Player 1 keys': 'Teclas J1', 'Player 2 keys': 'Teclas J2', 'Gamepad': 'Mando', 'Touch': 'Táctil', 'Move': 'Moverse',
+  'Left stick': 'Stick izquierdo', 'Drag on the left': 'Arrastra a la izquierda', 'Jump · double · wall jump': 'Salto · doble · salto de pared', 'Jump': 'Saltar',
+  'Attack (tap 3× for a combo)': 'Ataque (toca 3× para un combo)', 'Attack': 'Ataque', 'Air spin · hold down for pogo': 'Giro aéreo · mantén abajo para rebotar',
+  'in the air': 'en el aire', 'X in the air': 'X en el aire', 'Attack in the air': 'Ataque en el aire', 'Special (signature move)': 'Especial (movimiento firma)',
+  'B / Circle': 'B / Círculo', 'Special': 'Especial', 'Dodge in any direction': 'Esquiva en cualquier dirección', 'Dodge': 'Esquivar', 'Ultimate (full meter)': 'Definitiva (barra llena)',
+  'Y / Triangle': 'Y / Triángulo', 'Ult': 'Def', 'Drop through planks': 'Bajar de las tablas', 'Down + A': 'Abajo + A', 'Stick down + Jump': 'Stick abajo + Saltar', 'Pause': 'Pausa',
+  'Pause button': 'Botón de pausa', 'Got it': '¡Entendido!',
+  'Up to 4 players on one screen: two keyboard layouts, up to four gamepads, phones as controllers and the touch controls. In the lobby, press Jump on a new controller to join. Match mode: damage raises the % and the knockback; fall off the stage and you lose a stock.':
+    'Hasta 4 jugadores en una pantalla: dos teclados, hasta cuatro mandos, teléfonos como mandos y los controles táctiles. En la sala, pulsa Saltar en un mando nuevo para unirte. En Duelo, el daño sube el % y el empujón; si caes del escenario pierdes una vida.',
+  'Options': 'Opciones', 'Sound effects': 'Efectos de sonido', 'Music': 'Música', 'Difficulty': 'Dificultad', 'Friendly has unlimited lives': 'Amable tiene vidas ilimitadas',
+  'Friendly': 'Amable', 'Normal': 'Normal', 'Brutal': 'Brutal', 'Match stocks': 'Vidas en Duelo', 'Stage hazards': 'Peligros del escenario', 'On': 'Sí', 'Off': 'No',
+  'Graphics': 'Gráficos', 'Battery lowers resolution': 'Batería baja la resolución', 'Auto': 'Auto', 'High': 'Alta', 'Battery': 'Batería', '3D depth': 'Profundidad 3D',
+  'Perspective faces on the terrain': 'Caras en perspectiva en el terreno', 'Touch button size': 'Tamaño de botones táctiles', 'Touch controls': 'Controles táctiles',
+  'Always': 'Siempre', 'Never': 'Nunca', 'Vibration': 'Vibración', 'Screen shake, flashes, slow-motion': 'Temblor, destellos y cámara lenta', 'Show FPS': 'Mostrar FPS', 'Done': 'Listo',
+  'Language': 'Idioma', 'Read aloud': 'Leer en voz alta', 'Key instructions are spoken': 'Las instrucciones clave se leen en voz alta',
+  'Paused': 'En pausa', 'Resume': 'Seguir', 'Restart from checkpoint': 'Reiniciar desde el punto de control', 'Restart': 'Reiniciar', 'Quit to title': 'Salir al título',
+  'Stage clear': 'Nivel superado', 'NEW BEST': 'NUEVO RÉCORD', 'Time': 'Tiempo', 'Coins': 'Monedas', 'Pact Shells': 'Conchas del Pacto', 'Knockouts': 'Derribos', 'Best combo': 'Mejor combo',
+  'Falls': 'Caídas', 'Sun Gem': 'Gema Solar', 'Secrets': 'Secretos', 'Play again': 'Otra vez', 'Next level': 'Siguiente nivel', 'Share my run': 'Compartir', 'Copied!': '¡Copiado!',
+  'JUMP': 'SALTO', 'ATTACK': 'ATAQUE', 'SPECIAL': 'ESPECIAL', 'DODGE': 'ESQUIVA', 'ULT': 'DEF', 'ULTIMATE': 'DEFINITIVA', 'PERK': 'VENTAJA',
+  'Back to Inoa Games': 'Volver a Inoa Games', 'Pixel Pact game screen': 'Pantalla de juego de Pixel Pact',
+  // lobby
+  'Join': 'Unirse', 'Ready?': '¿Listo?', 'READY': 'LISTO', 'Leave': 'Salir', 'Bot': 'Bot', 'Phone': 'Teléfono',
+  'Press <b>Jump</b> on a free controller<br>or': 'Pulsa <b>Saltar</b> en un mando libre<br>o',
+  'Add a bot or press Jump on another controller to add a fighter.': 'Añade un bot o pulsa Saltar en otro mando para sumar un luchador.',
+  'Everyone is ready. Press Jump again (or Start) to fight.': 'Todos listos. Pulsa Saltar otra vez (o Start) para luchar.', 'Each player presses Attack or taps Ready.': 'Cada jugador pulsa Ataque o toca Listo.',
+  'Ready. Press Jump again (or Start) to go. Up to 4 can join with keyboards, gamepads, phones or bots.': 'Listos. Pulsa Saltar otra vez (o Start) para empezar. Hasta 4 pueden unirse con teclado, mandos, teléfonos o bots.',
+  'Press Attack or tap Ready when your hero is chosen.': 'Pulsa Ataque o toca Listo cuando elijas tu héroe.',
+  'IDLE': 'QUIETO', 'RUN': 'CORRER', 'ATTACK COMBO': 'COMBO DE ATAQUE', 'VICTORY': 'VICTORIA',
+  // map + picks
+  'Adventure · World 1 · Emberwood Isles': 'Aventura · Mundo 1 · Islas Emberwood', 'Choose an island': 'Elige una isla', 'locked': 'bloqueado', 'Best': 'Récord',
+  'Co-op: up to 4 heroes share one screen, one pool of lives and one exit. Tap the selected island again to play.': 'En equipo: hasta 4 héroes comparten pantalla, vidas y salida. Toca otra vez la isla elegida para jugar.',
+  'Clear {0} first to open this island.': 'Supera {0} primero para abrir esta isla.', 'Locked. Clear the island before it.': 'Bloqueada. Supera la isla anterior.',
+  'Match · Stage': 'Duelo · Escenario', 'Choose a stage': 'Elige un escenario', 'Stocks': 'Vidas', 'Coin Rush': 'Fiebre de Monedas', 'King of the Hill': 'Rey de la Colina',
+  'Last fighter standing.': 'Gana el último en pie.', 'Most coins in 90 seconds. A KO spills 3 of yours.': 'Más monedas en 90 segundos. Un KO te hace soltar 3.',
+  'Stand alone in the glowing zone. First to 30 points.': 'Quédate solo en la zona brillante. El primero en llegar a 30 puntos.',
+  '{0} stocks each.': '{0} vidas cada uno.', 'Hazards on (change in Settings).': 'Peligros activados (cámbialo en Ajustes).', 'Hazards off (change in Settings).': 'Peligros desactivados (cámbialo en Ajustes).',
+  '{0} STOCKS': '{0} VIDAS',
+  // levels
+  'Driftwood Beach': 'Playa Madera', 'Sunny shore. Learn the moves, cross the tidepools, beat Big Claw at the pier.': 'Costa soleada. Aprende los movimientos, cruza las pozas y vence a Gran Pinza en el muelle.',
+  'Palm Canopy': 'Copa de Palmeras', 'Treetop village. Climb through the palms, dodge coconuts, ride the lifts to the portal.': 'Aldea en los árboles. Trepa por las palmeras, esquiva cocos y sube en los elevadores hasta el portal.',
+  'Tidepool Caves': 'Cuevas de Marea', 'Dark sea cave lit by crystals. Water, urchins and jellies. Watch your footing.': 'Cueva marina oscura iluminada por cristales. Agua, erizos y medusas. Cuidado al pisar.',
+  'Springtide Shoals': 'Bajíos Saltarines', 'Bouncy clams fling you skyward. Something glitters inside the rocks.': 'Almejas saltarinas te lanzan al cielo. Algo brilla dentro de las rocas.',
+  'Jellyglow Lagoon': 'Laguna Medusa', 'Dive into glowing pools. The water never hurts here. The Jelly Queen rules the far grotto.': 'Bucea en pozas brillantes. Aquí el agua nunca hace daño. La Reina Medusa manda en la gruta del fondo.',
+  'Lever Ruins': 'Ruinas de Palancas', 'Old island ruins. Step on levers to raise the stone gates.': 'Viejas ruinas de la isla. Pisa las palancas para abrir las puertas.',
+  'Ferry Falls': 'Cascada del Ferri', 'The tide is high. Hop between ferries and ride the long lift to the cliffs.': 'La marea está alta. Salta entre ferris y sube en el elevador largo hasta los acantilados.',
+  'Neon Night Pier': 'Muelle Neón', 'The pier lights up at night. Time the lasers, outsmart the drones, pull the levers.': 'El muelle se ilumina de noche. Mide los láseres, engaña a los drones y activa las palancas.',
+  'Ember Steps': 'Escalones de Brasa', 'Volcano slopes. Steam vents fling you up, lava pools bite, planks crumble.': 'Laderas del volcán. Los géiseres de vapor te lanzan, la lava quema y las tablas se rompen.',
+  'Molten Crown Keep': 'Fortaleza Corona Fundida', 'The Tide Tyrant rebuilt Big Claw in lava. End it at the crater rim.': 'El Tirano de la Marea reconstruyó a Gran Pinza con lava. Acaba con él en el borde del cráter.',
+  // stages
+  'Driftwood Docks': 'Muelles Madera', 'One wide pier, two floating planks. The fair stage. A wave rolls through every 40 s.': 'Un muelle ancho y dos tablas flotantes. El escenario justo. Una ola pasa cada 40 s.',
+  'Canopy Clash': 'Choque en las Copas', 'Tall treetops on three levels. Juggle-heavy. Coconuts fall from shaking palms.': 'Copas altas en tres niveles. Muchos malabares. Caen cocos de las palmeras.',
+  'Molten Crown': 'Corona Fundida', 'A crater rim over lava. Small rock perches. Geysers erupt under the marked spots.': 'El borde de un cráter sobre lava. Rocas pequeñas. Los géiseres salen en los puntos marcados.',
+  'Neon Rooftops': 'Azoteas Neón', 'Two rooftops, one sliding ferry between them and lifts on the edges. Mind the gap.': 'Dos azoteas, un ferri que se desliza entre ellas y elevadores en los bordes. Cuidado con el hueco.',
+  'Crystal Grotto': 'Gruta de Cristal', 'A cave bowl with wall-jump pillars. Crystals shake loose from the ceiling.': 'Un cuenco de cueva con pilares para saltar por las paredes. Caen cristales del techo.',
+  // signs
+  'Move': 'Moverse', 'Jump, then again in the air': 'Salta, y otra vez en el aire', 'Tap 3 times for a combo': 'Toca 3 veces para un combo', 'Dodge through danger': 'Esquiva el peligro',
+  'Your signature move': 'Tu movimiento firma', 'In the air: pogo off enemies': 'En el aire: rebota sobre enemigos', 'Wall jump up the cliff': 'Salta por la pared del acantilado',
+  'Lasers pulse. Wait for the gap': 'Los láseres parpadean. Espera el hueco', 'Stand by a downed friend to revive': 'Quédate junto a un amigo caído para revivirlo',
+  'Spring clams launch you sky-high': 'Las almejas resorte te lanzan al cielo', 'Some walls are not what they seem': 'Algunas paredes no son lo que parecen',
+  'Land on a clam again for an extra bounce': 'Cae otra vez en una almeja para rebotar más', 'Portal ahead. Got all 3 Pact Shells?': 'Portal adelante. ¿Tienes las 3 Conchas del Pacto?',
+  'Jump to swim up. This water never hurts': 'Salta para nadar hacia arriba. Esta agua nunca hace daño', 'Wait for the Jelly Queen to dive, then strike': 'Espera a que la Reina Medusa baje y entonces ataca',
+  'Step on a lever to open the gate': 'Pisa una palanca para abrir la puerta', 'Each gate has a lever in the same area': 'Cada puerta tiene una palanca en la misma zona', 'Ride the log, then find the lever': 'Sube al tronco y busca la palanca',
+  'Ride the ferries across the tide': 'Viaja en los ferris sobre la marea', 'The tall lift climbs above the cliff': 'El elevador alto sube por encima del acantilado', 'Almost there. Hop the last ferries': 'Casi llegas. Salta a los últimos ferris',
+  'Three lasers in a row. Watch the rhythm': 'Tres láseres seguidos. Mira el ritmo', 'Last stretch. Drones dive when they lock on': 'Último tramo. Los drones bajan cuando te fijan',
+  'Steam vents launch you up. Stand on them': 'Los géiseres de vapor te lanzan. Párate encima', 'Crumbling planks fall. Keep moving': 'Las tablas se rompen. No te detengas',
+  'Final keep. Levers, lasers, lava': 'Fortaleza final. Palancas, láseres y lava', 'Magma Claw: dodge the glowing floor spots': 'Pinza de Magma: esquiva las manchas brillantes del suelo',
+  'PUSH + JUMP': 'EMPUJA + SALTA', '↓ + ATTACK': '↓ + ATAQUE', 'STICK': 'STICK',
+  // heroes
+  'Tank': 'Tanque', 'Speed': 'Velocidad', 'Ranged': 'Distancia', 'Bruiser': 'Luchador', 'Support': 'Apoyo', 'Grappler': 'Agarre',
+  'Shield Bash': 'Golpe de Escudo', 'Charges behind his shield. Blocks projectiles and claws from the front.': 'Carga tras su escudo. Bloquea proyectiles y pinzas de frente.',
+  'Fortress Wall': 'Muro Fortaleza', 'A golden barrier for 5 seconds and 25 health back.': 'Una barrera dorada durante 5 segundos y recupera 25 de vida.', 'Takes 15% less damage and is harder to launch.': 'Recibe 15% menos daño y cuesta más lanzarlo.',
+  'Shadow Dash': 'Carrera Sombra', 'Slices through everything in a line and cannot be hit while dashing.': 'Corta todo en línea recta y no recibe golpes mientras corre.',
+  'Clone Storm': 'Tormenta de Clones', 'Shadow clones strike every enemy on screen three times.': 'Clones de sombra golpean tres veces a cada enemigo en pantalla.', 'Triple jump and the fastest run speed.': 'Triple salto y la carrera más rápida.',
+  'Wave Push': 'Empuje de Ola', 'Sends a rolling wave that pierces everything in its path.': 'Lanza una ola que atraviesa todo a su paso.', 'Tsunami': 'Tsunami',
+  'A wall of water sweeps the whole screen.': 'Un muro de agua barre toda la pantalla.', 'Hold jump while falling to glide.': 'Mantén saltar al caer para planear.',
+  'Fire Uppercut': 'Gancho de Fuego', 'A rising flaming punch that launches enemies and carries Tito upward.': 'Un puñetazo ardiente que lanza a los enemigos y eleva a Tito.',
+  'Volcano Fist': 'Puño Volcán', 'One giant punch that erupts on impact.': 'Un puñetazo gigante que estalla al impactar.', 'Every hit sets enemies on fire for extra damage.': 'Cada golpe quema a los enemigos para hacer más daño.',
+  'Lantern Lob': 'Farol Volador', 'Lobs a lantern that bursts in a ring of light. The light heals friends it touches.': 'Lanza un farol que estalla en un anillo de luz. La luz cura a los amigos que toca.',
+  'Sunrise': 'Amanecer', 'Heals every ally, wakes downed friends and dazzles enemies on screen.': 'Cura a todos los aliados, despierta a los caídos y deslumbra a los enemigos en pantalla.',
+  'Revives friends twice as fast. Hearts heal her 50% more.': 'Revive amigos el doble de rápido. Los corazones la curan 50% más.',
+  'Vine Lash': 'Látigo de Liana', 'A long vine whip that yanks enemies toward Bo.': 'Un látigo de liana largo que atrae a los enemigos hacia Bo.',
+  'Thornquake': 'Terremoto de Espinas', 'Thorns burst from the ground across the screen, hitting every grounded enemy three times.': 'Brotan espinas por toda la pantalla y golpean tres veces a cada enemigo en el suelo.',
+  'Clings to walls: slides slowly and wall-jumps higher.': 'Se agarra a las paredes: resbala despacio y salta más alto desde ellas.',
+  // bosses + hud + float texts
+  'BIG CLAW': 'GRAN PINZA', 'MAGMA CLAW': 'PINZA DE MAGMA', 'JELLY QUEEN': 'REINA MEDUSA', 'BOSS · TIDE TYRANT MK II': 'JEFE · TIRANO DE LA MAREA MK II',
+  'FINAL BOSS · TIDE TYRANT MK III': 'JEFE FINAL · TIRANO DE LA MAREA MK III', 'MID-BOSS · GLOWING LAGOON': 'SUBJEFE · LAGUNA BRILLANTE',
+  '{0} DOWN!': '¡{0} DERROTADO!', 'DOWN!': '¡CAÍDO!', 'REVIVED!': '¡REVIVIDO!', 'CHECKPOINT': 'PUNTO DE CONTROL', 'PACT SHELL {0}/3': 'CONCHA DEL PACTO {0}/3', 'COOLDOWN': 'RECARGANDO',
+  'BLOCK': 'BLOQUEO', 'DEFLECT': 'DESVÍO', 'TEAM!': '¡EQUIPO!', 'KO!': '¡KO!', 'P{0} OUT': 'J{0} FUERA', 'BOT {0} OUT': 'BOT {0} FUERA', 'STUNNED · HIT NOW': 'ATURDIDO · ¡GOLPEA!',
+  'REINFORCEMENTS!': '¡REFUERZOS!', 'ENRAGED!': '¡FURIOSO!', 'SECRET!': '¡SECRETO!', 'SUN GEM!': '¡GEMA SOLAR!', 'GATE OPEN!': '¡PUERTA ABIERTA!', 'THE HILL MOVED!': '¡LA COLINA SE MOVIÓ!',
+  'MOVING SOON': 'SE MUEVE PRONTO', 'DAZZLED': 'DESLUMBRADO', 'WAVE INCOMING': 'SE ACERCA UNA OLA', 'WAITING FOR TEAM': 'ESPERANDO AL EQUIPO', 'HELP!': '¡AYUDA!', 'REVIVING': 'REVIVIENDO',
+  'BOARD': 'SUBE', 'EXIT': 'SALIDA', 'STAGE CLEAR': 'NIVEL SUPERADO', 'OUT OF LIVES': 'SIN VIDAS', 'DOWN': 'CAÍDO', 'HITS': 'GOLPES', 'GO': '¡YA!', 'DRAW': 'EMPATE',
+  'PLAYER {0} WINS': '¡GANA JUGADOR {0}!', 'BOT {0} WINS': '¡GANA BOT {0}!',
+  'Stick together. Stand by a downed friend to revive them.': 'Manteneos juntos. Quédate junto a un amigo caído para revivirlo.', 'Find 3 Pact Shells and reach the exit': 'Encuentra 3 Conchas del Pacto y llega a la salida',
+  'FORTRESS WALL!': '¡MURO FORTALEZA!', 'CLONE STORM!': '¡TORMENTA DE CLONES!', 'TSUNAMI!': '¡TSUNAMI!', 'VOLCANO FIST!': '¡PUÑO VOLCÁN!', 'SUNRISE!': '¡AMANECER!', 'THORNQUAKE!': '¡TERREMOTO DE ESPINAS!',
+  // results + pause + title
+  'Out of lives': 'Sin vidas', 'So close. Try again?': '¡Casi! ¿Otra vez?', 'Stage clear · {0}': 'Nivel superado · {0}', '{0} wins': '{0} gana', 'Draw': 'Empate', 'Player {0}': 'Jugador {0}', 'Bot {0}': 'Bot {0}',
+  'Perfect run. Nothing on this island could touch you.': 'Partida perfecta. Nada en esta isla pudo tocarte.',
+  'Star tip: find all 3 Pact Shells. They glow teal and are often above or under the main path.': 'Consejo: encuentra las 3 Conchas del Pacto. Brillan en turquesa y suelen estar arriba o debajo del camino.',
+  'Star tip: finish with no falls in under {0}.': 'Consejo: termina sin caídas en menos de {0}.',
+  'Tip: dodge through attacks (you are invincible mid-dodge), and stand next to a fallen friend to revive them.': 'Consejo: esquiva los ataques (eres invencible al esquivar) y quédate junto a un amigo caído para revivirlo.',
+  'Tip: dodge right as a bot swings, then punish with a 3-hit combo into a Special.': 'Consejo: esquiva justo cuando el bot ataca y castiga con un combo de 3 golpes y un Especial.',
+  'Rematch with the same fighters, or change the lineup from the lobby.': 'Revancha con los mismos luchadores, o cambia el equipo en la sala.',
+  '{0} coins': '{0} monedas', 'Hero lv {0}': 'Nivel de héroe {0}', 'unlimited': 'ilimitadas', '{0} lives left': '{0} vidas', 'Run summary copied. Paste it anywhere.': 'Resumen copiado. Pégalo donde quieras.',
+  'Turn your phone sideways for the widest view': 'Gira el teléfono para ver más', 'Every phone is its own player (up to 4 fighters). In the lobby, press A (jump) on a phone to join. C + D together = ultimate.': 'Cada teléfono es un jugador (hasta 4). En la sala, pulsa A (saltar) en un teléfono para unirte. C + D juntos = definitiva.',
+  '{0} of {1} islands cleared · {2} of {3} stars · {4} of {5} Sun Gems · {6} matches': '{0} de {1} islas superadas · {2} de {3} estrellas · {4} de {5} Gemas Solares · {6} duelos',
+  'Up to 4 players on one screen · keyboard, gamepads, phones or touch · {0} difficulty': 'Hasta 4 jugadores en una pantalla · teclado, mandos, teléfonos o táctil · dificultad {0}'
+};
 function buzz(ms) { if (!settings.haptics) return; try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) {} }
 
 /* =========================================================
@@ -585,7 +700,7 @@ function edge(o, prev, just) { for (const key in o) { just[key] = (o[key] && !pr
 /* menu input: union of every real source */
 const menuIn = BLANK(), menuPrev = {}, menuJust = {}, tmpIn = BLANK();
 const ALL_SRC = ['k1', 'k2', 'touch', 'pad0', 'pad1', 'pad2', 'pad3', 'net1', 'net2', 'net3', 'net4', 'net5', 'net6', 'net7', 'net8'];
-const srcName = s => { if (s.startsWith('net')) { const N = window.__NETMOD, p = N && N.net.players.find(q => q.slot === +s.slice(3)); return '📱 ' + (p ? p.name : 'Phone'); } return SRC_NAMES[s]; };
+const srcName = s => { if (s.startsWith('net')) { const N = window.__NETMOD, p = N && N.net.players.find(q => q.slot === +s.slice(3)); return '📱 ' + (p ? p.name : tr('Phone')); } return tr(SRC_NAMES[s]); };
 function pollMenu() {
   for (const key in menuIn) menuIn[key] = 0;
   for (const s of ALL_SRC) { readSrc(s, tmpIn); for (const key in tmpIn) if (tmpIn[key]) menuIn[key] = tmpIn[key]; }
@@ -821,7 +936,7 @@ function burst(x, y, n, cols, spd, life, o) {
   }
 }
 function ringFx(x, y, r0, r1, col, life, w) { parts.push({ x, y, vx: 0, vy: 0, g: 0, drag: 1, type: 'ring', r0, r1, c: col, life, max: life, sz: w || 3, add: true }); }
-function floatText(x, y, txt, col, size, o) { texts.push({ x, y, txt: String(txt), c: col || '#fff', life: 52, size: size || 12, crit: o && o.crit }); }
+function floatText(x, y, txt, col, size, o) { texts.push({ x, y, txt: typeof txt === 'string' ? tr(txt) : String(txt), c: col || '#fff', life: 52, size: size || 12, crit: o && o.crit }); }
 function addTrauma(v) { if (motionOK()) G.trauma = Math.min(1, G.trauma + v); }
 function slowmo(sec) { if (motionOK()) G.slowT = Math.max(G.slowT, sec); }
 function toast(msg, ms) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('on'), ms || 2600); }
@@ -906,7 +1021,7 @@ function startLevel(fromCheckpoint) {
   if (fromCheckpoint) for (const e of ents) if (e.kind === 'beacon' && Math.abs(e.x - checkpoint.x) < 40) e.on = true;
   Object.assign(G, { hitstop: 0, trauma: 0, fade: 1, fadeDir: -1, levelDone: 0, levelT: 0, gameOver: 0, gameOverT: 0, cine: 0, flash: 0, hurtFlash: 0, matchOver: 0, countdown: 0, world: true });
   G.cam.cx = checkpoint.x + 120; G.cam.cy = checkpoint.y; G.cam.z = 1;
-  if (!fromCheckpoint) G.bannerT = 0;
+  if (!fromCheckpoint) { G.bannerT = 0; say(LEVEL.id + '. ' + tr(LEVEL.name) + '. ' + tr(players.length > 1 ? 'Stick together. Stand by a downed friend to revive them.' : 'Find 3 Pact Shells and reach the exit'), true); }
   Sound.play(LEVEL.song);
 }
 function startMatch() {
@@ -1028,7 +1143,7 @@ function startAttack(kind) {
 }
 function useUlt() {
   const h = P.hero; P.meter = 0; Sound.sfx.ult(); addTrauma(.8); G.hitstop = 12; G.flash = .8; G.punch = 1.07; buzz(80);
-  floatText(P.x + 10, P.y - 24, h.ult.toUpperCase() + '!', '#ffc65c', 18, { crit: true });
+  floatText(P.x + 10, P.y - 24, h.ult.toUpperCase() + '!', '#ffc65c', 18, { crit: true }); if (!P.bot && G.mode !== 'match') say(tr(h.ult) + '!', false);
   ringFx(P.x + 10, P.y + 20, 10, 220, h.c.glow, 30, 6);
   const onScreen = e => e.hp !== undefined && !e.dead && e.kind !== 'crate' && !(e.boss && e.state === 'sleep') && e.x + e.w > view.l - 20 && e.x < view.r + 20;
   if (h.id === 'rook') { P.shield = 300; P.hp = Math.min(P.max, P.hp + 25); if (G.mode === 'match') P.dmg = Math.max(0, P.dmg - 25); burst(P.x + 10, P.y + 20, 40, ['#ffc65c', '#fff6d8'], 6, 40, { add: true, g: 0 }); }
@@ -1293,7 +1408,7 @@ function knockOut(o) {
   Sound.sfx.ko(); addTrauma(.9); G.flash = .7; G.punch = 1.06; slowmo(.5); buzz(60);
   const ex = clamp(o.x + 10, view.l + 30, view.r - 30), ey = clamp(o.y + 20, view.t + 30, view.b - 30);
   burst(ex, ey, 40, [o.col, '#ffffff', '#ffc65c'], 9, 40, { add: true, type: 'spark', g: .1 }); ringFx(ex, ey, 10, 160, o.col, 24, 6);
-  floatText(ex, ey - 20, o.bot ? 'BOT ' + (o.idx + 1) + ' OUT' : 'P' + (o.idx + 1) + ' OUT', o.col, 16, { crit: true });
+  floatText(ex, ey - 20, tr(o.bot ? 'BOT {0} OUT' : 'P{0} OUT', o.idx + 1), o.col, 16, { crit: true });
   if (G.mmode === 'stock' && o.stocks <= 0) { o.out = true; o.dead = 0; checkMatchEnd(); }
 }
 function matchRespawn(o) {
@@ -1408,7 +1523,7 @@ function updateEnts() {
       continue;
     }
     if (e.kind === 'heart') { for (const pl of players) if (!pl.dead && !pl.downed && !pl.out && overlap(pl, e) && (pl.hp < pl.max || G.mode === 'match')) { ents.splice(i, 1); const hh = pl.hero.id === 'pip' ? 45 : 30; pl.hp = Math.min(pl.max, pl.hp + hh); pl.dmg = Math.max(0, pl.dmg - hh); Sound.sfx.heart(); floatText(pl.x + 10, pl.y - 10, '+' + hh, '#ff4d6d', 14); burst(e.x + 9, e.y + 8, 14, ['#ff4d6d', '#ffffff'], 3, 26, { add: true, g: -.05 }); break; } continue; }
-    if (e.kind === 'shell') { for (const pl of players) if (!pl.dead && !pl.downed && overlap(pl, e)) { ents.splice(i, 1); stats.shells++; stats.got[e.key] = 1; Sound.sfx.shell(); floatText(pl.x + 10, pl.y - 20, 'PACT SHELL ' + stats.shells + '/3', '#2de2c3', 16, { crit: true }); ringFx(e.x + 10, e.y + 10, 6, 90, '#2de2c3', 30, 5); burst(e.x + 10, e.y + 10, 30, ['#2de2c3', '#ffffff', '#ffc65c'], 6, 40, { add: true, g: -.02 }); G.hitstop = 8; buzz(30); break; } continue; }
+    if (e.kind === 'shell') { for (const pl of players) if (!pl.dead && !pl.downed && overlap(pl, e)) { ents.splice(i, 1); stats.shells++; stats.got[e.key] = 1; Sound.sfx.shell(); floatText(pl.x + 10, pl.y - 20, tr('PACT SHELL {0}/3', stats.shells), '#2de2c3', 16, { crit: true }); ringFx(e.x + 10, e.y + 10, 6, 90, '#2de2c3', 30, 5); burst(e.x + 10, e.y + 10, 30, ['#2de2c3', '#ffffff', '#ffc65c'], 6, 40, { add: true, g: -.02 }); G.hitstop = 8; buzz(30); break; } continue; }
     if (e.kind === 'beacon') { if (!e.on) for (const pl of players) if (!pl.dead && !pl.downed && overlap(pl, e)) { e.on = true; e.t = 0; checkpoint = { x: e.x - 6, y: e.y + e.h - 40 }; Sound.sfx.beacon(); floatText(e.x + 4, e.y - 12, 'CHECKPOINT', '#2de2c3', 13); ringFx(e.x + 4, e.y + 6, 4, 60, '#2de2c3', 26, 4); for (const q of players) { q.hp = Math.min(q.max, q.hp + 15); if (q.downed) { q.downed = 0; q.hp = Math.round(q.max * .5); q.inv = 60; } } break; } continue; }
     if (e.kind === 'gem') { for (const pl of players) if (!pl.dead && !pl.downed && !pl.out && overlap(pl, e)) { ents.splice(i, 1); stats.gem = 1; stats.got[e.key] = 1; Sound.sfx.gem(); floatText(pl.x + 10, pl.y - 24, tr('SUN GEM!'), '#ffc65c', 18, { crit: true }); ringFx(e.x + 10, e.y + 10, 6, 110, '#ffc65c', 34, 6); burst(e.x + 10, e.y + 10, 40, ['#ffc65c', '#fff6d8', '#ff6b4a'], 7, 44, { add: true, g: -.02 }); G.hitstop = 10; buzz(40); break; } continue; }
     if (e.kind === 'switch') { if (!e.on) for (const pl of players) if (!pl.dead && !pl.downed && !pl.out && overlap(pl, { x: e.x - 6, y: e.y - 10, w: e.w + 12, h: e.h + 10 })) { pressSwitch(e, pl); break; } continue; }
@@ -1564,7 +1679,7 @@ function updateVents() {
 }
 function updateBoss(e, dxp, T) {
   if (e.state === 'sleep') {
-    if (arena && alive().some(pl => pl.x > arena.x0 + 140)) { e.state = 'intro'; e.st = 110; arena.active = true; G.cine = 110; Sound.play('boss'); Sound.sfx.roar(); addTrauma(.6); buzz(60); for (const pl of players) if (pl.x < arena.x0 + 10 && !pl.dead) { pl.x = arena.x0 + 20; } }
+    if (arena && alive().some(pl => pl.x > arena.x0 + 140)) { e.state = 'intro'; e.st = 110; arena.active = true; G.cine = 110; Sound.play('boss'); Sound.sfx.roar(); say(tr(e.name) + '!', true); addTrauma(.6); buzz(60); for (const pl of players) if (pl.x < arena.x0 + 10 && !pl.dead) { pl.x = arena.x0 + 20; } }
     e.vy += e.g; moveBody(e, true, false); return;
   }
   const spd = e.enraged ? 1.45 : 1;
@@ -2260,8 +2375,9 @@ function drawSign(s, t) {
   ctx.fillStyle = '#4a5a6e'; ctx.fillRect(s.x - 2, s.y - 30, 4, 30); ctx.fillStyle = '#2b3646'; ctx.beginPath(); rr(ctx, s.x - 7, s.y - 36, 14, 8, 3); ctx.fill();
   glow(ctx, s.x, s.y - 34, 10, '#2de2c3', .7);
   if (s.a < .03) return;
-  const sg = s.s, src = n ? n.src : 'k1', key = src === 'touch' ? sg.t : src.startsWith('pad') ? sg.p : sg.k;
-  ctx.font = `800 10px ${FB}`; const lw = ctx.measureText(sg.label).width; ctx.font = `600 8px ${FD}`; const kw = key ? ctx.measureText(key).width + 14 : 0;
+  const sg = s.s, src = n ? n.src : 'k1', key = tr(src === 'touch' ? sg.t : src.startsWith('pad') || src.startsWith('net') ? sg.p : sg.k);
+  if (near && !s.said && n && !n.bot) { s.said = 1; say(tr(sg.label)); }
+  const label = tr(sg.label); ctx.font = `800 10px ${FB}`; const lw = ctx.measureText(label).width; ctx.font = `600 8px ${FD}`; const kw = key ? ctx.measureText(key).width + 14 : 0;
   const w = lw + kw + (key ? 22 : 16), h = 24, x = s.x - w / 2, y = s.y - 74 + Math.sin(t * 2) * 2;
   ctx.save(); ctx.globalAlpha = (Math.sin(t * 23) > .96 ? .5 : 1) * s.a;
   ctx.fillStyle = 'rgba(45,226,195,.16)'; ctx.beginPath(); ctx.moveTo(s.x - 6, s.y - 34); ctx.lineTo(x + 8, y + h); ctx.lineTo(x + w - 8, y + h); ctx.lineTo(s.x + 6, s.y - 34); ctx.closePath(); ctx.fill();
@@ -2269,7 +2385,7 @@ function drawSign(s, t) {
   ctx.strokeStyle = 'rgba(45,226,195,.85)'; ctx.lineWidth = 1.2; ctx.beginPath(); rr(ctx, x, y, w, h, 5); ctx.stroke();
   let cx = x + 8; ctx.textBaseline = 'middle';
   if (key) { ctx.fillStyle = '#2de2c3'; ctx.beginPath(); rr(ctx, cx, y + 5, kw, 14, 3); ctx.fill(); ctx.fillStyle = '#04201c'; ctx.font = `600 8px ${FD}`; ctx.fillText(key, cx + 7, y + 12.5); cx += kw + 7; }
-  ctx.fillStyle = '#effaf6'; ctx.font = `800 10px ${FB}`; ctx.fillText(sg.label, cx, y + 12.5);
+  ctx.fillStyle = '#effaf6'; ctx.font = `800 10px ${FB}`; ctx.fillText(label, cx, y + 12.5);
   ctx.restore(); ctx.textBaseline = 'alphabetic';
 }
 function drawPickup(e, t) {
@@ -2367,7 +2483,7 @@ function drawMovers(t) {
     const sw = 32 + Math.sin(t * 3) * 3; ctx.fillStyle = OUTLINE; ctx.beginPath(); ctx.moveTo(r.x + r.w - 20, r.y - 62); ctx.quadraticCurveTo(r.x + r.w - 20 - sw, r.y - 40, r.x + r.w - 20, r.y - 12); ctx.closePath(); ctx.fill();
     ctx.fillStyle = '#fff4e4'; ctx.beginPath(); ctx.moveTo(r.x + r.w - 21, r.y - 60); ctx.quadraticCurveTo(r.x + r.w - 21 - sw + 3, r.y - 40, r.x + r.w - 21, r.y - 14); ctx.closePath(); ctx.fill();
     ctx.fillStyle = '#ff6b4a'; ctx.fillRect(r.x + r.w - 21 - sw * .45, r.y - 42, sw * .45, 5);
-    if (arena && arena.cleared && !G.levelDone) { const bob = Math.sin(t * 4) * 3; ctx.font = `800 11px ${FD}`; ctx.textAlign = 'center'; ctx.fillStyle = OUTLINE; ctx.fillText('BOARD', r.x + 37, r.y - 73 + bob); ctx.fillStyle = '#ffc65c'; ctx.fillText('BOARD', r.x + 36, r.y - 74 + bob); ctx.textAlign = 'left'; }
+    if (arena && arena.cleared && !G.levelDone) { const bob = Math.sin(t * 4) * 3; ctx.font = `800 11px ${FD}`; ctx.textAlign = 'center'; ctx.fillStyle = OUTLINE; ctx.fillText(tr('BOARD'), r.x + 37, r.y - 73 + bob); ctx.fillStyle = '#ffc65c'; ctx.fillText(tr('BOARD'), r.x + 36, r.y - 74 + bob); ctx.textAlign = 'left'; }
   }
   if (exitP) {
     const e = exitP, cx = e.x + e.w / 2, cy = e.y + e.h / 2, pul = Math.sin(e.t / 12);
@@ -2378,7 +2494,7 @@ function drawMovers(t) {
     const g = ctx.createRadialGradient(cx, cy, 2, cx, cy, 26); g.addColorStop(0, 'rgba(255,255,255,.95)'); g.addColorStop(.5, 'rgba(45,226,195,.7)'); g.addColorStop(1, 'rgba(45,226,195,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(cx, cy, 20, 32, 0, 0, TAU); ctx.fill();
     ctx.fillStyle = '#3a4658'; ctx.beginPath(); rr(ctx, e.x - 6, e.y + e.h - 6, e.w + 12, 10, 4); ctx.fill();
     if (G.frame % 6 === 0) burst(cx + rnd(-14, 14), cy + rnd(-20, 20), 1, ['#2de2c3', '#ffffff'], 1, 30, { add: true, g: -.05 });
-    const bob = Math.sin(t * 4) * 3; ctx.font = `800 11px ${FD}`; ctx.textAlign = 'center'; ctx.fillStyle = OUTLINE; ctx.fillText('EXIT', cx + 1, e.y - 9 + bob); ctx.fillStyle = '#ffc65c'; ctx.fillText('EXIT', cx, e.y - 10 + bob); ctx.textAlign = 'left';
+    const bob = Math.sin(t * 4) * 3; ctx.font = `800 11px ${FD}`; ctx.textAlign = 'center'; ctx.fillStyle = OUTLINE; ctx.fillText(tr('EXIT'), cx + 1, e.y - 9 + bob); ctx.fillStyle = '#ffc65c'; ctx.fillText(tr('EXIT'), cx, e.y - 10 + bob); ctx.textAlign = 'left';
   }
   for (const gz of geysers) {
     ctx.fillStyle = gz.state ? '#ff7a3a' : '#5a3a3a'; ctx.beginPath(); ctx.ellipse(gz.x, gz.y - 2, 18, 5, 0, 0, TAU); ctx.fill();
@@ -2468,7 +2584,7 @@ function drawPlayerOne(p, t) {
   if (p.downed) {
     ctx.fillStyle = 'rgba(6,24,33,.8)'; ctx.beginPath(); rr(ctx, p.x - 12, p.y - 24, 44, 8, 4); ctx.fill();
     ctx.fillStyle = p.revive > 0 ? '#2de2c3' : '#ff4d6d'; ctx.beginPath(); rr(ctx, p.x - 11, p.y - 23, 42 * (p.revive > 0 ? p.revive : p.downT / 900), 6, 3); ctx.fill();
-    ctx.font = `800 9px ${FD}`; ctx.textAlign = 'center'; ctx.fillStyle = '#ffffff'; ctx.fillText(p.revive > 0 ? 'REVIVING' : 'HELP!', p.x + 10, p.y - 30 + Math.sin(t * 8) * 2); ctx.textAlign = 'left';
+    ctx.font = `800 9px ${FD}`; ctx.textAlign = 'center'; ctx.fillStyle = '#ffffff'; ctx.fillText(tr(p.revive > 0 ? 'REVIVING' : 'HELP!'), p.x + 10, p.y - 30 + Math.sin(t * 8) * 2); ctx.textAlign = 'left';
   }
   if (p.shield > 0) {
     const a = p.shield < 60 ? (G.frame % 8 < 4 ? .3 : .8) : .8;
@@ -2530,7 +2646,7 @@ function drawWorld(left, top, z, t) {
 /* =========================================================
    HUD & overlays (screen space)
    ========================================================= */
-function textStroke(txt, x, y, fill, stroke, lw) { ctx.lineJoin = 'round'; ctx.lineWidth = lw; ctx.strokeStyle = stroke; ctx.strokeText(txt, x, y); ctx.fillStyle = fill; ctx.fillText(txt, x, y); }
+function textStroke(txt, x, y, fill, stroke, lw) { if (typeof txt === 'string' && LANG === 'es') txt = tr(txt); ctx.lineJoin = 'round'; ctx.lineWidth = lw; ctx.strokeStyle = stroke; ctx.strokeText(txt, x, y); ctx.fillStyle = fill; ctx.fillText(txt, x, y); }
 function drawPlayerCard(p, x, y, u, compact) {
   const h = p.hero, R = (compact ? 17 : 25) * u, cx = x + R + 4 * u, cy = y + R + 4 * u, frac = clamp(p.hp / p.max, 0, 1);
   ctx.fillStyle = 'rgba(6,24,33,.78)'; ctx.beginPath(); ctx.arc(cx, cy, R + 6 * u, 0, TAU); ctx.fill();
@@ -2646,27 +2762,27 @@ function drawOverlays() {
     ctx.fillStyle = '#ff6b4a'; ctx.fillRect(bx, y - 46 * u, 80 * u, 4 * u);
     const lx = bx + G.safe.l * G.dpr + 26 * u;
     ctx.font = `${10 * u}px ${FP}`; ctx.fillStyle = '#ff6b4a'; ctx.fillText(LEVEL.id, lx, y - 20 * u);
-    ctx.font = `900 ${Math.min(34 * u, W * .06)}px ${FD}`; textStroke(LEVEL.name.toUpperCase(), lx, y + 12 * u, '#effaf6', 'rgba(2,8,12,.8)', 4 * u);
-    ctx.font = `700 ${Math.min(11 * u, W * .022)}px ${FB}`; ctx.fillStyle = '#94b9c2'; ctx.fillText(players.length > 1 ? 'Stick together. Stand by a downed friend to revive them.' : 'Find 3 Pact Shells and reach the exit', lx, y + 32 * u);
+    ctx.font = `900 ${Math.min(34 * u, W * .06)}px ${FD}`; textStroke(tr(LEVEL.name).toUpperCase(), lx, y + 12 * u, '#effaf6', 'rgba(2,8,12,.8)', 4 * u);
+    ctx.font = `700 ${Math.min(11 * u, W * .022)}px ${FB}`; ctx.fillStyle = '#94b9c2'; ctx.fillText(tr(players.length > 1 ? 'Stick together. Stand by a downed friend to revive them.' : 'Find 3 Pact Shells and reach the exit'), lx, y + 32 * u);
     ctx.restore();
   }
   if (G.countdown > 0) {
-    const c = G.countdown, n = Math.ceil(c / 60), txt = c > 180 ? 'READY' : n > 0 ? String(n) : 'GO', k2 = (c % 60) / 60;
+    const c = G.countdown, n = Math.ceil(c / 60), txt = c > 180 ? tr('READY') : n > 0 ? String(n) : tr('GO'), k2 = (c % 60) / 60;
     ctx.save(); ctx.textAlign = 'center'; ctx.translate(W / 2, H * .42); ctx.scale(1 + (1 - k2) * .2, 1 + (1 - k2) * .2); ctx.globalAlpha = .4 + k2 * .6;
-    ctx.font = `900 ${Math.min(90 * u, W * .16)}px ${FD}`; textStroke(txt, 0, 0, txt === 'GO' ? '#2de2c3' : '#ffc65c', '#02080c', 8 * u); ctx.restore();
+    ctx.font = `900 ${Math.min(90 * u, W * .16)}px ${FD}`; textStroke(txt, 0, 0, n <= 0 ? '#2de2c3' : '#ffc65c', '#02080c', 8 * u); ctx.restore();
     if (c > 180) { ctx.textAlign = 'center'; ctx.font = `800 ${11 * u}px ${FD}`; ctx.fillStyle = '#effaf6'; ctx.fillText(tr(STAGE.name).toUpperCase() + ' · ' + (G.mmode === 'stock' ? tr('{0} STOCKS', settings.stocks) : tr((MMODES.find(m => m[0] === G.mmode) || MMODES[0])[2]).toUpperCase()), W / 2, H * .42 + 50 * u); }
   }
   if (G.matchOver && G.matchT > 10) {
     const w = players.find(p => p.winner), k2 = easeOut((G.matchT - 10) / 25); ctx.save(); ctx.globalAlpha = k2; ctx.textAlign = 'center';
     ctx.fillStyle = 'rgba(2,8,12,.45)'; ctx.fillRect(0, H * .3, W, H * .26);
-    ctx.font = `900 ${Math.min(52 * u, W * .09)}px ${FD}`; textStroke(w ? (w.bot ? 'BOT ' + (w.idx + 1) : 'PLAYER ' + (w.idx + 1)) + ' WINS' : 'DRAW', W / 2, H * .44, w ? w.col : '#effaf6', '#02080c', 7 * u);
+    ctx.font = `900 ${Math.min(52 * u, W * .09)}px ${FD}`; textStroke(w ? tr(w.bot ? 'BOT {0} WINS' : 'PLAYER {0} WINS', w.idx + 1) : 'DRAW', W / 2, H * .44, w ? w.col : '#effaf6', '#02080c', 7 * u);
     if (w) { ctx.font = `800 ${12 * u}px ${FD}`; ctx.fillStyle = '#ffc65c'; ctx.fillText(w.hero.name.toUpperCase(), W / 2, H * .44 + 28 * u); }
     ctx.restore();
   }
   if (G.levelDone && G.levelT > 20) {
     const k2 = easeOut((G.levelT - 20) / 25); ctx.save(); ctx.globalAlpha = k2; ctx.textAlign = 'center';
     ctx.font = `900 ${Math.min(64 * u, W * .1)}px ${FD}`; const g = ctx.createLinearGradient(0, H * .3, 0, H * .42); g.addColorStop(0, '#fff6d8'); g.addColorStop(.5, '#ffc65c'); g.addColorStop(1, '#ff6b4a');
-    ctx.lineWidth = 8 * u; ctx.strokeStyle = 'rgba(2,8,12,.85)'; ctx.lineJoin = 'round'; ctx.strokeText('STAGE CLEAR', W / 2, H * .4); ctx.fillStyle = g; ctx.fillText('STAGE CLEAR', W / 2, H * .4);
+    ctx.lineWidth = 8 * u; ctx.strokeStyle = 'rgba(2,8,12,.85)'; ctx.lineJoin = 'round'; ctx.strokeText(tr('STAGE CLEAR'), W / 2, H * .4); ctx.fillStyle = g; ctx.fillText(tr('STAGE CLEAR'), W / 2, H * .4);
     ctx.restore();
   }
   if (G.gameOver) { ctx.fillStyle = `rgba(2,8,12,${Math.min(.7, G.gameOverT / 60)})`; ctx.fillRect(0, 0, W, H); ctx.textAlign = 'center'; ctx.font = `900 ${Math.min(48 * u, W * .08)}px ${FD}`; textStroke('OUT OF LIVES', W / 2, H * .45, '#ff4d6d', '#02080c', 6 * u); }
@@ -2721,9 +2837,9 @@ function primarySource() { const gp = navigator.getGamepads ? navigator.getGamep
 function openLobby() {
   G.scene = 'lobby'; G.world = false; show('scrLobby'); setPlayUI(false);
   const adv = G.mode === 'adventure';
-  $('lobbyEyebrow').textContent = adv ? `Adventure · ${LEVELS[G.level].id} ${LEVELS[G.level].name}` : `Match · ${STAGES[G.stage].name} · ${settings.stocks} stocks`;
-  $('lobbyTitle').textContent = adv ? 'Pick your heroes' : 'Fighters, ready up';
-  $('btnAddBot').hidden = false; $('btnAddBot').textContent = adv ? 'Add bot ally' : 'Add bot';
+  $('lobbyEyebrow').textContent = adv ? `${tr('Adventure')} · ${LEVELS[G.level].id} ${tr(LEVELS[G.level].name)}` : `${tr('Match')} · ${tr(STAGES[G.stage].name)} · ${tr((MMODES.find(m => m[0] === settings.mmode) || MMODES[0])[1])}`;
+  $('lobbyTitle').textContent = tr(adv ? 'Pick your heroes' : 'Fighters, ready up');
+  $('btnAddBot').hidden = false; $('btnAddBot').textContent = tr(adv ? 'Add bot ally' : 'Add bot');
   if (!lobby.slots.length) lobby.slots.push({ idx: 0, src: primarySource(), hero: settings.heroes[0], ready: false });
   for (const s of lobby.slots) if (s.src !== 'bot') s.ready = false;
   lobby.src = {}; for (const s of ALL_SRC) { lobby.src[s] = { cur: BLANK(), prev: {}, just: {} }; }
@@ -2734,8 +2850,8 @@ function buildSlots() {
   for (let i = 0; i < 4; i++) {
     const s = lobby.slots[i], d = document.createElement('div'); d.className = 'slot' + (s ? '' : ' empty'); d.style.setProperty('--pc', PCOL[i]);
     if (!s) {
-      d.innerHTML = `<div class="pn">P${i + 1}</div><div>Press <b>Jump</b> on a free controller<br>or</div>`;
-      const j = document.createElement('button'); j.className = 'join'; j.textContent = i === 0 ? 'Join' : (G.mode === 'match' ? 'Add bot' : 'Add bot ally');
+      d.innerHTML = `<div class="pn">P${i + 1}</div><div>${tr('Press <b>Jump</b> on a free controller<br>or')}</div>`;
+      const j = document.createElement('button'); j.className = 'join'; j.textContent = tr(i === 0 ? 'Join' : (G.mode === 'match' ? 'Add bot' : 'Add bot ally'));
       j.addEventListener('click', () => { if (i === 0) joinSlot(primarySource()); else addBot(); }); d.appendChild(j);
     } else {
       const h = HEROES[s.hero];
@@ -2746,9 +2862,9 @@ function buildSlots() {
       const pick = document.createElement('div'); pick.className = 'pick';
       const l = document.createElement('button'); l.textContent = '◀'; l.setAttribute('aria-label', 'Previous hero'); l.addEventListener('click', () => cycleHero(s, -1));
       const r = document.createElement('button'); r.textContent = '▶'; r.setAttribute('aria-label', 'Next hero'); r.addEventListener('click', () => cycleHero(s, 1));
-      const rd = document.createElement('button'); rd.className = 'ready' + (s.ready ? ' on' : ''); rd.textContent = s.ready ? 'READY' : 'Ready?'; rd.addEventListener('click', () => toggleReady(s));
+      const rd = document.createElement('button'); rd.className = 'ready' + (s.ready ? ' on' : ''); rd.textContent = tr(s.ready ? 'READY' : 'Ready?'); rd.addEventListener('click', () => toggleReady(s));
       pick.appendChild(l); pick.appendChild(rd); pick.appendChild(r); d.appendChild(pick);
-      if (i > 0 || s.src === 'bot') { const x = document.createElement('button'); x.className = 'ready'; x.style.fontSize = '9px'; x.textContent = 'Leave'; x.addEventListener('click', () => leaveSlot(s)); d.appendChild(x); }
+      if (i > 0 || s.src === 'bot') { const x = document.createElement('button'); x.className = 'ready'; x.style.fontSize = '9px'; x.textContent = tr('Leave'); x.addEventListener('click', () => leaveSlot(s)); d.appendChild(x); }
       d.addEventListener('click', e => { if (e.target === d || e.target === cn || e.target === nm) lobby.focus = i; });
     }
     wrapEl.appendChild(d);
@@ -2759,10 +2875,10 @@ function updateLobbyInfo() {
   const s = lobby.slots[lobby.focus] || lobby.slots[0]; if (!s) return;
   const h = HEROES[s.hero];
   $('scWho').textContent = (s.src === 'bot' ? 'BOT' : 'P' + (s.idx + 1)) + ' · ' + h.name.toUpperCase();
-  $('selAbil').innerHTML = `<div class="ab"><span class="t">SPECIAL</span><div><b>${h.sig}</b> <span>${h.sigDesc}</span></div></div><div class="ab"><span class="t">ULTIMATE</span><div><b>${h.ult}</b> <span>${h.ultDesc}</span></div></div><div class="ab"><span class="t">PERK</span><div><span>${h.perk}</span></div></div>`;
+  $('selAbil').innerHTML = `<div class="ab"><span class="t">${tr('SPECIAL')}</span><div><b>${tr(h.sig)}</b> <span>${tr(h.sigDesc)}</span></div></div><div class="ab"><span class="t">${tr('ULTIMATE')}</span><div><b>${tr(h.ult)}</b> <span>${tr(h.ultDesc)}</span></div></div><div class="ab"><span class="t">${tr('PERK')}</span><div><span>${tr(h.role)} · ${tr(h.perk)}</span></div></div>`;
   const n = lobby.slots.length, allReady = lobby.slots.every(q => q.ready || q.src === 'bot'), minN = G.mode === 'match' ? 2 : 1;
   $('btnStart').disabled = !(n >= minN && allReady);
-  $('lobbyHint').textContent = G.mode === 'match' ? (n < 2 ? 'Add a bot or press Jump on another controller to add a fighter.' : allReady ? 'Everyone is ready. Press Jump again (or Start) to fight.' : 'Each player presses Attack or taps Ready.') : (allReady ? 'Ready. Press Jump again (or Start) to go. Up to 4 can join with keyboards, gamepads, phones or bots.' : 'Press Attack or tap Ready when your hero is chosen.');
+  $('lobbyHint').textContent = tr(G.mode === 'match' ? (n < 2 ? 'Add a bot or press Jump on another controller to add a fighter.' : allReady ? 'Everyone is ready. Press Jump again (or Start) to fight.' : 'Each player presses Attack or taps Ready.') : (allReady ? 'Ready. Press Jump again (or Start) to go. Up to 4 can join with keyboards, gamepads, phones or bots.' : 'Press Attack or tap Ready when your hero is chosen.'));
 }
 function joinSlot(src) {
   if (lobby.slots.length >= 4 || lobby.slots.some(s => s.src === src)) return;
@@ -2809,7 +2925,7 @@ function drawShowcase() {
   c.restore();
   glow(c, fx, fy, 70 * sc, h.c.glow, .35);
   const S = previewState(f), tag = { idle: 'IDLE', run: 'RUN', light: 'ATTACK COMBO', heavy: h.sig.toUpperCase(), jump: 'JUMP', fall: 'JUMP', win: 'VICTORY' }[S.anim] || '';
-  if (drawShowcase._tag !== tag) { $('scTag').textContent = tag; drawShowcase._tag = tag; }
+  if (drawShowcase._tag !== tag) { $('scTag').textContent = S.anim === 'heavy' ? tr(h.sig).toUpperCase() : tr(tag); drawShowcase._tag = tag; }
   if (S.anim === 'heavy' && h.id === 'marisol') { c.save(); c.translate(fx + (S.k * 30 + 10) * sc, fy - 36 * sc); c.scale(sc, sc); c.globalAlpha = Math.max(0, 1 - S.k); drawProj(c, { kind: 'wave', x: -18, y: 0, w: 36, h: 36, t: f, facing: 1 }); c.restore(); }
   c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(fx, fy, 16 * sc, 4 * sc, 0, 0, TAU); c.fill();
   drawHero(c, h, S, fx, fy - S.lift * sc / 2, 1, sc);
@@ -2842,7 +2958,7 @@ function drawWorldMap(cv2, pts) {
   c.setLineDash([]);
 }
 function buildMapPicks(wrapEl) {
-  const tall = wrapEl.clientWidth < 520 || G.portrait, pts = tall ? MAP_T : MAP_W;
+  const tall = G.portrait || innerWidth < 560, pts = tall ? MAP_T : MAP_W;
   const m = document.createElement('div'); m.className = 'wmap' + (tall ? ' tall' : ''); const cv2 = document.createElement('canvas'); m.appendChild(cv2);
   LEVELS.forEach((L, i) => {
     const pr = progress.levels[L.id] || {}, lock = !unlocked(i), n = document.createElement('button');
@@ -2938,11 +3054,22 @@ function setPlayUI(on) {
   $('touch').classList.toggle('on', !!showTouch); $('btnPause').classList.toggle('on', !!on); document.body.classList.toggle('playing', !!on);
   document.documentElement.style.setProperty('--b', settings.btn + 'px');
 }
+function translateDOM() {
+  document.documentElement.lang = LANG;
+  const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, { acceptNode: n => n.parentElement && !n.parentElement.closest('script,style,canvas,.inoa-party,.inoa-pp') ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT });
+  for (let n = walk.nextNode(); n; n = walk.nextNode()) { if (n.__en === undefined) n.__en = n.nodeValue; const t = n.__en.trim(); if (!t) continue; n.nodeValue = LANG === 'es' && ES[t] ? n.__en.replace(t, ES[t]) : n.__en; }
+  for (const el of document.querySelectorAll('[aria-label]')) { if (el.dataset.en === undefined) el.dataset.en = el.getAttribute('aria-label'); el.setAttribute('aria-label', tr(el.dataset.en)); }
+}
+function setLang(l) { LANG = l === 'es' ? 'es' : 'en'; settings.lang = LANG; saveSettings(); try { let key = 'inoa.profile'; const k = JSON.parse(localStorage.getItem('inoa.activeProfile') || 'null'); if (typeof k === 'string' && k.startsWith('inoa.profile.u.')) key = k; const pr = JSON.parse(localStorage.getItem(key) || '{}') || {}; pr.lang = LANG; localStorage.setItem(key, JSON.stringify(pr)); } catch (e) { } translateDOM(); }
+/* read-aloud for key instructions (Web Speech, EN/ES); follows the shared profile's read-aloud switch */
+let voiceOn = settings.voice != null ? !!settings.voice : (window.__inoaProfile && window.__inoaProfile().voice) !== false;
+function say(txt, interrupt) { if (!voiceOn || !txt || !window.speechSynthesis) return; try { if (interrupt) speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(txt); u.lang = LANG === 'es' ? 'es-ES' : 'en-US'; const v = speechSynthesis.getVoices().find(q => q.lang && q.lang.toLowerCase().startsWith(LANG)); if (v) u.voice = v; u.rate = 1.02; u.volume = Math.min(1, settings.sfx / 80); speechSynthesis.speak(u); } catch (e) { } }
 function fmt(s) { const m = Math.floor(s / 60), x = Math.floor(s % 60); return m + ':' + (x < 10 ? '0' : '') + x; }
 function goTitle() {
   G.scene = 'title'; G.world = false; show('scrTitle'); setPlayUI(false); Sound.play('title');
   const best = Object.values(progress.levels || {}).filter(l => l.bestTime);
-  $('bestLine').innerHTML = best.length ? `${best.length} of ${LEVELS.length} levels cleared · <b>${best.reduce((a, l) => a + (l.stars || 0), 0)}</b> of ${LEVELS.length * 3} stars · ${progress.matches || 0} matches played · ${DIFF[settings.diff].name}` : `Up to 4 players on one screen · keyboard, gamepads or touch · ${DIFF[settings.diff].name} difficulty`;
+  const gems = Object.values(progress.levels || {}).filter(l => l.gem).length;
+  $('bestLine').innerHTML = best.length ? tr('{0} of {1} islands cleared · {2} of {3} stars · {4} of {5} Sun Gems · {6} matches', best.length, LEVELS.length, '<b>' + best.reduce((a, l) => a + (l.stars || 0), 0) + '</b>', LEVELS.length * 3, gems, LEVELS.length, progress.matches || 0) : tr('Up to 4 players on one screen · keyboard, gamepads, phones or touch · {0} difficulty', tr(DIFF[settings.diff].name));
 }
 function openPicks(mode) { G.mode = mode; G.scene = 'picks'; G.world = false; buildPicks(); show('scrLevels'); setPlayUI(false); }
 function startPlay() {
@@ -2953,13 +3080,13 @@ function startPlay() {
   try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(() => {}); } catch (e) {}
   try { if (navigator.wakeLock) navigator.wakeLock.request('screen').catch(() => {}); } catch (e) {}
   setTimeout(resize, 250);
-  if (G.portrait && matchMedia('(pointer:coarse)').matches) setTimeout(() => toast('Turn your phone sideways for the widest view'), 600);
+  if (G.portrait && matchMedia('(pointer:coarse)').matches) setTimeout(() => toast(tr('Turn your phone sideways for the widest view')), 600);
 }
 function pauseGame() {
   if (G.scene !== 'play' || G.levelDone || G.gameOver || G.matchOver) return;
   G.scene = 'pause'; setPlayUI(false);
-  $('pauseEyebrow').textContent = G.mode === 'match' ? STAGE.name : LEVEL.id + ' · ' + LEVEL.name;
-  $('pauseStats').textContent = G.mode === 'match' ? `${fmt(stats.time)} · ${players.map(p => (p.bot ? 'Bot' : 'P' + (p.idx + 1)) + ' ' + Math.round(p.dmg) + '% ×' + p.stocks).join(' · ')}` : `${fmt(stats.time)} · ${stats.coins} coins · ${stats.shells}/3 Pact Shells · ${stats.lives > 50 ? 'unlimited' : stats.lives} lives left`;
+  $('pauseEyebrow').textContent = G.mode === 'match' ? tr(STAGE.name) : LEVEL.id + ' · ' + tr(LEVEL.name);
+  $('pauseStats').textContent = G.mode === 'match' ? `${fmt(stats.time)} · ${players.map(p => (p.bot ? tr('Bot') : 'P' + (p.idx + 1)) + ' ' + Math.round(p.dmg) + '% ×' + p.stocks).join(' · ')}` : `${fmt(stats.time)} · ${tr('{0} coins', stats.coins)} · ${stats.shells}/3 ${tr('Pact Shells')} · ${tr('{0} lives left', stats.lives > 50 ? tr('unlimited') : stats.lives)}`;
   $('btnRestartCp').hidden = G.mode === 'match';
   show('scrPause'); Sound.sfx.back();
 }
@@ -2972,21 +3099,22 @@ function showResults(won) { if (G.scene === 'results') return; let rw = { xp: wo
   $('resRankWrap').hidden = match; $('resGrid').hidden = match; $('resBoard').hidden = !match; $('btnResNext').hidden = match || !won || G.level >= LEVELS.length - 1;
   if (match) {
     const w = players.find(p => p.winner), sc = p => G.mmode === 'coins' ? p.score : G.mmode === 'hill' ? (p.hill || 0) : p.stocks, order = players.slice().sort((a, b) => (b.winner ? 1 : 0) - (a.winner ? 1 : 0) || sc(b) - sc(a) || b.kos - a.kos || a.dmg - b.dmg);
-    $('resEyebrow').textContent = STAGE.name + ' · ' + fmt(stats.time); $('resTitle').textContent = w ? (w.bot ? 'Bot ' + (w.idx + 1) : 'Player ' + (w.idx + 1)) + ' wins' : 'Draw';
+    $('resEyebrow').textContent = tr(STAGE.name) + ' · ' + fmt(stats.time); $('resTitle').textContent = w ? tr('{0} wins', tr(w.bot ? 'Bot {0}' : 'Player {0}', w.idx + 1)) : tr('Draw'); say($('resTitle').textContent, true);
     $('resBoard').innerHTML = order.map((p, i) => `<div class="${p.winner ? 'win' : ''}" style="--pc:${p.col}"><i>${i + 1}</i><b>${p.bot ? tr('Bot') + ' ' : 'P'}${p.idx + 1} · ${p.hero.short}</b><i>${p.kos} KO</i><i>${G.mmode === 'coins' ? '● ' + p.score : G.mmode === 'hill' ? Math.floor(p.hill || 0) + ' ♛' : Math.round(p.dealt) + ' dmg'}</i></div>`).join('');
-    $('resTip').textContent = w && w.bot ? 'Tip: dodge right as a bot swings, then punish with a 3-hit combo into a Special.' : 'Rematch with the same fighters, or change the lineup from the lobby.';
+    $('resTip').textContent = tr(w && w.bot ? 'Tip: dodge right as a bot swings, then punish with a 3-hit combo into a Special.' : 'Rematch with the same fighters, or change the lineup from the lobby.');
     shareText = `Pixel Pact · ${STAGE.name}: ${w ? (w.bot ? 'Bot' : 'Player ' + (w.idx + 1)) + ' (' + w.hero.short + ') won' : 'draw'} in ${fmt(stats.time)} with ${w ? w.kos : 0} KOs.`;
     Sound.sfx.win();
   } else {
     const par = LEVEL.par, s1 = won, s2 = won && stats.shells === 3, s3 = won && stats.deaths === 0 && stats.time < par, stars = (s1 ? 1 : 0) + (s2 ? 1 : 0) + (s3 ? 1 : 0);
     const rank = !won ? 'C' : stars === 3 && stats.combo >= 15 ? 'S' : stars >= 2 ? 'A' : 'B';
-    $('resEyebrow').textContent = won ? 'Stage clear · ' + LEVEL.id : 'Out of lives'; $('resTitle').textContent = won ? LEVEL.name : 'So close. Try again?'; $('resRank').textContent = rank;
+    $('resEyebrow').textContent = won ? tr('Stage clear · {0}', LEVEL.id) : tr('Out of lives'); $('resTitle').textContent = won ? tr(LEVEL.name) : tr('So close. Try again?'); $('resRank').textContent = rank;
+    say(won ? tr('STAGE CLEAR') + '. ' + tr(LEVEL.name) + '. ' + stars + ' ★' : tr('So close. Try again?'), true);
     $('resStars').innerHTML = STAR + STAR + STAR;
     const st = [...$('resStars').children]; [s1, s2, s3].forEach((on, i) => { if (on) setTimeout(() => { st[i].classList.add('on'); Sound.sfx.star(); buzz(15); }, 450 + i * 320); });
     $('rGem').textContent = stats.gem ? '◆' : '—'; $('rSecrets').textContent = String(stats.secrets || 0);
     const rows = { rTime: [stats.time, v => fmt(v)], rCoins: [stats.coins, v => Math.round(v)], rShells: [stats.shells, v => Math.round(v) + '/3'], rKos: [stats.kos, v => Math.round(v)], rCombo: [stats.combo, v => Math.round(v)], rDeaths: [stats.deaths, v => Math.round(v)] };
     const t0 = performance.now(); (function count() { const k2 = Math.min(1, (performance.now() - t0) / 900); for (const id in rows) $(id).textContent = rows[id][1](rows[id][0] * easeOut(k2)); if (k2 < 1) requestAnimationFrame(count); })();
-    $('resTip').textContent = won ? (s2 && s3 ? 'Perfect run. Nothing on this island could touch you.' : !s2 ? 'Star tip: find all 3 Pact Shells. They glow teal and are often above or under the main path.' : `Star tip: finish with no falls in under ${fmt(par)}.`) : 'Tip: dodge through attacks (you are invincible mid-dodge), and stand next to a fallen friend to revive them.';
+    $('resTip').textContent = won ? (s2 && s3 ? tr('Perfect run. Nothing on this island could touch you.') : !s2 ? tr('Star tip: find all 3 Pact Shells. They glow teal and are often above or under the main path.') : tr('Star tip: finish with no falls in under {0}.', fmt(par))) : tr('Tip: dodge through attacks (you are invincible mid-dodge), and stand next to a fallen friend to revive them.');
     let isNew = false;
     let newGem = false; if (won && stats.gem) { const pr0 = progress.levels[LEVEL.id] || {}; if (!pr0.gem) newGem = true; }
     if (won) { const pr = progress.levels[LEVEL.id] || { stars: 0, bestTime: 0, rank: '' }; if (stats.gem) pr.gem = true; if (!pr.bestTime || stats.time < pr.bestTime) { pr.bestTime = stats.time; isNew = true; } pr.stars = Math.max(pr.stars || 0, stars); if (!pr.rank || 'SABC'.indexOf(rank) < 'SABC'.indexOf(pr.rank)) { pr.rank = rank; isNew = true; } progress.levels[LEVEL.id] = pr; saveProgress(); }
@@ -2997,9 +3125,9 @@ function showResults(won) { if (G.scene === 'results') return; let rw = { xp: wo
   }
   if (match) { const hw = players.find(p => p.winner && !p.bot); rw = { xp: hw ? 70 : 40, coins: hw ? 20 : 10 }; }
   G.lastReward = rw;
-  { let lv = 1, need = 100, x = (+((window.__inoaProfile && window.__inoaProfile().xp) || 0)) + rw.xp; while (x >= need && lv < 50) { x -= need; lv++; need = Math.round(need * 1.12); } $('resReward').innerHTML = `<span>+${rw.xp} XP</span><span>+${rw.coins} coins</span><span>Hero lv ${lv}</span>`; }
+  { let lv = 1, need = 100, x = (+((window.__inoaProfile && window.__inoaProfile().xp) || 0)) + rw.xp; while (x >= need && lv < 50) { x -= need; lv++; need = Math.round(need * 1.12); } $('resReward').innerHTML = `<span>+${rw.xp} XP</span><span>+${tr('{0} coins', rw.coins)}</span><span>${tr('Hero lv {0}', lv)}</span>`; }
   try { window.__inoaReward('pixelpact', rw.xp, rw.coins, match ? null : (won ? G.level + 1 : null)); } catch (e) { } try { window.__inoaRound && window.__inoaRound(won, rw); } catch (e) { }
-  $('btnShare').textContent = 'Share my run';
+  $('btnShare').textContent = tr('Share my run');
   show('scrResults');
 }
 function menuNav() {
@@ -3055,24 +3183,29 @@ function seg(id, key, num) {
   const el = $(id), sync = () => { for (const b of el.children) b.classList.toggle('on', String(b.dataset.v) === String(settings[key])); };
   sync(); el.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; settings[key] = num ? Number(b.dataset.v) : b.dataset.v; sync(); saveSettings(); Sound.sfx.select(); if (key === 'quality') { G.res = 1; resize(); } if (key === 'haptics' && settings.haptics) buzz(30); });
 }
+seg('sLang', 'lang', false); seg('sVoice', 'voice', true);
+$('sLang').addEventListener('click', () => { setLang(settings.lang); goTitleIfThere(); });
+$('sVoice').addEventListener('click', () => { voiceOn = !!settings.voice; if (voiceOn) say(tr('Read aloud'), true); });
+function goTitleIfThere() { /* refresh text built at runtime on screens that stay open */ if (G.scene === 'title') goTitle(); }
 seg('sDiff', 'diff', true); seg('sStocks', 'stocks', true); seg('sHazards', 'hazards', true); seg('sQuality', 'quality', false); seg('sDepth', 'depth', true); seg('sTouch', 'touch', false); seg('sHaptics', 'haptics', true); seg('sMotion', 'motion', true); seg('sFps', 'fps', true);
 // share button on results
 (() => { const b = document.createElement('button'); b.className = 'btn glass'; b.id = 'btnShare'; b.textContent = 'Share my run'; $('btnAgain').parentNode.insertBefore(b, $('btnAgain'));
-  b.addEventListener('click', () => { const txt = shareText + ' Play free: ' + location.href.split('#')[0]; const done = () => { b.textContent = 'Copied!'; toast('Run summary copied. Paste it anywhere.'); setTimeout(() => b.textContent = 'Share my run', 2000); };
+  b.addEventListener('click', () => { const txt = shareText + ' Play free: ' + location.href.split('#')[0]; const done = () => { b.textContent = tr('Copied!'); toast(tr('Run summary copied. Paste it anywhere.')); setTimeout(() => b.textContent = tr('Share my run'), 2000); };
     try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done).catch(() => { toast(txt, 6000); }); else toast(txt, 6000); } catch (e) { toast(txt, 6000); } }); })();
 
 /* =========================================================
    Boot
    ========================================================= */
 function boot() {
-  buildSprites(); resize(); goTitle();
+  if (settings.voice == null) settings.voice = voiceOn ? 1 : 0; if (!settings.lang) settings.lang = LANG; $('sLang').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === settings.lang)); $('sVoice').querySelectorAll('button').forEach(b => b.classList.toggle('on', +b.dataset.v === settings.voice));
+  translateDOM(); buildSprites(); resize(); goTitle();
   try { if (window.claude && window.claude.hot && window.claude.hot.snapshot) window.claude.hot.snapshot(() => ({ heroes: settings.heroes })); } catch (e) {}
   requestAnimationFrame(t => { last = t; loop(t); });
   // headless test hooks (test/pixelpact.js): drive the fixed-step sim without real-time waits
   window.__GAME = { G, levels: LEVELS, stages: STAGES, heroes: HEROES, progress, get players() { return players; }, get lobby() { return lobby; }, get ents() { return ents; }, get boss() { return boss; }, get arena() { return arena; }, get mapW() { return MW * TS; },
     start(mode, level = 0, o = {}) { G.mode = mode; G.level = level; if (o.stage != null) G.stage = o.stage; if (o.mode) settings.mmode = o.mode; if (o.hero != null) settings.heroes[0] = o.hero; lobby.slots = []; openLobby(); if (mode === 'match') { while (lobby.slots.length < 1 + (o.bots || 1)) addBot(); } startPlay(); },
     openMap() { openPicks('adventure'); }, force(i, key) { const pl = players[i]; if (pl) { pl.force = key; if (key === 'ult') pl.meter = 100; } }, update(n = 1) { for (let i = 0; i < n; i++) { if (G.scene === 'play') pollPlayers(); step(); } if (G.world) drawPlay(); }, results: showResults };
-  window.__READY = true;
+  window.__ppTr = tr; window.__READY = true;
 }
 const fontsReady = document.fonts && document.fonts.load ? Promise.all([document.fonts.load('900 20px "Unbounded"'), document.fonts.load('800 12px "Manrope"'), document.fonts.load('10px "Press Start 2P"')]).catch(() => {}) : Promise.resolve();
 Promise.race([fontsReady, new Promise(r => setTimeout(r, 1500))]).then(() => { if (window.claude && window.claude.hot && window.claude.hot.ready) window.claude.hot.ready(boot); else boot(); });
@@ -3084,7 +3217,7 @@ import * as NET from '../engine/net.js';
 window.__NETMOD = NET; NET.resume();
 const push = () => { if (NET.net.role === 'host') NET.setLayout({ type: 'gamepad', labels: { A: '⤒', B: '⚔', C: '✨', D: '💨' }, buttons: ['A', 'B', 'C', 'D'] }); };
 NET.net.on('status', s => { if (s === 'ready') push(); }); NET.net.on('join', push);
-NET.partyWidget({ hint: 'Every phone is its own player (up to 4 fighters). In the lobby, press A (jump) on a phone to join. C + D together = ultimate.' });
+NET.partyWidget({ hint: (window.__ppTr || (s => s))('Every phone is its own player (up to 4 fighters). In the lobby, press A (jump) on a phone to join. C + D together = ultimate.') });
 </script>
 
 </body>

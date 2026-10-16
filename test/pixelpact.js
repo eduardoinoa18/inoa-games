@@ -68,4 +68,11 @@ module.exports = async (p, shot) => {
   // coin rush to the end → results board
   const end = await p.evaluate(async () => { const G = window.__GAME; G.start('match', 0, { stage: 0, mode: 'coins', bots: 1 }); for (let i = 0; i < 200 && G.G.scene === 'play'; i++) { G.update(60); await new Promise(r => setTimeout(r, 0)); } return { scene: G.G.scene, title: document.getElementById('resTitle').textContent }; });
   console.log('coin rush end', JSON.stringify(end));
+  // Spanish: flip the language in Settings, check the title, map, a level banner and the results card
+  const es = await p.evaluate(async () => { document.getElementById('btnQuit').click(); document.querySelector('#sLang button[data-v="es"]').click(); await new Promise(r => setTimeout(r, 50)); return { lang: document.documentElement.lang, adv: document.querySelector('#btnAdventure b').textContent, best: document.getElementById('bestLine').textContent.slice(0, 60) }; });
+  console.log('spanish', JSON.stringify(es));
+  await shot('title_es');
+  await p.evaluate(() => window.__GAME.openMap()); await p.waitForTimeout(300); await shot('map_es');
+  await p.evaluate(() => { const G = window.__GAME; G.start('adventure', 5); G.update(60); }); await shot('level6_es');
+  await p.evaluate(() => { document.querySelector('#sLang button[data-v="en"]').click(); });
 };
