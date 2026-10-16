@@ -55,7 +55,7 @@ export const MC = [
 ['ani', 2, 'What do you call animals that are active at night?', ['Nocturnal', 'Diurnal', 'Aquatic', 'Arboreal'], '¿Cómo se llaman los animales que están activos de noche?', ['Nocturnos', 'Diurnos', 'Acuáticos', 'Arbóreos']],
 // ---- geography
 ['geo', 1, 'What is the largest ocean on Earth?', ['Pacific', 'Atlantic', 'Indian', 'Arctic'], '¿Cuál es el océano más grande de la Tierra?', ['Pacífico', 'Atlántico', 'Índico', 'Ártico']],
-['geo', 1, 'On which continent is Egypt?', ['Africa', 'Asia', 'Europe', 'South America'], '¿En qué continente está Egipto?', ['África', 'Asia', 'Europa', 'América del Sur']],
+['geo', 1, 'On which continent is Egypt?', ['Africa', 'Australia', 'Europe', 'South America'], '¿En qué continente está Egipto?', ['África', 'Australia', 'Europa', 'América del Sur']],
 ['geo', 1, 'What is the capital of France?', ['Paris', 'London', 'Rome', 'Madrid'], '¿Cuál es la capital de Francia?', ['París', 'Londres', 'Roma', 'Madrid']],
 ['geo', 1, 'Which is the coldest continent?', ['Antarctica', 'Africa', 'Europe', 'Australia'], '¿Cuál es el continente más frío?', ['La Antártida', 'África', 'Europa', 'Australia']],
 ['geo', 1, 'Which country is shaped like a boot?', ['Italy', 'Spain', 'Greece', 'Portugal'], '¿Qué país tiene forma de bota?', ['Italia', 'España', 'Grecia', 'Portugal']],

@@ -437,7 +437,7 @@ Perfect Fit (`games/fit.html`) re-audited and extended by one game agent. Tested
 ## Pact Trivia elevation pass (2026-10-16)
 Pact Trivia (`games/trivia.html`) re-audited and extended by one game agent. The question bank moved to `games/trivia-questions.js` (ES module). Full fact-check log and per-question changes: `docs/audit-notes/trivia.md`. Tested with `test/trivia.js` at 1000×560 and 390×844 and `test/party.js test/party_trivia.js` (phones).
 
-**Fact-check**: all 173 existing questions checked (EN = ES, exactly one answer, timeless, kid-safe). 0 removed, 2 rewritten (hat trick was not unique to one sport; "Bollywood" means the Hindi industry), 3 ES distractor/wording fixes, 1 regional ES term, 3 difficulty re-tags.
+**Fact-check**: all 173 existing questions checked (EN = ES, exactly one answer, timeless, kid-safe). 0 removed, 3 fixed for ambiguity (Egypt had Asia as a wrong choice, hat trick was not unique to one sport; "Bollywood" means the Hindi industry), 3 ES distractor/wording fixes, 1 regional ES term, 3 difficulty re-tags.
 
 **Bank**: 473 questions in 11 categories (new: History to 1950, Math, Words). 342 multiple choice (121 kids / 139 everyone / 82 hard), 99 true/false (balanced per round), 32 closest-number. No living people, brands, franchises or school-system-dependent facts; no fact repeated across formats.
 

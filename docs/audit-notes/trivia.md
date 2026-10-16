@@ -51,6 +51,7 @@ All 173 existing multiple-choice questions (the handout said ~160) were checked 
 - **Vegetable** (food): ES "un vegetal" → "una verdura" (the earlier note).
 - **Slam dunk** (sport): ES "clavada" is regional (Mexico); now "'clavada' (o 'mate')".
 - Difficulty re-tags (too easy for "hard"): light vs sound 3→2, nocturnal 3→2, capital of Egypt 3→2.
+- **Egypt's continent** (geo, kids): Asia was a distractor, but Egypt's Sinai is in Asia; replaced by Australia (found while reviewing the daily screenshot).
 - Kept on purpose: croissant → France ("most associated" wording), regional food words (banana/plátano, papas) where both are widely understood.
 
 ## New questions (all original, checked the same way)

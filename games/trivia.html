@@ -40,7 +40,7 @@
 .tv-bubble{position:fixed;z-index:19;transform:translate(-50%,-100%);background:#fff;color:#1b2430;font-weight:800;font-size:14px;padding:6px 10px;border-radius:14px;box-shadow:0 6px 16px rgba(0,0,0,.3);pointer-events:none;white-space:nowrap;animation:pop .25s ease-out}
 .tv-bubble:after{content:"";position:absolute;left:50%;bottom:-8px;margin-left:-8px;border:8px solid transparent;border-top-color:#fff;border-bottom:0}
 @keyframes pop{from{transform:translate(-50%,-80%) scale(.6);opacity:0}}
-@media (max-width:640px){.tv-choices.three{grid-template-columns:1fr}.tv-nb{min-width:46px;font-size:14px}.tv-choices{grid-template-columns:1fr 1fr;gap:6px;padding:8px}.tv-ch{min-height:52px;grid-template-columns:36px 1fr;font-size:14px}.tv-ch b{width:36px;height:36px;font-size:17px}.tv-scores{max-width:60vw}.tv-scores span{font-size:12px;padding:5px 8px}}
+@media (max-width:640px){.tv-nb{min-width:46px;font-size:14px}.tv-choices{grid-template-columns:1fr 1fr;gap:6px;padding:8px}.tv-ch{min-height:52px;grid-template-columns:36px 1fr;font-size:14px}.tv-ch b{width:36px;height:36px;font-size:17px}.tv-scores{max-width:60vw}.tv-scores span{font-size:12px;padding:5px 8px}}
 @media (orientation:landscape) and (max-height:640px){.tv-choices{gap:6px;padding:8px;width:min(760px,calc(100vw - 20px))}.tv-ch{min-height:44px;grid-template-columns:36px 1fr;font-size:15px}.tv-ch b{width:34px;height:34px;font-size:16px}}
 /* true/false, category pick and number dial panels */
 .tv-choices.three{grid-template-columns:repeat(3,1fr)}
@@ -52,6 +52,7 @@
 .tv-lock{min-height:50px;border:0;border-radius:14px;background:var(--pc,#ffd166);color:#14173a;font-weight:900;font-size:17px;padding:0 18px;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.25)}
 .tv-stats>div{display:flex;flex-wrap:wrap;gap:5px}.tv-stats span{position:relative;overflow:hidden;border-radius:10px;border:2px solid var(--line);padding:3px 8px;font-weight:800;font-size:13px;background:#fff}.tv-stats span i{position:absolute;left:0;top:0;bottom:0;background:var(--c);opacity:.35;z-index:0}.tv-stats span{z-index:0}
 #pSk[hidden],#pP[hidden]{display:none}
+@media (max-width:640px){.nrow{grid-template-columns:repeat(4,1fr)}.nrow output{grid-column:1/-1;order:-1}}
 /* toasts sit low (over the stage floor) instead of on top of the question board */
 .ig-toast{top:auto;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 52px)}
 @media (orientation:portrait){.tv-buz[data-c="0"],.tv-buz[data-c="1"]{top:auto;bottom:128px}.tv-scores{bottom:auto;top:max(56px,calc(env(safe-area-inset-top) + 50px));left:8px;right:8px;transform:none;max-width:none;gap:4px}.ig-toast{bottom:max(30px,env(safe-area-inset-bottom));max-width:calc(100vw - 2 * clamp(78px,15vmin,112px) - 40px)}.tv-scores span{font-size:12px;padding:4px 8px;gap:4px}}
