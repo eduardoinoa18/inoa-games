@@ -4,7 +4,7 @@
  "base": "../assets/",
  "models": {
   "male": "models/male.glb?h=37b571ee",
-  "skater-male": "models/skater-male.glb?h=849a827d",
+  "skater-male": "models/skater-male.glb?h=04184670",
   "skater-female": "models/skater-female.glb?h=fb0e1605",
   "survivor-female": "models/survivor-female.glb?h=9157aa20",
   "survivor-male": "models/survivor-male.glb?h=69d38b39",
@@ -16,5 +16,5 @@
   "studio": "hdri/studio.hdr?h=b583ab9f"
  },
  "lazy": [],
- "bytes": 1439698
+ "bytes": 1439250
 }

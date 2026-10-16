@@ -23,7 +23,7 @@
   "ship-dark": "models/ship-dark.glb?h=e5230eab",
   "ship-light": "models/ship-light.glb?h=701cb38e",
   "skater-female": "models/skater-female.glb?h=fb0e1605",
-  "skater-male": "models/skater-male.glb?h=849a827d",
+  "skater-male": "models/skater-male.glb?h=04184670",
   "survivor-female": "models/survivor-female.glb?h=9157aa20",
   "survivor-male": "models/survivor-male.glb?h=69d38b39",
   "tower": "models/tower.glb?h=9952debe",
@@ -39,5 +39,5 @@
   "sunset": "hdri/sunset.hdr?h=0c90676a"
  },
  "lazy": [],
- "bytes": 2104963
+ "bytes": 2104515
 }

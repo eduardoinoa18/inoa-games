@@ -49,7 +49,7 @@
   "pumpkin": "models/pumpkin.glb?h=a6512cf9",
   "sandwich": "models/sandwich.glb?h=2611a892",
   "skater-female": "models/skater-female.glb?h=fb0e1605",
-  "skater-male": "models/skater-male.glb?h=849a827d",
+  "skater-male": "models/skater-male.glb?h=04184670",
   "soy": "models/soy.glb?h=401a1c8e",
   "strawberry": "models/strawberry.glb?h=15ba46c2",
   "sushi-salmon": "models/sushi-salmon.glb?h=783822fa",
@@ -88,5 +88,5 @@
   "sunset": "hdri/sunset.hdr?h=0c90676a"
  },
  "lazy": [],
- "bytes": 1925863
+ "bytes": 1925415
 }

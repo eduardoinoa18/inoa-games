@@ -1,19 +1,26 @@
 // Cleans character textures that don't fit an all-ages hub, in the source GLBs (assets/models), before packs are built.
 // survivor-female / survivor-male (Kenney): grey-brown dirt splotches and dark torn patches are painted over with the
-// surrounding colour, and survivor-female's deep-red skin becomes a warm brown. Run from repo root:
-//   node tools/clean_textures.mjs && python3 tools/build_pack.py ... && node tools/build_packs.mjs
+// surrounding colour, and survivor-female's deep-red skin becomes a warm brown. skater-male: the small skull print on the
+// shirt is painted over with the shirt's own (vertical) gradient. Run from repo root (optionally naming models):
+//   node tools/clean_textures.mjs [model ...] && python3 tools/build_pack.py ... && node tools/build_packs.mjs
 import fs from 'node:fs';
 import { NodeIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
 import sharp from 'sharp';
 
-const JOBS = { 'survivor-female': { skin: true }, 'survivor-male': { skin: false } };
+const ALL = { 'survivor-female': { skin: true }, 'survivor-male': { skin: false }, 'skater-male': { patch: [285, 808, 362, 880, 268] } };
+const pick = process.argv.slice(2), JOBS = pick.length ? Object.fromEntries(pick.map(k => [k, ALL[k]])) : ALL;
 const io = new NodeIO().registerExtensions(ALL_EXTENSIONS);
 for (const [name, opt] of Object.entries(JOBS)) {
   const file = `assets/models/${name}.glb`; const doc = await io.read(file); let n = 0;
   for (const tex of doc.getRoot().listTextures()) {
     const { data, info } = await sharp(Buffer.from(tex.getImage())).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
     const W = info.width, H = info.height, a = data, N = W * H;
+    if (opt.patch) { // [x0, y0, x1, y1, sampleX] in 1024px texture space: copy each row's colour from sampleX across the box
+      const s = W / 1024, [x0, y0, x1, y1, sx] = opt.patch.map(v => Math.round(v * s));
+      for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) for (let c = 0; c < 4; c++) a[(y * W + x) * 4 + c] = a[(y * W + sx) * 4 + c];
+      tex.setImage(new Uint8Array(await sharp(a, { raw: { width: W, height: H, channels: 4 } }).png().toBuffer())); n++; continue;
+    }
     if (opt.skin) for (let i = 0; i < N; i++) { const r = a[i * 4], g = a[i * 4 + 1], b = a[i * 4 + 2]; if (r > 60 && g < r * .45 && b < r * .45) { const k = r / 138; a[i * 4] = Math.min(255, 158 * k); a[i * 4 + 1] = Math.min(255, 104 * k); a[i * 4 + 2] = Math.min(255, 74 * k); } }
     // Kenney textures are flat colour blocks; stains are small blobs of a different colour. Label blobs of near-equal colour,
     // then repaint small, dirt-coloured (grey-brown / near-black) blobs outside the face block with the commonest colour on their rim.

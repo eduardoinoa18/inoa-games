@@ -4,7 +4,7 @@
  "base": "../assets/",
  "models": {
   "skater-female": "models/skater-female.glb?h=fb0e1605",
-  "skater-male": "models/skater-male.glb?h=849a827d",
+  "skater-male": "models/skater-male.glb?h=04184670",
   "survivor-female": "models/survivor-female.glb?h=9157aa20",
   "survivor-male": "models/survivor-male.glb?h=69d38b39",
   "cyborg-female": "models/cyborg-female.glb?h=86c5fb7b",
@@ -38,5 +38,5 @@
   "interior": "hdri/interior.hdr?h=dd54c722"
  },
  "lazy": [],
- "bytes": 2043449
+ "bytes": 2043001
 }
