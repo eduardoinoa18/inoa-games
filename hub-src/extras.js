@@ -28,7 +28,7 @@ const ES_GAMES = {
   junk: ['Lava, lija, pinta y pule 16 coches y barcos oxidados con el dedo. Añade rayas, estrellas y ruedas brillantes, cumple pedidos y saca tarjetas con foto.', ['Solo', '2–4 min']],
   brew: ['Cultiva hierbas en tiempo real, incluso cuando no estás, prepara 16 tés para clientes con pequeñas historias y sube tu café hasta el nivel 10: plantas de temporada, un pianito y un perrito. Aquí nadie se enoja.', ['Solo', 'Visitas cortas']],
   trivia: ['Un plató de concurso en 3D con pulsadores para hasta cuatro jugadores en un dispositivo, o juega contra bots. Inglés y español.', ['1–4 jugadores', '5 min']],
-  draw: ['Pasa el dispositivo, dibuja la palabra secreta y que los demás adivinen. También Boceto Rápido y Teléfono.', ['2–8 jugadores', '5 min']],
+  draw: ['Dibuja la palabra secreta y que los demás adivinen: más de 700 palabras, equipos, Teléfono, Boceto rápido, dibujo del día y Adivina el dibujo. Cubeta, figuras y calcomanías.', ['1–8 jugadores', '5 min']],
   runner: ['Un corredor por el paseo con una ruta diaria igual para todos. Compite contra el fantasma de tu mejor carrera.', ['Solo', '1–2 min']]
 };
 const HUB_ES = { // static page text: English source → Spanish (applied by setLang)

@@ -150,7 +150,7 @@ const easel = new THREE.Group(); {
   const ledge = new THREE.Mesh(new THREE.BoxGeometry(1.7, .07, .16), wm); ledge.position.set(0, .98, .08); ledge.castShadow = true; easel.add(ledge);
   const topbar = new THREE.Mesh(new THREE.BoxGeometry(.5, .06, .1), wm); topbar.position.set(0, 2.35, .02); easel.add(topbar);
   const board = new THREE.Mesh(new THREE.BoxGeometry(1.66, 1.26, .05), E.pbr('wood', 0xe9dcc5, [1, 1])); board.position.set(0, 1.66, .05); board.castShadow = true; easel.add(board);
-  const art = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.2), new THREE.MeshStandardMaterial({ map: easelTex, roughness: .9 })); art.position.set(0, 1.66, .081); easel.add(art);
+  const art = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.2), new THREE.MeshStandardMaterial({ map: easelTex, emissive: 0xffffff, emissiveMap: easelTex, emissiveIntensity: .32, roughness: .9 })); art.position.set(0, 1.66, .081); easel.add(art);
   easel.position.set(-.5, 0, -1.6); easel.rotation.y = .18; easel.traverse(o => { if (o.isMesh) o.receiveShadow = true; }); room.add(easel); easel.userData.art = art;
 }
 // work table with paint jars and brushes
