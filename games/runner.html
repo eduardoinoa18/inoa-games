@@ -225,6 +225,26 @@ const boxM = (w, h, d, mat, x = 0, y = 0, z = 0) => { const m = shadow(new THREE
 const lampMat = new THREE.MeshStandardMaterial({ color: 0xffd9a0, emissive: 0xffa040, emissiveIntensity: 1.3, roughness: .4 });
 const bulbMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
 
+/* ---------- merged static models: one mesh per material (some CC0 models are 40+ meshes) ---------- */
+const MERGED = {}, _mv = new THREE.Vector3(), _mn = new THREE.Vector3(), _m3 = new THREE.Matrix3();
+function mergeGroup(list) {
+  let total = 0; for (const { geo } of list) total += geo.index ? geo.index.count : geo.attributes.position.count;
+  const pos = new Float32Array(total * 3), nor = new Float32Array(total * 3), uv = new Float32Array(total * 2); let o = 0;
+  for (const { geo, m } of list) { const P = geo.attributes.position, N = geo.attributes.normal, U = geo.attributes.uv, I = geo.index; _m3.getNormalMatrix(m); const n = I ? I.count : P.count;
+    for (let k = 0; k < n; k++, o++) { const i = I ? I.getX(k) : k; _mv.fromBufferAttribute(P, i).applyMatrix4(m); pos[o * 3] = _mv.x; pos[o * 3 + 1] = _mv.y; pos[o * 3 + 2] = _mv.z; if (N) { _mn.fromBufferAttribute(N, i).applyMatrix3(_m3).normalize(); nor[o * 3] = _mn.x; nor[o * 3 + 1] = _mn.y; nor[o * 3 + 2] = _mn.z; } if (U) { uv[o * 2] = U.getX(i); uv[o * 2 + 1] = U.getY(i); } } }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.BufferAttribute(nor, 3)); g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); g.computeBoundingSphere(); g.computeBoundingBox(); return g;
+}
+// bake a procedural group into one mesh per material (outline shells included)
+function bake(grp, shadowOn = true) { grp.updateMatrixWorld(true); const by = new Map(); grp.traverse(o => { if (o.isMesh && !o.isInstancedMesh) { if (!by.has(o.material)) by.set(o.material, []); by.get(o.material).push({ geo: o.geometry, m: o.matrixWorld }); } }); const g = new THREE.Group(); for (const [mat, list] of by) { const m = new THREE.Mesh(mergeGroup(list), mat); m.castShadow = m.receiveShadow = shadowOn && mat !== E.OUTLINE; if (mat === E.OUTLINE) { m.renderOrder = -1; m.userData.outline = true; } g.add(m); } g.userData.size = new THREE.Box3().setFromObject(g).getSize(new THREE.Vector3()); return g; }
+function MI(name, { scale = 1, shadow = true, outline = true, tint = null, fit = 'max' } = {}) {
+  const key = name + '|' + scale + '|' + fit; let M = MERGED[key];
+  if (!M) { const src = E.instance(name, { scale, fit, outline: false, shadow: false }); let skinned = false; src.traverse(o => { if (o.isSkinnedMesh) skinned = true; }); if (skinned) return E.instance(name, { scale, shadow, outline, tint, fit });
+    src.updateMatrixWorld(true); const by = new Map(); src.traverse(o => { if (o.isMesh) { if (!by.has(o.material)) by.set(o.material, []); by.get(o.material).push({ geo: o.geometry, m: o.matrixWorld }); } });
+    const all = []; by.forEach(list => all.push(...list)); M = MERGED[key] = { parts: [...by].map(([mat, list]) => ({ mat, geo: mergeGroup(list) })), shell: mergeGroup(all), size: src.userData.size.clone(), tints: {} }; }
+  const g = new THREE.Group(); g.name = name; g.userData.size = M.size.clone();
+  for (const p of M.parts) { let mat = p.mat; if (tint != null) { const tk = p.mat.uuid + tint; mat = M.tints[tk] || (M.tints[tk] = p.mat.clone()); if (!M.tints[tk].userData.tinted) { mat.color.multiply(new THREE.Color(tint)); mat.userData.tinted = true; } } const m = new THREE.Mesh(p.geo, mat); m.castShadow = m.receiveShadow = shadow; g.add(m); }
+  if (outline) { const sh = new THREE.Mesh(M.shell, E.OUTLINE); sh.scale.setScalar(1.03); sh.userData.outline = true; sh.renderOrder = -1; g.add(sh); } return g; // one merged outline shell
+}
 /* ---------- water (wave shader, world-space so it can follow the runner) ---------- */
 const waterMat = new THREE.ShaderMaterial({ transparent: true, fog: true, uniforms: THREE.UniformsUtils.merge([THREE.UniformsLib.fog, { uTime: { value: 0 }, uC: { value: new THREE.Color(0x3aa7b8) }, uD: { value: new THREE.Color(0x1d5f7a) }, uSky: { value: new THREE.Color(0xffc9a0) }, uSun: { value: new THREE.Color(0xffd9a8) }, uSunDir: { value: new THREE.Vector3(-.36, .09, -.93).normalize() } }]),
   vertexShader: `uniform float uTime;varying vec3 vW;varying vec3 vN;
@@ -252,6 +272,7 @@ const FOAM_GEO = new THREE.PlaneGeometry(3.2, CH); FOAM_GEO.rotateX(-Math.PI / 2
 
 /* ---------- shared world pieces ---------- */
 const lanternProto = (() => { const g = new THREE.Group(); const post = new THREE.Mesh(new THREE.CylinderGeometry(.09, .12, 2.6, 8), woodDark); post.position.y = 1.3; g.add(post); const arm = new THREE.Mesh(new THREE.BoxGeometry(.08, .08, .7), woodDark); arm.position.set(0, 2.5, .3); g.add(arm); const lant = new THREE.Group(); const cage = new THREE.Mesh(new THREE.BoxGeometry(.3, .4, .3), lampMat); lant.add(cage); const cap = new THREE.Mesh(new THREE.ConeGeometry(.26, .2, 4), metalMat); cap.position.y = .3; cap.rotation.y = Math.PI / 4; lant.add(cap); lant.position.set(0, 2.2, .6); g.add(lant); g.traverse(o => { if (o.isMesh) o.castShadow = true; }); return g; })();
+const LAMP_BAKED = bake(lanternProto);
 function umbrella(col) { const g = new THREE.Group(); const pole = new THREE.Mesh(new THREE.CylinderGeometry(.04, .04, 2.3, 6), E.mat(0xf2efe8)); pole.position.y = 1.15; g.add(pole); const top = new THREE.Mesh(new THREE.ConeGeometry(1.5, .55, 12, 1, true), new THREE.MeshStandardMaterial({ map: stripeTex('#fff8ee', col, 12), side: THREE.DoubleSide, roughness: .8 })); top.position.y = 2.25; g.add(top); const towel = new THREE.Mesh(new THREE.BoxGeometry(.9, .03, 1.8), new THREE.MeshStandardMaterial({ map: stripeTex(col, '#fff8ee', 6, true), roughness: .95 })); towel.position.set(.9, .02, .3); towel.rotation.y = .3; g.add(towel); g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); return g; }
 const UMB_COLS = ['#ff7b6b', '#ffd166', '#5bc8b5', '#8c6cff', '#5bb8ff'];
 const PALMS = ['palm-long', 'palm-detailed-short'], HOUSES = ['house-4', 'house-5', 'house-6', 'house-7', 'house1'];
@@ -264,13 +285,23 @@ const PIL_GEO = new THREE.CylinderGeometry(.16, .18, 1.6, 8), RP_GEO = new THREE
 const ropeMat = E.mat(0xd9c39a);
 const _o = new THREE.Object3D();
 function inst(geo, mat, list, colors) { const im = new THREE.InstancedMesh(geo, mat, list.length); list.forEach((t, i) => { _o.position.set(t[0], t[1], t[2]); _o.rotation.set(t[6] || 0, t[7] || 0, t[8] || 0); _o.scale.set(t[3] ?? 1, t[4] ?? 1, t[5] ?? 1); _o.updateMatrix(); im.setMatrixAt(i, _o.matrix); if (colors) im.setColorAt(i, new THREE.Color(colors[i % colors.length])); }); return im; }
+// instanced copies of a prop (every mesh of the proto, outlines included, becomes one InstancedMesh) → far fewer draw calls
+function instSet(proto, n) {
+  proto.updateMatrixWorld(true); const g = new THREE.Group(), parts = [], M = new THREE.Matrix4();
+  proto.traverse(m => { if (m.isMesh && !m.isSkinnedMesh) { const im = new THREE.InstancedMesh(m.geometry, m.material, n); im.castShadow = m.castShadow; im.receiveShadow = m.receiveShadow; im.renderOrder = m.renderOrder; parts.push({ im, rel: m.matrixWorld.clone() }); g.add(im); } });
+  g.userData.set = (i, x, y, z, ry = 0, sc = 1) => { _o.position.set(x, y, z); _o.rotation.set(0, ry, 0); _o.scale.setScalar(sc); _o.updateMatrix(); for (const p of parts) { M.multiplyMatrices(_o.matrix, p.rel); p.im.setMatrixAt(i, M); } };
+  g.userData.done = () => parts.forEach(p => { p.im.instanceMatrix.needsUpdate = true; p.im.computeBoundingSphere(); });
+  return g;
+}
+const PALM_PROTO = PALMS.map(n => MI(n, { scale: 7 }));
+function palmSet(n) { const g = new THREE.Group(); const sets = PALM_PROTO.map((p, k) => { const st = instSet(p, Math.ceil((n - k) / 2)); g.add(st); return st; }); g.userData.put = (i, x, y, z, ry, sc) => sets[i % 2].userData.set(i >> 1, x, y, z, ry, sc / 7); g.userData.done = () => sets.forEach(st => st.userData.done()); return g; }
 function stallGroup(r, cols, withFruit = true) {
   const g = new THREE.Group(); const col = cols[Math.floor(r() * cols.length)];
   g.add(boxM(1.9, .95, 2.8, E.pbr('wood', 0xc08850, [1, 2]), 0, .475, 0));
   g.add(boxM(2.0, .1, 2.9, new THREE.MeshStandardMaterial({ map: stripeTex('#fff8ee', col, 10), roughness: .9 }), 0, 1.0, 0));
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(boxM(.09, 1.7, .09, woodDark, sx * .9, 1.85, sz * 1.32));
   const aw = boxM(2.4, .12, 3.3, new THREE.MeshStandardMaterial({ map: stripeTex('#fff8ee', col, 8), roughness: .8 }), 0, 2.72, 0); aw.rotation.z = .12; g.add(aw);
-  if (withFruit) { const F = ['watermelon', 'pineapple', 'orange', 'banana', 'coconut']; for (let i = 0; i < 3; i++) { const f = E.instance(F[Math.floor(r() * F.length)], { scale: .55, outline: false, shadow: false }); f.position.set(rnd(-.45, .45), 1.05, -.9 + i * .9); g.add(f); } }
+  if (withFruit) { const F = ['watermelon', 'pineapple', 'orange', 'banana', 'coconut']; for (let i = 0; i < 3; i++) { const f = MI(F[Math.floor(r() * F.length)], { scale: .55, outline: false, shadow: false }); f.position.set(rnd(-.45, .45), 1.05, -.9 + i * .9); g.add(f); } }
   return g;
 }
 function boothGroup(col) {
@@ -290,8 +321,8 @@ function makeChunk() {
   const rails = new THREE.Group(); g.add(rails); let n = 0;
   const pil = new THREE.InstancedMesh(PIL_GEO, woodDark, 24); for (const s of [-1, 1]) for (let i = 0; i < 12; i++) { _o.position.set(s * (BW / 2 + .15), -.7, -i * 3 - 1.5); _o.rotation.set(0, 0, 0); _o.scale.set(1, 1, 1); _o.updateMatrix(); pil.setMatrixAt(n++, _o.matrix); } pil.castShadow = true; rails.add(pil);
   const rp = new THREE.InstancedMesh(RP_GEO, woodDark, 24); n = 0; for (const s of [-1, 1]) for (let i = 0; i < 12; i++) { _o.position.set(s * (BW / 2 + .1), .45, -i * 3 - 1.5); _o.updateMatrix(); rp.setMatrixAt(n++, _o.matrix); } rp.castShadow = true; rails.add(rp);
-  for (const s of [-1, 1]) { const rope = new THREE.Mesh(ROPE_GEO, ropeMat); rope.rotation.x = Math.PI / 2; rope.position.set(s * (BW / 2 + .1), .78, -CH / 2); rails.add(rope); }
-  const lamps = new THREE.Group(); g.add(lamps); for (const s of [-1, 1]) for (let k = 0; k < 2; k++) { const l = lanternProto.clone(); l.position.set(s * (BW / 2 + .45), -.05, -k * 18 - 6); l.rotation.y = s > 0 ? -Math.PI / 2 : Math.PI / 2; lamps.add(l); }
+  rails.add(inst(ROPE_GEO, ropeMat, [[-(BW / 2 + .1), .78, -CH / 2, 1, 1, 1, Math.PI / 2], [BW / 2 + .1, .78, -CH / 2, 1, 1, 1, Math.PI / 2]]));
+  const lamps = instSet(LAMP_BAKED, 4); g.add(lamps); n = 0; for (const s of [-1, 1]) for (let k = 0; k < 2; k++) lamps.userData.set(n++, s * (BW / 2 + .45), -.05, -k * 18 - 6, s > 0 ? -Math.PI / 2 : Math.PI / 2); lamps.userData.done();
   const c = { g, idx, k: -1, z: -1, top, beams, rails, lamps, dress: {} }; chunks.push(c); return c;
 }
 const DRESS = {
@@ -300,13 +331,13 @@ const DRESS = {
     const sandR = new THREE.Mesh(new THREE.PlaneGeometry(10, CH), sandWet); sandR.rotation.x = -Math.PI / 2; sandR.position.set(BW / 2 + 5, -.45, -CH / 2); sandR.receiveShadow = true; g.add(sandR);
     const grass = new THREE.Mesh(new THREE.PlaneGeometry(80, CH), grassMat); grass.rotation.x = -Math.PI / 2; grass.position.set(BW / 2 + 50, -.44, -CH / 2); grass.receiveShadow = true; g.add(grass);
     const foam = new THREE.Mesh(FOAM_GEO, foamMat); foam.position.set(-17.6, WATER_Y + .12, 0); g.add(foam);
-    const palms = []; for (let k = 0; k < 5; k++) { const p = E.instance(PALMS[k % 2], { scale: 7 + (k % 3) }); g.add(p); palms.push(p); }
-    const houses = []; for (let k = 0; k < 2; k++) { const h = E.instance(HOUSES[(c.idx * 2 + k) % HOUSES.length], { scale: 10 }); h.rotation.y = -Math.PI / 2; g.add(h); houses.push(h); }
+    const palms = palmSet(5); g.add(palms);
+    const houses = []; for (let k = 0; k < 2; k++) { const h = MI(HOUSES[(c.idx * 2 + k) % HOUSES.length], { scale: 10, outline: false }); h.rotation.y = -Math.PI / 2; g.add(h); houses.push(h); }
     const umb = umbrella(UMB_COLS[c.idx % UMB_COLS.length]); g.add(umb);
-    const boat = E.instance('boat-small', { scale: 4 }); g.add(boat);
-    const ship = E.instance('ship-light', { scale: 46, shadow: false }); g.add(ship);
+    const boat = MI('boat-small', { scale: 4 }); g.add(boat);
+    const ship = MI('ship-light', { scale: 46, shadow: false }); g.add(ship);
     return { g, place(r, k) {
-      palms.forEach((p, i) => { const left = i < 3; const x = left ? -7 - r() * 8 : BW / 2 + 2.2 + r() * 4; p.position.set(x, left ? beachY(x) : -.45, -(i * 7 + r() * 5)); p.rotation.y = r() * 6.3; });
+      for (let i = 0; i < 5; i++) { const left = i < 3; const x = left ? -7 - r() * 8 : BW / 2 + 2.2 + r() * 4; palms.userData.put(i, x, left ? beachY(x) : -.45, -(i * 7 + r() * 5), r() * 6.3, 7 + (i % 3)); } palms.userData.done();
       houses.forEach((h, i) => { h.position.set(BW / 2 + 15 + r() * 5, -.45, -(i * 18 + 9 + r() * 3)); h.visible = r() < .85; });
       umb.position.set(-8.5 - r() * 5, beachY(-10), -r() * CH); umb.rotation.y = r() * 6; umb.visible = r() < .7;
       boat.position.set(-30 - r() * 30, WATER_Y + .1, -r() * CH); boat.rotation.y = r() * 6.3; boat.visible = r() < .45;
@@ -322,8 +353,8 @@ const DRESS = {
     const cont = inst(UNIT, new THREE.MeshStandardMaterial({ map: stripeTex('#ffffff', '#d8d8d8', 20), roughness: .6, metalness: .25 }), Array.from({ length: 9 }, (_, i) => [BW / 2 + 5.5 + (i % 3) * 2.6, 1.0 + Math.floor(i / 3) % 2 * 2.6 - .25, -4 - Math.floor(i / 3) * 11, 2.4, 2.6, 6]), ['#c8553d', '#3a7bd5', '#2a9d8f', '#e9a23b', '#8c6cff', '#5bc8b5']); shadow(cont); g.add(cont);
     const bol = inst(new THREE.CylinderGeometry(.18, .24, .5, 10), metalMat, Array.from({ length: 6 }, (_, i) => [BW / 2 + .9, 0, -i * 6 - 3])); shadow(bol); g.add(bol);
     const crane = new THREE.Group(); const yel = E.mat(0xf2b134); for (const z of [-1.6, 1.6]) { crane.add(boxM(.45, 16, .45, yel, 0, 8 - .25, z)); crane.add(boxM(.45, 16, .45, yel, 7, 8 - .25, z)); } crane.add(boxM(.6, .8, 4, yel, 3.5, 15.6, 0)); crane.add(boxM(22, .7, .9, yel, -3, 16.3, 0)); crane.add(boxM(2.4, 2.2, 3, E.mat(0x3a4048), 1.5, 17.6, 0)); const cable = boxM(.05, 8, .05, E.mat(0x222222), -9, 12, 0); crane.add(cable); crane.add(boxM(2.4, 2.4, 5, E.mat(0x3a7bd5), -9, 6.9, 0)); g.add(crane);
-    const boats = [0, 1].map(() => { const b = E.instance('boat-small', { scale: 5 }); g.add(b); return b; });
-    const ship = E.instance('ship-dark', { scale: 44, shadow: false, outline: false }); g.add(ship);
+    const boats = [0, 1].map(() => { const b = MI('boat-small', { scale: 5 }); g.add(b); return b; });
+    const ship = MI('ship-dark', { scale: 44, shadow: false, outline: false }); g.add(ship);
     return { g, place(r, k) {
       houses.forEach((h, i) => { h.position.set(BW / 2 + 19.5 + r() * 4, 0, -(i * 18 + 8)); h.visible = r() < .9; });
       crane.visible = k % 2 === 0; crane.position.set(BW / 2 + 3, 0, -10 - r() * 14);
@@ -338,19 +369,19 @@ const DRESS = {
     const foam = new THREE.Mesh(FOAM_GEO, foamMat); foam.position.set(-17.6, WATER_Y + .12, 0); g.add(foam);
     const plaza = new THREE.Mesh(new THREE.PlaneGeometry(70, CH), E.pbr('tile', 0xe2cfae, [24, 12])); plaza.rotation.x = -Math.PI / 2; plaza.position.set(BW / 2 + 35, -.04, -CH / 2); plaza.receiveShadow = true; g.add(plaza);
     const SC = ['#ff7b6b', '#5bc8b5', '#ffd166', '#8c6cff', '#ff8fb1', '#5bb8ff'];
-    const stalls = []; for (let i = 0; i < 4; i++) { const s = stallGroup(r0, SC, true); s.rotation.y = i < 3 ? Math.PI / 2 : -Math.PI / 2; g.add(s); stalls.push(s); }
-    const houses = []; for (let k = 0; k < 2; k++) { const h = E.instance(HOUSES[(c.idx + k + 1) % HOUSES.length], { scale: 10 }); h.rotation.y = -Math.PI / 2; g.add(h); houses.push(h); }
-    const palms = []; for (let k = 0; k < 3; k++) { const p = E.instance(PALMS[k % 2], { scale: 7 + k }); g.add(p); palms.push(p); }
-    const umbs = [0, 1].map(i => { const u = umbrella(UMB_COLS[(c.idx + i * 2) % 5]); g.add(u); return u; });
+    const stalls = instSet(bake(stallGroup(r0, SC, true)), 4); g.add(stalls);
+    const houses = []; for (let k = 0; k < 2; k++) { const h = MI(HOUSES[(c.idx + k + 1) % HOUSES.length], { scale: 10, outline: false }); h.rotation.y = -Math.PI / 2; g.add(h); houses.push(h); }
+    const palms = palmSet(3); g.add(palms);
+    const umbs = instSet(bake(umbrella(UMB_COLS[c.idx % 5])), 2); g.add(umbs);
     // bunting across the path, high above the lanes
-    const flags = []; for (const z of [-6, -24]) for (let i = 0; i < 14; i++) { const u = i / 13; flags.push([-BW / 2 - .3 + u * (BW + .6), 3.5 - Math.sin(u * Math.PI) * .45, z, 1, 1, 1, Math.PI, 0, 0]); }
+    const flags = []; for (const z of [-6, -24]) for (let i = 0; i < 14; i++) { const u = i / 13; flags.push([-BW / 2 - .3 + u * (BW + .6), 5.6 - Math.sin(u * Math.PI) * .45, z, .8, .8, .8, Math.PI, 0, 0]); }
     const fl = inst(new THREE.ConeGeometry(.2, .42, 3), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: .8 }), flags, [0xff7b6b, 0xffd166, 0x5bc8b5, 0x8c6cff, 0xff8fb1]); g.add(fl);
-    for (const z of [-6, -24]) { const line = boxM(BW + .6, .025, .025, E.mat(0x3a2a1a), 0, 3.62, z); line.castShadow = false; g.add(line); }
+    for (const z of [-6, -24]) { const line = boxM(BW + .6, .02, .02, E.mat(0x3a2a1a), 0, 5.7, z); line.castShadow = false; g.add(line); }
     return { g, place(r, k) {
-      stalls.forEach((s, i) => { if (i < 3) s.position.set(BW / 2 + 3.2, 0, -(i * 12 + 4 + r() * 3)); else s.position.set(-BW / 2 - 3.4, beachY(-BW / 2 - 3.4) + .05, -(14 + r() * 8)); s.visible = r() < .92; });
+      for (let i = 0; i < 4; i++) { const on = r() < .92 ? 1 : 0; if (i < 3) stalls.userData.set(i, BW / 2 + 3.2, 0, -(i * 12 + 4 + r() * 3), Math.PI / 2 + (i % 2) * Math.PI, on); else stalls.userData.set(3, -BW / 2 - 3.4, beachY(-BW / 2 - 3.4) + .05, -(14 + r() * 8), -Math.PI / 2, on); } stalls.userData.done();
       houses.forEach((h, i) => { h.position.set(BW / 2 + 16 + r() * 5, -.04, -(i * 18 + 9)); h.visible = r() < .8; });
-      palms.forEach((p, i) => { const x = -8 - r() * 8; p.position.set(x, beachY(x), -(i * 11 + r() * 6)); p.rotation.y = r() * 6.3; });
-      umbs.forEach((u, i) => { const x = -10 - r() * 5; u.position.set(x, beachY(x), -(i * 17 + r() * 10)); u.rotation.y = r() * 6; });
+      for (let i = 0; i < 3; i++) { const x = -8 - r() * 8; palms.userData.put(i, x, beachY(x), -(i * 11 + r() * 6), r() * 6.3, 7 + i); } palms.userData.done();
+      for (let i = 0; i < 2; i++) { const x = -10 - r() * 5; umbs.userData.set(i, x, beachY(x), -(i * 17 + r() * 10), r() * 6); } umbs.userData.done();
       void k;
     } };
   },
@@ -359,18 +390,18 @@ const DRESS = {
     const sandL = new THREE.Mesh(SAND_GEO, sandMat); sandL.receiveShadow = true; g.add(sandL);
     const foam = new THREE.Mesh(FOAM_GEO, foamMat); foam.position.set(-17.6, WATER_Y + .12, 0); g.add(foam);
     const ground = new THREE.Mesh(new THREE.PlaneGeometry(80, CH), E.pbr('stone', 0x8a8296, [20, 10])); ground.rotation.x = -Math.PI / 2; ground.position.set(BW / 2 + 40, -.3, -CH / 2); ground.receiveShadow = true; g.add(ground);
-    const wheel = E.instance('ferris-wheel', { scale: 30, outline: false, shadow: false }); wheel.rotation.y = Math.PI / 2; g.add(wheel);
+    const wheel = MI('ferris-wheel', { scale: 30, outline: false, shadow: false }); wheel.rotation.y = Math.PI / 2; g.add(wheel);
     const BC = ['#ff5b7f', '#5bb8ff', '#8c6cff', '#2fbf8f'];
-    const booths = [0, 1, 2].map(i => { const b = boothGroup(BC[(c.idx + i) % 4]); b.rotation.y = -Math.PI / 2; g.add(b); return b; });
-    const palms = []; for (let k = 0; k < 3; k++) { const p = E.instance(PALMS[k % 2], { scale: 7 + k }); g.add(p); palms.push(p); }
+    const booths = instSet(bake(boothGroup(BC[c.idx % 4])), 3); g.add(booths);
+    const palms = palmSet(3); g.add(palms);
     // string lights hanging between the lantern posts on both sides
     const bulbs = []; for (const s of [-1, 1]) for (let seg = 0; seg < 2; seg++) for (let i = 0; i < 12; i++) { const u = i / 11; bulbs.push([s * (BW / 2 + .5), 2.5 - Math.sin(u * Math.PI) * .55, -6 - seg * 18 + (seg === 0 ? -u * 18 : -u * 18), .1, .1, .1]); }
     const bl = inst(new THREE.SphereGeometry(1, 8, 6), bulbMat, bulbs, [0xffd166, 0xff6b9b, 0x7fd8ff, 0xb48cff, 0x8cffb0]); bl.frustumCulled = true; g.add(bl);
-    const boats = [E.instance('boat-small', { scale: 4 })]; boats.forEach(b => g.add(b));
+    const boats = [MI('boat-small', { scale: 4 })]; boats.forEach(b => g.add(b));
     return { g, place(r, k) {
       wheel.visible = k % 3 === 0; wheel.position.set(BW / 2 + 26 + r() * 6, -.3, -CH / 2);
-      booths.forEach((b, i) => { b.position.set(BW / 2 + 3.4, -.3, -(i * 12 + 3 + r() * 4)); b.visible = r() < .8; });
-      palms.forEach((p, i) => { const x = -8 - r() * 8; p.position.set(x, beachY(x), -(i * 11 + r() * 6)); p.rotation.y = r() * 6.3; });
+      for (let i = 0; i < 3; i++) booths.userData.set(i, BW / 2 + 3.4, -.3, -(i * 12 + 3 + r() * 4), -Math.PI / 2, r() < .8 ? 1 : 0); booths.userData.done();
+      for (let i = 0; i < 3; i++) { const x = -8 - r() * 8; palms.userData.put(i, x, beachY(x), -(i * 11 + r() * 6), r() * 6.3, 7 + i); } palms.userData.done();
       boats[0].position.set(-30 - r() * 25, WATER_Y + .1, -r() * CH); boats[0].visible = r() < .5;
       void r0;
     } };
@@ -386,9 +417,9 @@ const DRESS = {
     const cones = inst(new THREE.ConeGeometry(.35, 1.4, 6), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: .7 }), Array.from({ length: 34 }, () => { const s = .6 + r0() * 1.6; return [side(), -.4 + .7 * s, -r0() * CH, s, s, s, (r0() - .5) * .5, 0, (r0() - .5) * .5]; }), [0xff7b8b, 0xff9f5b, 0xb48cff, 0xffd166, 0x5bd2b5, 0xff6bb5]); g.add(cones);
     const brains = inst(new THREE.SphereGeometry(.7, 10, 8), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: .9 }), Array.from({ length: 14 }, () => { const s = .5 + r0() * 1.2; return [side(), -.45 + .4 * s, -r0() * CH, s, s * .7, s]; }), [0xe86a8a, 0xf2a65a, 0x9b7bd6, 0xd8c26a]); g.add(brains);
     const kelp = inst(new THREE.BoxGeometry(.16, 1, .04), new THREE.MeshStandardMaterial({ color: 0x3c9a5a, roughness: .8, side: THREE.DoubleSide }), Array.from({ length: 20 }, () => { const h = 3 + r0() * 5; return [side(), -.4 + h / 2, -r0() * CH, 1, h, 1, (r0() - .5) * .25, r0() * 3, (r0() - .5) * .25]; })); g.add(kelp);
-    const rocks = [0, 1].map(i => { const rk = E.instance(i ? 'formation-large-stone' : 'formation-large-rock', { scale: 5 + i * 2, tint: 0x8fb0a8 }); g.add(rk); return rk; });
-    const wreck = E.instance('ship-wreck', { scale: 20, shadow: false, outline: false, tint: 0x9fc0b8 }); g.add(wreck);
-    const fish = []; for (let i = 0; i < 6; i++) { const f = E.instance('fish', { scale: .9, outline: false, shadow: false, tint: [0xffffff, 0xffd166, 0x7fd8ff, 0xffa060][i % 4] }); g.add(f); fish.push(f); reefFish.push({ f, c, ph: r0() * 6.3, sp: .6 + r0() * .8, x: (r0() < .5 ? -1 : 1) * (7.5 + r0() * 9), y: 1 + r0() * 4, z: -r0() * CH }); }
+    const rocks = [0, 1].map(i => { const rk = MI(i ? 'formation-large-stone' : 'formation-large-rock', { scale: 5 + i * 2, tint: 0x8fb0a8 }); g.add(rk); return rk; });
+    const wreck = MI('ship-wreck', { scale: 20, shadow: false, outline: false, tint: 0x9fc0b8 }); g.add(wreck);
+    const fish = []; for (let i = 0; i < 6; i++) { const f = MI('fish', { scale: .9, outline: false, shadow: false, tint: [0xffffff, 0xffd166, 0x7fd8ff, 0xffa060][i % 4] }); g.add(f); fish.push(f); reefFish.push({ f, c, ph: r0() * 6.3, sp: .6 + r0() * .8, x: (r0() < .5 ? -1 : 1) * (7.5 + r0() * 9), y: 1 + r0() * 4, z: -r0() * CH }); }
     const shafts = inst(new THREE.PlaneGeometry(2.6, 22), shaftMat, Array.from({ length: 3 }, (_, i) => [(i - 1) * 9 + r0() * 3, 8, -6 - i * 11, 1, 1, 1, 0, r0() * 1.5, .25])); shafts.renderOrder = 3; g.add(shafts);
     return { g, place(r, k) {
       rocks.forEach((rk, i) => { rk.position.set((i ? 1 : -1) * (12 + r() * 14), -.45, -r() * CH); rk.rotation.y = r() * 6.3; });
@@ -408,7 +439,7 @@ function placeChunk(c, k) {
   c.rails.visible = Z.id === 'walk' || Z.id === 'dock' || Z.id === 'night'; c.lamps.visible = Z.id !== 'reef';
 }
 for (let i = 0; i < NCH; i++) placeChunk(makeChunk(), i);
-function streamWorld(d) { const first = Math.floor((d - 14) / CH); for (const c of chunks) if (c.k < first) placeChunk(c, c.k + NCH); }
+function streamWorld(d) { const first = Math.floor((d - 14) / CH); for (const c of chunks) { if (c.k < first) placeChunk(c, c.k + NCH); c.g.visible = c.k * CH < d + scene.fog.far * .88 + 8; } } // chunks hidden in the fog are not drawn
 function resetWorld(d = 0) { const first = Math.floor((d - 14) / CH); chunks.forEach((c, i) => placeChunk(c, first + i)); }
 
 /* ---------- arches: best distance + checkpoint gates ---------- */
@@ -450,56 +481,56 @@ function jellyObj(n, w) { const g = new THREE.Group(); // invisible frame keeps 
   return g; }
 function coralObj() { const g = new THREE.Group(); const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(.5, 0), E.mat(0x8a8a7a)); rock.scale.set(1.2, .5, 1); rock.position.y = .2; rock.castShadow = true; g.add(rock); const cols = [0xff7b8b, 0xff9f5b, 0xb48cff]; for (let i = 0; i < 6; i++) { const a = i / 6 * 6.28; const h = .5 + (i % 3) * .2; const b = new THREE.Mesh(new THREE.CylinderGeometry(.06, .1, h, 6), E.mat(cols[i % 3])); b.position.set(Math.cos(a) * .3, .35 + h / 2, Math.sin(a) * .3); b.rotation.set(Math.sin(a) * .4, 0, Math.cos(a) * .4); b.castShadow = true; g.add(b); const tip = new THREE.Mesh(new THREE.SphereGeometry(.1, 8, 6), E.mat(cols[(i + 1) % 3])); tip.position.set(Math.cos(a) * (.3 + h * .2), .35 + h, Math.sin(a) * (.3 + h * .2)); g.add(tip); } return g; }
 function giftObj() { const g = new THREE.Group(); const b = new THREE.Mesh(new THREE.BoxGeometry(.95, .9, .95), new THREE.MeshStandardMaterial({ map: stripeTex('#ff6b9b', '#fff4f8', 8), roughness: .6 })); b.position.y = .45; b.castShadow = true; g.add(b); E.addOutline(b); const gold = E.mat(0xffd166, { metalness: .4, roughness: .4 }); g.add(boxM(.98, .92, .14, gold, 0, .45, 0)); g.add(boxM(.14, .92, .98, gold, 0, .45, 0)); for (const s of [-1, 1]) { const bow = new THREE.Mesh(new THREE.TorusGeometry(.13, .045, 6, 12), gold); bow.position.set(s * .13, 1.0, 0); bow.rotation.y = Math.PI / 2; g.add(bow); } return g; }
-function fruitPile(name, n, s) { const g = new THREE.Group(); const P = [[-.25, 0, 0], [.25, 0, 0], [0, 0, .3], [0, .75, .1]]; for (let i = 0; i < n; i++) { const f = E.instance(name, { scale: s }); f.position.set(P[i][0], P[i][1] * s, P[i][2]); g.add(f); } return g; }
+function fruitPile(name, n, s) { const g = new THREE.Group(); const P = [[-.25, 0, 0], [.25, 0, 0], [0, 0, .3], [0, .75, .1]]; for (let i = 0; i < n; i++) { const f = MI(name, { scale: s }); f.position.set(P[i][0], P[i][1] * s, P[i][2]); g.add(f); } return g; }
 const CONT_COLS = [0xc8553d, 0x3a7bd5, 0x2a9d8f, 0xe9a23b];
 const OBS = {
-  barrel: { kind: 'jump', make: () => orient(E.instance('barrel', { scale: 1.15 }), 'x') },
-  rock: { kind: 'jump', make: () => E.instance('formation-rock', { scale: 1.0, fit: 'height' }) },
-  bench: { kind: 'jump', make: () => orient(E.instance('bench', { scale: 1.9 }), 'x') },
+  barrel: { kind: 'jump', make: () => orient(MI('barrel', { scale: 1.15 }), 'x') },
+  rock: { kind: 'jump', make: () => MI('formation-rock', { scale: 1.0, fit: 'height' }) },
+  bench: { kind: 'jump', make: () => orient(MI('bench', { scale: 1.9 }), 'x') },
   crate: { kind: 'jump', make: () => crateObj() },
-  chest: { kind: 'jump', make: () => E.instance('chest', { scale: 1.0 }) },
-  pod: { kind: 'jump', make: () => E.instance('sci-fi-crate', { scale: 1.05, fit: 'height' }) },
+  chest: { kind: 'jump', make: () => MI('chest', { scale: 1.0 }) },
+  pod: { kind: 'jump', make: () => MI('sci-fi-crate', { scale: 1.05, fit: 'height' }) },
   log: { kind: 'jump', all: true, make: () => rollObj({ mat: E.pbr('wood', 0x8e6a48, [1, 3]) }) },
-  van: { kind: 'block', make: () => orient(E.instance('van', { scale: 4.4 }), 'z') },
-  cream: { kind: 'block', make: () => orient(E.instance('ice-cream-truck', { scale: 4.3 }), 'z') },
-  hatch: { kind: 'block', make: () => orient(E.instance('hatchback', { scale: 4.1 }), 'z') },
+  van: { kind: 'block', make: () => orient(MI('van', { scale: 4.4 }), 'z') },
+  cream: { kind: 'block', make: () => orient(MI('ice-cream-truck', { scale: 4.3 }), 'z') },
+  hatch: { kind: 'block', make: () => orient(MI('hatchback', { scale: 4.1 }), 'z') },
   beam: { kind: 'slide', make: () => beamObj(false) },
   arch: { kind: 'slide', all: true, make: () => beamObj(true) },
   // harbor docks
-  fishbox: { kind: 'jump', make: () => { const g = crateObj(.82); const f = E.instance('fish', { scale: .75 }); f.rotation.set(0, Math.PI / 2, Math.PI / 2); f.position.y = .86 + .1; g.add(f); return g; } },
+  fishbox: { kind: 'jump', make: () => { const g = crateObj(.82); const f = MI('fish', { scale: .75 }); f.rotation.set(0, Math.PI / 2, Math.PI / 2); f.position.y = .86 + .1; g.add(f); return g; } },
   coil: { kind: 'jump', make: () => { const g = new THREE.Group(); const m = E.pbr('fabric', 0xd9c39a, [4, 1]); for (let i = 0; i < 3; i++) { const t = new THREE.Mesh(new THREE.TorusGeometry(.42 - i * .06, .11, 8, 18), m); t.rotation.x = Math.PI / 2; t.position.y = .11 + i * .19; t.castShadow = true; g.add(t); } E.addOutline(g.children[0], 1.06); return g; } },
   container: { kind: 'block', make: () => { const col = CONT_COLS[pools.container.length % 4]; const g = new THREE.Group(); const b = boxM(2.0, 2.4, 5.0, new THREE.MeshStandardMaterial({ map: stripeTex(hex(col), hex(new THREE.Color(col).multiplyScalar(.8)), 20), roughness: .6, metalness: .25 }), 0, 1.2, 0); g.add(b); E.addOutline(b, 1.01); for (const z of [-2.45, 2.45]) g.add(boxM(2.06, 2.46, .12, E.mat(0x2b3138), 0, 1.23, z)); return g; } },
-  dtruck: { kind: 'block', make: () => orient(E.instance('delivery-truck', { scale: 4.4 }), 'z') },
-  pickup: { kind: 'block', make: () => orient(E.instance('truck', { scale: 4.2 }), 'z') },
+  dtruck: { kind: 'block', make: () => orient(MI('delivery-truck', { scale: 4.4 }), 'z') },
+  pickup: { kind: 'block', make: () => orient(MI('truck', { scale: 4.2 }), 'z') },
   hook: { kind: 'slide', make: () => beamObj(false, '#ffd166', '#1b2430', 'none') },
   hawser: { kind: 'jump', all: true, make: () => rollObj({ r: .24, mat: E.pbr('fabric', 0xcdb184, [12, 1]), ring: null, posts: { h: .7, mat: metalMat } }) },
   girder: { kind: 'slide', all: true, make: () => beamObj(true, '#ffd166', '#1b2430', 'none') },
   // beach market
-  melon: { kind: 'jump', make: () => E.instance('watermelon', { scale: 1.05 }) },
-  fruitbox: { kind: 'jump', make: () => { const g = crateObj(.78); for (let i = 0; i < 3; i++) { const f = E.instance('orange', { scale: .32 }); f.position.set(-.22 + i * .22, .82, (i % 2) * .15 - .07); g.add(f); } return g; } },
+  melon: { kind: 'jump', make: () => MI('watermelon', { scale: 1.05 }) },
+  fruitbox: { kind: 'jump', make: () => { const g = crateObj(.78); for (let i = 0; i < 3; i++) { const f = MI('orange', { scale: .32 }); f.position.set(-.22 + i * .22, .82, (i % 2) * .15 - .07); g.add(f); } return g; } },
   coco: { kind: 'jump', make: () => fruitPile('coconut', 4, .5) },
-  pine: { kind: 'jump', make: () => E.instance('pineapple', { scale: 1.05, fit: 'height' }) },
-  stall: { kind: 'block', make: () => stallGroup(mulberry(pools.stall.length + 9), ['#ff7b6b', '#5bc8b5', '#ffd166', '#8c6cff'], true) },
+  pine: { kind: 'jump', make: () => MI('pineapple', { scale: 1.05, fit: 'height' }) },
+  stall: { kind: 'block', make: () => bake(stallGroup(mulberry(pools.stall.length + 9), ['#ff7b6b', '#5bc8b5', '#ffd166', '#8c6cff'], true)) },
   bunting: { kind: 'slide', make: () => beamObj(false, '#fff8ee', '#5bc8b5') },
   rug: { kind: 'jump', all: true, make: () => rollObj({ r: .3, mat: new THREE.MeshStandardMaterial({ map: stripeTex('#c8553d', '#ffd166', 18, true), roughness: .9 }), ring: 0xe9a23b }) },
   awning: { kind: 'slide', all: true, make: () => beamObj(true, '#fff8ee', '#ff8fb1') },
   // night pier
   prize: { kind: 'jump', make: giftObj },
-  booth: { kind: 'block', make: () => boothGroup(['#ff5b7f', '#5bb8ff', '#8c6cff'][pools.booth.length % 3]) },
+  booth: { kind: 'block', make: () => bake(boothGroup(['#ff5b7f', '#5bb8ff', '#8c6cff'][pools.booth.length % 3])) },
   lights: { kind: 'slide', make: () => beamObj(false, '#2a2f5a', '#ffd166', 'bulbs') },
   neon: { kind: 'jump', all: true, make: () => { const m = new THREE.MeshStandardMaterial({ color: 0xff8fd0, emissive: 0xff5bb5, emissiveIntensity: 1.6, roughness: .3 }); return rollObj({ r: .2, mat: m, ring: null, posts: { h: .55, mat: E.mat(0x3a3f6a) }, outline: false }); } },
   lanterns: { kind: 'slide', all: true, make: () => beamObj(true, '#3a2a5a', '#ff8fb1', 'bulbs') },
   // reef tunnel
-  clam: { kind: 'jump', make: () => { const g = orient(E.instance('mussel', { scale: 1.6, tint: 0xd8c8ff }), 'x'); const pearl = new THREE.Mesh(new THREE.SphereGeometry(.13, 12, 10), new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfff0f8, emissiveIntensity: .6, roughness: .1 })); pearl.position.y = (g.userData.size?.y || .5) + .08; g.add(pearl); return g; } },
+  clam: { kind: 'jump', make: () => { const g = orient(MI('mussel', { scale: 1.6, tint: 0xd8c8ff }), 'x'); const pearl = new THREE.Mesh(new THREE.SphereGeometry(.13, 12, 10), new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfff0f8, emissiveIntensity: .6, roughness: .1 })); pearl.position.y = (g.userData.size?.y || .5) + .08; g.add(pearl); return g; } },
   coral: { kind: 'jump', make: coralObj },
-  pillar: { kind: 'block', make: () => { const g = new THREE.Group(); const rk = E.instance('formation-large-rock', { scale: 2.3, tint: 0x9fb8b0 }); g.add(rk); const c = coralObj(); c.scale.setScalar(.8); c.position.y = 2.0; g.add(c); return g; } },
-  wreck: { kind: 'block', make: () => { const g = new THREE.Group(); g.add(crateObj(1.1)); const c2 = crateObj(1.0); c2.position.y = 1.15; c2.rotation.y = .35; g.add(c2); const ch = E.instance('chest', { scale: .9 }); ch.position.y = 2.2; g.add(ch); return g; } },
+  pillar: { kind: 'block', make: () => { const g = new THREE.Group(); const rk = MI('formation-large-rock', { scale: 2.3, tint: 0x9fb8b0 }); g.add(rk); const c = coralObj(); c.scale.setScalar(.8); c.position.y = 2.0; g.add(c); return g; } },
+  wreck: { kind: 'block', make: () => { const g = new THREE.Group(); g.add(crateObj(1.1)); const c2 = crateObj(1.0); c2.position.y = 1.15; c2.rotation.y = .35; g.add(c2); const ch = MI('chest', { scale: .9 }); ch.position.y = 2.2; g.add(ch); return g; } },
   jelly: { kind: 'slide', make: () => jellyObj(3, 1.3) },
   ridge: { kind: 'jump', all: true, make: () => rollObj({ r: .26, mat: E.mat(0xff8f8f), ring: 0xffb3b3, bumps: [0xff7b8b, 0xffb36b, 0xb48cff, 0xffd166] }) },
   jellies: { kind: 'slide', all: true, make: () => jellyObj(6, BW - 1.4) }
 };
 const pools = {}; for (const k in OBS) pools[k] = [];
-function getObj(type) { let o = pools[type].find(o => !o.userData.busy); if (!o) { o = OBS[type].make(); scene.add(o); pools[type].push(o); o.updateMatrixWorld(true); const b = new THREE.Box3(); o.traverse(m => { if (m.isMesh && m.visible !== false && (!m.material || m.material.visible !== false) && !m.userData.outline) b.expandByObject(m); }); o.userData.h = OBS[type].kind === 'slide' ? 1.4 : b.max.y; o.userData.len = Math.max(.4, b.max.z - b.min.z); o.userData.hw = (b.max.x - b.min.x) / 2; o.userData.rot0 = o.rotation.y; } o.userData.busy = true; o.visible = true; o.rotation.set(0, o.userData.rot0, 0); o.position.set(0, 0, 0); return o; }
+function getObj(type) { let o = pools[type].find(o => !o.userData.busy); if (!o) { o = OBS[type].make(); let inst = false; o.traverse(m => { if (m.isInstancedMesh) inst = true; }); if (!inst && !o.userData.anim) o = bake(o); /* fewer draw calls per obstacle */ scene.add(o); pools[type].push(o); o.updateMatrixWorld(true); const b = new THREE.Box3(); o.traverse(m => { if (m.isMesh && m.visible !== false && (!m.material || m.material.visible !== false) && !m.userData.outline) b.expandByObject(m); }); o.userData.h = OBS[type].kind === 'slide' ? 1.4 : b.max.y; o.userData.len = Math.max(.4, b.max.z - b.min.z); o.userData.hw = (b.max.x - b.min.x) / 2; o.userData.rot0 = o.rotation.y; } o.userData.busy = true; o.visible = true; o.rotation.set(0, o.userData.rot0, 0); o.position.set(0, 0, 0); return o; }
 function freeObj(o) { o.userData.busy = false; o.visible = false; }
 
 /* ---------- coins (instanced) + glints + power-ups ---------- */
@@ -666,7 +697,8 @@ function update(dt) {
   for (const k in powerObjs) powerObjs[k].visible = false;
   for (const p of G.powers) { if (p.taken || p.d < G.d - 3 || p.d > G.d + 200) continue; const o = powerObjs[p.kind]; o.visible = true; o.position.set(p.x, 1.1 + Math.sin(G.t * 2.5) * .15, -p.d); o.children[0].rotation.y = G.t; o.children[2].rotation.set(Math.PI / 2 + Math.sin(G.t * 1.7) * .5, G.t * 1.3, 0); const s = 1 + Math.sin(G.t * 5) * .06; o.scale.setScalar(s); }
   // knocked-away obstacles + animated ones (jellyfish)
-  for (const o of G.obs) { if (o.fly) { o.fly.t += dt; o.obj.position.x += o.fly.vx * dt; o.obj.position.y = Math.max(0, o.obj.position.y + o.fly.vy * dt); o.fly.vy -= 22 * dt; o.obj.rotation.z += o.fly.vx * dt * .6; o.obj.rotation.x += dt * 4; if (o.fly.t > 1.4) { o.obj.visible = false; o.fly = null; } } else if (o.obj.userData.anim && o.d0 < G.d + 120) o.obj.userData.anim(o.obj, G.t); }
+  const fogCut = scene.fog.far * .9 + 6;
+  for (const o of G.obs) { if (o.fly) { o.fly.t += dt; o.obj.position.x += o.fly.vx * dt; o.obj.position.y = Math.max(0, o.obj.position.y + o.fly.vy * dt); o.fly.vy -= 22 * dt; o.obj.rotation.z += o.fly.vx * dt * .6; o.obj.rotation.x += dt * 4; if (o.fly.t > 1.4) { o.obj.visible = false; o.fly = null; o.smashed = true; } } else { o.obj.visible = o.d0 < G.d + fogCut && !(o.smashed); if (o.obj.userData.anim && o.obj.visible) o.obj.userData.anim(o.obj, G.t); } } // obstacles hidden in the fog are not drawn
   // recycle behind
   for (let i = G.obs.length - 1; i >= 0; i--) if (G.obs[i].d1 < G.d - 12) { freeObj(G.obs[i].obj); G.obs.splice(i, 1); }
   if (G.coins.length > 400) G.coins = G.coins.filter(c => !c.taken && c.d > G.d - 5);
@@ -740,7 +772,7 @@ function stumble(o) {
   E.toast(G.hearts > 0 ? L(`Oops! ${G.hearts} ♥ left`, `¡Uy! Quedan ${G.hearts} ♥`) : L('Careful! Last chance!', '¡Cuidado! ¡Última oportunidad!'), 1500);
   if (G.hearts === 0) E.say(L('Careful! Last chance!', '¡Cuidado! ¡Última oportunidad!'), { interrupt: false });
 }
-function knock(o, smash) { if (smash && o.lanes.length === 3) o.obj.visible = false; else if (o.lanes.length < 3 && (smash || o.kind === 'jump')) o.fly = { t: 0, vx: (o.obj.position.x >= G.x ? 1 : -1) * rnd(3, 5) * (smash ? 1.6 : 1), vy: smash ? 9 : 6 }; if (smash) { SFX.hit(); G.smashN = (G.smashN || 0) + 1; G.coinsN += 2 * G.mult; G.shake = Math.max(G.shake, .15); } PT.burst(new THREE.Vector3(G.x, .8, -G.d - .6), { color: smash ? 0xbff4ff : 0xfff1d0, n: 18, speed: 3, up: 4, size: .5, life: .6, additive: false, gravity: 10 }); }
+function knock(o, smash) { if (smash && o.lanes.length === 3) { o.obj.visible = false; o.smashed = true; } else if (o.lanes.length < 3 && (smash || o.kind === 'jump')) o.fly = { t: 0, vx: (o.obj.position.x >= G.x ? 1 : -1) * rnd(3, 5) * (smash ? 1.6 : 1), vy: smash ? 9 : 6 }; if (smash) { SFX.hit(); G.smashN = (G.smashN || 0) + 1; G.coinsN += 2 * G.mult; G.shake = Math.max(G.shake, .15); } PT.burst(new THREE.Vector3(G.x, .8, -G.d - .6), { color: smash ? 0xbff4ff : 0xfff1d0, n: 18, speed: 3, up: 4, size: .5, life: .6, additive: false, gravity: 10 }); }
 function powerFx(dt) {
   G.fxT += dt; if (G.fxT < .045) return; G.fxT = 0; const p = tmp.set(G.x, G.y + .2, -G.d + .3);
   if (G.pw.double) PT.burst(tmp.set(G.x + rnd(-.5, .5), G.y + 1 + rnd(-.3, .8), -G.d + rnd(-.3, .3)), { color: 0xffd166, n: 2, speed: .5, up: .8, size: .22, life: .5, gravity: 0 });
@@ -918,6 +950,6 @@ addEventListener('inoa:settings', e => { if (e.detail && e.detail.key === 'lang'
 title(); ld.done(); window.__READY = true;
 E.loop((dt) => { if (window.__HOLD) return; update(dt); updateCamera(dt); R.render(dt); });
 function warp(d) { if (!G) return; for (const o of G.obs) freeObj(o.obj); G.obs = []; G.coins = []; G.powers = []; G.d = d; G.genD = d + 30; G.zoneN = Math.floor(d / ZL); G.aheadN = G.zoneN; G.cleanD = d; resetWorld(d); genUntil(d + 240); placeGates(); G.camPos.set(G.x * .55, 4, -d + 7); tHist.length = 0; lookKey = ''; }
-window.__GAME = { get G() { return G; }, S, startRun, update, updateCamera, title, set auto(v) { window.__AUTOPILOT = v; if (G) G.auto = v; }, E, player, act: a => push(a), showShield: () => { if (G) G.pw.shield = G.pw.shield || 14; shieldMesh.visible = true; }, warp, ZONES, ZL, STYLES, chunks, fillMissions, checkMissions, mProg, loadSave, renderTitle, setBoard };
+window.__GAME = { get G() { return G; }, R, S, startRun, update, updateCamera, title, set auto(v) { window.__AUTOPILOT = v; if (G) G.auto = v; }, E, player, act: a => push(a), showShield: () => { if (G) G.pw.shield = G.pw.shield || 14; shieldMesh.visible = true; }, warp, ZONES, ZL, STYLES, chunks, fillMissions, checkMissions, mProg, loadSave, renderTitle, setBoard };
 </script>
 </body></html>
