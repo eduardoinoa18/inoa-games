@@ -404,7 +404,7 @@ function glow(c, x, y, r, col, a) {
    Settings & save
    ========================================================= */
 const reduceOS = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const settings = { sfx: 80, music: 60, diff: 0, btn: 68, haptics: 1, motion: reduceOS ? 0 : 1, quality: 'auto', fps: 0, touch: 'auto', depth: 1, stocks: 3, hazards: 1, heroes: [0, 1, 2, 3] };
+const settings = { sfx: 80, music: 60, diff: 0, btn: 68, haptics: 1, motion: reduceOS ? 0 : 1, quality: 'auto', fps: 0, touch: 'auto', depth: 1, stocks: 3, hazards: 1, heroes: [0, 1, 2, 3], mmode: 'stock', lang: '' };
 const progress = { levels: {}, matches: 0 };
 try { Object.assign(settings, JSON.parse(localStorage.getItem('pixelpact3.settings') || '{}')); } catch (e) {}
 try { Object.assign(progress, JSON.parse(localStorage.getItem('pixelpact3.progress') || '{}')); } catch (e) {}
@@ -751,6 +751,31 @@ const STAGES = [
     '........1....g...2......3...g....4......',
     '........RRRRRRRRRRRRRRRRRRRRRRRRRRRR....',
     '........RRRRRRRRRRRRRRRRRRRRRRRRRRRR....',
+    '', '', ''] },
+  { id: 'rooftops', name: 'Neon Rooftops', theme: 'dusk', song: 'match', hazard: 'ferry', desc: 'Two rooftops, one sliding ferry between them and lifts on the edges. Mind the gap.', rows: [
+    '', '', '', '', '', '',
+    '..................PPPP..................',
+    '', '',
+    '..........PPPP..............PPPP........',
+    '', '',
+    '...l...............M................l...',
+    '', '',
+    '......1....2...............3....4.......',
+    '.....###########.......###########......',
+    '.....###########.......###########......',
+    '', '', ''] },
+  { id: 'grotto', name: 'Crystal Grotto', theme: 'cave', song: 'cave', hazard: 'stal', desc: 'A cave bowl with wall-jump pillars. Crystals shake loose from the ceiling.', rows: [
+    '', '', '', '', '', '', '',
+    '..........PPP..............PPP..........',
+    '', '',
+    '.......R.........PPPPPP.........R.......',
+    '.......R........................R.......',
+    '.......R........................R.......',
+    '.......R........................R.......',
+    '',
+    '.........1.....2..........3.....4.......',
+    '.......RRRRRRRRRRRRRRRRRRRRRRRRRRRR.....',
+    '.......RRRRRRRRRRRRRRRRRRRRRRRRRRRR.....',
     '', '', ''] }
 ];
 const THEMES = {
@@ -887,7 +912,13 @@ function startMatch() {
     const c = map[ty][tx];
     if ('1234'.includes(c)) { spawns[+c - 1] = { x: tx * TS + 6, y: (ty + 1) * TS - 40 }; map[ty][tx] = '.'; }
     else if (c === 'g') { geysers.push({ x: tx * TS + 16, y: (ty + 1) * TS, t: 0, state: 0 }); map[ty][tx] = '.'; }
+    else if (c === 'M') { plats.push({ kind: 'ferry', x: tx * TS, y: ty * TS + 12, w: 96, h: 14, ox: tx * TS - 48, oy: ty * TS + 12, range: 320, axis: 'x', t: 0, dx: 0, dy: 0 }); map[ty][tx] = '.'; }
+    else if (c === 'l') { plats.push({ kind: 'lift', x: tx * TS - 16, y: ty * TS + 12, w: 64, h: 12, ox: tx * TS - 16, oy: ty * TS + 12, range: 190, axis: 'y', t: tx * .3, dx: 0, dy: 0 }); map[ty][tx] = '.'; }
   }
+  movers = plats.slice();
+  G.mmode = settings.mmode || 'stock'; G.matchLimit = G.mmode === 'coins' ? 90 : G.mmode === 'hill' ? 120 : 0; G.coinT = 0;
+  G.spots = []; for (let ty = 1; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) if ((SOLID[map[ty][tx]] || map[ty][tx] === 'P') && map[ty - 1][tx] === '.' && (ty < 2 || map[ty - 2][tx] === '.')) G.spots.push({ x: tx * TS + 16, y: ty * TS, top: ty });
+  const hs = G.spots.filter(q => q.top < MH - 4); G.hill = G.mmode === 'hill' ? { x: 0, y: 0, w: 120, t: 0, holder: -1, spots: hs.length ? hs : G.spots } : null; if (G.hill) moveHill(true);
   STAGE.x0 = 1e9; STAGE.x1 = 0; STAGE.floorY = 0;
   for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) if (SOLID[map[ty][tx]]) { STAGE.x0 = Math.min(STAGE.x0, tx * TS); STAGE.x1 = Math.max(STAGE.x1, (tx + 1) * TS); STAGE.floorY = Math.max(STAGE.floorY, ty * TS); }
   players = players.map((p, i) => { const sp = spawns[i] || spawns[0]; const np = makePlayer({ idx: p.idx, src: p.src, hero: HEROES.indexOf(p.hero) }, sp.x, sp.y); np.facing = sp.x < MW * TS / 2 ? 1 : -1; np.inv = 0; return np; });
@@ -1012,7 +1043,10 @@ function botThink() {
   const o = P.in, skill = DIFF[settings.diff].bot; for (const key in o) o[key] = 0;
   P.botT--;
   if (G.mode === 'match') {
-    const t = nearest(P.x + 10, P.y + 20, P); if (!t) return;
+    const t0 = nearest(P.x + 10, P.y + 20, P); if (!t0) return;
+    let t = t0;
+    if (G.mmode === 'coins') { let bc = null, bd = 1e9; for (const e of ents) if (e.kind === 'coin') { const d = Math.hypot(e.x - P.x, e.y - P.y); if (d < bd) { bd = d; bc = e; } } if (bc && (bd < Math.hypot(t0.x - P.x, t0.y - P.y) * 1.6 || P.idx % 2)) t = { x: bc.x, y: bc.y - 20, atk: null }; }
+    if (G.hill && !overlap(P, { x: G.hill.x - G.hill.w / 2, y: G.hill.y - 70, w: G.hill.w, h: 72 })) t = { x: G.hill.x - 10, y: G.hill.y - 40, atk: null };
     const dx = t.x - P.x, dy = t.y - P.y, ad = Math.abs(dx), stageL = STAGE.x0, stageR = STAGE.x1, floorY = STAGE.floorY;
     const offStage = P.x < stageL - 10 || P.x + P.w > stageR + 10 || P.y > floorY + 30;
     if (offStage) { const cx = (stageL + stageR) / 2; o.x = sign(cx - P.x); if (P.vy > 2 && (P.jumps > 0 || P.wall) && Math.random() < .4) o.jump = 1; if (P.y > floorY - 40 && P.heavyCd === 0 && (P.hero.id === 'tito' || P.hero.id === 'kiko') && Math.random() < .3) o.spec = 1; if (P.vy > 6 && Math.random() < .2) o.jump = 1; return; }
@@ -1023,6 +1057,8 @@ function botThink() {
     const nearEdgeL = P.x < stageL + 40 && o.x < 0, nearEdgeR = P.x + P.w > stageR - 40 && o.x > 0; if ((nearEdgeL || nearEdgeR) && P.onGround) { o.x = 0; if (ad > 60 && Math.random() < .1) o.jump = 1; }
     if (o.x) { const ax = o.x > 0 ? P.x + P.w + 12 : P.x - 12, gtx = Math.floor(ax / TS); let ground = false; for (let ty = Math.floor((P.y + P.h) / TS); ty < Math.floor((P.y + P.h) / TS) + 6; ty++) if (isSolid(gtx, ty) || isOneWay(gtx, ty)) { ground = true; break; } if (!ground && (P.onGround || P.vy > 0)) { if (Math.abs(dy) < 30 && ad < 90 && P.onGround && Math.random() < .5) { o.x = 0; } else o.x = 0; } }
     if (!P.onGround && (P.x < stageL + 20 || P.x + P.w > stageR - 20)) o.x = sign((stageL + stageR) / 2 - P.x);
+    const tdx = t0.x - P.x, tdy = t0.y - P.y; if (Math.abs(tdx) < 48 && Math.abs(tdy) < 44) { if (Math.random() < .12 * skill + .03) { o.atk = 1; if (t !== t0) P.facing = sign(tdx) || P.facing; } if (Math.random() < .02 * skill && P.heavyCd === 0) o.spec = 1; }
+    if (t !== t0) { /* goal seeking: skip the duel-only logic below */ if (P.meter >= 100 && Math.abs(tdx) < 160 && Math.random() < .05) o.ult = 1; return; }
     if (ad < 48 && Math.abs(dy) < 44) { if (Math.random() < .12 * skill + .03) o.atk = 1; if (Math.random() < .02 * skill && P.heavyCd === 0) o.spec = 1; }
     else if (ad < 120 && Math.random() < .01 * skill && P.heavyCd === 0) o.spec = 1;
     if (t.atk && t.atk.t < 4 && ad < 70 && Math.random() < .35 * skill && P.dodgeCd === 0 && P.x > stageL + 80 && P.x + P.w < stageR - 80) { o.dodge = 1; o.x = -sign(dx); }
@@ -1220,20 +1256,39 @@ function hitPlayer(o, dmg, kx, ky, kind, from) {
 }
 function knockOut(o) {
   if (o.out || o.dead) return;
-  o.stocks--; stats.deaths++; o.dead = 1; o.deadT = 20; o.vx = 0; o.vy = 0;
+  if (G.mmode === 'stock') o.stocks--; stats.deaths++; o.dead = 1; o.deadT = 20; o.vx = 0; o.vy = 0;
+  if (G.mmode === 'coins' && o.score > 0) { const lose = Math.min(3, o.score); o.score -= lose; const sp = G.spots[(Math.random() * G.spots.length) | 0] || { x: MW * TS / 2, y: 200 }; for (let i = 0; i < lose; i++) ents.push({ kind: 'coin', x: sp.x - 8, y: sp.y - 60, w: 16, h: 16, t: i * 5, vx: rnd(-3, 3), vy: rnd(-8, -4), loose: 1 }); }
   const killer = (o.lastHit >= 0 && G.frame - o.lastHitT < 400) ? players.find(q => q.idx === o.lastHit) : null;
   if (killer) { killer.kos++; killer.meter = Math.min(100, killer.meter + 25); floatText(killer.x + 10, killer.y - 24, 'KO!', '#ffc65c', 20, { crit: true }); }
   Sound.sfx.ko(); addTrauma(.9); G.flash = .7; G.punch = 1.06; slowmo(.5); buzz(60);
   const ex = clamp(o.x + 10, view.l + 30, view.r - 30), ey = clamp(o.y + 20, view.t + 30, view.b - 30);
   burst(ex, ey, 40, [o.col, '#ffffff', '#ffc65c'], 9, 40, { add: true, type: 'spark', g: .1 }); ringFx(ex, ey, 10, 160, o.col, 24, 6);
   floatText(ex, ey - 20, o.bot ? 'BOT ' + (o.idx + 1) + ' OUT' : 'P' + (o.idx + 1) + ' OUT', o.col, 16, { crit: true });
-  if (o.stocks <= 0) { o.out = true; o.dead = 0; checkMatchEnd(); }
+  if (G.mmode === 'stock' && o.stocks <= 0) { o.out = true; o.dead = 0; checkMatchEnd(); }
 }
 function matchRespawn(o) {
   if (o.out) return;
   o.dead = 0; o.deadT = 0; o.rot = 0; o.dmg = 0; o.hp = o.max; o.inv = 150; o.atk = null; o.hurtT = 0; o.launch = 0;
   const sp = spawns[o.idx % spawns.length] || { x: MW * TS / 2, y: 100 }; o.x = (STAGE.x0 + STAGE.x1) / 2 - 10 + (o.idx - 1.5) * 40; o.y = 2 * TS; o.vx = 0; o.vy = 0; o.jumps = o.hero.jumps;
   o.plat = 140; ringFx(o.x + 10, o.y + 20, 4, 60, o.col, 20, 3);
+}
+function moveHill(first) {
+  const H2 = G.hill, sp = H2.spots.filter(q => Math.abs(q.x - H2.x) > 120 || first); const q = sp[(Math.random() * sp.length) | 0] || G.spots[0];
+  let x0 = q.x, x1 = q.x; while (G.spots.some(o => o.top === q.top && Math.abs(o.x - (x0 - TS)) < 2) && q.x - x0 < 48) x0 -= TS; while (G.spots.some(o => o.top === q.top && Math.abs(o.x - (x1 + TS)) < 2) && x1 - q.x < 48) x1 += TS;
+  H2.x = (x0 + x1) / 2; H2.y = q.y; H2.w = Math.max(64, x1 - x0 + 32); H2.t = 0; H2.holder = -1; if (!first) { Sound.sfx.beacon(); floatText(H2.x, H2.y - 50, tr('THE HILL MOVED!'), '#ffc65c', 14, { crit: true }); }
+}
+function updateModes() {
+  if (G.mmode === 'stock' || G.matchOver || G.countdown > 0) return;
+  if (G.mmode === 'coins') { G.coinT++; const n = ents.filter(e => e.kind === 'coin').length; if (G.coinT % 50 === 0 && n < 7 && G.spots.length) { const q = G.spots[(Math.random() * G.spots.length) | 0]; ents.push({ kind: 'coin', x: q.x - 8, y: q.y - 26, w: 16, h: 16, t: 0 }); ringFx(q.x, q.y - 18, 4, 24, '#ffc65c', 14, 2); } }
+  if (G.hill) { const H2 = G.hill; H2.t++; if (H2.t >= 15 * 60) moveHill(false);
+    const zone = { x: H2.x - H2.w / 2, y: H2.y - 70, w: H2.w, h: 72 }, inZ = players.filter(p => !p.out && !p.dead && overlap(p, zone));
+    H2.holder = inZ.length === 1 ? inZ[0].idx : inZ.length > 1 ? -2 : -1;
+    if (inZ.length === 1) { const p = inZ[0]; const before = Math.floor(p.hill || 0); p.hill = (p.hill || 0) + 1 / 60; if (Math.floor(p.hill) > before) { Sound.sfx.coin(); if (p.hill >= 30) endScoreMatch(); } } }
+  if (G.matchLimit && stats.time >= G.matchLimit) endScoreMatch();
+}
+function endScoreMatch() {
+  if (G.matchOver) return; const sc = p => G.mmode === 'hill' ? (p.hill || 0) : p.score, best = Math.max(...players.map(sc)), top = players.filter(p => sc(p) === best);
+  G.matchOver = 1; G.matchT = 0; if (top.length === 1 && best > 0) top[0].winner = 1; Sound.stop(); Sound.sfx.win(); slowmo(1); G.flash = 1; progress.matches = (progress.matches || 0) + 1; saveProgress();
 }
 function checkMatchEnd() {
   const left = inPlay();
@@ -1544,6 +1599,10 @@ function updateHazards() {
     if (G.hazardT >= 2220) { G.hazardT = 0; projs.push({ kind: 'tsunami', x: -120, y: MH * TS - 9 * TS, w: 80, h: 5 * TS, vx: 9, vy: 0, life: 200, dmg: 9, hit: {}, t: 0, owner: 'h', facing: 1 }); Sound.sfx.splash(); addTrauma(.3); }
   } else if (STAGE.hazard === 'coconut') {
     if (G.hazardT % 150 === 0) { const x = rnd(9 * TS, 38 * TS); projs.push({ kind: 'coconut', x, y: -40, w: 14, h: 14, vx: rnd(-1, 1), vy: 2, g: .4, life: 400, owner: 'h', dmg: 10, t: 0 }); }
+  } else if (STAGE.hazard === 'stal') {
+    if (G.hazardT % 130 === 0) G.stalX = rnd(STAGE.x0 + 30, STAGE.x1 - 30);
+    if (G.stalX && G.hazardT % 130 < 40 && G.frame % 3 === 0) burst(G.stalX + rnd(-8, 8), 6, 1, ['#9ff7e6', '#ffffff'], 1, 20, { g: .2 });
+    if (G.stalX && G.hazardT % 130 === 40) { projs.push({ kind: 'stal', x: G.stalX - 8, y: -10, w: 16, h: 26, vx: 0, vy: 2, g: .45, life: 400, owner: 'h', dmg: 10, t: 0 }); G.stalX = 0; }
   } else if (STAGE.hazard === 'geyser') {
     for (const gz of geysers) {
       gz.t++;
@@ -1622,7 +1681,7 @@ function step() {
   stats.time += 1 / 60;
   if (G.cine > 0) G.cine--;
   for (const pl of players) { P = pl; updatePlayer(); if (pl.plat > 0) pl.plat--; }
-  updateEnts(); if (G.mode === 'match') updateHazards(); else updateVents(); updateCamera(); updateFx();
+  updateEnts(); if (G.mode === 'match') { updateHazards(); updateModes(); } else updateVents(); updateCamera(); updateFx();
   P = players[0];
   const low = players.some(p => !p.bot && p.hp > 0 && p.hp < p.max * .25 && !p.dead && G.mode !== 'match');
   if (low && G.frame % 70 === 0) Sound.sfx.heartbeat();
@@ -2386,6 +2445,11 @@ function drawWorld(left, top, z, t) {
     }
   }
   for (const c of corpses) { ctx.save(); ctx.globalAlpha = Math.min(1, c.life / 10); drawEnemy(ctx, c, G.frame); ctx.restore(); }
+  if (G.mode === 'match' && G.hill) { const H2 = G.hill, hcol = H2.holder >= 0 ? PCOL[H2.holder] : H2.holder === -2 ? '#ff4d6d' : '#ffc65c', x0 = H2.x - H2.w / 2, pul = .5 + Math.sin(G.t * 5) * .2;
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createLinearGradient(0, H2.y - 70, 0, H2.y); g.addColorStop(0, rgba(hcol, 0)); g.addColorStop(1, rgba(hcol, .35 * pul + .1)); ctx.fillStyle = g; ctx.fillRect(x0, H2.y - 70, H2.w, 70); ctx.restore();
+    ctx.strokeStyle = rgba(hcol, .9); ctx.lineWidth = 3; ctx.setLineDash([8, 6]); ctx.lineDashOffset = -G.frame * .5; ctx.strokeRect(x0, H2.y - 70, H2.w, 70); ctx.setLineDash([]);
+    ctx.font = `900 13px ${FD}`; ctx.textAlign = 'center'; textStroke('♛', H2.x, H2.y - 78 + Math.sin(G.t * 3) * 3, hcol, OUTLINE, 4); ctx.textAlign = 'left';
+    if (H2.t > 13 * 60 && G.frame % 20 < 10) { ctx.font = `800 9px ${FD}`; ctx.textAlign = 'center'; textStroke(tr('MOVING SOON'), H2.x, H2.y - 96, '#ffffff', OUTLINE, 3); ctx.textAlign = 'left'; } }
   for (const p of projs) drawProj(ctx, p);
   drawParticles(false);
   for (const p of players) drawPlayerOne(p, t);
@@ -2440,15 +2504,16 @@ function drawHUD() {
       ctx.font = `800 ${8 * u}px ${FD}`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; textStroke((p.bot ? 'BOT' : 'P' + (p.idx + 1)) + ' · ' + p.hero.short.toUpperCase(), cx + R + 8 * u, by + 12 * u, p.col, 'rgba(6,24,33,.9)', 3 * u);
       const dmgCol = p.dmg < 40 ? '#ffffff' : p.dmg < 90 ? '#ffc65c' : p.dmg < 140 ? '#ff6b4a' : '#ff4d6d', pop = p.hurtT > 8 ? 1.2 : 1;
       ctx.save(); ctx.translate(cx + R + 8 * u, by + 36 * u); ctx.scale(pop, pop); ctx.font = `900 ${22 * u}px ${FD}`; textStroke(p.out ? 'OUT' : Math.round(p.dmg) + '%', 0, 0, p.out ? '#94b9c2' : dmgCol, 'rgba(6,24,33,.9)', 4 * u); ctx.restore();
-      for (let k2 = 0; k2 < settings.stocks; k2++) { const on = k2 < p.stocks; ctx.fillStyle = on ? p.col : 'rgba(239,250,246,.15)'; ctx.beginPath(); ctx.arc(x + w - 10 * u - k2 * 11 * u, by + 14 * u, 4 * u, 0, TAU); ctx.fill(); }
+      if (G.mmode === 'stock') for (let k2 = 0; k2 < settings.stocks; k2++) { const on = k2 < p.stocks; ctx.fillStyle = on ? p.col : 'rgba(239,250,246,.15)'; ctx.beginPath(); ctx.arc(x + w - 10 * u - k2 * 11 * u, by + 14 * u, 4 * u, 0, TAU); ctx.fill(); }
+      else { ctx.textAlign = 'right'; ctx.font = `900 ${12 * u}px ${FD}`; textStroke(G.mmode === 'coins' ? '● ' + p.score : '♛ ' + Math.floor(p.hill || 0), x + w - 8 * u, by + 36 * u, G.mmode === 'coins' ? '#ffc65c' : (G.hill && G.hill.holder === p.idx ? '#ffc65c' : '#effaf6'), 'rgba(6,24,33,.9)', 3 * u); ctx.textAlign = 'left'; }
       if (p.meter >= 100 && !p.out) glow(ctx, x + w / 2, by + 29 * u, w * .5, '#ffc65c', .25 + Math.sin(G.t * 8) * .1);
       ctx.fillStyle = 'rgba(239,250,246,.12)'; ctx.fillRect(x + w - 10 * u - 48 * u, by + 46 * u, 48 * u, 4 * u); const g = ctx.createLinearGradient(x, 0, x + w, 0); g.addColorStop(0, '#2de2c3'); g.addColorStop(1, '#ffc65c'); ctx.fillStyle = g; ctx.fillRect(x + w - 10 * u - 48 * u, by + 46 * u, 48 * u * p.meter / 100, 4 * u);
     });
     // timer
-    const tm = Math.floor(stats.time / 60), ts = Math.floor(stats.time % 60), tstr = tm + ':' + (ts < 10 ? '0' : '') + ts;
+    const tsec = G.matchLimit ? Math.max(0, G.matchLimit - stats.time) : stats.time, tm = Math.floor(tsec / 60), ts = Math.floor(tsec % 60), tstr = tm + ':' + (ts < 10 ? '0' : '') + ts;
     ctx.font = `${10 * u}px ${FP}`; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; const tw2 = ctx.measureText(tstr).width;
     ctx.fillStyle = 'rgba(6,24,33,.7)'; ctx.beginPath(); rr(ctx, W / 2 - tw2 / 2 - 12 * u, T + 4 * u, tw2 + 24 * u, 24 * u, 12 * u); ctx.fill(); ctx.fillStyle = '#effaf6'; ctx.fillText(tstr, W / 2, T + 20 * u);
-    ctx.font = `800 ${8 * u}px ${FD}`; ctx.fillStyle = '#94b9c2'; ctx.fillText(STAGE.name.toUpperCase() + (settings.hazards ? ' · HAZARDS ON' : ''), W / 2, T + 40 * u);
+    ctx.font = `800 ${8 * u}px ${FD}`; ctx.fillStyle = '#94b9c2'; ctx.fillText(tr(STAGE.name).toUpperCase() + ' · ' + tr((MMODES.find(m => m[0] === G.mmode) || MMODES[0])[1]).toUpperCase(), W / 2, T + 40 * u);
     if (G.hazardWarn > 0) { G.hazardWarn--; ctx.font = `900 ${14 * u}px ${FD}`; textStroke('WAVE INCOMING', W / 2, T + 70 * u, (G.frame >> 3) % 2 ? '#5be7ff' : '#ffffff', 'rgba(6,24,33,.9)', 4 * u); }
   } else {
     const compact = players.length > 1; let y = T;
@@ -2521,7 +2586,7 @@ function drawOverlays() {
     const c = G.countdown, n = Math.ceil(c / 60), txt = c > 180 ? 'READY' : n > 0 ? String(n) : 'GO', k2 = (c % 60) / 60;
     ctx.save(); ctx.textAlign = 'center'; ctx.translate(W / 2, H * .42); ctx.scale(1 + (1 - k2) * .2, 1 + (1 - k2) * .2); ctx.globalAlpha = .4 + k2 * .6;
     ctx.font = `900 ${Math.min(90 * u, W * .16)}px ${FD}`; textStroke(txt, 0, 0, txt === 'GO' ? '#2de2c3' : '#ffc65c', '#02080c', 8 * u); ctx.restore();
-    if (c > 180) { ctx.textAlign = 'center'; ctx.font = `800 ${11 * u}px ${FD}`; ctx.fillStyle = '#effaf6'; ctx.fillText(STAGE.name.toUpperCase() + ' · ' + settings.stocks + ' STOCKS', W / 2, H * .42 + 50 * u); }
+    if (c > 180) { ctx.textAlign = 'center'; ctx.font = `800 ${11 * u}px ${FD}`; ctx.fillStyle = '#effaf6'; ctx.fillText(tr(STAGE.name).toUpperCase() + ' · ' + (G.mmode === 'stock' ? tr('{0} STOCKS', settings.stocks) : tr((MMODES.find(m => m[0] === G.mmode) || MMODES[0])[2]).toUpperCase()), W / 2, H * .42 + 50 * u); }
   }
   if (G.matchOver && G.matchT > 10) {
     const w = players.find(p => p.winner), k2 = easeOut((G.matchT - 10) / 25); ctx.save(); ctx.globalAlpha = k2; ctx.textAlign = 'center';
@@ -2728,6 +2793,7 @@ function mapDetail() {
   d.innerHTML = `<div><b>${L.id} · ${tr(L.name)}</b><br><span>${lock ? tr('Locked. Clear the island before it.') : tr(L.desc)}</span>${pr.bestTime ? `<br><span>${tr('Best')} ${fmt(pr.bestTime)} · ${pr.rank || ''} · ${'★'.repeat(pr.stars || 0)}${pr.gem ? ' · ◆' : ''}</span>` : ''}</div><div class="wtot">★ ${stars}/${LEVELS.length * 3}<br>◆ ${gems}/${LEVELS.length}</div>`;
   $('btnPickGo').disabled = lock;
 }
+const MMODES = [['stock', 'Stocks', 'Last fighter standing.'], ['coins', 'Coin Rush', 'Most coins in 90 seconds. A KO spills 3 of yours.'], ['hill', 'King of the Hill', 'Stand alone in the glowing zone. First to 30 points.']];
 function buildPicks() {
   const wrapEl = $('picks'); wrapEl.innerHTML = '';
   const adv = G.mode === 'adventure', list = adv ? LEVELS : STAGES;
@@ -2735,11 +2801,15 @@ function buildPicks() {
   $('btnPickGo').disabled = false;
   if (adv) { $('pickEyebrow').textContent = tr('Adventure · World 1 · Emberwood Isles'); $('pickTitle').textContent = tr('Choose an island'); $('pickNote').textContent = tr('Co-op: up to 4 heroes share one screen, one pool of lives and one exit. Tap the selected island again to play.'); buildMapPicks(wrapEl); return; }
   $('pickEyebrow').textContent = adv ? 'Adventure · World 1' : 'Match · Stage'; $('pickTitle').textContent = adv ? 'Choose a level' : 'Choose a stage';
-  $('pickNote').textContent = adv ? 'Co-op: up to 4 heroes share one screen, one pool of lives and one exit.' : `Last fighter standing wins. ${settings.stocks} stocks each. Hazards ${settings.hazards ? 'on' : 'off'} (change in Settings).`;
+  const mm = MMODES.find(m => m[0] === settings.mmode) || MMODES[0];
+  $('pickNote').textContent = tr(mm[2]) + ' ' + (mm[0] === 'stock' ? tr('{0} stocks each.', settings.stocks) + ' ' : '') + tr(settings.hazards ? 'Hazards on (change in Settings).' : 'Hazards off (change in Settings).');
+  const md = document.createElement('div'); md.className = 'mmodes'; md.style.gridColumn = '1 / -1';
+  for (const m of MMODES) { const b = document.createElement('button'); b.className = 'pickcard' + (settings.mmode === m[0] ? ' sel' : ''); b.innerHTML = `<b>${tr(m[1])}</b><span>${tr(m[2])}</span>`; b.style.flex = '1 1 150px'; b.addEventListener('click', () => { settings.mmode = m[0]; saveSettings(); Sound.sfx.select(); buildPicks(); }); md.appendChild(b); }
+  wrapEl.appendChild(md);
   list.forEach((it, i) => {
     const d = document.createElement('button'); d.className = 'pickcard' + ((adv ? G.level : G.stage) === i ? ' sel' : '');
     const pr = adv ? (progress.levels[it.id] || {}) : null;
-    d.innerHTML = `<b>${adv ? it.id + ' · ' : ''}${it.name}</b><span>${it.desc}</span>` + (adv ? `<div class="stars"><i class="${pr.stars >= 1 ? 'on' : ''}"></i><i class="${pr.stars >= 2 ? 'on' : ''}"></i><i class="${pr.stars >= 3 ? 'on' : ''}"></i>${pr.bestTime ? `<span style="margin-left:6px">${fmt(pr.bestTime)} · ${pr.rank || ''}</span>` : ''}</div>` : `<span>Hazard: ${it.hazard}</span>`);
+    d.innerHTML = `<b>${adv ? it.id + ' · ' : ''}${tr(it.name)}</b><span>${tr(it.desc)}</span>` + (adv ? `<div class="stars"><i class="${pr.stars >= 1 ? 'on' : ''}"></i><i class="${pr.stars >= 2 ? 'on' : ''}"></i><i class="${pr.stars >= 3 ? 'on' : ''}"></i>${pr.bestTime ? `<span style="margin-left:6px">${fmt(pr.bestTime)} · ${pr.rank || ''}</span>` : ''}</div>` : '');
     d.addEventListener('click', () => { if (adv) G.level = i; else G.stage = i; Sound.sfx.select(); buildPicks(); });
     wrapEl.appendChild(d);
   });
@@ -2833,9 +2903,9 @@ function showResults(won) { if (G.scene === 'results') return; let rw = { xp: wo
   const match = G.mode === 'match';
   $('resRankWrap').hidden = match; $('resGrid').hidden = match; $('resBoard').hidden = !match; $('btnResNext').hidden = match || !won || G.level >= LEVELS.length - 1;
   if (match) {
-    const w = players.find(p => p.winner), order = players.slice().sort((a, b) => (b.winner ? 1 : 0) - (a.winner ? 1 : 0) || b.stocks - a.stocks || b.kos - a.kos || a.dmg - b.dmg);
+    const w = players.find(p => p.winner), sc = p => G.mmode === 'coins' ? p.score : G.mmode === 'hill' ? (p.hill || 0) : p.stocks, order = players.slice().sort((a, b) => (b.winner ? 1 : 0) - (a.winner ? 1 : 0) || sc(b) - sc(a) || b.kos - a.kos || a.dmg - b.dmg);
     $('resEyebrow').textContent = STAGE.name + ' · ' + fmt(stats.time); $('resTitle').textContent = w ? (w.bot ? 'Bot ' + (w.idx + 1) : 'Player ' + (w.idx + 1)) + ' wins' : 'Draw';
-    $('resBoard').innerHTML = order.map((p, i) => `<div class="${p.winner ? 'win' : ''}" style="--pc:${p.col}"><i>${i + 1}</i><b>${p.bot ? 'Bot ' : 'P'}${p.idx + 1} · ${p.hero.short}</b><i>${p.kos} KO</i><i>${Math.round(p.dealt)} dmg</i></div>`).join('');
+    $('resBoard').innerHTML = order.map((p, i) => `<div class="${p.winner ? 'win' : ''}" style="--pc:${p.col}"><i>${i + 1}</i><b>${p.bot ? tr('Bot') + ' ' : 'P'}${p.idx + 1} · ${p.hero.short}</b><i>${p.kos} KO</i><i>${G.mmode === 'coins' ? '● ' + p.score : G.mmode === 'hill' ? Math.floor(p.hill || 0) + ' ♛' : Math.round(p.dealt) + ' dmg'}</i></div>`).join('');
     $('resTip').textContent = w && w.bot ? 'Tip: dodge right as a bot swings, then punish with a 3-hit combo into a Special.' : 'Rematch with the same fighters, or change the lineup from the lobby.';
     shareText = `Pixel Pact · ${STAGE.name}: ${w ? (w.bot ? 'Bot' : 'Player ' + (w.idx + 1)) + ' (' + w.hero.short + ') won' : 'draw'} in ${fmt(stats.time)} with ${w ? w.kos : 0} KOs.`;
     Sound.sfx.win();
