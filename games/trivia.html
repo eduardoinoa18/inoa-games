@@ -40,8 +40,18 @@
 .tv-bubble{position:fixed;z-index:19;transform:translate(-50%,-100%);background:#fff;color:#1b2430;font-weight:800;font-size:14px;padding:6px 10px;border-radius:14px;box-shadow:0 6px 16px rgba(0,0,0,.3);pointer-events:none;white-space:nowrap;animation:pop .25s ease-out}
 .tv-bubble:after{content:"";position:absolute;left:50%;bottom:-8px;margin-left:-8px;border:8px solid transparent;border-top-color:#fff;border-bottom:0}
 @keyframes pop{from{transform:translate(-50%,-80%) scale(.6);opacity:0}}
-@media (max-width:640px){.tv-choices{grid-template-columns:1fr 1fr;gap:6px;padding:8px}.tv-ch{min-height:52px;grid-template-columns:36px 1fr;font-size:14px}.tv-ch b{width:36px;height:36px;font-size:17px}.tv-scores{max-width:60vw}.tv-scores span{font-size:12px;padding:5px 8px}}
+@media (max-width:640px){.tv-choices.three{grid-template-columns:1fr}.tv-nb{min-width:46px;font-size:14px}.tv-choices{grid-template-columns:1fr 1fr;gap:6px;padding:8px}.tv-ch{min-height:52px;grid-template-columns:36px 1fr;font-size:14px}.tv-ch b{width:36px;height:36px;font-size:17px}.tv-scores{max-width:60vw}.tv-scores span{font-size:12px;padding:5px 8px}}
 @media (orientation:landscape) and (max-height:640px){.tv-choices{gap:6px;padding:8px;width:min(760px,calc(100vw - 20px))}.tv-ch{min-height:44px;grid-template-columns:36px 1fr;font-size:15px}.tv-ch b{width:34px;height:34px;font-size:16px}}
+/* true/false, category pick and number dial panels */
+.tv-choices.three{grid-template-columns:repeat(3,1fr)}
+.tv-choices.two .tv-ch b{font-family:Manrope,sans-serif}.tv-choices.two .tv-ch:nth-of-type(1) b{background:#1f9a63}.tv-choices.two .tv-ch:nth-of-type(2) b{background:#e2443a}
+.tv-choices.num{grid-template-columns:1fr}
+.nrow{display:grid;grid-template-columns:auto auto 1fr auto auto;gap:6px;align-items:center}.nrow output{font-family:var(--f-d);font-weight:900;font-size:clamp(24px,5vw,38px);color:#fff;text-align:center;white-space:nowrap;overflow:hidden}
+.tv-nb{min-width:58px;min-height:52px;border:0;border-radius:14px;background:#fff8ee;color:#1b2430;font-weight:900;font-size:16px;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.25);touch-action:none;padding:0 8px}.tv-nb:active{transform:translateY(3px)}
+.nrow2{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}.nrow2 input{width:100%;accent-color:var(--pc,#fff);height:34px}
+.tv-lock{min-height:50px;border:0;border-radius:14px;background:var(--pc,#ffd166);color:#14173a;font-weight:900;font-size:17px;padding:0 18px;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.25)}
+.tv-stats>div{display:flex;flex-wrap:wrap;gap:5px}.tv-stats span{position:relative;overflow:hidden;border-radius:10px;border:2px solid var(--line);padding:3px 8px;font-weight:800;font-size:13px;background:#fff}.tv-stats span i{position:absolute;left:0;top:0;bottom:0;background:var(--c);opacity:.35;z-index:0}.tv-stats span{z-index:0}
+#pSk[hidden],#pP[hidden]{display:none}
 /* toasts sit low (over the stage floor) instead of on top of the question board */
 .ig-toast{top:auto;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 52px)}
 @media (orientation:portrait){.tv-buz[data-c="0"],.tv-buz[data-c="1"]{top:auto;bottom:128px}.tv-scores{bottom:auto;top:max(56px,calc(env(safe-area-inset-top) + 50px));left:8px;right:8px;transform:none;max-width:none;gap:4px}.ig-toast{bottom:max(30px,env(safe-area-inset-bottom));max-width:calc(100vw - 2 * clamp(78px,15vmin,112px) - 40px)}.tv-scores span{font-size:12px;padding:4px 8px;gap:4px}}
@@ -56,198 +66,12 @@
 import * as E from '../engine/inoa3d.js';
 const { THREE, clamp, lerp, rnd, pick, hash, damp, SFX, $ } = E;
 
-/* ======================= question bank =======================
-   [category, difficulty 1-3, EN question, [EN correct, wrong, wrong, wrong], ES question, [ES correct, wrong, wrong, wrong]]
-   Original, family-friendly questions. The first choice is the correct one; choices are shuffled at runtime. */
-const Q = [
-// ---- science
-['sci', 1, 'What do plants need from the sun to make their food?', ['Light', 'Sound', 'Wind', 'Snow'], '¿Qué necesitan las plantas del sol para fabricar su alimento?', ['Luz', 'Sonido', 'Viento', 'Nieve']],
-['sci', 1, 'How many planets are in our solar system?', ['8', '7', '9', '10'], '¿Cuántos planetas hay en nuestro sistema solar?', ['8', '7', '9', '10']],
-['sci', 1, 'Which planet is known as the Red Planet?', ['Mars', 'Venus', 'Jupiter', 'Saturn'], '¿Qué planeta es conocido como el planeta rojo?', ['Marte', 'Venus', 'Júpiter', 'Saturno']],
-['sci', 1, 'What is frozen water called?', ['Ice', 'Steam', 'Fog', 'Salt'], '¿Cómo se llama el agua congelada?', ['Hielo', 'Vapor', 'Niebla', 'Sal']],
-['sci', 1, 'Which body part pumps blood around the body?', ['The heart', 'The lungs', 'The stomach', 'The brain'], '¿Qué parte del cuerpo bombea la sangre?', ['El corazón', 'Los pulmones', 'El estómago', 'El cerebro']],
-['sci', 1, 'Which gas do we need to breathe to stay alive?', ['Oxygen', 'Helium', 'Neon', 'Argon'], '¿Qué gas necesitamos respirar para vivir?', ['Oxígeno', 'Helio', 'Neón', 'Argón']],
-['sci', 1, 'Which tool do scientists use to see very tiny things?', ['Microscope', 'Telescope', 'Thermometer', 'Compass'], '¿Qué instrumento usan los científicos para ver cosas muy pequeñas?', ['El microscopio', 'El telescopio', 'El termómetro', 'La brújula']],
-['sci', 1, 'What color do you get by mixing blue and yellow paint?', ['Green', 'Purple', 'Orange', 'Pink'], '¿Qué color se obtiene al mezclar pintura azul y amarilla?', ['Verde', 'Morado', 'Naranja', 'Rosado']],
-['sci', 2, 'What is the largest planet in our solar system?', ['Jupiter', 'Saturn', 'Earth', 'Neptune'], '¿Cuál es el planeta más grande del sistema solar?', ['Júpiter', 'Saturno', 'La Tierra', 'Neptuno']],
-['sci', 2, 'At sea level, water boils at what temperature?', ['100 °C', '50 °C', '0 °C', '200 °C'], 'Al nivel del mar, ¿a qué temperatura hierve el agua?', ['100 °C', '50 °C', '0 °C', '200 °C']],
-['sci', 2, 'What is the chemical formula for water?', ['H₂O', 'CO₂', 'O₂', 'NaCl'], '¿Cuál es la fórmula química del agua?', ['H₂O', 'CO₂', 'O₂', 'NaCl']],
-['sci', 2, 'Which force pulls objects toward the Earth?', ['Gravity', 'Magnetism', 'Friction', 'Electricity'], '¿Qué fuerza atrae los objetos hacia la Tierra?', ['La gravedad', 'El magnetismo', 'La fricción', 'La electricidad']],
-['sci', 2, 'What is the largest organ of the human body?', ['The skin', 'The liver', 'The heart', 'The lungs'], '¿Cuál es el órgano más grande del cuerpo humano?', ['La piel', 'El hígado', 'El corazón', 'Los pulmones']],
-['sci', 2, 'Which planet is closest to the Sun?', ['Mercury', 'Venus', 'Mars', 'Earth'], '¿Qué planeta está más cerca del Sol?', ['Mercurio', 'Venus', 'Marte', 'La Tierra']],
-['sci', 2, 'Which gas do plants take in from the air to make food?', ['Carbon dioxide', 'Helium', 'Neon', 'Hydrogen'], '¿Qué gas toman las plantas del aire para fabricar su alimento?', ['Dióxido de carbono', 'Helio', 'Neón', 'Hidrógeno']],
-['sci', 2, 'What do you call an animal that eats only plants?', ['Herbivore', 'Carnivore', 'Omnivore', 'Predator'], '¿Cómo se llama un animal que solo come plantas?', ['Herbívoro', 'Carnívoro', 'Omnívoro', 'Depredador']],
-['sci', 3, 'How many bones are in the adult human body?', ['206', '106', '306', '186'], '¿Cuántos huesos tiene el cuerpo humano adulto?', ['206', '106', '306', '186']],
-['sci', 3, 'What is the chemical symbol for gold?', ['Au', 'Ag', 'Go', 'Gd'], '¿Cuál es el símbolo químico del oro?', ['Au', 'Ag', 'Or', 'Go']],
-['sci', 3, 'Which is the hottest planet in our solar system?', ['Venus', 'Mercury', 'Mars', 'Jupiter'], '¿Cuál es el planeta más caliente del sistema solar?', ['Venus', 'Mercurio', 'Marte', 'Júpiter']],
-['sci', 3, 'About how long does sunlight take to reach Earth?', ['8 minutes', '8 seconds', '8 hours', '8 days'], '¿Cuánto tarda aproximadamente la luz del Sol en llegar a la Tierra?', ['8 minutos', '8 segundos', '8 horas', '8 días']],
-['sci', 3, 'Which part of a plant or animal cell holds most of its DNA?', ['The nucleus', 'The membrane', 'The cell wall', 'The ribosome'], '¿Qué parte de una célula animal o vegetal guarda la mayor parte de su ADN?', ['El núcleo', 'La membrana', 'La pared celular', 'El ribosoma']],
-['sci', 3, 'What travels faster: light or sound?', ['Light', 'Sound', 'They are equal', 'It depends on the color'], '¿Qué viaja más rápido: la luz o el sonido?', ['La luz', 'El sonido', 'Son iguales', 'Depende del color']],
-// ---- animals
-['ani', 1, 'What is the largest animal on Earth?', ['Blue whale', 'Elephant', 'Giraffe', 'Great white shark'], '¿Cuál es el animal más grande de la Tierra?', ['La ballena azul', 'El elefante', 'La jirafa', 'El tiburón blanco']],
-['ani', 1, 'How many legs does a spider have?', ['8', '6', '10', '4'], '¿Cuántas patas tiene una araña?', ['8', '6', '10', '4']],
-['ani', 1, 'What is a baby frog called?', ['Tadpole', 'Cub', 'Calf', 'Chick'], '¿Cómo se llama la cría de la rana?', ['Renacuajo', 'Cachorro', 'Ternero', 'Pollito']],
-['ani', 1, 'Which animal is famous for its black and white stripes?', ['Zebra', 'Lion', 'Giraffe', 'Hippo'], '¿Qué animal es famoso por sus rayas blancas y negras?', ['La cebra', 'El león', 'La jirafa', 'El hipopótamo']],
-['ani', 1, 'What do pandas mostly eat?', ['Bamboo', 'Fish', 'Meat', 'Bananas'], '¿Qué comen principalmente los pandas?', ['Bambú', 'Pescado', 'Carne', 'Bananas']],
-['ani', 1, 'Which bird cannot fly but is an excellent swimmer?', ['Penguin', 'Eagle', 'Parrot', 'Owl'], '¿Qué ave no puede volar pero nada muy bien?', ['El pingüino', 'El águila', 'El loro', 'El búho']],
-['ani', 1, 'Which insect makes honey?', ['Bee', 'Ant', 'Butterfly', 'Mosquito'], '¿Qué insecto produce miel?', ['La abeja', 'La hormiga', 'La mariposa', 'El mosquito']],
-['ani', 1, 'Where does a baby kangaroo grow after it is born?', ["In its mother's pouch", 'In a nest', 'Underwater', 'In a cave'], '¿Dónde crece la cría del canguro después de nacer?', ['En la bolsa de su madre', 'En un nido', 'Bajo el agua', 'En una cueva']],
-['ani', 1, 'Which animal is the tallest in the world?', ['Giraffe', 'Elephant', 'Camel', 'Ostrich'], '¿Cuál es el animal más alto del mundo?', ['La jirafa', 'El elefante', 'El camello', 'El avestruz']],
-['ani', 1, 'What sound does a cow make?', ['Moo', 'Woof', 'Meow', 'Quack'], '¿Qué sonido hace la vaca?', ['Mu', 'Guau', 'Miau', 'Cuac']],
-['ani', 2, 'What is the fastest land animal?', ['Cheetah', 'Horse', 'Lion', 'Kangaroo'], '¿Cuál es el animal terrestre más rápido?', ['El guepardo', 'El caballo', 'El león', 'El canguro']],
-['ani', 2, 'What is a group of lions called?', ['A pride', 'A flock', 'A school', 'A swarm'], '¿Cómo se llama un grupo de leones?', ['Manada', 'Bandada', 'Cardumen', 'Enjambre']],
-['ani', 2, 'Which mammal can truly fly?', ['The bat', 'The flying squirrel', 'The penguin', 'The ostrich'], '¿Qué mamífero puede volar de verdad?', ['El murciélago', 'La ardilla voladora', 'El pingüino', 'El avestruz']],
-['ani', 2, 'How many hearts does an octopus have?', ['3', '1', '2', '8'], '¿Cuántos corazones tiene un pulpo?', ['3', '1', '2', '8']],
-['ani', 2, 'Dolphins are…', ['Mammals', 'Fish', 'Reptiles', 'Amphibians'], 'Los delfines son…', ['Mamíferos', 'Peces', 'Reptiles', 'Anfibios']],
-['ani', 2, 'Which bird can fly backwards?', ['Hummingbird', 'Pigeon', 'Eagle', 'Duck'], '¿Qué ave puede volar hacia atrás?', ['El colibrí', 'La paloma', 'El águila', 'El pato']],
-['ani', 2, 'Why are flamingos pink?', ['Because of the food they eat', 'They are born pink', 'They roll in pink mud', 'From sunburn'], '¿Por qué los flamencos son rosados?', ['Por la comida que comen', 'Nacen rosados', 'Se revuelcan en barro rosado', 'Por quemaduras de sol']],
-['ani', 3, "Which sea animal is also called a 'sea cow'?", ['Manatee', 'Walrus', 'Seal', 'Dolphin'], "¿Qué animal marino también es llamado 'vaca marina'?", ['El manatí', 'La morsa', 'La foca', 'El delfín']],
-['ani', 3, 'A caterpillar turns into a butterfly inside a…', ['Chrysalis', 'Nest', 'Shell', 'Burrow'], 'La oruga se convierte en mariposa dentro de una…', ['Crisálida', 'Madriguera', 'Concha', 'Colmena']],
-['ani', 3, 'What is the largest species of turtle?', ['Leatherback sea turtle', 'Box turtle', 'Snapping turtle', 'Green sea turtle'], '¿Cuál es la especie de tortuga más grande?', ['La tortuga laúd', 'La tortuga de caja', 'La tortuga mordedora', 'La tortuga verde']],
-['ani', 3, 'Snakes flick their tongues mainly to…', ['Smell', 'Hear', 'See', 'Breathe'], 'Las serpientes sacan la lengua principalmente para…', ['Oler', 'Oír', 'Ver', 'Respirar']],
-['ani', 3, 'What do you call animals that are active at night?', ['Nocturnal', 'Diurnal', 'Aquatic', 'Arboreal'], '¿Cómo se llaman los animales que están activos de noche?', ['Nocturnos', 'Diurnos', 'Acuáticos', 'Arbóreos']],
-// ---- geography
-['geo', 1, 'What is the largest ocean on Earth?', ['Pacific', 'Atlantic', 'Indian', 'Arctic'], '¿Cuál es el océano más grande de la Tierra?', ['Pacífico', 'Atlántico', 'Índico', 'Ártico']],
-['geo', 1, 'On which continent is Egypt?', ['Africa', 'Asia', 'Europe', 'South America'], '¿En qué continente está Egipto?', ['África', 'Asia', 'Europa', 'América del Sur']],
-['geo', 1, 'What is the capital of France?', ['Paris', 'London', 'Rome', 'Madrid'], '¿Cuál es la capital de Francia?', ['París', 'Londres', 'Roma', 'Madrid']],
-['geo', 1, 'Which is the coldest continent?', ['Antarctica', 'Africa', 'Europe', 'Australia'], '¿Cuál es el continente más frío?', ['La Antártida', 'África', 'Europa', 'Australia']],
-['geo', 1, 'Which country is shaped like a boot?', ['Italy', 'Spain', 'Greece', 'Portugal'], '¿Qué país tiene forma de bota?', ['Italia', 'España', 'Grecia', 'Portugal']],
-['geo', 1, 'What do we call the huge bodies of salt water that cover most of Earth?', ['Oceans', 'Rivers', 'Waterfalls', 'Streams'], '¿Cómo se llaman las enormes masas de agua salada que cubren gran parte de la Tierra?', ['Océanos', 'Ríos', 'Cascadas', 'Arroyos']],
-['geo', 1, 'What is the capital of Spain?', ['Madrid', 'Barcelona', 'Seville', 'Valencia'], '¿Cuál es la capital de España?', ['Madrid', 'Barcelona', 'Sevilla', 'Valencia']],
-['geo', 1, 'What is the name of the planet we live on?', ['Earth', 'Mars', 'The Moon', 'The Sun'], '¿Cómo se llama el planeta donde vivimos?', ['La Tierra', 'Marte', 'La Luna', 'El Sol']],
-['geo', 2, 'What is the tallest mountain in the world above sea level?', ['Mount Everest', 'Kilimanjaro', 'Aconcagua', 'Mont Blanc'], '¿Cuál es la montaña más alta del mundo sobre el nivel del mar?', ['El monte Everest', 'El Kilimanjaro', 'El Aconcagua', 'El Mont Blanc']],
-['geo', 2, 'What is the capital of Japan?', ['Tokyo', 'Kyoto', 'Osaka', 'Seoul'], '¿Cuál es la capital de Japón?', ['Tokio', 'Kioto', 'Osaka', 'Seúl']],
-['geo', 2, 'What is the largest country in the world by area?', ['Russia', 'Canada', 'China', 'Brazil'], '¿Cuál es el país más grande del mundo por superficie?', ['Rusia', 'Canadá', 'China', 'Brasil']],
-['geo', 2, 'On which continent is the Sahara Desert?', ['Africa', 'Asia', 'Australia', 'South America'], '¿En qué continente está el desierto del Sahara?', ['África', 'Asia', 'Australia', 'América del Sur']],
-['geo', 2, 'What is the capital of Canada?', ['Ottawa', 'Toronto', 'Vancouver', 'Montreal'], '¿Cuál es la capital de Canadá?', ['Ottawa', 'Toronto', 'Vancouver', 'Montreal']],
-['geo', 2, 'Which ocean lies between the Americas and Europe?', ['Atlantic', 'Pacific', 'Indian', 'Arctic'], '¿Qué océano está entre América y Europa?', ['Atlántico', 'Pacífico', 'Índico', 'Ártico']],
-['geo', 2, 'Which imaginary line divides Earth into northern and southern halves?', ['The equator', 'The prime meridian', 'The Tropic of Cancer', 'The date line'], '¿Qué línea imaginaria divide la Tierra en hemisferio norte y sur?', ['El ecuador', 'El meridiano de Greenwich', 'El trópico de Cáncer', 'La línea de cambio de fecha']],
-['geo', 3, 'In which country is Mount Kilimanjaro?', ['Tanzania', 'Kenya', 'Egypt', 'Morocco'], '¿En qué país está el monte Kilimanjaro?', ['Tanzania', 'Kenia', 'Egipto', 'Marruecos']],
-['geo', 3, 'The Great Barrier Reef lies off the coast of which country?', ['Australia', 'Brazil', 'Mexico', 'Philippines'], '¿Frente a la costa de qué país está la Gran Barrera de Coral?', ['Australia', 'Brasil', 'México', 'Filipinas']],
-['geo', 3, 'What is the capital of Egypt?', ['Cairo', 'Alexandria', 'Giza', 'Luxor'], '¿Cuál es la capital de Egipto?', ['El Cairo', 'Alejandría', 'Guiza', 'Luxor']],
-['geo', 3, 'Which river flows through Paris?', ['The Seine', 'The Thames', 'The Danube', 'The Rhine'], '¿Qué río atraviesa París?', ['El Sena', 'El Támesis', 'El Danubio', 'El Rin']],
-['geo', 3, 'In which ocean is Iceland?', ['The North Atlantic', 'The Pacific', 'The Indian Ocean', 'The Southern Ocean'], '¿En qué océano está Islandia?', ['El Atlántico Norte', 'El Pacífico', 'El Índico', 'El Océano Austral']],
-['geo', 3, 'What is the smallest country in the world?', ['Vatican City', 'Monaco', 'Malta', 'San Marino'], '¿Cuál es el país más pequeño del mundo?', ['La Ciudad del Vaticano', 'Mónaco', 'Malta', 'San Marino']],
-// ---- food
-['food', 1, 'Guacamole is mainly made from which fruit?', ['Avocado', 'Strawberry', 'Apple', 'Mango'], '¿De qué fruta se hace principalmente el guacamole?', ['Aguacate', 'Fresa', 'Manzana', 'Mango']],
-['food', 1, 'Popcorn is made from which grain?', ['Corn', 'Rice', 'Wheat', 'Oats'], '¿De qué grano se hacen las palomitas?', ['Maíz', 'Arroz', 'Trigo', 'Avena']],
-['food', 1, 'Which animal gives us most of the milk we drink?', ['Cow', 'Chicken', 'Pig', 'Fish'], '¿Qué animal nos da la mayor parte de la leche que tomamos?', ['La vaca', 'La gallina', 'El cerdo', 'El pez']],
-['food', 1, 'Cheese is made from…', ['Milk', 'Eggs', 'Flour', 'Honey'], 'El queso se hace con…', ['Leche', 'Huevos', 'Harina', 'Miel']],
-['food', 1, 'Chocolate is made from the seeds of which plant?', ['Cacao', 'Coffee', 'Vanilla', 'Coconut'], '¿De las semillas de qué planta se hace el chocolate?', ['Cacao', 'Café', 'Vainilla', 'Coco']],
-['food', 1, 'Which fruit is long, yellow and curved?', ['Banana', 'Apple', 'Grape', 'Cherry'], '¿Qué fruta es larga, amarilla y curva?', ['La banana', 'La manzana', 'La uva', 'La cereza']],
-['food', 1, 'Which of these is a vegetable?', ['Carrot', 'Apple', 'Strawberry', 'Grape'], '¿Cuál de estos es un vegetal?', ['La zanahoria', 'La manzana', 'La fresa', 'La uva']],
-['food', 1, 'What color is a ripe tomato usually?', ['Red', 'Blue', 'Purple', 'Black'], '¿De qué color es normalmente un tomate maduro?', ['Rojo', 'Azul', 'Morado', 'Negro']],
-['food', 1, 'Which drink is made from roasted beans?', ['Coffee', 'Lemonade', 'Milk', 'Orange juice'], '¿Qué bebida se hace con granos tostados?', ['El café', 'La limonada', 'La leche', 'El jugo de naranja']],
-['food', 2, 'Sushi comes from which country?', ['Japan', 'China', 'Thailand', 'Korea'], '¿De qué país viene el sushi?', ['Japón', 'China', 'Tailandia', 'Corea']],
-['food', 2, 'Paella is a famous rice dish from…', ['Spain', 'Italy', 'Mexico', 'Peru'], 'La paella es un famoso plato de arroz de…', ['España', 'Italia', 'México', 'Perú']],
-['food', 2, 'Which vitamin are oranges famous for?', ['Vitamin C', 'Vitamin D', 'Vitamin K', 'Vitamin B12'], '¿Por qué vitamina son famosas las naranjas?', ['Vitamina C', 'Vitamina D', 'Vitamina K', 'Vitamina B12']],
-['food', 2, 'Bread dough rises thanks to…', ['Yeast', 'Salt', 'Sugar', 'Oil'], 'La masa del pan sube gracias a…', ['La levadura', 'La sal', 'El azúcar', 'El aceite']],
-['food', 2, 'Tofu is made from…', ['Soybeans', 'Rice', 'Corn', 'Peanuts'], 'El tofu se hace con…', ['Soya', 'Arroz', 'Maíz', 'Maní']],
-['food', 2, 'Butter is made by churning…', ['Cream', 'Water', 'Juice', 'Eggs'], 'La mantequilla se hace batiendo…', ['Crema de leche', 'Agua', 'Jugo', 'Huevos']],
-['food', 2, 'Kimchi is a traditional dish from…', ['Korea', 'Japan', 'India', 'Vietnam'], 'El kimchi es un plato tradicional de…', ['Corea', 'Japón', 'India', 'Vietnam']],
-['food', 2, 'Croissants are most associated with which country?', ['France', 'Germany', 'Mexico', 'Japan'], '¿Con qué país se asocian más los cruasanes?', ['Francia', 'Alemania', 'México', 'Japón']],
-['food', 3, 'Pizza Margherita comes from which Italian city?', ['Naples', 'Rome', 'Milan', 'Venice'], '¿De qué ciudad italiana viene la pizza Margarita?', ['Nápoles', 'Roma', 'Milán', 'Venecia']],
-['food', 3, 'Which country is most famous for maple syrup?', ['Canada', 'Brazil', 'Egypt', 'Spain'], '¿Qué país es más famoso por el sirope de arce?', ['Canadá', 'Brasil', 'Egipto', 'España']],
-['food', 3, 'Which spice comes from the dried stigmas of the crocus flower?', ['Saffron', 'Cinnamon', 'Pepper', 'Nutmeg'], '¿Qué especia se obtiene de los estigmas secos de la flor llamada crocus?', ['El azafrán', 'La canela', 'La pimienta', 'La nuez moscada']],
-['food', 3, 'Hummus is mainly made from which legume?', ['Chickpeas', 'Lentils', 'Black beans', 'Peas'], '¿De qué legumbre se hace principalmente el hummus?', ['Garbanzos', 'Lentejas', 'Frijoles negros', 'Guisantes']],
-// ---- sports
-['sport', 1, 'How many players does a soccer team have on the field?', ['11', '9', '7', '5'], '¿Cuántos jugadores tiene un equipo de fútbol en la cancha?', ['11', '9', '7', '5']],
-['sport', 1, 'In which sport do you shoot a ball through a hoop?', ['Basketball', 'Tennis', 'Golf', 'Swimming'], '¿En qué deporte se lanza una pelota por un aro?', ['Baloncesto', 'Tenis', 'Golf', 'Natación']],
-['sport', 1, 'Which sport uses a bat, a ball and bases?', ['Baseball', 'Soccer', 'Volleyball', 'Hockey'], '¿Qué deporte usa bate, pelota y bases?', ['Béisbol', 'Fútbol', 'Voleibol', 'Hockey']],
-['sport', 1, 'How many rings are on the Olympic flag?', ['5', '4', '6', '7'], '¿Cuántos aros hay en la bandera olímpica?', ['5', '4', '6', '7']],
-['sport', 1, 'Which sport is played on ice with sticks and a puck?', ['Ice hockey', 'Curling', 'Skiing', 'Rugby'], '¿Qué deporte se juega sobre hielo con palos y un disco?', ['Hockey sobre hielo', 'Curling', 'Esquí', 'Rugby']],
-['sport', 1, 'Which sport is done in a pool?', ['Swimming', 'Cycling', 'Boxing', 'Skating'], '¿Qué deporte se practica en una piscina?', ['Natación', 'Ciclismo', 'Boxeo', 'Patinaje']],
-['sport', 1, 'What shape is a rugby ball?', ['Oval', 'Round', 'Square', 'Triangular'], '¿Qué forma tiene un balón de rugby?', ['Ovalada', 'Redonda', 'Cuadrada', 'Triangular']],
-['sport', 1, 'What do you ride in a cycling race?', ['A bicycle', 'A horse', 'A skateboard', 'A boat'], '¿En qué se monta en una carrera de ciclismo?', ['En una bicicleta', 'En un caballo', 'En una patineta', 'En un bote']],
-['sport', 2, 'In baseball, how many strikes make a strikeout?', ['3', '2', '4', '5'], 'En el béisbol, ¿cuántos strikes hacen un ponche?', ['3', '2', '4', '5']],
-['sport', 2, 'How long is a regular soccer match?', ['90 minutes', '60 minutes', '45 minutes', '120 minutes'], '¿Cuánto dura un partido regular de fútbol?', ['90 minutos', '60 minutos', '45 minutos', '120 minutos']],
-['sport', 2, 'Which sport uses a shuttlecock?', ['Badminton', 'Tennis', 'Squash', 'Table tennis'], '¿Qué deporte usa un volante (o gallito)?', ['Bádminton', 'Tenis', 'Squash', 'Tenis de mesa']],
-['sport', 2, 'How many players per team are on a volleyball court?', ['6', '5', '4', '8'], '¿Cuántos jugadores por equipo hay en una cancha de voleibol?', ['6', '5', '4', '8']],
-['sport', 2, 'In golf, who wins?', ['Fewest strokes', 'Most strokes', 'Longest single drive', 'Fastest walker'], 'En el golf, ¿quién gana?', ['Quien usa menos golpes', 'Quien usa más golpes', 'El tiro más largo', 'Quien camina más rápido']],
-['sport', 2, 'How many points is a touchdown worth in American football?', ['6', '3', '7', '2'], '¿Cuántos puntos vale un touchdown en el fútbol americano?', ['6', '3', '7', '2']],
-['sport', 2, 'In basketball, a basket from behind the arc is worth…', ['3 points', '2 points', '1 point', '4 points'], 'En el baloncesto, una canasta desde detrás del arco vale…', ['3 puntos', '2 puntos', '1 punto', '4 puntos']],
-['sport', 2, 'Ping-pong is another name for…', ['Table tennis', 'Badminton', 'Squash', 'Bowling'], 'El ping-pong también se llama…', ['Tenis de mesa', 'Bádminton', 'Squash', 'Bolos']],
-['sport', 2, "In which sport would you see a 'slam dunk'?", ['Basketball', 'Baseball', 'Volleyball', 'Tennis'], "¿En qué deporte se hace una 'clavada'?", ['Baloncesto', 'Béisbol', 'Voleibol', 'Tenis']],
-['sport', 3, 'How long is a marathon?', ['42.195 km', '21.1 km', '50 km', '36.5 km'], '¿Cuánto mide un maratón?', ['42,195 km', '21,1 km', '50 km', '36,5 km']],
-['sport', 3, 'How high is a regulation basketball hoop?', ['10 feet (3.05 m)', '8 feet (2.44 m)', '12 feet (3.66 m)', '9 feet (2.74 m)'], '¿A qué altura está un aro de baloncesto reglamentario?', ['3,05 m (10 pies)', '2,44 m (8 pies)', '3,66 m (12 pies)', '2,74 m (9 pies)']],
-['sport', 3, "In which sport is scoring three goals in one game called a 'hat trick'?", ['Soccer', 'Golf', 'Swimming', 'Tennis'], "¿En qué deporte se llama 'hat-trick' a marcar tres goles en un partido?", ['Fútbol', 'Golf', 'Natación', 'Tenis']],
-['sport', 3, 'How many holes are in a standard round of golf?', ['18', '9', '12', '24'], '¿Cuántos hoyos tiene una ronda estándar de golf?', ['18', '9', '12', '24']],
-// ---- music
-['music', 1, 'Which instrument has black and white keys?', ['Piano', 'Guitar', 'Drum', 'Flute'], '¿Qué instrumento tiene teclas blancas y negras?', ['El piano', 'La guitarra', 'El tambor', 'La flauta']],
-['music', 1, 'How many strings does a standard guitar have?', ['6', '4', '5', '8'], '¿Cuántas cuerdas tiene una guitarra estándar?', ['6', '4', '5', '8']],
-['music', 1, 'Which instrument do you play by hitting it with sticks?', ['Drum', 'Violin', 'Trumpet', 'Harp'], '¿Qué instrumento se toca golpeándolo con baquetas?', ['El tambor', 'El violín', 'La trompeta', 'El arpa']],
-['music', 1, 'What kind of instrument are maracas?', ['Percussion (you shake them)', 'String', 'Brass', 'Keyboard'], '¿Qué tipo de instrumento son las maracas?', ['De percusión (se sacuden)', 'De cuerda', 'De metal', 'De teclado']],
-['music', 1, 'What do we call the person who leads an orchestra?', ['Conductor', 'Pilot', 'Coach', 'Captain'], '¿Cómo se llama la persona que dirige una orquesta?', ['Director de orquesta', 'Piloto', 'Entrenador', 'Capitán']],
-['music', 1, 'Which of these instruments do you blow into?', ['Flute', 'Drum', 'Piano', 'Guitar'], '¿En cuál de estos instrumentos se sopla?', ['La flauta', 'El tambor', 'El piano', 'La guitarra']],
-['music', 1, 'How many lines does a music staff have?', ['5', '4', '6', '7'], '¿Cuántas líneas tiene el pentagrama?', ['5', '4', '6', '7']],
-['music', 2, 'How many keys does a standard piano have?', ['88', '76', '92', '64'], '¿Cuántas teclas tiene un piano estándar?', ['88', '76', '92', '64']],
-['music', 2, 'The trumpet belongs to which family of instruments?', ['Brass', 'Strings', 'Percussion', 'Woodwinds'], '¿A qué familia de instrumentos pertenece la trompeta?', ['Viento metal', 'Cuerdas', 'Percusión', 'Viento madera']],
-['music', 2, 'What is a group of four musicians called?', ['Quartet', 'Trio', 'Duet', 'Quintet'], '¿Cómo se llama un grupo de cuatro músicos?', ['Cuarteto', 'Trío', 'Dúo', 'Quinteto']],
-['music', 2, "In music, what does 'tempo' describe?", ['Speed', 'Volume', 'Pitch', 'Harmony'], "En la música, ¿qué describe el 'tempo'?", ['La velocidad', 'El volumen', 'El tono', 'La armonía']],
-['music', 2, 'Reggae music comes from which island?', ['Jamaica', 'Cuba', 'Puerto Rico', 'Trinidad'], '¿De qué isla viene la música reggae?', ['Jamaica', 'Cuba', 'Puerto Rico', 'Trinidad']],
-['music', 2, 'Mariachi music is traditional in…', ['Mexico', 'Argentina', 'Spain', 'Chile'], 'La música de mariachi es tradicional de…', ['México', 'Argentina', 'España', 'Chile']],
-['music', 2, 'Samba is a famous rhythm from…', ['Brazil', 'Peru', 'Cuba', 'Spain'], 'La samba es un ritmo famoso de…', ['Brasil', 'Perú', 'Cuba', 'España']],
-['music', 2, 'Which is the smallest instrument of the violin family?', ['Violin', 'Cello', 'Double bass', 'Viola'], '¿Cuál es el instrumento más pequeño de la familia del violín?', ['El violín', 'El violonchelo', 'El contrabajo', 'La viola']],
-['music', 2, 'How is a harp played?', ['By plucking strings', 'By blowing air', 'By pressing keys', 'By hitting it with sticks'], '¿Cómo se toca el arpa?', ['Pulsando cuerdas', 'Soplando aire', 'Presionando teclas', 'Golpeándola con baquetas']],
-['music', 3, 'The steelpan (steel drum) was invented in…', ['Trinidad and Tobago', 'Jamaica', 'Barbados', 'Haiti'], '¿Dónde se inventó el steelpan (tambor de acero)?', ['Trinidad y Tobago', 'Jamaica', 'Barbados', 'Haití']],
-['music', 3, 'Tango was born around the Río de la Plata, mainly in…', ['Argentina and Uruguay', 'Mexico and Cuba', 'Spain and Portugal', 'Peru and Bolivia'], 'El tango nació en la región del Río de la Plata, principalmente en…', ['Argentina y Uruguay', 'México y Cuba', 'España y Portugal', 'Perú y Bolivia']],
-['music', 3, 'Cumbia music has its roots in which country?', ['Colombia', 'Chile', 'Venezuela', 'Paraguay'], '¿En qué país tiene sus raíces la cumbia?', ['Colombia', 'Chile', 'Venezuela', 'Paraguay']],
-['music', 3, 'What is the highest female singing voice?', ['Soprano', 'Alto', 'Tenor', 'Bass'], '¿Cuál es la voz femenina más aguda?', ['Soprano', 'Contralto', 'Tenor', 'Bajo']],
-['music', 3, "In sheet music, what does the marking 'piano' mean?", ['Play softly', 'Play loudly', 'Play quickly', 'Play slowly'], "En una partitura, ¿qué significa la indicación 'piano'?", ['Tocar suave', 'Tocar fuerte', 'Tocar rápido', 'Tocar lento']],
-// ---- Caribbean & Latin America
-['latam', 1, 'What is the capital of the Dominican Republic?', ['Santo Domingo', 'Santiago', 'Punta Cana', 'La Romana'], '¿Cuál es la capital de la República Dominicana?', ['Santo Domingo', 'Santiago', 'Punta Cana', 'La Romana']],
-['latam', 1, 'What is the capital of Puerto Rico?', ['San Juan', 'Ponce', 'Mayagüez', 'Arecibo'], '¿Cuál es la capital de Puerto Rico?', ['San Juan', 'Ponce', 'Mayagüez', 'Arecibo']],
-['latam', 1, 'What is the capital of Mexico?', ['Mexico City', 'Guadalajara', 'Monterrey', 'Cancún'], '¿Cuál es la capital de México?', ['Ciudad de México', 'Guadalajara', 'Monterrey', 'Cancún']],
-['latam', 1, 'Which language is mainly spoken in Brazil?', ['Portuguese', 'Spanish', 'French', 'English'], '¿Qué idioma se habla principalmente en Brasil?', ['Portugués', 'Español', 'Francés', 'Inglés']],
-['latam', 1, 'The Dominican Republic shares its island with which country?', ['Haiti', 'Cuba', 'Jamaica', 'Puerto Rico'], '¿Con qué país comparte su isla la República Dominicana?', ['Haití', 'Cuba', 'Jamaica', 'Puerto Rico']],
-['latam', 1, 'Tostones are made by frying slices of…', ['Green plantain', 'Apple', 'Pineapple', 'Grape'], 'Los tostones se hacen friendo rodajas de…', ['Plátano verde', 'Manzana', 'Piña', 'Uva']],
-['latam', 2, 'What is the name of the island shared by the Dominican Republic and Haiti?', ['Hispaniola', 'Cuba', 'Borinquen', 'Jamaica'], '¿Cómo se llama la isla que comparten la República Dominicana y Haití?', ['La Española', 'Cuba', 'Borinquen', 'Jamaica']],
-['latam', 2, 'Which is the largest island in the Caribbean?', ['Cuba', 'Hispaniola', 'Jamaica', 'Puerto Rico'], '¿Cuál es la isla más grande del Caribe?', ['Cuba', 'La Española', 'Jamaica', 'Puerto Rico']],
-['latam', 2, 'In which country is Machu Picchu?', ['Peru', 'Bolivia', 'Chile', 'Ecuador'], '¿En qué país está Machu Picchu?', ['Perú', 'Bolivia', 'Chile', 'Ecuador']],
-['latam', 2, 'Merengue and bachata are music styles from…', ['The Dominican Republic', 'Colombia', 'Argentina', 'Chile'], 'El merengue y la bachata son ritmos de…', ['República Dominicana', 'Colombia', 'Argentina', 'Chile']],
-['latam', 2, 'The little coquí frog is a beloved symbol of…', ['Puerto Rico', 'Mexico', 'Peru', 'Panama'], 'La ranita coquí es un símbolo querido de…', ['Puerto Rico', 'México', 'Perú', 'Panamá']],
-['latam', 2, 'What is the capital of Cuba?', ['Havana', 'Santiago de Cuba', 'Varadero', 'Trinidad'], '¿Cuál es la capital de Cuba?', ['La Habana', 'Santiago de Cuba', 'Varadero', 'Trinidad']],
-['latam', 2, 'The Panama Canal connects which two oceans?', ['Atlantic and Pacific', 'Pacific and Indian', 'Atlantic and Arctic', 'Indian and Atlantic'], '¿Qué océanos conecta el Canal de Panamá?', ['Atlántico y Pacífico', 'Pacífico e Índico', 'Atlántico y Ártico', 'Índico y Atlántico']],
-['latam', 2, 'Which mountain range runs down the west of South America?', ['The Andes', 'The Alps', 'The Rockies', 'The Himalayas'], '¿Qué cordillera recorre el oeste de Sudamérica?', ['Los Andes', 'Los Alpes', 'Las Rocosas', 'El Himalaya']],
-['latam', 2, 'The Day of the Dead (Día de Muertos) is a famous celebration from…', ['Mexico', 'Spain', 'Brazil', 'Cuba'], 'El Día de Muertos es una famosa celebración de…', ['México', 'España', 'Brasil', 'Cuba']],
-['latam', 2, 'Besides French, which language is official in Haiti?', ['Haitian Creole', 'Spanish', 'English', 'Portuguese'], 'Además del francés, ¿qué idioma es oficial en Haití?', ['Criollo haitiano', 'Español', 'Inglés', 'Portugués']],
-['latam', 2, 'Which country is named after the imaginary line around the middle of the Earth?', ['Ecuador', 'Colombia', 'Peru', 'Venezuela'], '¿Qué país lleva el nombre de la línea imaginaria que rodea el centro de la Tierra?', ['Ecuador', 'Colombia', 'Perú', 'Venezuela']],
-['latam', 3, 'Larimar, a sky-blue gemstone, is found almost only in…', ['The Dominican Republic', 'Brazil', 'Mexico', 'Chile'], 'El larimar, una piedra azul cielo, se encuentra casi únicamente en…', ['República Dominicana', 'Brasil', 'México', 'Chile']],
-['latam', 3, 'What is the highest mountain in the Caribbean?', ['Pico Duarte', 'Blue Mountain Peak', 'El Yunque', 'Pico Turquino'], '¿Cuál es la montaña más alta del Caribe?', ['Pico Duarte', 'Pico Blue Mountain', 'El Yunque', 'Pico Turquino']],
-['latam', 3, 'The Galápagos Islands belong to which country?', ['Ecuador', 'Peru', 'Colombia', 'Chile'], '¿A qué país pertenecen las Islas Galápagos?', ['Ecuador', 'Perú', 'Colombia', 'Chile']],
-['latam', 3, 'Easter Island (Rapa Nui), famous for its giant moai statues, belongs to…', ['Chile', 'Peru', 'Argentina', 'Mexico'], 'La Isla de Pascua (Rapa Nui), famosa por sus moáis, pertenece a…', ['Chile', 'Perú', 'Argentina', 'México']],
-['latam', 3, 'Lake Titicaca is shared by which two countries?', ['Peru and Bolivia', 'Chile and Argentina', 'Ecuador and Colombia', 'Brazil and Paraguay'], '¿Qué dos países comparten el lago Titicaca?', ['Perú y Bolivia', 'Chile y Argentina', 'Ecuador y Colombia', 'Brasil y Paraguay']],
-['latam', 3, 'Mangú, a Dominican breakfast favorite, is made from mashed…', ['Plantains', 'Potatoes', 'Corn', 'Rice'], 'El mangú, favorito del desayuno dominicano, es un puré de…', ['Plátanos', 'Papas', 'Maíz', 'Arroz']],
-// ---- movies
-['film', 1, 'What do we call a movie made of drawings or computer images that move?', ['An animated film', 'A documentary', 'A newsreel', 'A radio show'], '¿Cómo se llama una película hecha con dibujos o imágenes de computadora que se mueven?', ['Película animada', 'Documental', 'Noticiero', 'Programa de radio']],
-['film', 1, 'Which snack is the classic treat at movie theaters?', ['Popcorn', 'Soup', 'Salad', 'Rice'], '¿Qué merienda es la clásica en el cine?', ['Palomitas de maíz', 'Sopa', 'Ensalada', 'Arroz']],
-['film', 1, 'Who tells the actors what to do while making a movie?', ['The director', 'The pilot', 'The chef', 'The judge'], '¿Quién les dice a los actores qué hacer mientras se filma una película?', ['El director', 'El piloto', 'El chef', 'El juez']],
-['film', 1, 'What color carpet is traditionally rolled out at big movie premieres?', ['Red', 'Blue', 'Green', 'Yellow'], '¿De qué color es la alfombra tradicional en los grandes estrenos de cine?', ['Roja', 'Azul', 'Verde', 'Amarilla']],
-['film', 1, 'Where do you watch a movie at the cinema?', ['On a big screen', 'On a radio', 'In a book', 'On a clock'], '¿Dónde se ve una película en el cine?', ['En una pantalla grande', 'En una radio', 'En un libro', 'En un reloj']],
-['film', 1, 'A short preview of an upcoming movie is called a…', ['Trailer', 'Sequel', 'Credit', 'Ticket'], 'Un adelanto corto de una película que viene se llama…', ['Tráiler', 'Secuela', 'Créditos', 'Boleto']],
-['film', 2, "What is a 'storyboard'?", ['Drawings that plan each shot', 'A very long script', 'The movie poster', 'A camera stand'], "¿Qué es un 'storyboard'?", ['Dibujos que planean cada toma', 'Un guion muy largo', 'El cartel de la película', 'Un soporte para la cámara']],
-['film', 2, 'In movies, what does CGI stand for?', ['Computer-generated imagery', 'Camera grade image', 'Color graphic input', 'Cinema group idea'], 'En el cine, ¿qué significa CGI?', ['Imágenes generadas por computadora', 'Imagen de cámara grado', 'Entrada gráfica de color', 'Idea de grupo de cine']],
-['film', 2, 'Movies made before recorded sound were called…', ['Silent films', 'Talkies', 'Musicals', 'Cartoons'], 'Las películas hechas antes del sonido grabado se conocen como…', ['Cine mudo', 'Cine sonoro', 'Musicales', 'Caricaturas']],
-['film', 2, 'What is a green screen used for?', ['Replacing the background', 'Showing subtitles', 'Cooling the cameras', 'Selling tickets'], '¿Para qué se usa una pantalla verde?', ['Para reemplazar el fondo', 'Para mostrar subtítulos', 'Para enfriar las cámaras', 'Para vender boletos']],
-['film', 2, 'What is the clapperboard used for on a film set?', ['Matching picture and sound', 'Scaring the actors', 'Calling lunch', 'Lighting the scene'], '¿Para qué se usa la claqueta en un rodaje?', ['Para sincronizar imagen y sonido', 'Para asustar a los actores', 'Para llamar a almorzar', 'Para iluminar la escena']],
-['film', 2, 'Stop-motion animation is made by…', ['Moving models a tiny bit between photos', 'Drawing on glass', 'Filming real animals', 'Recording only voices'], 'La animación stop-motion se hace…', ['Moviendo figuras un poquito entre fotos', 'Dibujando sobre vidrio', 'Filmando animales reales', 'Grabando solo voces']],
-['film', 2, 'A person who performs dangerous scenes in place of an actor is a…', ['Stunt double', 'Extra', 'Producer', 'Editor'], 'La persona que hace las escenas peligrosas en lugar de un actor es un…', ['Doble de acción', 'Extra', 'Productor', 'Editor']],
-['film', 2, 'In which country is the Cannes Film Festival held?', ['France', 'Italy', 'Spain', 'Germany'], '¿En qué país se celebra el Festival de Cine de Cannes?', ['Francia', 'Italia', 'España', 'Alemania']],
-['film', 2, "The music written especially for a movie is called its…", ['Score', 'Script', 'Cast', 'Trailer'], 'La música compuesta especialmente para una película se llama…', ['Banda sonora', 'Guion', 'Reparto', 'Tráiler']],
-['film', 2, "What is a 'sequel'?", ['A movie that continues an earlier story', "A movie's first scene", 'A movie review', 'A funny mistake'], "¿Qué es una 'secuela'?", ['Una película que continúa una historia anterior', 'La primera escena', 'Una reseña', 'Un error gracioso']],
-['film', 3, 'What is the classic frame rate of cinema film?', ['24 frames per second', '12 frames per second', '60 frames per second', '100 frames per second'], '¿Cuál es la velocidad clásica del cine en fotogramas por segundo?', ['24 por segundo', '12 por segundo', '60 por segundo', '100 por segundo']],
-['film', 3, "Which country's film industry is nicknamed 'Bollywood'?", ['India', 'Nigeria', 'Brazil', 'Egypt'], "¿La industria de cine de qué país es apodada 'Bollywood'?", ['India', 'Nigeria', 'Brasil', 'Egipto']],
-['film', 3, "Nigeria's huge film industry is often nicknamed…", ['Nollywood', 'Bollywood', 'Tollywood', 'Lollywood'], 'La enorme industria de cine de Nigeria es apodada…', ['Nollywood', 'Bollywood', 'Tollywood', 'Lollywood']],
-['film', 3, 'The written text of a movie, with dialogue and directions, is the…', ['Screenplay', 'Storyboard', 'Soundtrack', 'Poster'], 'El texto escrito de una película, con diálogos e indicaciones, es el…', ['Guion', 'Storyboard', 'Banda sonora', 'Cartel']],
-['film', 3, 'Funny mistakes shown at the end of some movies are called…', ['Bloopers', 'Cameos', 'Credits', 'Spoilers'], 'Los errores graciosos que se muestran al final de algunas películas se llaman…', ['Tomas falsas', 'Cameos', 'Créditos', 'Spoilers']],
-['film', 3, 'When a famous person appears very briefly in a movie, it is called a…', ['Cameo', 'Montage', 'Close-up', 'Flashback'], 'Cuando una persona famosa aparece muy brevemente en una película, se llama…', ['Cameo', 'Montaje', 'Primer plano', 'Flashback']]
-];
-const CATS = { sci: ['🔬', 'Science', 'Ciencia', '#5bb8ff'], ani: ['🐾', 'Animals', 'Animales', '#2fd18a'], geo: ['🌍', 'Geography', 'Geografía', '#4fd1c5'], food: ['🍲', 'Food', 'Comida', '#ff9a3c'], sport: ['⚽', 'Sports', 'Deportes', '#ff6b6b'], music: ['🎵', 'Music', 'Música', '#c9b8ff'], latam: ['🌴', 'Caribbean & Latin America', 'Caribe y Latinoamérica', '#ffd166'], film: ['🎬', 'Movies', 'Cine', '#ff7bc0'] };
+import { MC, TF, NUM, CATS, qid } from './trivia-questions.js';
 
 /* ======================= strings ======================= */
 const STR = {
-  en: { welcome: 'Welcome to Pact Trivia! Buzz in when you know the answer.', round1: 'Round one: buzz in!', final: 'Final round: All in!', wager: n => `${n}, how much will you wager?`, look: n => `${n}, everyone else look away!`, ready: "I'm ready", locked: 'Locked in!', pass: n => `Pass to ${n}`, steal: 'Steal! Anyone else?', nobody: "Time's up! The answer was", correct: 'Correct!', wrong: 'Not quite!', answering: 'answering', buzz: 'BUZZ', q: 'Question', of: 'of', wins: n => `${n} wins!`, tie: 'It’s a tie!', answer: 'The answer is', allin: 'ALL IN', score: 'Score', go: 'Go!', reveal: 'Reveal!', cat: 'Category', yourWager: 'Wager', kids: 'Kids mode', choose: 'Pick your answer', timeout: 'Out of time', bestSolo: 'Best solo score', share: (n, s) => `${n} won Pact Trivia with ${s} points!`, space: 'Space', player: 'Player' },
-  es: { welcome: '¡Bienvenidos a Pact Trivia! Presiona tu botón cuando sepas la respuesta.', round1: 'Primera ronda: ¡a pulsar!', final: 'Ronda final: ¡Todo o nada!', wager: n => `${n}, ¿cuánto vas a apostar?`, look: n => `${n}, ¡los demás no miren!`, ready: 'Estoy listo', locked: '¡Respuesta guardada!', pass: n => `Pásale a ${n}`, steal: '¡Robo! ¿Alguien más?', nobody: '¡Se acabó el tiempo! La respuesta era', correct: '¡Correcto!', wrong: '¡Casi!', answering: 'responde', buzz: '¡YA!', q: 'Pregunta', of: 'de', wins: n => `¡Gana ${n}!`, tie: '¡Empate!', answer: 'La respuesta es', allin: 'TODO', score: 'Puntos', go: '¡Vamos!', reveal: '¡A revelar!', cat: 'Categoría', yourWager: 'Apuesta', kids: 'Modo niños', choose: 'Elige tu respuesta', timeout: 'Sin tiempo', bestSolo: 'Mejor puntaje en solitario', share: (n, s) => `¡${n} ganó Pact Trivia con ${s} puntos!`, space: 'Espacio', player: 'Jugador' }
+  en: { welcome: 'Welcome to Pact Trivia!', round1: 'Round one: buzz in!', final: 'Final round: All in!', wager: n => `${n}, how much will you wager?`, look: n => `${n}, everyone else look away!`, ready: "I'm ready", locked: 'Locked in!', pass: n => `Pass to ${n}`, steal: 'Steal! Anyone else?', nobody: "Time's up! The answer was", correct: 'Correct!', wrong: 'Not quite!', answering: 'answering', buzz: 'BUZZ', q: 'Question', of: 'of', wins: n => `${n} wins!`, tie: 'It’s a tie!', answer: 'The answer is', allin: 'ALL IN', score: 'Score', go: 'Go!', reveal: 'Reveal!', cat: 'Category', yourWager: 'Wager', kids: 'Kids mode', choose: 'Pick your answer', timeout: 'Out of time', bestSolo: 'Best solo score', share: (n, s) => `${n} won Pact Trivia with ${s} points!`, space: 'Space', player: 'Player', tru: 'True', fals: 'False', picks: n => `${n} picks the category`, picked: (n, c) => `${n} picked ${c}!`, guessing: n => `${n} is guessing…`, yourGuess: 'Your guess', lock: 'Lock in', closest: n => `${n} is closest!`, exact: 'Exactly right!', bonus: 'bonus', round: 'Round', daily: 'Daily 10', dailyShare: 'Pact Trivia · Daily', right: 'Correct', streak: 'Day streak', practice: 'Practice run: today’s score is already saved.', dailyDone: (r, s) => `Today: ${r}/10 · ${s} pts`, tfAsk: 'True or false?' },
+  es: { welcome: '¡Bienvenidos a Pact Trivia!', round1: 'Primera ronda: ¡a pulsar!', final: 'Ronda final: ¡Todo o nada!', wager: n => `${n}, ¿cuánto vas a apostar?`, look: n => `${n}, ¡los demás no miren!`, ready: 'Estoy listo', locked: '¡Respuesta guardada!', pass: n => `Pásale a ${n}`, steal: '¡Robo! ¿Alguien más?', nobody: '¡Se acabó el tiempo! La respuesta era', correct: '¡Correcto!', wrong: '¡Casi!', answering: 'responde', buzz: '¡YA!', q: 'Pregunta', of: 'de', wins: n => `¡Gana ${n}!`, tie: '¡Empate!', answer: 'La respuesta es', allin: 'TODO', score: 'Puntos', go: '¡Vamos!', reveal: '¡A revelar!', cat: 'Categoría', yourWager: 'Apuesta', kids: 'Modo niños', choose: 'Elige tu respuesta', timeout: 'Sin tiempo', bestSolo: 'Mejor puntaje en solitario', share: (n, s) => `¡${n} ganó Pact Trivia con ${s} puntos!`, space: 'Espacio', player: 'Jugador', tru: 'Verdadero', fals: 'Falso', picks: n => `${n} elige la categoría`, picked: (n, c) => `¡${n} eligió ${c}!`, guessing: n => `${n} está adivinando…`, yourGuess: 'Tu número', lock: 'Listo', closest: n => `¡${n} está más cerca!`, exact: '¡Exacto!', bonus: 'extra', round: 'Ronda', daily: 'Reto diario', dailyShare: 'Pact Trivia · Reto diario', right: 'Aciertos', streak: 'Días seguidos', practice: 'Ronda de práctica: el resultado de hoy ya está guardado.', dailyDone: (r, s) => `Hoy: ${r}/10 · ${s} pts`, tfAsk: '¿Verdadero o falso?' }
 };
 const BOTS = [
   { name: 'Profe Pip', e: '🦉', acc: [.95, .85, .7], react: [2.4, 4.6], bluff: .05, wager: .5, lines: { en: ['Elementary!', 'Let me think…', 'Hmm, fascinating.'], es: ['¡Elemental!', 'Déjame pensar…', 'Mmm, fascinante.'] } },
@@ -257,7 +81,18 @@ const BOTS = [
 const PCOL = [0xff6b6b, 0x4fb3ff, 0xffd166, 0x2fd18a], PCSS = ['#ff6b6b', '#4fb3ff', '#ffd166', '#2fd18a'];
 const MODELS = ['skater-female', 'male', 'survivor-female', 'cyborg-female'], HOST_MODEL = 'survivor-male';
 const KEYS = ['KeyA', 'KeyL', 'KeyZ', 'KeyM'], KEYN = ['A', 'L', 'Z', 'M'];
-const ROUND_Q = 8;
+const ROUND_Q = 8; // classic show length
+// Round types. A show is a list of [round, questions]; every show ends with the All In final (except the daily).
+const ROUNDS = {
+  buzz: { i: '🔔', en: 'Buzz-in', es: 'A pulsar', rule: { en: 'Buzz in first, then answer. Miss it and the others can steal!', es: 'Pulsa primero y responde. Si fallas, los demás pueden robar.' } },
+  tf: { i: '⚡', en: 'Lightning: true or false', es: 'Relámpago: verdadero o falso', rule: { en: 'Quick! Buzz in and say true or false.', es: '¡Rápido! Pulsa y di verdadero o falso.' } },
+  pick: { i: '🎯', en: 'Your pick', es: 'Tú eliges', rule: { en: 'Whoever is in last place picks the category.', es: 'Quien va en último lugar elige la categoría.' } },
+  num: { i: '🔢', en: 'Closest number', es: 'El número más cercano', rule: { en: 'Everyone guesses a number, last place first. Closest wins!', es: 'Todos adivinan un número, empezando por el último. ¡Gana el más cercano!' } },
+  daily: { i: '📅', en: 'Daily 10', es: 'Reto diario', rule: { en: 'Ten questions, the same for everyone today. Answer fast for bonus points!', es: 'Diez preguntas, las mismas para todos hoy. ¡Responde rápido para ganar puntos extra!' } }
+};
+const SHOWS = { full: [['buzz', 4], ['tf', 5], ['pick', 3], ['num', 2]], classic: [['buzz', ROUND_Q]], daily: [['daily', 10]] };
+// Bot skill scales accuracy and reaction time; bots never buzz before the question has been read.
+const SKILL = { easy: { acc: .72, react: 1.6 }, normal: { acc: 1, react: 1 }, hard: { acc: 1.12, react: .72 } };
 
 /* ======================= engine ======================= */
 const ld = E.loading('Pact Trivia', 'Warming up the studio lights…');
@@ -269,7 +104,8 @@ R.setEnv(E.ASSETS.hdri.studio);
 sun.position.set(2, 14, 12); sun.target.position.set(0, 1, 0); sun.target.updateMatrixWorld();
 const input = E.createInput({ surface: $('gl') });
 const P = new E.Particles(scene);
-const S = Object.assign({ humans: 1, bots: true, kids: false, names: ['Ana', 'Leo', 'Mia', 'Rafa'] }, E.store.get('inoa.trivia', {}));
+const S = Object.assign({ humans: 1, bots: true, kids: false, names: ['Ana', 'Leo', 'Mia', 'Rafa'], show: 'full', botSkill: 'normal' }, E.store.get('inoa.trivia', {}));
+if (!SHOWS[S.show] || S.show === 'daily') S.show = 'full'; if (!SKILL[S.botSkill]) S.botSkill = 'normal';
 const profLang = () => ((E.lang ? E.lang() : E.profile().lang) === 'es' ? 'es' : 'en');
 S.lang = profLang(); // the shared profile (hub / settings panel) owns the language
 const save = () => E.store.set('inoa.trivia', S);
@@ -363,34 +199,72 @@ function drawPodium(p) {
 }
 
 /* ======================= screen drawing ======================= */
+const CH_COLS = ['#e2443a', '#2f7fd0', '#e0a100', '#1f9a63'];
+const catName = (k, L = S.lang) => { const c = CATS[k]; return `${c[0]} ${L === 'es' ? c[2] : c[1]}`; };
+const roundName = k => { const r = ROUNDS[k]; return `${r.i} ${S.lang === 'es' ? r.es : r.en}`; };
+const fmtNum = v => Number(v).toLocaleString(S.lang === 'es' ? 'es' : 'en');
+function drawText(g, text, x, y, w, h, start, min, weight = 900, family = 'Unbounded, Manrope, sans-serif', align = 'center') {
+  const ft = fitText(g, text, w, h, start, min, weight, family, 1.16); g.font = `${weight} ${ft.f}px ${family}`; g.textAlign = align;
+  const y0 = y + (h - ft.L.length * ft.f * 1.16) / 2 + ft.f * .58; ft.L.forEach((l, i) => g.fillText(l, align === 'center' ? x + w / 2 : x, y0 + i * ft.f * 1.16));
+}
 function drawScreen() {
   const { c, g, t } = SCR.tex; const W = c.width, H = c.height, portrait = W < 1400; SCR.dirty = false;
   const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#1d1650'); bg.addColorStop(1, '#0c0f2e'); g.fillStyle = bg; g.fillRect(0, 0, W, H);
   g.globalAlpha = .08; for (let i = 0; i < 18; i++) { g.fillStyle = i % 2 ? '#8c6cff' : '#6fe3ff'; g.beginPath(); g.moveTo(W / 2, H * 1.2); g.arc(W / 2, H * 1.2, H * 1.6, -Math.PI + i / 18 * Math.PI, -Math.PI + (i + .5) / 18 * Math.PI); g.fill(); } g.globalAlpha = 1;
   const pad = W * .04; g.textBaseline = 'middle';
-  if (!G || !G.cur) { g.textAlign = 'center'; g.fillStyle = '#fff'; g.font = `900 ${portrait ? 120 : 150}px Unbounded, Manrope, sans-serif`; g.fillText('PACT', W / 2, H * .38); g.fillStyle = '#ffd166'; g.fillText('TRIVIA', W / 2, H * .38 + (portrait ? 130 : 160)); g.font = `800 ${portrait ? 40 : 44}px Manrope, sans-serif`; g.fillStyle = '#c9d4ff'; g.fillText(G && G.banner ? T()[G.banner] : '★ ★ ★', W / 2, H * .82); t.needsUpdate = true; return; }
-  const q = G.cur, cat = CATS[q.cat], L = S.lang;
-  // header: category pill + counter + timer ring
-  g.font = `800 ${portrait ? 40 : 42}px Manrope, sans-serif`; const label = `${cat[0]} ${L === 'es' ? cat[2] : cat[1]}`; const lw = g.measureText(label).width + 50;
-  g.fillStyle = cat[3]; rrect(g, pad, pad, lw, 68, 34); g.fill(); g.fillStyle = '#14173a'; g.textAlign = 'left'; g.fillText(label, pad + 25, pad + 36);
-  g.textAlign = 'right'; g.fillStyle = '#c9d4ff'; g.font = `800 ${portrait ? 36 : 40}px Manrope, sans-serif`; const ctr = G.phase === 'final' || G.final ? T().allin + ' ★' : `${T().q} ${G.qi + 1} ${T().of} ${ROUND_Q}`; g.fillText(ctr + '  ' + '★'.repeat(q.d), W - pad - 130, pad + 36);
-  // timer ring
+  if (!G || (!G.cur && G.phase !== 'pick')) { // logo board + banner line (round names, final)
+    g.textAlign = 'center'; g.fillStyle = '#fff'; g.font = `900 ${portrait ? 120 : 150}px Unbounded, Manrope, sans-serif`; g.fillText('PACT', W / 2, H * .34); g.fillStyle = '#ffd166'; g.fillText('TRIVIA', W / 2, H * .34 + (portrait ? 130 : 160));
+    g.fillStyle = '#c9d4ff'; drawText(g, G && G.banner ? G.banner() : '★ ★ ★', pad, H * .7, W - pad * 2, H * .22, portrait ? 56 : 60, 30, 800, 'Manrope, sans-serif'); t.needsUpdate = true; return;
+  }
+  const L = S.lang, e = G.seq[G.qi], q = G.cur;
+  // header: category pill + round counter + timer ring
+  const pill = (label, col) => { g.font = `800 ${portrait ? 40 : 42}px Manrope, sans-serif`; const lw = Math.min(W * .55, g.measureText(label).width + 50); g.fillStyle = col; rrect(g, pad, pad, lw, 68, 34); g.fill(); g.fillStyle = '#14173a'; g.textAlign = 'left'; g.fillText(label, pad + 25, pad + 36, lw - 40); };
+  if (q) pill(catName(q.cat), CATS[q.cat][3]); else pill(roundName('pick'), '#ffd166');
+  g.textAlign = 'right'; g.fillStyle = '#c9d4ff'; g.font = `800 ${portrait ? 36 : 40}px Manrope, sans-serif`;
+  const ctr = G.final ? T().allin + ' ★' : e ? `${ROUNDS[e.round].i} ${e.idx + 1}/${e.n}` : ''; g.fillText(ctr + (q && q.kind !== 'num' && !G.final ? '  ' + '★'.repeat(q.d) : ''), W - pad - 130, pad + 36);
   const tr = G.timer; const cx = W - pad - 54, cy = pad + 36, rr = 46; g.lineWidth = 12; g.strokeStyle = 'rgba(255,255,255,.18)'; g.beginPath(); g.arc(cx, cy, rr, 0, 7); g.stroke();
   if (tr && tr.max) { const k = clamp(tr.left / tr.max, 0, 1); g.strokeStyle = k < .3 ? '#ff6b6b' : k < .6 ? '#ffd166' : '#6fe3ff'; g.beginPath(); g.arc(cx, cy, rr, -Math.PI / 2, -Math.PI / 2 + k * Math.PI * 2); g.stroke(); g.fillStyle = '#fff'; g.textAlign = 'center'; g.font = '900 40px Unbounded, Manrope, sans-serif'; g.fillText(String(Math.ceil(tr.left)), cx, cy + 2); }
-  // question
-  const qTop = pad + 100, qH = H * (portrait ? .36 : .34);
-  g.fillStyle = '#fff'; g.textAlign = 'center'; const ft = fitText(g, q.q, W - pad * 2, qH, portrait ? 76 : 80, 34, 900, 'Unbounded, Manrope, sans-serif', 1.16);
-  g.font = `900 ${ft.f}px Unbounded, Manrope, sans-serif`; const y0 = qTop + (qH - ft.L.length * ft.f * 1.16) / 2 + ft.f * .58; ft.L.forEach((l, i) => g.fillText(l, W / 2, y0 + i * ft.f * 1.16));
-  // choices 2x2
-  const top = qTop + qH + 18, gap = 16, cw = (W - pad * 2 - gap) / 2, chh = (H - top - pad - gap) / 2; const cols = ['#e2443a', '#2f7fd0', '#e0a100', '#1f9a63'];
+  const qTop = pad + 100;
+  if (G.phase === 'pick') { // the trailing player picks one of three categories
+    const pi = G.pickInfo; g.fillStyle = PCSS[pi.who]; drawText(g, T().picks(G.players[pi.who].name), pad, qTop, W - pad * 2, H * .2, portrait ? 66 : 70, 32);
+    const top = qTop + H * .24, gap = 18, n = pi.cats.length, bh = portrait ? (H - top - pad - gap * (n - 1)) / n : H - top - pad, bw = portrait ? W - pad * 2 : (W - pad * 2 - gap * (n - 1)) / n;
+    pi.cats.forEach((k, i) => { const x = portrait ? pad : pad + i * (bw + gap), y = portrait ? top + i * (bh + gap) : top; const on = pi.sel === i;
+      g.fillStyle = CATS[k][3]; g.globalAlpha = pi.sel != null && !on ? .35 : 1; rrect(g, x, y, bw, bh, 26); g.fill(); if (on) { g.lineWidth = 10; g.strokeStyle = '#fff'; rrect(g, x, y, bw, bh, 26); g.stroke(); }
+      g.fillStyle = '#14173a'; g.textAlign = 'center'; const cc = CATS[k]; if (portrait) { drawText(g, `${i + 1}  ${cc[0]} ${L === 'es' ? cc[2] : cc[1]}`, x + 20, y, bw - 40, bh, 54, 26, 900, 'Manrope, sans-serif'); }
+      else { g.font = `900 ${Math.min(110, bh * .34)}px Manrope, sans-serif`; g.fillText(cc[0], x + bw / 2, y + bh * .3); drawText(g, `${i + 1} · ${L === 'es' ? cc[2] : cc[1]}`, x + 14, y + bh * .52, bw - 28, bh * .42, 48, 24, 900, 'Manrope, sans-serif'); }
+      g.globalAlpha = 1; });
+    t.needsUpdate = true; return;
+  }
+  if (q.kind === 'num') { // closest number: question, the answer box, everyone's guesses
+    const qH = H * (portrait ? .3 : .27); g.fillStyle = '#fff'; drawText(g, q.q, pad, qTop, W - pad * 2, qH, portrait ? 70 : 74, 32);
+    const by = qTop + qH + 14, bh = H * .17; g.fillStyle = G.revealed ? '#2fd18a' : 'rgba(255,255,255,.1)'; rrect(g, W * .2, by, W * .6, bh, 28); g.fill();
+    g.fillStyle = G.revealed ? '#0c2a1e' : '#c9d4ff'; drawText(g, G.revealed ? `${fmtNum(q.ans)} ${q.unit}`.trim() : '?', W * .2, by, W * .6, bh, 90, 40);
+    const rows = G.players.map((p, i) => ({ p, i, v: G.guesses[i] })), top = by + bh + 22, n = rows.length, gap = 14;
+    const cols = portrait ? 2 : n, rh = portrait ? (H - top - pad - gap) / 2 : H - top - pad, cw = (W - pad * 2 - gap * (cols - 1)) / cols;
+    rows.forEach((r, k) => { const x = pad + (k % cols) * (cw + gap), y = top + Math.floor(k / cols) * (rh + gap); const win = G.revealed && G.numWin && G.numWin.includes(r.i), turn = G.phase === 'nguess' && G.ni === r.i;
+      g.globalAlpha = G.revealed && !win ? .55 : 1; g.fillStyle = win ? '#fff3c4' : '#f4efe6'; rrect(g, x, y, cw, rh, 22); g.fill(); g.lineWidth = turn || win ? 10 : 6; g.strokeStyle = PCSS[r.i]; rrect(g, x, y, cw, rh, 22); g.stroke();
+      g.fillStyle = '#14173a'; drawText(g, (r.p.bot ? r.p.bot.e + ' ' : '') + r.p.name, x + 10, y + 4, cw - 20, rh * .36, 40, 22, 800, 'Manrope, sans-serif');
+      const val = r.v != null ? fmtNum(r.v) : turn ? fmtNum(G.numVal) + '…' : '—'; g.fillStyle = turn ? PCSS[r.i] : '#14173a'; drawText(g, val, x + 10, y + rh * .36, cw - 20, rh * .6, 64, 28);
+      g.globalAlpha = 1; });
+    t.needsUpdate = true; return;
+  }
+  // multiple choice / true-false
+  const qH = H * (portrait ? .36 : .34);
+  g.fillStyle = '#fff'; drawText(g, q.q, pad, qTop, W - pad * 2, qH, portrait ? 76 : 80, 34);
+  const two = q.ch.length === 2, top = qTop + qH + 18, gap = 16, cw = (W - pad * 2 - gap) / 2, chh = two ? H - top - pad : (H - top - pad - gap) / 2;
   q.ch.forEach((txt, i) => {
     const x = pad + (i % 2) * (cw + gap), y = top + Math.floor(i / 2) * (chh + gap);
     const out = G.out && G.out.includes(i), rev = G.revealed; const isC = i === q.correct; const picked = G.pickedShow === i;
     g.globalAlpha = out && !rev ? .35 : rev && !isC ? .35 : 1;
     g.fillStyle = rev && isC ? '#2fd18a' : picked ? '#fff3c4' : '#f4efe6'; rrect(g, x, y, cw, chh, 24); g.fill();
     if (rev && isC) { g.lineWidth = 8; g.strokeStyle = '#fff'; rrect(g, x, y, cw, chh, 24); g.stroke(); }
-    g.fillStyle = cols[i]; rrect(g, x + 12, y + 12, chh - 24, chh - 24, 18); g.fill(); g.fillStyle = '#fff'; g.font = `900 ${Math.min(52, chh * .5)}px Unbounded, Manrope, sans-serif`; g.textAlign = 'center'; g.fillText('ABCD'[i], x + chh / 2, y + chh / 2 + 2);
-    g.fillStyle = '#14173a'; g.textAlign = 'left'; const ff = fitText(g, txt, cw - chh - 20, chh - 18, portrait ? 50 : 50, 24, 800); g.font = `800 ${ff.f}px Manrope, sans-serif`; const yy = y + chh / 2 - (ff.L.length - 1) * ff.f * 1.18 / 2; ff.L.forEach((l, k) => g.fillText(l, x + chh + 4, yy + k * ff.f * 1.18));
+    if (two) { // big true / false tiles: ✓ and ✗ badges, key number in the label
+      const bs = Math.min(chh * .5, 150); g.fillStyle = i ? '#e2443a' : '#1f9a63'; rrect(g, x + cw / 2 - bs / 2, y + chh * .1, bs, bs, 28); g.fill(); g.fillStyle = '#fff'; g.font = `900 ${bs * .62}px Manrope, sans-serif`; g.textAlign = 'center'; g.fillText(i ? '✗' : '✓', x + cw / 2, y + chh * .1 + bs / 2 + 4);
+      g.fillStyle = '#14173a'; drawText(g, `${i + 1} · ${txt}`, x + 16, y + chh * .1 + bs + 6, cw - 32, chh * .9 - bs - 16, 64, 30, 900, 'Manrope, sans-serif');
+    } else {
+      g.fillStyle = CH_COLS[i]; rrect(g, x + 12, y + 12, chh - 24, chh - 24, 18); g.fill(); g.fillStyle = '#fff'; g.font = `900 ${Math.min(52, chh * .5)}px Unbounded, Manrope, sans-serif`; g.textAlign = 'center'; g.fillText('ABCD'[i], x + chh / 2, y + chh / 2 + 2);
+      g.fillStyle = '#14173a'; g.textAlign = 'left'; const ff = fitText(g, txt, cw - chh - 20, chh - 18, 50, 24, 800); g.font = `800 ${ff.f}px Manrope, sans-serif`; const yy = y + chh / 2 - (ff.L.length - 1) * ff.f * 1.18 / 2; ff.L.forEach((l, k) => g.fillText(l, x + chh + 4, yy + k * ff.f * 1.18));
+    }
     if (out && !rev) { g.strokeStyle = '#ff6b6b'; g.lineWidth = 10; g.beginPath(); g.moveTo(x + 20, y + 20); g.lineTo(x + cw - 20, y + chh - 20); g.stroke(); }
     g.globalAlpha = 1;
   });
@@ -450,7 +324,7 @@ function camTarget() {
   const portrait = innerHeight > innerWidth; const a = innerWidth / innerHeight;
   const focus = G && G.focus != null && G.focusT > 0 ? G.focus : null;
   if (portrait || focus != null) { // portrait shots + every focus shot keep the full board readable, leaning toward the contestant
-    const n = G ? G.players.length : 4, choices = !$('tvChoices').hidden;
+    const n = G ? G.players.length : 4, choices = $('tvChoices').hidden ? '' : $('tvChoices').className;
     const key = [innerWidth, innerHeight, focus, n, choices, camera.fov, !!G].join();
     if (key !== _shotKey) {
       _shotKey = key; const box = uiBox(); let pts = boardPts(), dir;
@@ -492,83 +366,198 @@ function updateConfetti(dt) { const o = new THREE.Object3D(); conf.forEach((c, i
 /* ======================= game flow ======================= */
 function later(sec, fn) { G.sched.push({ t: G.time + sec, fn }); }
 function runSched() { const due = G.sched.filter(e => e.t <= G.time); if (!due.length) return; G.sched = G.sched.filter(e => e.t > G.time); due.forEach(e => e.fn()); }
-function buildDeck() {
-  const pool = Q.map((r, i) => ({ r, i })).filter(o => S.kids ? o.r[1] === 1 : true);
-  const seen = new Set(E.store.get('inoa.trivia.seen', [])); let fresh = pool.filter(o => !seen.has(o.i)); if (fresh.length < ROUND_Q + 2) { fresh = pool; seen.clear(); }
-  fresh.sort(() => Math.random() - .5);
-  // pick a spread of categories and rising difficulty
-  const picked = []; const cats = new Set();
-  for (const o of fresh) { if (picked.length >= ROUND_Q) break; if (cats.has(o.r[0]) && cats.size < 8 && picked.length < 8) continue; picked.push(o); cats.add(o.r[0]); }
-  for (const o of fresh) { if (picked.length >= ROUND_Q) break; if (!picked.includes(o)) picked.push(o); }
-  picked.sort((a, b) => a.r[1] - b.r[1]);
-  const fin = fresh.filter(o => !picked.includes(o)).sort((a, b) => b.r[1] - a.r[1])[0];
-  [...picked, fin].forEach(o => seen.add(o.i)); E.store.set('inoa.trivia.seen', [...seen].slice(-140));
-  return { qs: picked.map(o => mkQ(o)), fin: mkQ(fin) };
+function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function shuffle(a, rn = Math.random) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rn() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+const fmtDate = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const today = () => window.__DAY || fmtDate(new Date());
+// every question gets a stable id (hash of its English text), so "recently asked" survives bank edits
+const BANK = { m: MC.map(r => ({ r, kind: 'mc', id: qid('m', r[2]), cat: r[0], d: r[1] })), t: TF.map(r => ({ r, kind: 'tf', id: qid('t', r[2]), cat: r[0], d: r[1] })), n: NUM.map(r => ({ r, kind: 'num', id: qid('n', r[2]), cat: r[0], d: r[1] })) };
+function mkQ(o, rn = Math.random) { const q = { ...o }; if (o.kind === 'mc') { q.order = shuffle([0, 1, 2, 3], rn); q.correct = q.order.indexOf(0); } else if (o.kind === 'tf') q.correct = o.r[3] ? 0 : 1; else Object.assign(q, { ans: o.r[3], min: o.r[7], max: o.r[8], step: o.r[9] }); return relang(q); }
+function relang(q) {
+  if (!q) return q; const es = S.lang === 'es', r = q.r;
+  if (q.kind === 'mc') { q.q = es ? r[4] : r[2]; const c0 = es ? r[5] : r[3]; q.ch = q.order.map(k => c0[k]); }
+  else if (q.kind === 'tf') { q.q = es ? r[4] : r[2]; q.ch = [T().tru, T().fals]; }
+  else { q.q = es ? r[5] : r[2]; q.unit = es ? r[6] : r[4]; q.ch = []; }
+  return q;
 }
-function mkQ(o) { const r = o.r; const order = [0, 1, 2, 3].sort(() => Math.random() - .5); return relang({ id: o.i, r, order, cat: r[0], d: r[1], correct: order.indexOf(0) }); }
-function relang(q) { if (!q) return q; const es = S.lang === 'es', r = q.r; q.q = es ? r[4] : r[2]; const ch0 = es ? r[5] : r[3]; q.ch = q.order.map(k => ch0[k]); return q; }
+// Recently asked: ids in the order they were asked, per kind. Fresh questions come first, then the ones asked longest ago.
+const SEEN_KEY = 'inoa.trivia.seen2';
+function markSeen(q) { if (!q) return; const k = q.id[0], s = E.store.get(SEEN_KEY, {}); const a = (s[k] || []).filter(x => x !== q.id); a.push(q.id); s[k] = a.slice(-BANK[k].length); E.store.set(SEEN_KEY, s); }
+function freshPool(k, filter) { const a = E.store.get(SEEN_KEY, {})[k] || [], pos = new Map(a.map((id, i) => [id, i])); const rank = o => pos.has(o.id) ? pos.get(o.id) : -1; return shuffle(BANK[k].filter(filter)).sort((x, y) => rank(x) - rank(y)); }
+const kidsF = o => !S.kids || o.d === 1;
+function buildShow(mode) {
+  const seq = [], used = new Set();
+  if (mode === 'daily') { // same 10 questions (and choice order) for everyone today: 3 kids, 4 everyone, 3 hard, spread over categories
+    let seed = 7; for (const ch of today()) seed = Math.imul(seed ^ ch.charCodeAt(0), 2654435761); const rn = mulberry(seed >>> 0); const pool = shuffle(BANK.m.slice(), rn), cats = new Set();
+    for (const d of [1, 1, 1, 2, 2, 2, 2, 3, 3, 3]) { const o = pool.find(x => x.d === d && !used.has(x.id) && !cats.has(x.cat)) || pool.find(x => x.d === d && !used.has(x.id)); used.add(o.id); cats.add(o.cat); seq.push({ round: 'daily', kind: 'daily', q: mkQ(o, rn) }); }
+  } else {
+    const mcPool = freshPool('m', kidsF);
+    const takeMC = n => { const out = [], cats = new Set(); for (const pass of [0, 1]) for (const o of mcPool) { if (out.length >= n) break; if (used.has(o.id) || (!pass && cats.has(o.cat))) continue; out.push(o); cats.add(o.cat); used.add(o.id); } return out; };
+    const spread = (pool, n) => { const out = [], cats = new Set(); for (const pass of [0, 1]) for (const o of pool) { if (out.length >= n) break; if (out.includes(o) || (!pass && cats.has(o.cat))) continue; out.push(o); cats.add(o.cat); } return out; };
+    for (const [round, n] of SHOWS[mode]) {
+      if (round === 'buzz') takeMC(n).sort((a, b) => a.d - b.d).forEach(o => seq.push({ round, kind: 'buzz', q: mkQ(o) }));
+      else if (round === 'tf') { const pool = freshPool('t', kidsF), nt = Math.random() < .5 ? Math.floor(n / 2) : Math.ceil(n / 2); shuffle([...spread(pool.filter(o => o.r[3]), nt), ...spread(pool.filter(o => !o.r[3]), n - nt)]).forEach(o => seq.push({ round, kind: 'tf', q: mkQ(o) })); }
+      else if (round === 'num') spread(freshPool('n', kidsF), n).forEach(o => seq.push({ round, kind: 'num', q: mkQ(o) }));
+      else if (round === 'pick') for (let i = 0; i < n; i++) seq.push({ round, kind: 'pick', q: null });
+    }
+    const fin = mcPool.filter(o => !used.has(o.id)).slice(0, 24).sort((a, b) => b.d - a.d)[0]; used.add(fin.id);
+    var deck = { fin: mkQ(fin), mcPool, used };
+  }
+  const cnt = {}; seq.forEach(e => { e.idx = cnt[e.round] = (cnt[e.round] ?? -1) + 1; }); seq.forEach(e => e.n = cnt[e.round] + 1);
+  return { seq, fin: null, used, ...deck };
+}
+// per-category stats for the people playing on this device (title screen shows them)
+const STATS_KEY = 'inoa.trivia.stats';
+function recordStat(cat, ok) { const s = E.store.get(STATS_KEY, {}); const v = s[cat] || [0, 0]; v[0]++; if (ok) v[1]++; s[cat] = v; E.store.set(STATS_KEY, s); const g = G.catStats[cat] || (G.catStats[cat] = [0, 0]); g[0]++; if (ok) g[1]++; }
 function start(opts = {}) {
-  const lang = opts.lang; delete opts.lang; Object.assign(S, opts); if (lang) { S.lang = lang === 'es' ? 'es' : 'en'; if (E.setSetting && profLang() !== S.lang) E.setSetting('lang', S.lang); } save();
+  const lang = opts.lang; delete opts.lang; const mode = SHOWS[opts.mode] ? opts.mode : S.show; delete opts.mode; Object.assign(S, opts); if (lang) { S.lang = lang === 'es' ? 'es' : 'en'; if (E.setSetting && profLang() !== S.lang) E.setSetting('lang', S.lang); } save();
+  const daily = mode === 'daily';
   // Phones in the party room (engine/net.js) become the players: each phone buzzes and answers privately.
-  const phones = E.net.role === 'host' ? E.net.pads().slice(0, 4) : [];
-  const humans = phones.length || clamp(S.humans, 1, 4); const nb = humans === 1 ? 3 : S.bots ? 4 - humans : 0;
+  const phones = !daily && E.net.role === 'host' ? E.net.pads().slice(0, 4) : [];
+  const humans = daily ? 1 : phones.length || clamp(S.humans, 1, 4); const nb = daily ? 0 : humans === 1 ? 3 : S.bots ? 4 - humans : 0;
   const players = []; for (let i = 0; i < humans; i++) players.push(phones.length ? { name: phones[i].name, human: true, slot: phones[i].slot, score: 0 } : { name: S.names[i] || `P${i + 1}`, human: true, score: 0 });
   for (let i = 0; i < nb; i++) players.push({ name: BOTS[i].name, bot: BOTS[i], score: 0 });
-  const deck = buildDeck();
-  G = { time: 0, sched: [], players, deck, qi: -1, cur: null, phase: 'intro', timer: null, out: [], tried: new Set(), buzzer: null, revealed: false, focus: null, focusT: 0, hype: 0, paused: false, auto: !!window.__AUTO, finalPicks: [], banner: '' };
+  const deck = buildShow(mode);
+  G = { mode, time: 0, sched: [], players, deck, seq: deck.seq, qi: -1, cur: null, phase: 'intro', timer: null, out: [], tried: new Set(), buzzer: null, revealed: false, focus: null, focusT: 0, hype: 0, paused: false, auto: !!window.__AUTO, finalPicks: [], banner: null, roundKey: null, roundNo: 0, guesses: [], marks: [], right: 0, catStats: {} };
   conf.forEach(c => c.on = false); LAY = null; layout(); players.forEach((p, i) => drawPodium(i)); chars.forEach((c, i) => { c.state = 'idle'; c.react = 0; });
   ensureHud(); buildBuzzers(); scores(); $('tvScores').hidden = false;
+  if (daily && E.net.role === 'host') E.NET.setLayout({ type: 'text', text: S.lang === 'es' ? '📅 Reto diario en la pantalla grande' : '📅 Daily challenge on the big screen' });
   if (music) music.stop(); music = E.music(E.SONGS.bright);
-  G.banner = 'round1'; SCR.dirty = true; hostTalk(2.5); E.say(T().welcome, { lang: S.lang }); big(T().round1);
-  later(3.2, nextQuestion);
+  G.banner = () => '★ ★ ★'; SCR.dirty = true; hostTalk(2); E.say(T().welcome, { lang: S.lang }); big('🎤 Pact Trivia');
+  later(2.2, nextQuestion);
 }
 function nextQuestion() {
-  G.qi++; if (G.qi >= ROUND_Q) { finalRound(); return; }
-  G.cur = G.deck.qs[G.qi]; G.out = []; G.tried = new Set(); G.buzzer = null; G.revealed = false; G.pickedShow = null; G.phase = 'read'; G.timer = null; SCR.dirty = true; showChoices(false);
-  E.tone(660, .15, 'triangle', .08); E.tone(990, .2, 'triangle', .07, 0, .12);
-  readAloud(G.cur); hostTalk(2);
-  later(1.2, () => openBuzz(S.kids ? 16 : 12));
+  G.qi++; G.cur = null; showChoices(false);
+  if (G.qi >= G.seq.length) { G.mode === 'daily' ? endDaily() : finalRound(); return; }
+  const e = G.seq[G.qi];
+  if (e.round !== G.roundKey) { G.roundKey = e.round; roundIntro(e); later(3, () => present(e)); } else present(e);
 }
-function readAloud(q) { const t = `${q.q} ${q.ch.map((c, i) => 'ABCD'[i] + ': ' + c).join('. ')}.`; E.say(t, { lang: S.lang }); }
+function roundIntro(e) {
+  const r = ROUNDS[e.round], no = ++G.roundNo; G.phase = 'roundIntro'; G.timer = null; G.cur = null; SCR.dirty = true; setBuzzers(false);
+  G.banner = () => (G.mode === 'daily' ? '' : `${T().round} ${no} · `) + roundName(e.round) + ` (${e.n})`;
+  big(roundName(e.round)); E.say(`${S.lang === 'es' ? r.es : r.en}. ${r.rule[S.lang]}`, { lang: S.lang }); hostTalk(2.5); E.tone(523, .12, 'triangle', .07); E.tone(784, .2, 'triangle', .07, 0, .12);
+}
+function present(e) {
+  if (e.kind === 'pick' && !e.q) return pickStart(e);
+  const q = G.cur = e.q; markSeen(q); G.out = []; G.tried = new Set(); G.buzzer = null; G.revealed = false; G.pickedShow = null; G.timer = null; G.shownAt = G.time; SCR.dirty = true; showChoices(false);
+  E.tone(660, .15, 'triangle', .08); E.tone(990, .2, 'triangle', .07, 0, .12); readAloud(q); hostTalk(2);
+  if (q.kind === 'num') { G.phase = 'nread'; G.guesses = []; G.numWin = null; later(S.kids ? 2.6 : 2, numStart); return; }
+  G.phase = 'read';
+  if (e.kind === 'daily') { later(1, dailyOpen); return; }
+  const tf = q.kind === 'tf'; later(tf ? .6 : 1.2, () => openBuzz(tf ? (S.kids ? 10 : 7) : (S.kids ? 16 : 12)));
+}
+function readAloud(q) { const t = q.kind === 'num' ? q.q : q.kind === 'tf' ? `${q.q} ${T().tfAsk}` : `${q.q} ${q.ch.map((c, i) => 'ABCD'[i] + ': ' + c).join('. ')}.`; E.say(t, { lang: S.lang }); }
+const botFor = i => G.players[i].bot || BOTS[i % 3];
+function botKnows(b, d, skill = S.botSkill) { return Math.random() < Math.min(.98, b.acc[d - 1] * SKILL[skill].acc); }
 function openBuzz(sec, steal) {
   G.phase = steal ? 'steal' : 'buzz'; G.timer = { left: sec, max: sec, kind: 'buzz' }; setBuzzers(true); SCR.dirty = true;
-  // bots decide
-  G.players.forEach((pl, i) => { if (!(pl.bot || G.auto) || G.tried.has(i)) return; const b = pl.bot || BOTS[i % 3]; const know = Math.random() < b.acc[G.cur.d - 1] * (S.kids ? 1.05 : 1); pl.know = know; const go = know || Math.random() < b.bluff; if (!go) return; const tt = rnd(b.react[0], b.react[1]) * (steal ? .6 : 1) + (know ? 0 : 1.2); if (tt < sec - .3) later(tt, () => { if ((G.phase === 'buzz' || G.phase === 'steal') && !G.tried.has(i)) buzz(i); }); });
+  // bots decide; they wait until the question has been read out (≈16 characters a second), so humans get a fair chance
+  const q = G.cur, sk = SKILL[S.botSkill], gate = steal ? 0 : Math.max(0, clamp(q.q.length / 16, .8, 5) - (G.time - G.shownAt));
+  G.players.forEach((pl, i) => { if (!(pl.bot || G.auto) || G.tried.has(i)) return; const b = botFor(i); const know = botKnows(b, q.d); pl.know = know; const go = know || Math.random() < b.bluff; if (!go) return; const tt = gate + rnd(b.react[0], b.react[1]) * sk.react * (steal ? .6 : 1) * (q.kind === 'tf' ? .6 : 1) + (know ? 0 : 1.2); if (tt < sec - .3) later(tt, () => { if ((G.phase === 'buzz' || G.phase === 'steal') && !G.tried.has(i)) buzz(i); }); });
 }
 function buzz(i) {
   if (!G || (G.phase !== 'buzz' && G.phase !== 'steal') || G.tried.has(i) || i >= G.players.length) return;
-  G.buzzer = i; G.tried.add(i); G.phase = 'answer'; setBuzzers(false); G.timer = { left: S.kids ? 10 : 7, max: S.kids ? 10 : 7, kind: 'answer' }; SCR.dirty = true;
+  const tf = G.cur.kind === 'tf', sec = tf ? (S.kids ? 8 : 5) : (S.kids ? 10 : 7);
+  G.buzzer = i; G.tried.add(i); G.phase = 'answer'; setBuzzers(false); G.timer = { left: sec, max: sec, kind: 'answer' }; SCR.dirty = true;
   E.tone(880, .12, 'square', .1); E.tone(1320, .2, 'square', .08, 0, .08); cam.shake = .4; G.focus = i; G.focusT = 1.6;
   react(i, 'buzz', 30); podiums[i].btn.material.emissiveIntensity = 2.2; P.burst(new THREE.Vector3(podiums[i].x, 1.3, 1.85), { color: PCOL[i], n: 22, speed: 2, up: 3, size: .3, life: .6 });
   const pl = G.players[i]; scores();
   if (pl.human && !G.auto) { showChoices(true, i); E.say(pl.name, { lang: S.lang, interrupt: false }); }
-  else { showChoices(false); const b = pl.bot || BOTS[i % 3]; bubble(i, pick(b.lines[S.lang])); later(rnd(1.2, 2.6), () => { if (G.phase !== 'answer' || G.buzzer !== i) return; const avail = [0, 1, 2, 3].filter(k => !G.out.includes(k)); const k = pl.know !== false && (pl.know || Math.random() < .3) ? G.cur.correct : pick(avail.filter(x => x !== G.cur.correct)); answer(k); }); }
+  else { showChoices(false); const b = botFor(i); bubble(i, pick(b.lines[S.lang])); later(rnd(1.2, 2.6) * (tf ? .6 : 1), () => { if (G.phase !== 'answer' || G.buzzer !== i) return; const avail = G.cur.ch.map((_, k) => k).filter(k => !G.out.includes(k)); const k = pl.know !== false && (pl.know || Math.random() < .3) ? G.cur.correct : pick(avail.filter(x => x !== G.cur.correct)); answer(k); }); }
 }
 function answer(k) {
   if (!G || G.phase !== 'answer') return; const i = G.buzzer, pl = G.players[i], q = G.cur; G.pickedShow = k; showChoices(false); podiums[i].btn.material.emissiveIntensity = .3;
-  const pts = 100 * q.d;
-  if (k === q.correct) {
+  const ok = k === q.correct; if (pl.human) recordStat(q.cat, ok);
+  if (G.mode === 'daily') return dailyAnswer(k, ok);
+  const pts = q.kind === 'tf' ? 50 : 100 * q.d;
+  if (ok) {
     pl.score += pts; G.phase = 'result'; G.revealed = true; G.timer = null; SCR.dirty = true; SFX.win(); react(i, 'cheer', 2.6); G.hype = 1; cam.shake = .3;
     floatAt(i, `+${pts}`, 'gold'); P.burst(new THREE.Vector3(podiums[i].x, 2.4, 1.4), { color: 0xffd166, n: 40, speed: 3, up: 5, size: .35, life: 1.2, additive: false, gravity: 6 });
     E.say(`${T().correct} ${q.ch[q.correct]}`, { lang: S.lang }); E.toast(`${T().correct} ${pl.name} +${pts}`, 1800);
-    drawPodium(i); scores(); later(2.8, nextQuestion);
+    drawPodium(i); scores(); later(q.kind === 'tf' ? 2.2 : 2.8, nextQuestion);
   } else {
-    if (!S.kids) pl.score -= pts / 2; G.out.push(k); SFX.bad(); react(i, 'slump', 2.4); SCR.dirty = true; drawPodium(i); scores(); floatAt(i, S.kids ? '✗' : `−${pts / 2}`, 'bad'); E.toast(`${T().wrong} ${pl.name}`, 1500);
+    if (!S.kids) pl.score -= pts / 2; if (k != null) G.out.push(k); SFX.bad(); react(i, 'slump', 2.4); SCR.dirty = true; drawPodium(i); scores(); floatAt(i, S.kids ? '✗' : `−${pts / 2}`, 'bad'); E.toast(`${T().wrong} ${pl.name}`, 1500);
     const left = G.players.map((p, j) => j).filter(j => !G.tried.has(j));
-    if (left.length && G.out.length < 3) { G.phase = 'pre'; G.timer = null; later(1.2, () => { E.say(T().steal, { lang: S.lang }); big(T().steal.split('!')[0] + '!'); openBuzz(S.kids ? 9 : 6, true); }); }
+    if (left.length && G.out.length < q.ch.length - 1) { G.phase = 'pre'; G.timer = null; later(1.2, () => { E.say(T().steal, { lang: S.lang }); big(T().steal.split('!')[0] + '!'); openBuzz(S.kids ? 9 : 6, true); }); }
     else revealNobody();
   }
 }
 function revealNobody() { G.phase = 'result'; G.revealed = true; G.timer = null; SCR.dirty = true; setBuzzers(false); showChoices(false); E.tone(330, .4, 'triangle', .08); E.say(`${T().answer} ${G.cur.ch[G.cur.correct]}`, { lang: S.lang }); hostTalk(2); later(3, nextQuestion); }
 function timeUp() {
   if (G.phase === 'buzz' || G.phase === 'steal') { E.toast(T().nobody + ' ' + G.cur.ch[G.cur.correct], 2200); revealNobody(); }
-  else if (G.phase === 'answer') { const i = G.buzzer; E.toast(T().timeout, 1200); const avail = [0, 1, 2, 3].filter(k => !G.out.includes(k) && k !== G.cur.correct); answer(avail[0] ?? (G.cur.correct + 1) % 4); }
+  else if (G.phase === 'answer') { E.toast(T().timeout, 1200); if (G.mode === 'daily') { answer(null); return; } const avail = G.cur.ch.map((_, k) => k).filter(k => !G.out.includes(k) && k !== G.cur.correct); answer(avail[0] ?? null); }
   else if (G.phase === 'fpick') finalPick(null);
+  else if (G.phase === 'pick') pickCat(Math.floor(Math.random() * G.pickInfo.cats.length));
+  else if (G.phase === 'nguess') numLock();
+}
+
+/* ---------- your pick: the trailing player chooses the category ---------- */
+function trailing() { const min = Math.min(...G.players.map(p => p.score)); const c = G.players.map((p, i) => i).filter(i => G.players[i].score === min); return c.find(i => G.players[i].human) ?? c[0]; }
+function pickStart(e) {
+  const avail = Object.keys(CATS).filter(k => G.deck.mcPool.some(o => o.cat === k && !G.deck.used.has(o.id)));
+  const cats = shuffle(avail).slice(0, 3), who = trailing(), pl = G.players[who], sec = S.kids ? 15 : 12;
+  G.cur = null; G.phase = 'pick'; G.pickInfo = { who, cats, sel: null, e, done: false }; G.timer = { left: sec, max: sec, kind: 'pick' }; SCR.dirty = true; G.focus = who; G.focusT = 2.5;
+  E.say(`${T().picks(pl.name)}: ${cats.map(k => catName(k).replace(/^\S+\s/, '')).join(', ')}`, { lang: S.lang }); hostTalk(2); react(who, 'think', 3);
+  if (pl.human && !G.auto) { if (!pl.slot) showPick(); }
+  else later(rnd(1.4, 2.4) * (G.auto ? .3 : 1), () => pickCat(Math.floor(Math.random() * cats.length)));
+}
+function pickCat(k) {
+  if (!G || G.phase !== 'pick' || G.pickInfo.done) return; const pi = G.pickInfo; if (!pi.cats[k]) return;
+  pi.sel = k; pi.done = true; G.timer = null; showChoices(false); SCR.dirty = true; SFX.coin();
+  const cat = pi.cats[k], o = G.deck.mcPool.find(x => x.cat === cat && !G.deck.used.has(x.id)); G.deck.used.add(o.id); pi.e.q = mkQ(o);
+  E.toast(T().picked(G.players[pi.who].name, catName(cat)), 1600); later(1.3, () => present(pi.e));
+}
+
+/* ---------- closest number: open guesses, last place first ---------- */
+const snap = (q, v) => clamp(Math.round((v - q.min) / q.step) * q.step + q.min, q.min, q.max);
+function numStart() { G.numOrder = G.players.map((p, i) => i).sort((a, b) => G.players[a].score - G.players[b].score || a - b); numTurn(0); }
+function numTurn(k) {
+  if (k >= G.numOrder.length) { numReveal(); return; }
+  const i = G.numOrder[k], pl = G.players[i], q = G.cur, sec = S.kids ? 20 : 15; G.nk = k; G.ni = i; G.phase = 'nguess'; G.typed = ''; G.numVal = snap(q, (q.min + q.max) / 2);
+  G.timer = { left: sec, max: sec, kind: 'num' }; G.focus = i; G.focusT = 1.2; SCR.dirty = true; react(i, 'think', 3);
+  if (pl.human && !G.auto) { if (!pl.slot) showNum(); E.say(pl.name, { lang: S.lang, interrupt: false }); }
+  else { showChoices(false); later(rnd(1.2, 2.2) * (G.auto ? .3 : 1), () => { if (G.phase !== 'nguess' || G.ni !== i) return; G.numVal = botGuess(botFor(i), q); numLock(); }); }
+}
+function botGuess(b, q) { const span = q.max - q.min; return snap(q, q.ans + (botKnows(b, q.d) ? rnd(-.03, .03) : rnd(-.25, .25)) * span); }
+function numNudge(m) { if (!G || G.phase !== 'nguess') return; G.numVal = snap(G.cur, (G.typed ? +G.typed : G.numVal) + m * G.cur.step); G.typed = ''; SCR.dirty = true; updNum(); }
+function numType(ch) { if (!G || G.phase !== 'nguess') return; G.typed = ch === '<' ? G.typed.slice(0, -1) : (G.typed + ch).replace(/^0+(?=\d)/, '').slice(0, 6); if (G.typed) G.numVal = snap(G.cur, +G.typed); SCR.dirty = true; updNum(); }
+function numLock() {
+  if (!G || G.phase !== 'nguess') return; const i = G.ni; if (G.typed) G.numVal = snap(G.cur, +G.typed); G.typed = '';
+  G.guesses[i] = G.numVal; G.timer = null; G.phase = 'nwait'; showChoices(false); SFX.snap(); bubble(i, fmtNum(G.numVal)); SCR.dirty = true; later(G.auto ? .3 : .9, () => numTurn(G.nk + 1));
+}
+function numReveal() {
+  const q = G.cur, dist = G.players.map((p, i) => Math.abs((G.guesses[i] ?? Infinity) - q.ans)), best = Math.min(...dist);
+  G.phase = 'result'; G.revealed = true; G.timer = null; G.numWin = dist.map((x, i) => x === best ? i : -1).filter(i => i >= 0); SCR.dirty = true;
+  const pts = 200 + (best === 0 ? 100 : 0); G.numWin.forEach(i => { G.players[i].score += pts; floatAt(i, `+${pts}`, 'gold'); react(i, 'cheer', 2.4); drawPodium(i); }); scores(); SFX.win(); G.hype = 1;
+  const names = G.numWin.map(i => G.players[i].name).join(' & '); E.say(`${T().answer} ${fmtNum(q.ans)} ${q.unit}. ${best === 0 ? T().exact + ' ' : ''}${T().closest(names)}`, { lang: S.lang });
+  E.toast(`${best === 0 ? T().exact + ' ' : ''}${T().closest(names)} +${pts}`, 2200); G.focus = G.numWin[0]; G.focusT = 2; later(3.6, nextQuestion);
+}
+
+/* ---------- daily 10: one player, same questions for everyone today ---------- */
+function dailyOpen() { const sec = S.kids ? 20 : 15; G.buzzer = 0; G.tried = new Set([0]); G.phase = 'answer'; G.timer = { left: sec, max: sec, kind: 'answer' }; SCR.dirty = true; G.focus = 0; G.focusT = 1; if (!G.auto) showChoices(true, 0); }
+function dailyAnswer(k, ok) {
+  const q = G.cur, left = G.timer ? G.timer.left / G.timer.max : 0, pts = ok ? 100 + Math.round(50 * left) : 0; G.timer = null; G.phase = 'result'; G.revealed = true; SCR.dirty = true;
+  G.players[0].score += pts; G.marks.push(ok ? '🟩' : k == null ? '⬜' : '🟥'); if (ok) G.right++;
+  if (ok) { SFX.win(); react(0, 'cheer', 2); floatAt(0, `+${pts}`, 'gold'); E.say(`${T().correct} ${q.ch[q.correct]}`, { lang: S.lang }); } else { SFX.bad(); react(0, 'slump', 2); E.say(`${T().answer} ${q.ch[q.correct]}`, { lang: S.lang }); }
+  drawPodium(0); scores(); E.toast(G.marks.join(''), 1800); later(2.6, nextQuestion);
+}
+function endDaily() {
+  G.phase = 'end'; G.cur = null; const date = today(), D = E.store.get('inoa.trivia.daily', {}), first = D.last !== date, sc = G.players[0].score;
+  if (first) { const y = new Date(date + 'T12:00:00'); y.setDate(y.getDate() - 1); D.streak = D.last === fmtDate(y) ? (D.streak || 0) + 1 : 1; Object.assign(D, { last: date, score: sc, right: G.right, marks: G.marks.join(''), best: Math.max(D.best || 0, sc) }); E.store.set('inoa.trivia.daily', D); }
+  G.banner = () => `${roundName('daily')} · ${G.right}/10`; SCR.dirty = true; G.focus = 0; G.focusT = 3; react(0, G.right >= 5 ? 'cheer' : 'idle', 99); if (G.right >= 7) confetti(podiums[0].x, 200); SFX.win();
+  E.say(`${G.right} / 10. ${T().score}: ${sc}`, { lang: S.lang }); big(`${G.marks.join('')}`);
+  const share = `${T().dailyShare} ${date}\n${G.marks.join('')} ${G.right}/10 · ${sc}\n${location.href.split('?')[0]}`;
+  later(3, () => finish({ title: `${roundName('daily')} · ${G.right}/10`, stats: [[T().right, `${G.right}/10`], [T().score, sc], [T().streak, D.streak || 1]], xp: 30 + G.right * 6, coins: 5 + G.right, won: G.right >= 7, share, after: first ? null : T().practice }));
+}
+function finish(o) {
+  if (G.resultsShown) return; G.resultsShown = true; resultsCount++; music && music.stop(); if (E.net.role === 'host') E.NET.setLayout({ type: 'gamepad' });
+  E.results({ gameId: 'trivia', title: o.title, stats: o.stats, xp: Math.round(o.xp), coins: o.coins, best: o.best ?? null, bestLabel: T().bestSolo, won: o.won, onAgain: () => title(), share: o.share });
+  if (o.after) setTimeout(() => E.toast(o.after, 2600), 400);
 }
 
 /* ---------- final round ---------- */
 function finalRound() {
-  G.phase = 'finalIntro'; G.final = true; G.cur = null; G.banner = 'final'; SCR.dirty = true; showChoices(false); setBuzzers(false);
+  G.phase = 'finalIntro'; G.final = true; G.cur = null; G.timer = null; G.banner = () => T().final; SCR.dirty = true; showChoices(false); setBuzzers(false);
   if (music) music.stop(); music = E.music(E.SONGS.tense);
   big(T().allin + '!'); E.say(T().final, { lang: S.lang }); hostTalk(3); G.wagers = []; G.finalPicks = [];
   later(3, () => wagerNext(0));
@@ -584,11 +573,11 @@ function wagerNext(i) {
 const WF = [0, .25, .5, .75, 1];
 function wagerNav(d) { const wc = G.wagerCard; if (!wc) return; wc.sel = clamp(wc.sel + d, 0, 4); wc.card.querySelectorAll('.wg button').forEach((b, k) => b.classList.toggle('sel', k === wc.sel)); }
 function setWager(f) { const wc = G.wagerCard; if (!wc) return; G.wagerCard = null; wc.card.remove(); G.wagers[wc.i] = Math.round(wc.maxW * f / 10) * 10; SFX.coin(); wagerNext(wc.i + 1); }
-function finalQuestion() { G.cur = G.deck.fin; G.out = []; G.revealed = false; G.pickedShow = null; G.phase = 'fread'; SCR.dirty = true; readAloud(G.cur); hostTalk(3); later(2, () => finalPickNext(0)); }
+function finalQuestion() { G.cur = G.deck.fin; markSeen(G.cur); G.shownAt = G.time; G.out = []; G.revealed = false; G.pickedShow = null; G.phase = 'fread'; SCR.dirty = true; readAloud(G.cur); hostTalk(3); later(2, () => finalPickNext(0)); }
 function finalPickNext(i) {
   if (i >= G.players.length) { finalReveal(); return; }
   const pl = G.players[i]; G.fi = i;
-  if (!pl.human || G.auto) { const b = pl.bot || BOTS[i % 3]; const know = Math.random() < b.acc[G.cur.d - 1]; G.finalPicks[i] = know ? G.cur.correct : pick([0, 1, 2, 3].filter(k => k !== G.cur.correct)); react(i, 'think', 1.4); later(G.auto ? .3 : 1.2, () => { bubble(i, T().locked); finalPickNext(i + 1); }); return; }
+  if (!pl.human || G.auto) { const b = pl.bot || BOTS[i % 3]; const know = botKnows(b, G.cur.d); G.finalPicks[i] = know ? G.cur.correct : pick([0, 1, 2, 3].filter(k => k !== G.cur.correct)); react(i, 'think', 1.4); later(G.auto ? .3 : 1.2, () => { bubble(i, T().locked); finalPickNext(i + 1); }); return; }
   if (pl.slot) { G.phase = 'fpick'; G.fcard = null; G.timer = { left: S.kids ? 30 : 20, max: S.kids ? 30 : 20, kind: 'final' }; bubble(i, '📱 ' + (S.lang === 'es' ? 'eligiendo en secreto…' : 'choosing in secret…')); react(i, 'think', 3); return; }
   const card = overlay(`<div class="ig-kicker" style="color:${PCSS[i]}">${T().allin} · ${T().yourWager} ${G.wagers[i]}</div><h2>${esc(T().look(pl.name))}</h2><button class="ig-btn" data-a="ready">👀 ${T().ready}</button>`);
   E.say(T().look(pl.name), { lang: S.lang });
@@ -609,8 +598,9 @@ function endGame() {
   G.phase = 'end'; const rows = G.players.map((p, i) => ({ ...p, i })).sort((a, b) => b.score - a.score); const tie = rows.length > 1 && rows[0].score === rows[1].score;
   const w = rows[0]; react(w.i, 'cheer', 99); G.players.forEach((p, i) => { if (i !== w.i && !(tie && p.score === w.score)) react(i, 'idle', 0); }); confetti(podiums[w.i].x, 240); SFX.win(); G.hype = 1.5; G.focus = w.i; G.focusT = 3;
   E.say(tie ? T().tie : T().wins(w.name), { lang: S.lang }); big(tie ? T().tie : '🏆 ' + w.name);
-  later(3.4, () => { if (G.resultsShown) return; G.resultsShown = true; resultsCount++; music && music.stop(); if (E.net.role === 'host') E.NET.setLayout({ type: 'gamepad' }); const me = G.players[0]; const place = rows.findIndex(r => r.i === 0) + 1; const correct = G.correctCount || 0;
-    E.results({ gameId: 'trivia', title: tie ? T().tie : T().wins(w.name), stats: rows.map((r, k) => [`${k + 1}. ${r.bot ? r.bot.e + ' ' : ''}${r.name}`, r.score]), xp: 40 + Math.max(0, me.score) / 10 + (place === 1 ? 40 : 0), coins: 8 + (place === 1 ? 20 : 6), best: G.players.filter(p => p.human).length === 1 ? me.score : null, bestLabel: T().bestSolo, won: place === 1 && !tie, onAgain: () => title(), share: T().share(w.name, w.score) + ` (Inoa Games) ${location.href}` }); });
+  later(3.4, () => { const me = G.players[0], place = rows.findIndex(r => r.i === 0) + 1;
+    const bestCat = Object.entries(G.catStats).filter(([, v]) => v[1] > 0).sort((a, b) => b[1][1] / b[1][0] - a[1][1] / a[1][0] || b[1][1] - a[1][1])[0];
+    finish({ title: tie ? T().tie : T().wins(w.name), stats: rows.map((r, k) => [`${k + 1}. ${r.bot ? r.bot.e + ' ' : ''}${r.name}`, r.score]), xp: 40 + Math.min(120, Math.max(0, me.score) / 10) + (place === 1 ? 40 : 0), coins: 8 + (place === 1 ? 20 : 6), best: G.players.filter(p => p.human).length === 1 ? me.score : null, won: place === 1 && !tie, share: T().share(w.name, w.score) + ` (Inoa Games) ${location.href.split('?')[0]}`, after: bestCat ? `⭐ ${catName(bestCat[0])}: ${bestCat[1][1]}/${bestCat[1][0]}` : null }); });
 }
 
 /* ======================= UI ======================= */
@@ -619,12 +609,29 @@ function ensureHud() { if (hudEl) { document.querySelector('.ig-top').hidden = f
 function scores() { if (!G) return; $('tvScores').innerHTML = G.players.map((p, i) => `<span class="${G.buzzer === i && G.phase === 'answer' ? 'on' : ''}"><i style="background:${PCSS[i]}"></i>${esc(p.bot ? p.bot.e + ' ' + p.name : p.name)} <b>${p.score}</b></span>`).join(''); }
 function buildBuzzers() { const box = $('tvBuzzers'); box.innerHTML = ''; G.players.forEach((p, i) => { if (!p.human || p.slot) return; const b = document.createElement('button'); b.className = 'tv-buz off'; b.dataset.c = i; b.style.background = PCSS[i]; b.innerHTML = `${T().buzz}<small>${esc(p.name)} · ${G.players.filter(x => x.human).length === 1 ? T().space : KEYN[i]}</small>`; b.addEventListener('pointerdown', e => { e.preventDefault(); E.audio(); b.classList.add('hit'); setTimeout(() => b.classList.remove('hit'), 150); buzz(i); }); box.appendChild(b); }); }
 function setBuzzers(on) { document.querySelectorAll('.tv-buz').forEach(b => b.classList.toggle('off', !on || G.tried.has(+b.dataset.c))); }
+// the bottom panel: answer choices (2 or 4), the category pick (3) or the number dial
+function panel(i, cls) { const el = $('tvChoices'); $('tvScores').style.visibility = 'hidden'; $('tvBuzzers').style.visibility = 'hidden'; el.className = 'tv-choices ' + cls; el.style.setProperty('--pc', PCSS[i]); el.hidden = false; return el; }
 function showChoices(on, i) {
-  const el = $('tvChoices'); $('tvScores').style.visibility = on ? 'hidden' : ''; if (!on) { el.hidden = true; return; } const q = G.cur, pl = G.players[i];
-  el.style.setProperty('--pc', PCSS[i]); el.hidden = false;
-  el.innerHTML = `<div class="who"><span><b>${esc(pl.name)}</b> ${T().answering}…</span><span>1 · 2 · 3 · 4</span></div><div class="tbar"><i id="tvBar"></i></div>${q.ch.map((c, k) => `<button class="tv-ch ${G.out.includes(k) ? 'out' : ''}" data-k="${k}"><b>${'ABCD'[k]}</b>${esc(c)}</button>`).join('')}`;
+  const el = $('tvChoices'); if (!on) { el.hidden = true; el.className = 'tv-choices'; $('tvScores').style.visibility = ''; $('tvBuzzers').style.visibility = ''; return; }
+  const q = G.cur, pl = G.players[i], two = q.ch.length === 2; panel(i, two ? 'two' : '');
+  el.innerHTML = `<div class="who"><span><b>${esc(pl.name)}</b> ${T().answering}…</span><span>${two ? '1 · 2' : '1 · 2 · 3 · 4'}</span></div><div class="tbar"><i id="tvBar"></i></div>${q.ch.map((c, k) => `<button class="tv-ch ${G.out.includes(k) ? 'out' : ''}" data-k="${k}"><b>${two ? (k ? '✗' : '✓') : 'ABCD'[k]}</b>${esc(c)}</button>`).join('')}`;
   el.querySelectorAll('.tv-ch').forEach(b => b.onclick = () => answer(+b.dataset.k));
 }
+function showPick() {
+  const pi = G.pickInfo, el = panel(pi.who, 'three');
+  el.innerHTML = `<div class="who"><span><b>${esc(G.players[pi.who].name)}</b>${esc(T().picks(''))}</span><span>1 · 2 · 3</span></div><div class="tbar"><i id="tvBar"></i></div>${pi.cats.map((k, i) => `<button class="tv-ch" data-k="${i}"><b style="background:${CATS[k][3]};color:#14173a">${i + 1}</b>${esc(catName(k))}</button>`).join('')}`;
+  el.querySelectorAll('.tv-ch').forEach(b => b.onclick = () => pickCat(+b.dataset.k));
+}
+function showNum() {
+  const i = G.ni, q = G.cur, el = panel(i, 'num'), s = q.step;
+  el.innerHTML = `<div class="who"><span><b>${esc(G.players[i].name)}</b> · ${T().yourGuess}</span><span>0–9 · ← → · ⏎</span></div><div class="tbar"><i id="tvBar"></i></div>
+  <div class="nrow"><button class="tv-nb" data-m="-10">−${fmtNum(s * 10)}</button><button class="tv-nb" data-m="-1">−${fmtNum(s)}</button><output id="tvNum"></output><button class="tv-nb" data-m="1">+${fmtNum(s)}</button><button class="tv-nb" data-m="10">+${fmtNum(s * 10)}</button></div>
+  <div class="nrow2"><input type="range" id="tvRange" min="${q.min}" max="${q.max}" step="${s}" value="${G.numVal}" aria-label="${T().yourGuess}"><button class="tv-lock" id="tvLock">🔒 ${T().lock}</button></div>`;
+  el.querySelectorAll('.tv-nb').forEach(b => { let iv = 0, to = 0; const stop = () => { clearTimeout(to); clearInterval(iv); }; b.addEventListener('pointerdown', ev => { ev.preventDefault(); numNudge(+b.dataset.m); stop(); to = setTimeout(() => { iv = setInterval(() => numNudge(+b.dataset.m), 90); }, 380); }); ['pointerup', 'pointerleave', 'pointercancel'].forEach(t => b.addEventListener(t, stop)); });
+  $('tvRange').addEventListener('input', ev => { if (G.phase !== 'nguess') return; G.typed = ''; G.numVal = snap(q, +ev.target.value); SCR.dirty = true; updNum(true); });
+  $('tvLock').onclick = () => numLock(); updNum();
+}
+function updNum(fromRange) { const o = $('tvNum'); if (!o || !G.cur) return; o.textContent = (G.typed || fmtNum(G.numVal)) + (G.cur.unit ? ' ' + G.cur.unit : ''); const r = $('tvRange'); if (r && !fromRange) r.value = G.numVal; }
 function overlay(html) { const d = document.createElement('div'); d.className = 'tv-card'; d.innerHTML = `<div class="ig-card">${html}</div>`; document.body.appendChild(d); return d; }
 function bubble(i, text) { const p = E.toScreen(new THREE.Vector3(podiums[i].x, 3.25, .85), camera); const d = document.createElement('div'); d.className = 'tv-bubble'; d.textContent = text; d.style.left = clamp(p.x, 60, innerWidth - 60) + 'px'; d.style.top = p.y + 'px'; document.body.appendChild(d); setTimeout(() => d.remove(), 1600); }
 function floatAt(i, text, cls) { const p = E.toScreen(new THREE.Vector3(podiums[i].x, 2.9, 1.2), camera); E.floatText(text, p.x, p.y, cls); }
@@ -632,13 +639,20 @@ function big(t) { const d = document.createElement('div'); d.className = 'ig-big
 function hostTalk(sec) { host.state = 'talk'; host.react = sec; }
 
 /* ======================= input ======================= */
+const localTurn = i => i != null && G.players[i] && G.players[i].human && !G.players[i].slot;
 addEventListener('keydown', e => {
-  if (!G || G.paused) return; if (e.target && e.target.tagName === 'INPUT') return;
+  if (!G || G.paused) return; if (e.target && e.target.tagName === 'INPUT' && e.target.type !== 'range') return;
   if ((e.code === 'Escape' || e.code === 'KeyP')) { pause(); return; }
   const humans = G.players.filter(p => p.human).length;
+  const dg = /^(?:Digit|Numpad)(\d)$/.exec(e.code), num = dg ? +dg[1] : -1;
+  if (G.phase === 'nguess' && localTurn(G.ni)) { // number dial: type digits, arrows nudge (↑↓ ×10), Enter locks
+    if (dg) numType(dg[1]); else if (e.code === 'Backspace') numType('<'); else if (e.code === 'ArrowLeft') numNudge(-1); else if (e.code === 'ArrowRight') numNudge(1); else if (e.code === 'ArrowDown') numNudge(-10); else if (e.code === 'ArrowUp') numNudge(10); else if (e.code === 'Enter' || e.code === 'Space') numLock(); else return;
+    e.preventDefault(); return;
+  }
+  if (G.phase === 'pick' && !G.pickInfo.done && localTurn(G.pickInfo.who)) { if (num >= 1 && num <= 3) pickCat(num - 1); return; }
   if (G.phase === 'buzz' || G.phase === 'steal') { const k = KEYS.indexOf(e.code); if (k >= 0 && G.players[k]?.human) buzz(k); if ((e.code === 'Space' || e.code === 'Enter') && humans === 1) buzz(0); }
-  const n = ['Digit1', 'Digit2', 'Digit3', 'Digit4'].indexOf(e.code); const n2 = ['Numpad1', 'Numpad2', 'Numpad3', 'Numpad4'].indexOf(e.code); const ci = n >= 0 ? n : n2;
-  if (ci >= 0) { if (G.phase === 'answer' && G.players[G.buzzer].human && !G.out.includes(ci)) answer(ci); else if (G.phase === 'fpick') finalPick(ci); }
+  const ci = num - 1;
+  if (ci >= 0 && ci <= 3 && !G.wagerCard) { if (G.phase === 'answer' && G.players[G.buzzer].human && ci < G.cur.ch.length && !G.out.includes(ci)) answer(ci); else if (G.phase === 'fpick') finalPick(ci); }
   if (G.wagerCard) { const w = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5'].indexOf(e.code); if (w >= 0) setWager(WF[w]); else if (e.code === 'ArrowLeft') wagerNav(-1); else if (e.code === 'ArrowRight') wagerNav(1); else if (e.code === 'Enter' || e.code === 'Space') setWager(WF[G.wagerCard.sel]); return; }
   if (G.phase === 'fwait' && (e.code === 'Enter' || e.code === 'Space') && G.fcard) G.fcard.querySelector('[data-a=ok]')?.click();
   if (G.fcard && G.phase !== 'fpick' && G.phase !== 'fwait' && (e.code === 'Enter' || e.code === 'Space')) G.fcard.querySelector('[data-a=ready]')?.click();
@@ -649,7 +663,9 @@ function pollPads() {
   for (const p of pads) { if (!p) continue; const i = idx++; const prev = padPrev[i] || []; const now = p.buttons.map(b => b.pressed); const pressed = k => now[k] && !prev[k]; padPrev[i] = now;
     if (!G || G.paused) continue; const pi = i < G.players.length && G.players[i].human ? i : (G.players.filter(x => x.human).length === 1 ? 0 : -1); if (pi < 0) continue;
     if ((G.phase === 'buzz' || G.phase === 'steal') && [0, 1, 2, 3].some(pressed)) buzz(pi);
-    else if (G.phase === 'answer' && G.buzzer === pi) { const k = [0, 1, 2, 3].find(pressed); if (k != null && !G.out.includes(k)) answer(k); }
+    else if (G.phase === 'answer' && G.buzzer === pi) { const k = [0, 1, 2, 3].find(pressed); if (k != null && k < G.cur.ch.length && !G.out.includes(k)) answer(k); }
+    else if (G.phase === 'pick' && !G.pickInfo.done && G.pickInfo.who === pi) { const k = [0, 1, 2].find(pressed); if (k != null) pickCat(k); }
+    else if (G.phase === 'nguess' && G.ni === pi) { if (pressed(14)) numNudge(-1); if (pressed(15)) numNudge(1); if (pressed(13)) numNudge(-10); if (pressed(12)) numNudge(10); if (pressed(0)) numLock(); }
     else if (G.phase === 'fpick' && G.fi === pi) { const k = [0, 1, 2, 3].find(pressed); if (k != null) finalPick(k); }
     else if (G.wagerCard && (G.wagerCard.i === pi || G.players.filter(x => x.human).length === 1)) { if (pressed(14)) wagerNav(-1); if (pressed(15)) wagerNav(1); if (pressed(0)) setWager(WF[G.wagerCard.sel]); }
     else if (G.fcard && G.phase !== 'fpick' && pressed(0)) G.fcard.querySelector('[data-a=ready],[data-a=ok]')?.click();
@@ -663,7 +679,13 @@ function phoneLayout(i) {
   if (G.phase === 'end') return { type: 'text', text: `${pl.name}: ${pl.score}` };
   if (G.wagerCard && G.wagerCard.i === i) return { type: 'choices', question: T().wager(pl.name) + ` (${pl.score})`, choices: WAGER_F.map(f => `${Math.round(G.wagerCard.maxW * f / 10) * 10}${f === 1 ? ' · ' + T().allin : ''}`) };
   if (G.phase === 'fpick' && G.fi === i) return { type: 'choices', question: q.q, choices: q.ch };
+  if (G.phase === 'pick') return G.pickInfo.who === i && !G.pickInfo.done ? { type: 'choices', question: T().picks(pl.name), choices: G.pickInfo.cats.map(k => catName(k)) } : { type: 'text', text: `🎯 ${T().picks(G.players[G.pickInfo.who].name)}` };
   if (!q) return { type: 'text', text: es ? `¡Listo, ${pl.name}! Mira la pantalla grande.` : `Ready, ${pl.name}! Watch the big screen.` };
+  if (q.kind === 'num') {
+    if (G.phase === 'nguess' && G.ni === i) { const s = q.step; return { type: 'choices', question: `${q.q}  →  ${G.typed || fmtNum(G.numVal)} ${q.unit}`, choices: [`−${fmtNum(s * 10)}`, `−${fmtNum(s)}`, `+${fmtNum(s)}`, `+${fmtNum(s * 10)}`, `🔒 ${T().lock}`] }; }
+    if (G.revealed) return { type: 'text', text: `✅ ${fmtNum(q.ans)} ${q.unit}\n\n${pl.name}: ${pl.score}` };
+    return { type: 'text', text: `${q.q}\n\n${G.phase === 'nguess' ? '🔢 ' + T().guessing(G.players[G.ni].name) : ''}${G.guesses[i] != null ? `\n${T().yourGuess}: ${fmtNum(G.guesses[i])}` : ''}` };
+  }
   if (G.phase === 'buzz' || G.phase === 'steal') return G.tried.has(i) ? { type: 'text', text: es ? 'Espera la próxima…' : 'Wait for the next one…' } : { type: 'buzzer', label: T().buzz, question: q.q, choices: q.ch, out: G.out };
   if (G.phase === 'answer') return G.buzzer === i ? { type: 'choices', question: q.q, choices: q.ch, out: G.out } : { type: 'text', text: `🔔 ${G.players[G.buzzer].name}…` };
   if (G.revealed || G.phase === 'result') return { type: 'text', text: `✅ ${q.ch[q.correct]}\n\n${pl.name}: ${pl.score}` };
@@ -673,7 +695,7 @@ function syncPhones() { if (!G || E.net.role !== 'host') return; G.players.forEa
 E.net.on('msg', (p, m) => {
   if (!G || G.paused || !p) return; const i = G.players.findIndex(x => x.slot === p.slot); if (i < 0) return;
   if (m.t === 'buzz' && (G.phase === 'buzz' || G.phase === 'steal')) buzz(i);
-  else if (m.t === 'choice') { const k = +m.i; if (G.wagerCard && G.wagerCard.i === i) setWager(WAGER_F[k] ?? 0); else if (G.phase === 'fpick' && G.fi === i) finalPick(k); else if (G.phase === 'answer' && G.buzzer === i && !G.out.includes(k)) answer(k); }
+  else if (m.t === 'choice') { const k = +m.i; if (G.wagerCard && G.wagerCard.i === i) setWager(WAGER_F[k] ?? 0); else if (G.phase === 'fpick' && G.fi === i) finalPick(k); else if (G.phase === 'pick' && G.pickInfo.who === i) pickCat(k); else if (G.phase === 'nguess' && G.ni === i) { if (k === 4) numLock(); else numNudge([-10, -1, 1, 10][k] || 0); } else if (G.phase === 'answer' && G.buzzer === i && k < G.cur.ch.length && !G.out.includes(k)) answer(k); }
 });
 E.net.on('join', p => { if (G) { const pl = G.players.find(x => x.slot === p.slot); if (pl) pl.sig = null; } });
 
@@ -710,41 +732,52 @@ function cleanup() { document.querySelectorAll('.tv-card,.tv-bubble').forEach(e 
 function applyLang() {
   const t = document.querySelector('.ig-title'); if (t && !G) { t.remove(); title(); return; }
   if (!G) return;
-  G.deck.qs.forEach(relang); relang(G.deck.fin); SCR.dirty = true; buildBuzzers(); setBuzzers(G.phase === 'buzz' || G.phase === 'steal');
+  G.seq.forEach(e => relang(e.q)); relang(G.deck.fin); SCR.dirty = true; buildBuzzers(); setBuzzers(G.phase === 'buzz' || G.phase === 'steal');
   if (G.phase === 'answer' && G.players[G.buzzer]?.human && !G.auto) showChoices(true, G.buzzer);
+  if (G.phase === 'pick' && !G.pickInfo.done && localTurn(G.pickInfo.who) && !G.auto) showPick();
+  if (G.phase === 'nguess' && localTurn(G.ni) && !G.auto) showNum();
   if (G.phase === 'fpick' && G.fcard) showFinalChoices(G.fi);
 }
 addEventListener('inoa:settings', e => { const v = e.detail && e.detail.settings && e.detail.settings.lang; if (!v) return; const l = v === 'es' ? 'es' : 'en'; if (l === S.lang) return; S.lang = l; save(); applyLang(); });
 addEventListener('storage', e => { if (e.key === 'inoa.profile' && profLang() !== S.lang) { S.lang = profLang(); applyLang(); } });
 
 /* ======================= title ======================= */
+let titleMode = null; // 'daily' while the daily button is picked (never saved as the default show)
 function title() {
   cleanup(); if (G) G = null; $('tvScores').hidden = true; if (hudEl) document.querySelector('.ig-top').hidden = true; if (music) music.stop(); music = E.music(E.SONGS.chill); LAY = null; layout(); SCR.dirty = true;
-  const L = S.lang === 'es';
-  const extra = `<div><p class="ig-sub" style="margin-bottom:6px">${L ? 'Idioma' : 'Language'}</p><div class="pk" id="pL"><button data-l="en" class="${!L ? 'on' : ''}">🇬🇧 English</button><button data-l="es" class="${L ? 'on' : ''}">🇪🇸 Español</button></div></div>
-  <div><p class="ig-sub" style="margin-bottom:6px">${L ? 'Jugadores en este aparato' : 'Players on this device'}</p><div class="pk" id="pH">${[1, 2, 3, 4].map(n => `<button data-n="${n}" class="${n === S.humans ? 'on' : ''}">${n === 1 ? '🙂 Solo' : '👥 ' + n}<small>${n === 1 ? (L ? 'contra 3 bots' : 'vs 3 bots') : (L ? 'teclas ' : 'keys ') + KEYN.slice(0, n).join(' ')}</small></button>`).join('')}</div></div>
-  <div id="pN" ${S.humans > 1 ? '' : 'hidden'}><div class="names">${[0, 1, 2, 3].map(i => `<input data-i="${i}" maxlength="10" value="${esc(S.names[i])}" style="border-left:6px solid ${PCSS[i]}" ${i < S.humans ? '' : 'hidden'} aria-label="${T().player} ${i + 1}">`).join('')}</div><div class="pk" style="margin-top:6px"><button id="pB" class="${S.bots ? 'on' : ''}">🤖 ${L ? 'Llenar con bots' : 'Fill empty podiums with bots'}</button></div></div>
-  <div class="pk"><button id="pK" class="${S.kids ? 'on' : ''}">🧸 ${T().kids}<small>${L ? 'preguntas fáciles, más tiempo, sin restar' : 'easy questions, more time, no minus points'}</small></button></div>`;
-  const how = L ? [['🔔', 'Pulsa tu botón: J1 A · J2 L · J3 Z · J4 M, un control cada uno, o toca tu botón de color'], ['1️⃣', 'Responde con 1–4 o tocando la opción. ¡Si fallas, los demás pueden robar!'], ['🎲', 'Ronda final: apuesta tus puntos y responde en secreto']] : [['🔔', 'Buzz: P1 A · P2 L · P3 Z · P4 M, one gamepad each, or tap your colored buzzer'], ['1️⃣', 'Answer with 1–4 or tap a choice. Miss it and the others can steal!'], ['🎲', 'Final round: wager your points and answer in secret']];
+  const L = S.lang === 'es', mode = titleMode || S.show, D = E.store.get('inoa.trivia.daily', {}), playedToday = D.last === today();
+  const dailySub = playedToday ? `✓ ${D.right}/10${D.streak > 1 ? ' · 🔥' + D.streak : ''}` : D.streak && D.last ? (L ? 'nuevo hoy · 🔥' : 'new today · 🔥') + D.streak : (L ? '¡nuevo cada día!' : 'new every day!');
+  const SK = { easy: ['🐢', L ? 'Fáciles' : 'Easy'], normal: ['🙂', 'Normal'], hard: ['🔥', L ? 'Difíciles' : 'Hard'] };
+  const extra = `<div class="pk" id="pL"><button data-l="en" class="${!L ? 'on' : ''}">🇬🇧 English</button><button data-l="es" class="${L ? 'on' : ''}">🇪🇸 Español</button></div>
+  <div><p class="ig-sub" style="margin-bottom:6px">${L ? 'Programa' : 'Show'}</p><div class="pk" id="pS"><button data-s="full" class="${mode === 'full' ? 'on' : ''}">🎪 ${L ? 'Gran show' : 'Full show'}<small>${L ? '4 rondas + Todo o nada' : '4 rounds + All In'}</small></button><button data-s="classic" class="${mode === 'classic' ? 'on' : ''}">🔔 ${L ? 'Clásico' : 'Classic'}<small>${L ? '8 preguntas + final' : '8 buzz-ins + final'}</small></button><button data-s="daily" class="${mode === 'daily' ? 'on' : ''}">📅 ${T().daily}<small>${dailySub}</small></button></div></div>
+  <div id="pP" ${mode === 'daily' ? 'hidden' : ''}><p class="ig-sub" style="margin-bottom:6px">${L ? 'Jugadores en este aparato' : 'Players on this device'}</p><div class="pk" id="pH">${[1, 2, 3, 4].map(n => `<button data-n="${n}" class="${n === S.humans ? 'on' : ''}">${n === 1 ? '🙂 Solo' : '👥 ' + n}<small>${n === 1 ? (L ? 'contra 3 bots' : 'vs 3 bots') : (L ? 'teclas ' : 'keys ') + KEYN.slice(0, n).join(' ')}</small></button>`).join('')}</div>
+  <div id="pN" ${S.humans > 1 ? '' : 'hidden'} style="margin-top:6px"><div class="names">${[0, 1, 2, 3].map(i => `<input data-i="${i}" maxlength="10" value="${esc(S.names[i])}" style="border-left:6px solid ${PCSS[i]}" ${i < S.humans ? '' : 'hidden'} aria-label="${T().player} ${i + 1}">`).join('')}</div><div class="pk" style="margin-top:6px"><button id="pB" class="${S.bots ? 'on' : ''}">🤖 ${L ? 'Llenar con bots' : 'Fill empty podiums with bots'}</button></div></div></div>
+  <div class="pk"><button id="pK" class="${S.kids ? 'on' : ''}">🧸 ${T().kids}<small>${L ? 'fáciles, más tiempo, sin restar' : 'easy, more time, no minus'}</small></button><button id="pSk" ${mode === 'daily' ? 'hidden' : ''}>${SK[S.botSkill][0]} Bots: ${SK[S.botSkill][1]}<small>${L ? 'toca para cambiar' : 'tap to change'}</small></button></div>`;
+  const how = L ? [['🔔', 'Pulsa tu botón: J1 A · J2 L · J3 Z · J4 M, un control cada uno, o toca tu botón de color. Responde con 1–4.'], ['🎪', 'Gran show: a pulsar, relámpago de verdadero o falso, tú eliges la categoría y el número más cercano'], ['🎲', 'Ronda final: apuesta tus puntos y responde en secreto']] : [['🔔', 'Buzz: P1 A · P2 L · P3 Z · P4 M, one gamepad each, or tap your colored buzzer. Answer with 1–4.'], ['🎪', 'Full show: buzz-in, lightning true or false, your pick and closest number'], ['🎲', 'Final round: wager your points and answer in secret']];
+  const ST = E.store.get(STATS_KEY, {}), stCats = Object.keys(CATS).filter(k => ST[k] && ST[k][0]).sort((a, b) => ST[b][0] - ST[a][0]);
+  const stats = stCats.length ? `<div class="tv-stats"><p class="ig-sub" style="margin:0 0 4px">📊 ${L ? 'Tus categorías' : 'Your categories'}</p><div>${stCats.map(k => { const [n, ok] = ST[k], pc = Math.round(ok / n * 100); return `<span title="${esc(catName(k))}: ${ok}/${n}" style="--c:${CATS[k][3]}"><i style="width:${pc}%"></i>${CATS[k][0]} ${pc}%</span>`; }).join('')}</div></div>` : '';
   const nPh = E.net.role === 'host' ? E.net.pads().length : 0;
   const PARTY = { label: L ? 'Jugar con teléfonos' : 'Play with phones', hint: L ? 'Cada teléfono es un jugador (hasta 4): pulsa y responde en tu teléfono, en secreto.' : 'Each phone is a player (up to 4): buzz and answer on your phone, in secret.', online: { page: 'pad.html', text: L ? 'Amigos lejos: abran este enlace; las preguntas salen en su teléfono.' : 'Friends far away: open this link; the questions show on your phone.' } };
   const phoneLine = `<p class="ig-sub" id="tvPhones" style="margin:0;font-weight:800;color:#0f5c48">${nPh ? `📱 ${nPh} ${L ? 'teléfonos conectados: cada uno es un jugador' : 'phones connected: each phone is a player'}` : ''}</p>`;
-  const d = E.titleScreen({ party: PARTY, title: 'Pact Trivia', kicker: L ? 'Inoa Games · Concurso' : 'Inoa Games · Game show', lead: L ? 'Un concurso de preguntas para 1–4 jugadores en el mismo aparato. Cada pregunta se lee en voz alta.' : 'A family quiz show for 1–4 players on one device. Every question is read aloud.', how, extra: extra + phoneLine, onPlay: () => { save(); start(); } });
+  const d = E.titleScreen({ party: PARTY, title: 'Pact Trivia', kicker: L ? 'Inoa Games · Concurso' : 'Inoa Games · Game show', lead: L ? `Un concurso de preguntas para 1–4 jugadores. ${MC.length + TF.length + NUM.length} preguntas en 11 categorías, todas leídas en voz alta.` : `A family quiz show for 1–4 players. ${MC.length + TF.length + NUM.length} questions in 11 categories, every one read aloud.`, how, extra: stats + extra + phoneLine, onPlay: () => { save(); start({ mode: titleMode || S.show }); } });
   const upd = () => { const el = document.getElementById('tvPhones'); if (!el) return; const n = E.net.role === 'host' ? E.net.pads().length : 0; el.textContent = n ? `📱 ${n} ${L ? 'teléfonos conectados: cada uno es un jugador' : 'phones connected: each phone is a player'}` : ''; }; E.net.on('change', upd);
   wideTitle(d);
   d.querySelectorAll('#pL button').forEach(b => b.onclick = () => { SFX.click(); setLang(b.dataset.l); if (document.body.contains(d)) { d.remove(); title(); } });
+  d.querySelectorAll('#pS button').forEach(b => b.onclick = () => { SFX.click(); const s = b.dataset.s; if (s === 'daily') titleMode = 'daily'; else { titleMode = null; S.show = s; save(); } d.querySelectorAll('#pS button').forEach(x => x.classList.toggle('on', x === b)); $('pP').hidden = $('pSk').hidden = s === 'daily'; if (s === 'daily') E.say(ROUNDS.daily.rule[S.lang], { lang: S.lang }); });
   d.querySelectorAll('#pH button').forEach(b => b.onclick = () => { S.humans = +b.dataset.n; d.querySelectorAll('#pH button').forEach(x => x.classList.toggle('on', x === b)); $('pN').hidden = S.humans < 2; d.querySelectorAll('.names input').forEach(inp => inp.hidden = +inp.dataset.i >= S.humans); SFX.click(); });
   d.querySelectorAll('.names input').forEach(inp => { inp.addEventListener('input', () => { S.names[+inp.dataset.i] = inp.value.trim() || `P${+inp.dataset.i + 1}`; }); inp.addEventListener('keydown', e => e.stopPropagation()); });
   $('pB').onclick = () => { S.bots = !S.bots; $('pB').classList.toggle('on', S.bots); };
-  $('pK').onclick = () => { S.kids = !S.kids; $('pK').classList.toggle('on', S.kids); };
-  E.say(L ? 'Pact Trivia. Elige jugadores y toca jugar.' : 'Pact Trivia. Choose players and press play.', { lang: S.lang });
+  const skBtn = () => { const k = SK[S.botSkill]; $('pSk').innerHTML = `${k[0]} Bots: ${k[1]}<small>${L ? 'toca para cambiar' : 'tap to change'}</small>`; };
+  $('pK').onclick = () => { S.kids = !S.kids; $('pK').classList.toggle('on', S.kids); if (S.kids && S.botSkill !== 'easy') { S.botSkill = 'easy'; skBtn(); } save(); };
+  $('pSk').onclick = () => { const o = ['easy', 'normal', 'hard']; S.botSkill = o[(o.indexOf(S.botSkill) + 1) % 3]; skBtn(); SFX.click(); save(); };
+  E.say(L ? 'Pact Trivia. Elige un programa y toca jugar.' : 'Pact Trivia. Pick a show and press play.', { lang: S.lang });
 }
-function wideTitle(d) { const card = d.querySelector('.ig-card'); card.classList.add('ttl-scroll', 'tt-wide'); const kids = [...card.children]; const L = document.createElement('div'), Rr = document.createElement('div'); L.className = Rr.className = 'tt-col'; kids.forEach(k => (k.matches('.ig-kicker,h1,.ig-sub,.ig-how') ? L : Rr).appendChild(k)); card.append(L, Rr); }
+function wideTitle(d) { const card = d.querySelector('.ig-card'); card.classList.add('ttl-scroll', 'tt-wide'); const kids = [...card.children]; const L = document.createElement('div'), Rr = document.createElement('div'); L.className = Rr.className = 'tt-col'; kids.forEach(k => (k.matches('.ig-kicker,h1,.ig-sub,.ig-how,.tv-stats') ? L : Rr).appendChild(k)); card.append(L, Rr); }
 
 // idle preview: everyone on stage
 G = null; LAY = null; layout(); podiums.forEach((pd, i) => { pd.grp.visible = true; });
 title(); if (new URLSearchParams(location.search).get('online')) setTimeout(() => document.querySelector('[data-a=phones]')?.click(), 300); ld.done(); window.__READY = true;
 E.loop((dt) => { if (!window.__HOLD) update(dt); R.render(dt); });
-window.__GAME = { get G() { return G; }, get resultsCount() { return resultsCount; }, S, Q, setLang, start, update, buzz, answer, title, warm: () => { R.render(1 / 60); R.renderer.getContext().finish(); }, setAuto: v => { window.__AUTO = v; if (G) G.auto = v; } };
+window.__GAME = { get G() { return G; }, get resultsCount() { return resultsCount; }, S, Q: MC, TF, NUM, CATS, BANK, SKILL, botKnows, buildShow, today, setLang, start, update, buzz, answer, title, pickCat, numNudge, numType, numLock, setWager, warm: () => { R.render(1 / 60); R.renderer.getContext().finish(); }, setAuto: v => { window.__AUTO = v; if (G) G.auto = v; } };
 </script>
 </body></html>
