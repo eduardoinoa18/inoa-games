@@ -2607,7 +2607,7 @@ function drawPlayerOne(p, t) {
     ctx.fillStyle = rgba('#fff6d8', .12 * a); ctx.fill();
   }
   if (p.meter >= 100 && !p.dead) glow(ctx, p.x + 10, p.y + 20, 30 + Math.sin(t * 8) * 4, h.c.glow, .25);
-  if (players.length > 1 && !p.dead) { ctx.font = `800 8px ${FD}`; ctx.textAlign = 'center'; ctx.fillStyle = OUTLINE; ctx.fillText(p.bot ? 'BOT' : 'P' + (p.idx + 1), p.x + 11, p.y - 7); ctx.fillStyle = p.col; ctx.fillText(p.bot ? 'BOT' : 'P' + (p.idx + 1), p.x + 10, p.y - 8); ctx.textAlign = 'left'; }
+  if (players.length > 1 && !p.dead && !G.noHud) { ctx.font = `800 8px ${FD}`; ctx.textAlign = 'center'; ctx.fillStyle = OUTLINE; ctx.fillText(p.bot ? 'BOT' : 'P' + (p.idx + 1), p.x + 11, p.y - 7); ctx.fillStyle = p.col; ctx.fillText(p.bot ? 'BOT' : 'P' + (p.idx + 1), p.x + 10, p.y - 8); ctx.textAlign = 'left'; }
   if (G.mode === 'match' && p.launch && p.hurtT > 0 && G.frame % 2 === 0) burst(p.x + 10, p.y + 20, 2, [p.col, '#ffffff'], 1, 14, { add: true, type: 'spark', g: 0 });
   if (p.launch && p.hurtT === 0) p.launch = 0;
 }
@@ -2813,7 +2813,7 @@ function drawPlay() {
   drawWorld(left, top, z, G.t);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   drawOverlays();
-  if (G.scene === 'play' || G.scene === 'pause') drawHUD();
+  if ((G.scene === 'play' || G.scene === 'pause') && !G.noHud) drawHUD();
 }
 function drawTitle() {
   G.theme = THEMES.beach;
@@ -3217,7 +3217,7 @@ function boot() {
   requestAnimationFrame(t => { last = t; loop(t); });
   // headless test hooks (test/pixelpact.js): drive the fixed-step sim without real-time waits
   window.__GAME = { G, levels: LEVELS, stages: STAGES, heroes: HEROES, progress, get players() { return players; }, get lobby() { return lobby; }, get ents() { return ents; }, get boss() { return boss; }, get arena() { return arena; }, get mapW() { return MW * TS; },
-    start(mode, level = 0, o = {}) { G.mode = mode; G.level = level; if (o.stage != null) G.stage = o.stage; if (o.mode) settings.mmode = o.mode; if (o.hero != null) settings.heroes[0] = o.hero; lobby.slots = []; openLobby(); if (mode === 'match') { while (lobby.slots.length < 1 + (o.bots || 1)) addBot(); } startPlay(); },
+    start(mode, level = 0, o = {}) { G.mode = mode; G.level = level; if (o.stage != null) G.stage = o.stage; if (o.mode) settings.mmode = o.mode; if (o.hero != null) settings.heroes[0] = o.hero; lobby.slots = []; openLobby(); if (mode === 'match' || o.bots) { while (lobby.slots.length < 1 + (o.bots || 1)) addBot(); } startPlay(); },
     openMap() { openPicks('adventure'); }, loopStep(n = 1) { for (let i = 0; i < n; i++) { if (G.scene === 'play') { pollPlayers(); pollDropIn(); } step(); } }, down(i) { const pl = players[i]; if (pl) { pl.hp = 0; downPlayer(pl); } }, force(i, key) { const pl = players[i]; if (pl) { pl.force = key; if (key === 'ult') pl.meter = 100; } }, update(n = 1) { for (let i = 0; i < n; i++) { if (G.scene === 'play') pollPlayers(); step(); } if (G.world) drawPlay(); }, results: showResults };
   window.__ppTr = tr; window.__READY = true;
 }
