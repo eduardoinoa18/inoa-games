@@ -520,3 +520,77 @@ One game agent re-audited and extended Fail Tray (`games/tray.html`). Tested wit
 - The bot is deterministic, so the hot-seat test ends in a tie (the tie-break is shown).
 - No separate-screen online mode (phones as controllers work as before).
 
+
+## Draw the Pact elevation pass (2026-10-16)
+Files: `games/draw.html`, new `games/draw-words.js`, `test/draw.js`, `thumbs/draw.jpg`, hub copy (`hub-src/hub.js`, `hub-src/extras.js`). Engine unchanged.
+Tests: `PORT=8891 node test/run.js draw test/draw.js` (120 checks) and `W=390 H=844 PORT=8892 …` both end `DRAW_CHECKS_PASSED`, `NO_ERRORS`. `PORT=8893 SIG=9893 node test/party.js test/party_games.js` passes (the drawer's phone shows the word, the other phone guesses, scores update). The test now skips rendering between screenshots (`window.__NORENDER`), so it runs well under the 10-minute tool limit (it used to take 7.5 minutes with fewer checks).
+
+**Words**
+- **704 family-friendly EN/ES pairs** (was 366), moved to `games/draw-words.js`. Each word has a difficulty (218 easy, 264 medium, 222 hard) and one of 15 categories: animals 80, food 70, objects 72, actions 62, nature 61, places 56, ideas 56, home 48, jobs 38, vehicles 34, fantasy 34, sports 27, clothes 25, body 22, music 19. Easy words are concrete things a child can draw.
+- No brands. Dropped: "wifi", "password", "fish (verb)", "spring (season)". "Popsicle" became "ice pop". Every English word and every Spanish word is unique, so two answer options never read the same; the test checks this.
+- **No repeats**: words used this game are excluded. The last 400 words drawn on this device (`inoa.draw.recent`) are skipped too. When a pool runs out, the least recently used words come back first.
+- **Category picker** on the title (🎲 all, or one of 15), on top of the difficulty choice.
+- Phone guess options are the answer plus 2 words from the same category and 1 from another, so the drawing has to decide.
+
+**Bugs fixed**
+- **Stale HUD**: Speed Sketch showed the previous mode's chips (party scores, "📞 4/4"). Every mode now sets its own HUD. Test: `sketch: HUD shows the sketch counter`.
+- **Undo noise**: undo matched the old canvas only within ~16 px of anti-aliasing noise. The paper is now a CPU canvas (`willReadFrequently`), and the "everything but the last op" snapshot is cached, so undo restores exactly: 0 px differ (`pixels off after undo: 0`). A fill also costs at most one replay.
+- **Gamepad focus could land under the title's sticky Play row**: D-pad left from Play jumped to a hidden "1×" button. Buttons covered by another element are now skipped.
+- **Palm rejection** (new):
+  - a touch within 1.5 s of the pen is ignored
+  - a contact patch larger than 50×50 px is ignored
+  - a palm line that started just before the pen lands is dropped
+  - a second finger never draws a stray line
+  - Tests use synthetic `PointerEvent`s.
+- **Time-based points were unfair with other round lengths**: the old 40 s / 20 s thresholds assumed 60 s rounds. Points now use the share of time left (more than ⅔ left = 3, more than ⅓ = 2, else 1).
+- A tap with a shape tool no longer adds an empty op. `autoDraw` (demo/tests) no longer changes the player's colour and size.
+- The hub tile doodle listed a real person's name as a guess; it now says "a hat!".
+
+**Added**
+- **Drawing tools**:
+  - fill bucket: scanline flood, grown 1 px so no pale halo is left; undo/redo are exact
+  - shapes: tap the shapes tool again to cycle line → rectangle → oval
+  - 6 stickers drawn from simple original shapes (star, heart, smiley, flower, cloud, bolt): tap to stamp, drag to size, in the current colour
+  - redo (↷, Y, Ctrl+Y / Ctrl+Shift+Z)
+  - two-finger tap = undo
+  - keys: D pencil, F fill, S shapes, T stickers; R3 on a gamepad cycles the tool
+- **Teams mode** (4–8 players, alternating Team Sun / Team Wave):
+  - the drawer's team guesses ("✓ Our team got it!")
+  - when time runs out, the other team gets one guess to steal +1
+  - team board and results show the best drawer
+- **Hints** (on by default): the guessers see the category icon and letter blanks. One letter shows at half time, up to a third of the letters at ¾ time, with a soft chime.
+- **Round options**: 45 / 60 / 90 s, 1–3 rounds.
+- **Daily doodle**:
+  - one prompt per calendar day, the same on every device (date hash over easy/medium nouns)
+  - 120 s, relaxed
+  - saved to a local daily gallery (last 30 days) with a 🔥 streak; drawing again the same day replaces that day's doodle
+- **Guess the doodle** (solo or a couch shouting together; 35 original line-art doodles generated in code):
+  - the pencil draws by itself
+  - pick from 4 answers before it finishes: 3 / 2 / 1 points by speed, 1 after a wrong try
+  - wrong answers are crossed out (forgiving)
+  - 8 per round, with a best-streak count
+  - answer with touch, keys 1–4, arrows + Enter, or D-pad + A
+- **Gallery viewer** (title → 🖼️ Gallery):
+  - Speed Sketch and Daily tabs, view and remove items
+  - **share card**: a 1080×1350 PNG with a framed drawing, the word and the date, handed to the system share sheet, or downloaded where sharing is not available
+  - nothing leaves the device unless the player shares it
+  - daily doodles also hang on the 3D gallery wall
+- **Celebration**: on a correct guess, DOM confetti (off with reduced motion), 3D confetti, a 🎉 name banner, an arpeggio, and the name and word read aloud. The timer ring pulses in the last 10 s.
+- **Title**:
+  - 6 modes, each with a one-line description; choosing a mode says its name aloud
+  - Round and Words rows show only for the modes that use them
+  - the title backdrop shows a finished picture made with the new tools
+- **Easel art** is lit slightly (emissive map) so drawings read clearly in the 3D room.
+- New tile art (`thumbs/draw.jpg`); hub copy updated in EN/ES.
+
+**Screenshots reviewed** (portrait adds `_p`):
+- landscape and portrait: `draw_title`, `draw_peek`, `draw_drawing` (hint blanks), `draw_reveal`, `draw_team_draw`, `draw_team_steal`, `draw_team_results`, `draw_sketch`, `draw_daily`, `draw_gallery_view`, `draw_gallery_item`, `draw_sharecard`, `draw_doodle`, `draw_doodle_right`, `draw_tools`, `draw_pointer_tools`, `draw_rotated_draw`, `draw_es_title`, `draw_es_doodle`, `draw_gp_draw`
+- all 35 doodles on one contact sheet (the apple, cat mouth, tree trunk and flower leaf were redrawn after review)
+
+**Still open**
+- Real stylus hardware (iPad + Pencil, Android pen) and real palm contact sizes are unverified; the tests use synthetic events.
+- Telephone descriptions still need typing, so a gamepad-only player can't fill them in.
+- Teams and Guess the doodle don't use phones: Party is still the only phone mode, unchanged.
+- The ES word list should get a native read-through for regional variants (carro/coche, papa/patata, maní/cacahuate).
+- At 844×390 landscape the tools panel scrolls a little when a mode has two action buttons.
+- The daily prompt sequence follows the word list order, so editing `draw-words.js` reshuffles future days.
