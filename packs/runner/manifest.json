@@ -25,11 +25,27 @@
   "house1": "models/house1.glb?h=c7610680",
   "boat-small": "models/boat-small.glb?h=95a1addc",
   "ship-light": "models/ship-light.glb?h=701cb38e",
-  "chest": "models/chest.glb?h=3cd5506f"
+  "chest": "models/chest.glb?h=3cd5506f",
+  "delivery-truck": "models/delivery-truck.glb?h=77d10630",
+  "truck": "models/truck.glb?h=0ec2e428",
+  "fish": "models/fish.glb?h=54b308d3",
+  "ship-wreck": "models/ship-wreck.glb?h=9a846824",
+  "watermelon": "models/watermelon.glb?h=80552c56",
+  "pineapple": "models/pineapple.glb?h=c21b55cc",
+  "coconut": "models/coconut.glb?h=12d8a615",
+  "banana": "models/banana.glb?h=44ecd745",
+  "orange": "models/orange.glb?h=07318ad9",
+  "lollypop": "models/lollypop.glb?h=efaec397",
+  "mussel": "models/mussel.glb?h=4a4c1cba",
+  "formation-large-rock": "models/formation-large-rock.glb?h=1f0f1b0e",
+  "formation-large-stone": "models/formation-large-stone.glb?h=637216f4",
+  "ferris-wheel": "models/ferris-wheel.glb?h=154929f1",
+  "ice-cream-cone": "models/ice-cream-cone.glb?h=c52e540b",
+  "ship-dark": "models/ship-dark.glb?h=e5230eab"
  },
  "hdri": {
   "sunset": "hdri/sunset.hdr?h=0c90676a"
  },
  "lazy": [],
- "bytes": 1435407
+ "bytes": 1902707
 }
