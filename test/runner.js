@@ -123,7 +123,7 @@ module.exports = async (p, shot) => {
   check(!half.owned && /Buy/.test(half.label) && shop.owned && shop.trail === 'stars' && shop.jar === 3000, `shop: confirm then buy Stardust (${half.label} → ${JSON.stringify(shop)})`);
   await p.waitForTimeout(200); await S('shop');
 
-  if (process.env.RUNNER_THUMB) { await p.evaluate(() => { const g = window.__GAME; document.querySelectorAll('.ig-screen').forEach(d => d.remove()); g.S.trail = 'rainbow'; g.startRun(); g.auto = true; }); await sim(1.5); await p.evaluate(() => { const g = window.__GAME; g.warp(3 * g.ZL + 60); g.G.invT = 0; g.G.pw.magnet = 9; }); await sim(2.4); await p.evaluate(() => { document.querySelectorAll('.ig-top,.ig-pad,.rn-pw,.rn-ghost,.ig-toast,.ig-big,.rn-hint,.rn-mis,.inoa-pw,.ig-party').forEach(e => e.style.visibility = 'hidden'); }); await p.waitForTimeout(300); await S('thumb'); }
+  if (process.env.RUNNER_THUMB) { await p.evaluate(() => { const g = window.__GAME; document.querySelectorAll('.ig-screen').forEach(d => d.remove()); g.S.trail = 'rainbow'; g.startRun(); g.auto = true; }); await sim(1.5); await p.evaluate(() => { const g = window.__GAME; g.warp(3 * g.ZL + 60); g.G.invT = 0; g.G.pw.magnet = 9; }); await sim(2.4); await p.evaluate(() => { document.querySelectorAll('.ig-top,.ig-pad,.rn-pw,.rn-ghost,.ig-toast,.ig-big,.rn-hint,.rn-mis,.inoa-party').forEach(e => e.style.visibility = 'hidden'); }); await p.waitForTimeout(300); await S('thumb'); }
 
   console.log(fails.length ? `FAILED ${fails.length}: ${fails.join(' | ')}` : 'ALL CHECKS PASSED');
 };

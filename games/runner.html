@@ -395,8 +395,8 @@ const DRESS = {
     const booths = instSet(bake(boothGroup(BC[c.idx % 4])), 3); g.add(booths);
     const palms = palmSet(3); g.add(palms);
     // string lights hanging between the lantern posts on both sides
-    const bulbs = []; for (const s of [-1, 1]) for (let seg = 0; seg < 2; seg++) for (let i = 0; i < 12; i++) { const u = i / 11; bulbs.push([s * (BW / 2 + .5), 2.5 - Math.sin(u * Math.PI) * .55, -6 - seg * 18 + (seg === 0 ? -u * 18 : -u * 18), .1, .1, .1]); }
-    const bl = inst(new THREE.SphereGeometry(1, 8, 6), bulbMat, bulbs, [0xffd166, 0xff6b9b, 0x7fd8ff, 0xb48cff, 0x8cffb0]); bl.frustumCulled = true; g.add(bl);
+    const bulbs = []; for (const s of [-1, 1]) for (let seg = 0; seg < 2; seg++) for (let i = 0; i < 12; i++) { const u = i / 11; bulbs.push([s * (BW / 2 + .5), 2.42 - Math.sin(u * Math.PI) * .12, -6 - seg * 18 + (seg === 0 ? -u * 18 : -u * 18), .1, .1, .1]); }
+    const bl = inst(new THREE.SphereGeometry(1, 8, 6), bulbMat, bulbs, [0xffd166, 0xff6b9b, 0x7fd8ff, 0xb48cff, 0x8cffb0]); bl.frustumCulled = true; g.add(bl); g.add(inst(new THREE.BoxGeometry(.025, .025, 18.4), E.mat(0x1b1d2e), [-1, 1].flatMap(s => [0, 1].map(seg => [s * (BW / 2 + .5), 2.5, -15 - seg * 18]))));
     const boats = [MI('boat-small', { scale: 4 })]; boats.forEach(b => g.add(b));
     return { g, place(r, k) {
       wheel.visible = k % 3 === 0; wheel.position.set(BW / 2 + 26 + r() * 6, -.3, -CH / 2);
