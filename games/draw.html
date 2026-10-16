@@ -552,16 +552,16 @@ const PI = Math.PI;
 const DOODLES = {
   sun: () => [circ(.5, .5, .13), ...[...Array(8)].map((_, i) => { const a = i * PI / 4; return ln([.5 + Math.cos(a) * .18, .5 + Math.sin(a) * .18 * Q], [.5 + Math.cos(a) * .26, .5 + Math.sin(a) * .26 * Q]); })],
   house: () => [ln([.3, .82], [.3, .5], [.7, .5], [.7, .82], [.3, .82]), ln([.25, .52], [.5, .22], [.75, .52]), ln([.45, .82], [.45, .66], [.55, .66], [.55, .82]), ln([.35, .57], [.42, .57], [.42, .65], [.35, .65], [.35, .57]), ln([.58, .57], [.65, .57], [.65, .65], [.58, .65], [.58, .57])],
-  tree: () => [ln([.46, .88], [.46, .62]), ln([.54, .88], [.54, .62]), arc(.5, .42, .17, .24), ln([.5, .62], [.44, .5])],
-  cat: () => [circ(.5, .56, .15), ln([.39, .44], [.4, .24], [.47, .37]), ln([.53, .37], [.6, .24], [.61, .44]), circ(.44, .52, .016), circ(.56, .52, .016), ln([.47, .64], [.5, .61], [.53, .64]), ln([.43, .61], [.3, .58]), ln([.43, .64], [.3, .67]), ln([.57, .61], [.7, .58]), ln([.57, .64], [.7, .67])],
+  tree: () => [ln([.46, .88], [.46, .655]), ln([.54, .88], [.54, .655]), arc(.5, .42, .17, .24), ln([.36, .9], [.64, .9])],
+  cat: () => [circ(.5, .56, .15), ln([.39, .44], [.4, .24], [.47, .37]), ln([.53, .37], [.6, .24], [.61, .44]), circ(.44, .52, .016), circ(.56, .52, .016), ln([.48, .585], [.52, .585], [.5, .61], [.48, .585]), ln([.46, .63], [.48, .655], [.5, .63], [.52, .655], [.54, .63]), ln([.43, .61], [.3, .58]), ln([.43, .64], [.3, .67]), ln([.57, .61], [.7, .58]), ln([.57, .64], [.7, .67])],
   fish: () => [arc(.46, .5, .2, .17), ln([.65, .5], [.8, .35], [.8, .65], [.65, .5]), circ(.35, .46, .016), arc(.28, .53, .03, .025, -.5 * PI, .5 * PI), ln([.46, .33], [.54, .25], [.56, .35])],
   star: () => [starPts(.5, .53, .26)],
   heart: () => { const o = []; for (let i = 0; i <= 60; i++) { const t = i / 60 * PI * 2; o.push([.5 + 16 * Math.sin(t) ** 3 * .016, .5 - (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) * .016 * Q]); } return [o]; },
   moon: () => [arc(.52, .5, .2, .3, .5 * PI, 1.5 * PI), arc(.52, .5, .07, .3, 1.5 * PI, .5 * PI), starPts(.72, .3, .04), starPts(.66, .66, .03)],
   car: () => [ln([.18, .66], [.18, .52], [.31, .5], [.4, .37], [.62, .37], [.71, .5], [.83, .52], [.83, .66], [.18, .66]), circ(.33, .67, .06), circ(.68, .67, .06), ln([.42, .41], [.5, .41], [.5, .5], [.36, .5], [.42, .41]), ln([.54, .41], [.61, .41], [.66, .5], [.54, .5], [.54, .41])],
   boat: () => [ln([.2, .6], [.8, .6], [.68, .74], [.32, .74], [.2, .6]), ln([.5, .6], [.5, .18]), ln([.5, .2], [.72, .55], [.5, .55]), wavy(.1, .82, .9, .82, .015, 4)],
-  flower: () => [ln([.5, .9], [.5, .5]), arc(.57, .72, .07, .04, PI, 2 * PI), arc(.57, .72, .07, .04, 0, PI), ...[...Array(6)].map((_, i) => { const a = i * PI / 3; return circ(.5 + Math.cos(a) * .09, .36 + Math.sin(a) * .09 * Q, .055); }), circ(.5, .36, .045)],
-  apple: () => [arc(.44, .57, .13, .27, .45 * PI, 1.6 * PI), arc(.56, .57, .13, .27, 1.4 * PI, 2.55 * PI), ln([.5, .33], [.52, .2]), arc(.58, .25, .06, .03, PI, 2 * PI), arc(.58, .25, .06, .03, 0, PI)],
+  flower: () => [ln([.5, .9], [.5, .5]), ln([.5, .74], [.57, .66], [.63, .67], [.58, .74], [.5, .74]), ...[...Array(6)].map((_, i) => { const a = i * PI / 3; return circ(.5 + Math.cos(a) * .09, .36 + Math.sin(a) * .09 * Q, .055); }), circ(.5, .36, .045)],
+  apple: () => { const o = []; for (let i = 0; i <= 64; i++) { const t = i / 64 * PI * 2, m = Math.min(t, PI * 2 - t); o.push([.5 + .17 * Math.sin(t), .57 - .2 * Math.cos(t) + .05 * Math.cos(2 * t) + .06 * Math.exp(-m * m * 5)]); } return [o, ln([.5, .42], [.53, .26]), arc(.6, .3, .06, .03, PI, 2 * PI), arc(.6, .3, .06, .03, 0, PI)]; },
   balloon: () => [arc(.5, .38, .14, .22), ln([.47, .63], [.5, .6], [.53, .63], [.47, .63]), wavy(.5, .63, .5, .92, .02, 2)],
   umbrella: () => [arc(.5, .48, .28, .26, PI, 2 * PI), arc(.315, .48, .093, .05, 0, PI), arc(.5, .48, .093, .05, 0, PI), arc(.685, .48, .093, .05, 0, PI), ln([.5, .22], [.5, .8]), arc(.46, .8, .04, .05, 0, PI)],
   cup: () => [ln([.33, .36], [.37, .76], [.6, .76], [.64, .36]), arc(.485, .36, .155, .04), arc(.65, .54, .07, .11, -.5 * PI, .5 * PI), wavy(.44, .3, .44, .14, .012, 1.5), wavy(.53, .3, .53, .12, .012, 1.5)],
@@ -740,13 +740,13 @@ function celebrate(who) { SFX.win(); confettiBurst(); domConfetti(); big(`🎉 $
 
 /* ======================= auto-draw (tests + demo) ======================= */
 function autoDraw(n = 6) {
-  const seed = Math.random() * 100, tool = D.tool; D.tool = 'pen'; for (let k = 0; k < n; k++) {
+  const seed = Math.random() * 100, tool = D.tool, col = D.color, size = D.size; D.tool = 'pen'; for (let k = 0; k < n; k++) {
     D.color = PAL[(k * 5 + 2) % PAL.length === 1 ? 0 : (k * 5 + 2) % PAL.length]; D.size = k % 3; D.eraser = false;
     const cx = .5 + Math.sin(seed + k * 1.7) * .25, cy = .5 + Math.cos(seed + k * 2.3) * .2, r = .06 + (k % 4) * .04; const kind = k % 3;
     const pts = []; for (let i = 0; i <= 36; i++) { const t = i / 36; let x, y; if (kind === 0) { x = cx + Math.cos(t * 6.3) * r * 1.2; y = cy + Math.sin(t * 6.3) * r; } else if (kind === 1) { x = cx - r * 1.5 + t * r * 3; y = cy + Math.sin(t * 9 + k) * r * .5; } else { x = cx + Math.cos(t * 12) * r * t; y = cy + Math.sin(t * 12) * r * t; } pts.push([clamp(x, .02, .98), clamp(y, .02, .98), .5]); }
     beginStroke(pts[0], false); for (const p of pts.slice(1)) extendStroke(p); endStroke();
   }
-  D.tool = tool; D.dirty = true;
+  D.tool = tool; D.color = col; D.size = size; D.dirty = true;
 }
 // a finished, coloured picture for the tile art / title backdrop: a house on a hill with the new tools
 function demoPicture() {
@@ -812,7 +812,9 @@ const curEl = document.createElement('div'); curEl.className = 'dw-cursor'; $('d
 let navFocus = null;
 const PRIMARY = '[data-a=play],[data-a=resume],[data-a=next],[data-a=go],[data-a=show],[data-a=send],[data-a=again]';
 function activeScreen() { const sl = document.querySelector('.dw-slide'); if (sl) return sl; const sc = [...document.querySelectorAll('.ig-screen')].filter(s => s.getClientRects().length); if (sc.length) return sc[sc.length - 1]; const tl = $('dwTools'); return !$('dw').hidden && tl.classList.contains('guess') ? tl : null; } // guess-the-doodle answers are a menu too
-function focusables(root) { return [...root.querySelectorAll('button, a.ig-btn')].filter(b => !b.disabled && b.getClientRects().length); }
+// buttons hidden under another element (e.g. scrolled beneath the title's sticky Play row) are skipped; off-screen ones stay reachable (they scroll into view)
+function covered(b) { const r = b.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2; if (x < 0 || y < 0 || x > innerWidth || y > innerHeight) return false; const hit = document.elementFromPoint(x, y); return !!hit && hit !== b && !b.contains(hit) && !hit.closest('.dw-conf'); }
+function focusables(root) { return [...root.querySelectorAll('button, a.ig-btn')].filter(b => !b.disabled && b.getClientRects().length && !covered(b)); }
 function setFocus(el) { document.querySelectorAll('.gp-focus').forEach(x => x.classList.remove('gp-focus')); navFocus = el; if (el) { el.classList.add('gp-focus'); try { el.focus({ preventScroll: true }); } catch (e) { } el.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } }
 function curFocus(root) { return navFocus && navFocus.isConnected && root.contains(navFocus) ? navFocus : null; }
 function primaryOf(root) { const list = focusables(root); return list.find(b => b.matches(PRIMARY)) || list[0]; }
