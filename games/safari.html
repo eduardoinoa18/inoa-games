@@ -118,6 +118,9 @@ input[type=text]{font:inherit;font-weight:800;font-size:16px;padding:12px 14px;b
 @media (max-height:640px){.ig-results .ig-card h2{font-size:20px}.ig-results .learn div:nth-child(n+4){display:none}.ig-results .ig-sub{display:none}}
 /* elevation pass: room for the hub chip, notes, profiles, sticker book, toggles, accessibility */
 .screen{padding-top:max(54px,calc(env(safe-area-inset-top) + 46px))}
+/* tall cards scroll from their top (flex centering used to cut the heading off under the hub chip) */
+.screen:not(.rescue){align-items:flex-start}.screen:not(.rescue)>.card{margin-block:auto}
+a.btn{text-decoration:none}
 .note{font-size:13px;font-weight:800;color:#0f5c48;background:#e4f7ef;border-radius:12px;padding:8px 12px;margin:0}
 .row.sticky{position:sticky;bottom:-26px;background:var(--paper);padding:10px 0 12px;margin-bottom:-12px;z-index:2;box-shadow:0 -12px 12px -10px rgba(27,36,48,.18)}
 .profiles{display:flex;gap:8px;flex-wrap:wrap}.chip.prof{min-height:44px}.chip.add{border-style:dashed}
@@ -132,7 +135,7 @@ input[type=text]{font:inherit;font-weight:800;font-size:16px;padding:12px 14px;b
 .stk-b{display:grid;justify-items:center;align-content:start;gap:4px;padding:10px 6px;border-radius:16px;border:2px dashed var(--line);background:#f4efe6;cursor:pointer;font:inherit}
 .stk-b .e{font-size:30px;filter:grayscale(1);opacity:.35}.stk-b small{font-size:11px;font-weight:800;color:#6b7482;text-align:center;line-height:1.2}
 .stk-b.got{border:2px solid var(--sun);background:#fff;box-shadow:0 3px 0 #d9a92e}.stk-b.got .e{filter:none;opacity:1}.stk-b.got small{color:var(--ink)}
-.stk{position:absolute;left:50%;top:24%;transform:translate(-50%,-10px) scale(.9);background:#fff;border:3px solid var(--sun);border-radius:20px;padding:8px 16px;display:flex;gap:10px;align-items:center;box-shadow:0 10px 30px rgba(27,36,48,.2);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:4;max-width:86%}
+.stk{position:fixed;left:50%;top:max(8px,env(safe-area-inset-top));transform:translate(-50%,-10px) scale(.9);background:#fff;border:3px solid var(--sun);border-radius:18px;padding:5px 14px;display:flex;gap:10px;align-items:center;box-shadow:0 10px 30px rgba(27,36,48,.2);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:70;max-width:min(340px,70%)}
 .stk.show{opacity:1;transform:translate(-50%,0) scale(1)}.stk .e{font-size:32px}.stk small{display:block;font-size:11px;font-weight:800;color:#b07f12;text-transform:uppercase;letter-spacing:.06em}.stk b{font-family:var(--f-d);font-size:15px}
 .stkrow span{font-size:20px}
 #scrLevels .card{width:min(860px,100%)}
