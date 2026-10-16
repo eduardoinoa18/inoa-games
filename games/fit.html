@@ -469,7 +469,7 @@ function camFit(bx, lidPts, port, passes = 4) {
 function fitCamera() {
   const c = camFit(G.fitBox, G.fitLid, G.port); G.fitSlack = c.slack;
   G.cam = { pos: c.pos, look: c.look.clone(), dir: c.dir, d: c.d };
-  G.camNow = { pos: c.pos.clone(), look: c.look.clone() }; G.camTo = null;
+  G.camNow = { pos: c.pos.clone(), look: c.look.clone() };
 }
 const slotPos = s => new THREE.Vector3(s.x, s.floor, s.z).add(G.cont.g.position);
 
@@ -527,7 +527,14 @@ const pickable = i => i.state === 'loose' || i.state === 'ret';
 // generous pick: the item's (enlarged) box under the pointer first, else the nearest loose item whose middle is within reach on screen
 function pickAt(x, y, touch) {
   for (const it of G.items) it.g.updateMatrixWorld(true); // (items may have moved since the last rendered frame)
-  setRay(x, y); const hits = ray.intersectObjects(G.items.filter(pickable).map(i => i.proxy), false); if (hits.length) return hits[0].object.userData.item;
+  setRay(x, y); const hits = ray.intersectObjects(G.items.filter(pickable).map(i => i.proxy), false);
+  if (hits.length === 1) return hits[0].object.userData.item;
+  if (hits.length > 1) {
+    // enlarged pick boxes overlap: the item whose real shape is under the pointer wins, else the one whose middle is closest
+    const cand = hits.map(h => h.object.userData.item), real = cand.find(it => ray.intersectObject(it.model, true).length);
+    if (real) return real;
+    let best = cand[0], bd = 1e9; for (const it of cand) { const s = E.toScreen(it.g.position.clone().setY(it.size.y * .5), camera), d = Math.hypot(s.x - x, s.y - y); if (d < bd) { bd = d; best = it; } } return best;
+  }
   const reach = touch ? 46 : 30; let best = null, bd = reach;
   for (const it of G.items) { if (!pickable(it)) continue; const s = E.toScreen(it.g.position.clone().setY(it.size.y * .5), camera), d = Math.hypot(s.x - x, s.y - y); if (d < bd) { bd = d; best = it; } }
   return best;
@@ -665,6 +672,7 @@ function update(dt) {
   P.update(dt);
   if (!G) { return; }
   if (G.paused) return;
+  if (!G.done && !G.attract && portrait() !== G.port) onResize();
   if (G.playing && !G.done) G.t += dt;
   if (G.playing && !G.done) pollPad();
   if (G.auto) runAuto(dt);
@@ -829,8 +837,10 @@ function updateCamera(dt) {
   if (G.camTo && G.seq && G.seq.phase >= 2) { } else if (G.cam && !G.done) { G.camNow.pos.lerp(G.cam.pos, 1 - Math.pow(.01, dt)); G.camNow.look.lerp(G.cam.look, 1 - Math.pow(.01, dt)); }
   camera.position.copy(G.camNow.pos); if (G.done && G.seq == null && G.camTo && !E.reducedMotion()) { const t = performance.now() / 1000; camera.position.x += Math.sin(t * .4) * .25; } camera.lookAt(G.camNow.look);
 }
-let lastPort = portrait();
-addEventListener('resize', () => { if (!G) return; const p = portrait(); if (G.done) { fitCamera(); if (G.camTo) { pushIn(); G.camNow.pos.copy(G.camTo.pos); G.camNow.look.copy(G.camTo.look); } return; } if (p !== lastPort) { lastPort = p; if (G.drag) { const it = G.drag.it; G.drag = null; goHome(it); } layout(true); } else fitCamera(); G.camNow.pos.copy(G.cam.pos); G.camNow.look.copy(G.cam.look); });
+// (turning the phone during the finale keeps the push-in going)
+function onResize() { if (!G) return; const p = portrait(); if (G.done) { const had = !!G.camTo; fitCamera(); if (had) { pushIn(); if (!G.seq || G.seq.phase > 2) { G.camNow.pos.copy(G.camTo.pos); G.camNow.look.copy(G.camTo.look); } } return; } if (p !== G.port) { if (G.drag) { const it = G.drag.it; G.drag = null; goHome(it); } layout(true); } else fitCamera(); G.camNow.pos.copy(G.cam.pos); G.camNow.look.copy(G.cam.look); }
+addEventListener('resize', onResize);
+// some phones (and headless runs) deliver the rotation late: the frame loop also notices a changed orientation
 // (the menu box behind the title card is not a game: a hidden tab or ⏸ there must not open the pause menu)
 function pause() { if (!G || G.paused || G.done || G.attract) return; G.paused = true; if (G.drag) { const it = G.drag.it; G.drag = null; goHome(it); } music && music.stop(); E.pauseMenu({ onResume: () => { G.paused = false; music = E.music(E.SONGS.chill); }, onRestart: () => startLevel(G.li), extra: `<p class="ig-sub">${G.L.e} ${nm(G.L)} · ${G.placed}/${G.items.length} ${T('placed', 'colocadas')}</p>` }); }
 document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });

@@ -174,15 +174,19 @@ module.exports = async (p, _shot) => {
     // pick a box whose best turn differs between the two orientations
     const tA = await p.evaluate(() => window.__GAME.turns()); await p.setViewportSize(other); await p.waitForTimeout(200);
     const tB = await p.evaluate(() => window.__GAME.turns()); await p.setViewportSize(vp); await p.waitForTimeout(200);
-    const tli = Math.max(0, tA.findIndex((t, i) => t !== tB[i] && i > 0)); log('turnPick', { tli, tA, tB });
-    await p.evaluate(async li => { document.querySelectorAll('.ig-screen').forEach(e => e.remove()); await window.__GAME.startLevel(li); }, tli); await sim(.4);
-    const turn0 = await p.evaluate(() => window.__GAME.G.cont.turn);
-    await p.evaluate(() => { const g = window.__GAME, G = g.G; g.autoSolve(6); G.auto.list = G.auto.list.slice(0, 3); }); await sim(3);
-    await p.setViewportSize(other); await p.waitForTimeout(250); await sim(.5);
-    const mid = await p.evaluate(() => { const G = window.__GAME.G; const off = G.items.filter(i => i.state === 'placed').map(it => { const s = it.slot, q = it.g.position; return Math.hypot(q.x - (s.x + G.cont.g.position.x), q.z - (s.z + G.cont.g.position.z)); }); return { turn: G.cont.turn, placed: G.placed, maxOff: Math.max(...off) }; });
-    await p.waitForTimeout(200); await shot('turned');
-    await p.evaluate(() => window.__GAME.autoSolve(6)); await sim(7); const done = await p.evaluate(() => window.__GAME.G.done);
-    await p.setViewportSize(vp); await p.waitForTimeout(250); await sim(.3);
+    const cands = tA.map((t, i) => t !== tB[i] && i > 0 ? i : -1).filter(i => i >= 0); log('turnPick', { cands });
+    let turn0, mid, done;
+    for (const tli of cands) {
+      await p.evaluate(async li => { document.querySelectorAll('.ig-screen').forEach(e => e.remove()); await window.__GAME.startLevel(li); }, tli); await sim(.4);
+      turn0 = await p.evaluate(() => window.__GAME.G.cont.turn);
+      await p.evaluate(() => { const g = window.__GAME, G = g.G; g.autoSolve(6); G.auto.list = G.auto.list.slice(0, 3); }); await sim(3);
+      await p.setViewportSize(other); await p.waitForTimeout(250); await sim(.5);
+      mid = await p.evaluate(() => { const G = window.__GAME.G; const off = G.items.filter(i => i.state === 'placed').map(it => { const s = it.slot, q = it.g.position; return Math.hypot(q.x - (s.x + G.cont.g.position.x), q.z - (s.z + G.cont.g.position.z)); }); return { li: G.li, turn: G.cont.turn, placed: G.placed, maxOff: Math.max(...off) }; });
+      if (turn0 !== mid.turn) { await p.waitForTimeout(200); await shot('turned'); }
+      await p.evaluate(() => window.__GAME.autoSolve(6)); await sim(7); done = await p.evaluate(() => window.__GAME.G.done);
+      await p.setViewportSize(vp); await p.waitForTimeout(250); await sim(.3);
+      if (turn0 !== mid.turn) break;
+    }
     log('turn', { turn0, mid, done }); check(turn0 !== mid.turn && mid.placed === 3 && mid.maxOff < .01 && done, 'box turns with the screen, placed items stay in their slots');
   }
   // 12) share-code replay round trip

@@ -308,6 +308,9 @@ Perfect Fit (`games/fit.html`) re-audited and extended by one game agent. Tested
 - **Phone toast covered the box** at the start of every level in portrait ("Spice Drawer · 5 items" over the top row): the toast is landscape-only (the HUD and the voice already name the box).
 - **Results card**: the share code was a cramped 4th stat tile that wrapped in portrait; it moved under the 3 stats with the next-star goal. "Next box" followed the array order (would have jumped from Bakery to the new Veggie box); it follows the room order now. Share text is EN/ES.
 - Silhouette opacity was set by traversing every slot's meshes each frame; one material per slot now.
+- **Wrong item picked up when pick boxes overlapped**: the enlarged invisible pick boxes of neighbours overlap, and the ray took the nearest box, so a press on one item could lift the one in front (also hidden in tests because item matrices were stale between frames). Now the item whose real shape is under the pointer wins, else the one whose middle is closest; matrices are refreshed before picking.
+- **Late rotation events were missed**: the orientation was compared with a page-load snapshot and only on `resize`; some browsers deliver rotation late (and headless runs not at all), so the box kept the old layout. The frame loop now also compares the screen with the level's layout orientation.
+- **Crash when the phone was turned during the finale**: a resize cleared the push-in camera target mid-animation (`Cannot read properties of null (reading 'pos')`). The push-in is recomputed instead (found by the new orientation test).
 - Menu A-button handling duplicated (and fought) the engine's focus ring; the game's own `menuPad()` was removed so pads and phones navigate the room/box grid with the engine ring.
 
 **Added**
