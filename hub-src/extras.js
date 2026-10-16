@@ -16,8 +16,8 @@ const DAILY = {
   brew: ['Serve a cozy shift', 'Sirve un turno acogedor'], trivia: ['Play a round of trivia', 'Juega una ronda de trivia'], draw: ['Finish a Speed Sketch round', 'Termina una ronda de Boceto Rápido'], runner: ['Run today’s daily course', 'Corre la ruta del día']
 };
 const ES_GAMES = {
-  pact: ['Cuatro héroes, una salida. Recorran juntos las islas Emberwood, revivan a sus amigos y venzan a Big Claw.', ['1–4 jugadores', '3–5 min', 'Jugar']],
-  match: ['Daño, empujones y fuera del ring. Gana el último héroe en pie. Los bots llenan los huecos.', ['1–4 jugadores', '2–3 min', 'Jugar']],
+  pact: ['Seis héroes, una salida. Diez islas con resortes, paredes secretas, pozas para nadar, palancas y lava. Encuentra Gemas Solares, revive a tus amigos y vence a la Reina Medusa y a la Pinza de Magma.', ['1–4 jugadores', '3–6 min', 'Jugar']],
+  match: ['Daño, empujones y fuera del ring. Vidas, Fiebre de Monedas o Rey de la Colina en cinco escenarios, de los Muelles Madera a las Azoteas Neón. Los bots llenan los huecos.', ['1–4 jugadores', '2–3 min', 'Jugar']],
   safari: ['Alimenta a tu amiguito solo con lo que es seguro para ti, en 10 niveles: senderos, almuerzo escolar, una fiesta de cumpleaños, el supermercado, un picnic y un restaurante. Etiquetas y menús leídos en voz alta, un perfil por niño con sus propios alérgenos, un álbum de calcomanías y una práctica de rescate con calma.', ['1–2 jugadores', '10 niveles', 'Jugar']],
   depths: ['Bajo las islas con aliados IA, un segundo jugador o teléfonos. Dos actos de ocho salas, 19 dones distintos en cada partida, un capitán ahogado y un coloso de cristal.', ['1–4 jugadores', '10–15 min', '10+ años']],
   builders: ['Construye un hogar en tu isla, navega a dos islas nuevas, recibe vecinos en casitas, cumple sus deseos y completa tus postales. 21 misiones, compártela con un código.', ['Solo', '10–30 min', '8+ años']],
