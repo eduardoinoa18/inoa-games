@@ -115,11 +115,86 @@ Safety wording: untouched (byte-identical strings; diff the `STR`, drill markup 
 - The expanded test covers title (EN + ES), setup, level picker, all 5 levels (rain/snow particle systems counted), duo + Shift scanner, label read + answer, friend offer, mystery snack, pause, unsafe catch → every rescue step (symptoms, help, auto-injector hold, 9-1-1 dial, call, ambulance, lie down, done) → level end → results, and checks exactly one profile reward (`plays 0→1, xp 0→76`).
 - Before/after comparison: `test/out/safari_before_*.png` vs `test/out/safari_*.png` (+`_p` portrait). Every feature screen is present after the migration; the scene, HUD, drill card and cutscene match. Differences: results now use the shared card (adds XP/coins/hero level, best score, Hub button); emoji/web fonts render differently headless (expected).
 
-## Known issues (not changed)
-- Rescue drill steps, symptoms, hold text and footer have no Spanish version (safety wording, left for allergist + translator review).
+## Known issues (migration pass; see the elevation pass below for what changed since)
+- ~~Rescue drill steps, symptoms, hold text and footer have no Spanish version~~ → translated in the elevation pass (pending review, list below).
 - Portrait duo: the Scanner button is a little tight at the right edge (same as before).
-- No background music (the original had none either).
+- ~~No background music~~ → soft music while rolling (stops during the rescue).
 - The "Copied!" share fallback toast comes from the engine in English.
+
+## Elevation pass (2026-10-16) — allergist review list
+
+**Rule followed:** no medical guidance was invented or changed. The English rescue wording (drill card, bubbles, steps, hold
+text, footer, lessons) is byte-identical to the migration pass. What is new: (a) Spanish translations of existing English
+medical lines, (b) new non-rescue content (allergen tags of new foods/dishes, new "ask a grown-up / check the label" moments),
+(c) a practice-game disclaimer. **Everything below needs review before families use the game.**
+
+### A. ES translation — needs allergist + native review (existing EN medical lines, translated faithfully)
+| Where | EN (unchanged) | ES (new) |
+| --- | --- | --- |
+| Drill title | Buddy Rescue! | ¡Rescate del amiguito! |
+| Drill symptoms line | Itchy mouth, hives, a swollen lip, trouble breathing: those are the signs. Stay calm and follow the plan, in order. | Picazón en la boca, ronchas, un labio hinchado, dificultad para respirar: esas son las señales. Mantén la calma y sigue el plan, en orden. |
+| Step 1 | Tell a grown-up right away / Say: "I ate something and I feel sick." | Avísale a un adulto enseguida / Di: "Comí algo y me siento mal." |
+| Step 2 | Use the epinephrine auto-injector / Outer thigh, hold it there and count. | Usa el autoinyector de epinefrina / En la parte externa del muslo, sostenlo ahí y cuenta. |
+| Step 3 | Call 911 / Even if you feel better. Then lie down and wait. | Llama al 911 / Aunque te sientas mejor. Luego acuéstate y espera. |
+| Hold button | Hold on the thigh: 3… 2… 1… · Hold… 3/2/1 · Done! | Sostén en el muslo: 3… 2… 1… · Sostén… 3/2/1 · ¡Listo! |
+| Final button | 🛏️ Lie down, legs up, wait together | 🛏️ Acuéstate, piernas arriba, esperen juntos |
+| Drill footer | Practice only. Your real plan comes from your doctor or allergist; grown-ups, keep two auto-injectors nearby. | Solo es práctica. Tu plan real viene de tu médico o alergólogo; adultos, tengan dos autoinyectores cerca. |
+| 3D phone screen | Calling 911… | Llamando al 911… |
+| Lesson | Reaction plan: tell a grown-up, auto-injector, call 911, lie down and wait | Plan de reacción: avisar a un adulto, autoinyector, llamar al 911, acostarse y esperar |
+| How it works (rescue row) | 🚨 Buddy Rescue: if an allergen slips through, your buddy needs you. Practice the 3-step plan: tell a grown-up, auto-injector, call 911. Calm and clear. | 🚨 Rescate del amiguito: si se cuela un alérgeno, tu amiguito te necesita. Practica el plan de 3 pasos: avisar a un adulto, autoinyector, llamar al 911. Con calma y claridad. |
+| Label footer | When you are not sure, the safe move is to skip it and ask a grown-up. | Cuando no estés seguro, lo más seguro es no comerlo y preguntarle a un adulto. |
+| Scanner hint (hidden) | <hidden> is another name for <allergen>. | <hidden> es otro nombre de <alérgeno>. |
+| Scanner hint (may) | "May contain" means the factory also handles it. Treat it as not safe. | "Puede contener" significa que la fábrica también lo usa. Tómalo como no seguro. |
+| Scanner hint (decoy) | <decoy> is not on your list. Is anything from your list in there? | <decoy> no está en tu lista. ¿Hay algo de tu lista ahí? |
+| Scanner hint (default) | read the CONTAINS line first, then the full list. | lee primero la línea CONTIENE y luego toda la lista. |
+| Mistake (hidden) | "<hidden>" means <allergen>. | "<hidden>" significa <alérgeno>. |
+| Mistake (may) | "May contain" is a warning. Skip it. | "Puede contener" es una advertencia. No lo comas. |
+| Mistake (plain) | Your allergen was on the list. | Tu alérgeno estaba en la lista. |
+| Mistake (food) | <Food> has <allergens> in it. | <Comida> tiene <alérgenos>. |
+| Lessons | "May contain" counts as not safe · "<hidden>" is a hidden name for <allergen> · <Food> contains <allergens> | "Puede contener" cuenta como no seguro · "<hidden>" es un nombre escondido de <alérgeno> · <Comida> contiene <alérgenos> |
+| Original 4 friend offers | choices + lessons as listed above under "Friend-offer scenarios" | translated one-to-one in `OFFERS` (`c[i][3]` choice, `c[i][4]` lesson), e.g. "Even a tiny bite can cause a reaction. Never test with your mouth." → "Hasta un pedacito puede causar una reacción. Nunca pruebes con la boca."; "A shared knife carries traces. That is cross-contact." → "Un cuchillo compartido lleva restos. Eso es contacto cruzado." |
+| Allergen names | Peanut, Tree nuts, Milk, Egg, Wheat, Soy, Fish, Shellfish, Sesame | Cacahuate (maní), Nueces de árbol, Leche, Huevo, Trigo, Soya, Pescado, Mariscos, Ajonjolí (sésamo) |
+| Hidden names (index-aligned) | arachis oil, groundnut, mandelonas · marzipan, praline, almond paste, pesto · whey, casein, lactose, ghee · albumin, lysozyme, meringue, mayonnaise · semolina, durum, spelt, farina · edamame, tofu, soy lecithin, miso · anchovy, worcestershire sauce, surimi · prawn, scampi, krill · tahini, benne seed, halva | aceite de arachis, cacahuete, mandelonas · mazapán, praliné, pasta de almendra, pesto · suero de leche, caseína, lactosa, ghee · albúmina, lisozima, merengue, mayonesa · sémola, durum, espelta, farina · edamame, tofu, lecitina de soya, miso · anchoa, salsa inglesa, surimi · langostino, scampi, kril · tahini, semilla de benne, halva |
+
+Unchanged ES lines that already existed (kidHelp, gotYou, penTip, penDone, dialTip, nowCall, lieTip, helpHere, drillDone, noRead, alwaysRead, lucky, skipSafe, title disclaimer) are still pending the same review.
+
+### B. Call script: only the place name changes per level (non-medical)
+EN stays "Say: my friend had an allergic reaction. We used the epinephrine. Please come to **the Dawn Trail picnic area**." on level 1;
+other levels name their own fictional place (the Sunset Boardwalk, the Lantern Night Party, the Rainy Day Market, the Snow Cabin Trail,
+Sunny Hill School, the birthday garden on Maple Street, the Corner Market on Pine Road, the Willow Park picnic lawn, the Harbor Lights restaurant).
+ES: "Di: mi amigo tuvo una reacción alérgica. Usamos la epinefrina. Vengan **al área de picnic del sendero**." (level 1 unchanged) and the matching places. This fixes the reviewer note that the script always named the Dawn Trail.
+
+### C. New content written in this pass (EN + ES) — needs review
+- **Disclaimer** (title + How it works): "⚕️ Practice game — not medical advice. Follow your doctor's allergy action plan." / "⚕️ Juego de práctica — no es consejo médico. Sigue el plan de acción para alergias de tu médico."
+- **Setup note**: "Grown-ups: pick the same allergens as your child's allergy action plan." / "Adultos: elijan los mismos alérgenos del plan de acción para alergias de su hijo."
+- **9 new moments** (`OFFERS` with `th` school / party / store / picnic / rest). Lessons only restate habits already in the game (ask first, read the label every time, skip when you cannot check, your own snack is safest, shared bowls spread crumbs, tell the server):
+  - Trade lunches: "Your own lunch is the safest lunch." · "Trading food can bring allergens you cannot see. Keep your own lunch." · "Grown-ups at school can help you check."
+  - Class cupcakes: "Asking first keeps the party fun and safe." · "Treats can hide allergens. Always ask first." · "Bringing your own treat means you never miss out."
+  - Birthday cake: "A grown-up can check the recipe or the box." · "Cake can hide allergens. Check first." · "A packed treat lets you join the fun safely."
+  - Goodie bags: "Candy can have allergens too. Read the label." · "No wrapper means no label. When you cannot check, skip it." · "It is okay to wait until a grown-up can check."
+  - Free sample: "Samples come from packages with labels. Read it first." · "Samples can hide allergens. Check before you taste." · "Saying no politely is a superpower."
+  - New package: "Recipes can change. Read the label every time." · "A new package can have new ingredients. Read every time." · "Reading together makes everyone safer."
+  - Unlabeled cookies: "When you cannot check, skip it." · "Plain-looking food can still hide allergens. Ask first." · "Asking is always the right first move."
+  - Shared snack bowl: "Your own snack is the safest snack." · "Many hands in one bowl spread crumbs. Skip shared bowls." · "Grown-ups can read the label with you."
+  - Free dessert: "Telling the server about your allergy is a great habit." · "Free food can still hide allergens. Ask first." · "A grown-up can talk to the kitchen for you."
+- **Menu moments** (school lunch line, restaurant): pick a dish or "Ask the lunch helper what is safe for me" / "Ask my grown-up to tell the server about my allergy" (always correct). Lessons: "Good pick! A grown-up should still tell the server about your allergy." · "Good pick! The lunch helper can double-check with you." · "Telling the server about your allergy is a great habit." · "Grown-ups at school can help you check." · on a wrong pick "<Dish> has <allergens> in it."
+- **Dish allergen tags** (`DISHES`; ingredients are shown to the player): Garden rice bowl (none) · Peanut noodle bowl (peanut, soy, wheat — "soy sauce (soy, wheat)") · Cheesy pasta bake (wheat, milk) · Grilled fish tacos (fish) · Shrimp fried rice (shellfish, egg, soy, wheat) · Sesame chicken (sesame, soy, wheat) · Pesto pasta (wheat, tree nut via pine nuts, milk) · Baked potato (none) · Grilled salmon plate (fish) · Fruit salad (none) · Pizza day tray (wheat, milk) · Rice and beans tray (none) · Turkey sandwich tray (wheat, egg via mayonnaise) · Fish nuggets tray (fish, wheat, egg) · PB and jelly tray (peanut, wheat) · Veggies and hummus tray (sesame) · Chicken and rice tray (none) · Yogurt and fruit tray (milk, wheat via granola). Question for the reviewer: are "none" dishes acceptable in a kids' game, given that real kitchens can add hidden ingredients? The game always lets the player choose "ask a grown-up" instead.
+- **New plain-food tags** (`FOODS`, game treats them as fact): Lemon, Tomato, Cherries, Avocado, Pineapple, Cabbage, Eggplant, Fruit ice pop (none) · Pancakes (wheat, egg, milk) · Waffle (wheat, egg, milk) · Pizza slice (wheat, milk) · Croissant (wheat, milk, egg) · Apple pie (wheat, milk, egg) · Ice cream cone (milk, wheat). Prepared foods vary by recipe; the reviewer may prefer to tag them more broadly or turn them into labelled packages.
+- **New packaged products** (fictional names; base ingredients carry no top-9 allergen, `labelFor()` inserts allergens/"may contain" as before): Lunchbox Crackers (rice flour, sunflower oil, salt), Apple Sauce Cups, Raisin Snack Box, Party Sprinkles, Rainbow Frosting (sugar, palm oil, water, vanilla), Fizzy Fruit Punch, Party Popcorn, Moon Oat Rings (oats, sugar, salt), Starfish Crackers (corn flour), Garden Veggie Soup, Sunrise Pancake Mix (rice flour), Crispy Rice Bites, Berry Jam, Picnic Potato Chips, Lemon Fizz, Sunny Salsa, Fruit Leather, Crunchy Croutons (corn flour), Kids Menu Juice, Dipping Sauce.
+- **Sticker facts** reuse existing lessons ("Always read the label on packaged food", "\"May contain\" counts as not safe", the reaction-plan lesson, "Asking is always the right first move.") plus neutral ones ("Allergens can hide under other names on a label.").
+
+### D. Observations for the reviewer (existing content, NOT changed)
+- "Done! Now rub the spot for 10 seconds." — device-specific; some auto-injector instructions differ.
+- "Lie down, legs up" — positioning advice may differ (e.g. sitting up when breathing is hard); the reviewer should confirm wording.
+- "Call 911 even if you feel better" and "keep two auto-injectors nearby" — confirm.
+- Symptom list in the drill sub-line is short (mouth itch, hives, swollen lip, trouble breathing): confirm it is acceptable as "examples".
+- Oats (Granola bar, Moon Oat Rings) are shown as safe for wheat-allergic players unless the game inserts wheat; real oats often carry wheat cross-contact.
+- Mystery treats are awarded without checking the player's list: Coconut Cloud (coconut is labelled a tree nut in some places), Sunflower Butter Cup, Oat Moon Cookie (would usually contain wheat), Honey Pear Chips (honey is not for babies under 1). Options: tag treats and only award ones that fit, or rename them.
+- When a hidden name is used, the label still shows the CONTAINS line (realistic; teaches "read CONTAINS first").
+- Label highlights are on by default (yellow = allergen word, pink = hidden name); "Detective mode" (highlights off) is an option for older players and grown-ups.
+
+## Elevation pass — what changed (gameplay, UI, content)
+See `docs/AUDIT.md` → "Snack Squad Safari elevation pass (2026-10-16)" for the full list with test evidence.
 
 ## Engine requests
 1. Gamepad menu navigation (focus ring + A to press) for all cards — implemented locally in `padMenu()`.
