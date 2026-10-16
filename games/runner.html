@@ -947,6 +947,18 @@ function renderTitle() {
   shop('#pT', TRAILS, 'trail', () => { }); shop('#pB', BOARDS, 'board', setBoard);
 }
 addEventListener('inoa:settings', e => { if (e.detail && e.detail.key === 'lang' && titleEl && titleEl.isConnected) renderTitle(); });
+// warm-up: pre-build every obstacle type now, then each chunk's zone dressings a few at a time while the title shows,
+// and compile their shaders, so the first trip into a new zone never hitches mid-run
+for (const type in OBS) freeObj(getObj(type));
+const warmQ = []; for (const c of chunks) for (const Z of ZONES) if (!c.dress[Z.id]) warmQ.push([c, Z.id]);
+function warmStep() {
+  for (let n = 0; n < 2 && warmQ.length; n++) { const [c, id] = warmQ.shift(); if (!c.dress[id]) { const dr = c.dress[id] = DRESS[id](c); dr.g.visible = false; c.g.add(dr.g); } }
+  if (warmQ.length) return setTimeout(warmStep, 40);
+  try { const hidden = []; for (const c of chunks) for (const id in c.dress) if (!c.dress[id].g.visible) { c.dress[id].g.visible = true; hidden.push(c.dress[id].g); } for (const t in pools) for (const o of pools[t]) if (!o.visible) { o.visible = true; hidden.push(o); }
+    const r = R.renderer.compileAsync ? R.renderer.compileAsync(scene, camera) : R.renderer.compile(scene, camera); hidden.forEach(g => g.visible = false); if (r && r.catch) r.catch(() => { }); } catch (e) { }
+  window.__WARM = true;
+}
+setTimeout(warmStep, 300);
 title(); ld.done(); window.__READY = true;
 E.loop((dt) => { if (window.__HOLD) return; update(dt); updateCamera(dt); R.render(dt); });
 function warp(d) { if (!G) return; for (const o of G.obs) freeObj(o.obj); G.obs = []; G.coins = []; G.powers = []; G.d = d; G.genD = d + 30; G.zoneN = Math.floor(d / ZL); G.aheadN = G.zoneN; G.cleanD = d; resetWorld(d); genUntil(d + 240); placeGates(); G.camPos.set(G.x * .55, 4, -d + 7); tHist.length = 0; lookKey = ''; }
