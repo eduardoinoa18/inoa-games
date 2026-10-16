@@ -17,18 +17,35 @@
 .dw-paper{position:relative;background:#fffdf7;border-radius:18px;box-shadow:0 18px 50px rgba(0,0,0,.35),0 0 0 6px #e9dcc5,0 0 0 9px #7a5232;touch-action:none;cursor:crosshair;max-width:100%;max-height:100%;aspect-ratio:4/3}
 .dw-paper canvas{width:100%;height:100%;display:block;border-radius:18px;touch-action:none}
 .dw-tools{display:flex;flex-direction:column;gap:8px;background:rgba(255,248,238,.95);border-radius:22px;padding:10px;box-shadow:0 10px 30px rgba(0,0,0,.3);align-self:center;max-height:100%;overflow:auto;box-sizing:border-box}
-.dw-pal{display:grid;grid-template-columns:repeat(3,38px);gap:6px}
+.dw-pal{display:grid;grid-template-columns:repeat(4,38px);gap:6px}
 .dw-pal button{width:38px;height:38px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px rgba(0,0,0,.15);cursor:pointer;padding:0}
 .dw-pal button.on{box-shadow:0 0 0 3px #1b2430;transform:scale(1.08)}
-.dw-row{display:flex;gap:6px;justify-content:space-between}
-.dw-row button,.dw-act button{min-width:38px;height:42px;border-radius:12px;border:2px solid var(--line);background:#fff;cursor:pointer;font-size:18px;font-weight:800;display:grid;place-items:center;padding:0 8px;color:var(--ink)}
-.dw-row button.on{border-color:var(--mint-ink);background:var(--mint)}
+.dw-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.dw-edit{grid-template-columns:repeat(3,1fr)}
+.dw-grid button,.dw-act button{min-width:0;height:42px;border-radius:12px;border:2px solid var(--line);background:#fff;cursor:pointer;font-size:18px;font-weight:800;display:grid;place-items:center;padding:0 4px;color:var(--ink)}
+.dw-grid button.on{border-color:var(--mint-ink);background:var(--mint)}
+.dw-grid button:disabled{opacity:.35;cursor:default}
 .dw-size i{display:block;border-radius:50%;background:#1b2430}
 .dw-act{display:grid;gap:6px}
 .dw-act button{height:auto;min-height:48px;font-size:14px;font-family:var(--f-d);font-weight:900}
 .dw-act button.go{background:var(--mint-ink);color:#fff;border-color:transparent}
 .dw-act button.sun{background:var(--sun);border-color:transparent}
 .dw-peek{user-select:none}
+.dw-tools.guess{min-width:min(300px,100%)}
+.dw-choices{display:grid;gap:8px}.dw-choices button{min-height:58px;font-size:18px;border-radius:16px;border:3px solid var(--line);background:#fff;font-family:var(--f-d);font-weight:900;color:var(--ink);cursor:pointer;padding:6px 10px}
+.dw-choices button.ok{background:var(--mint);border-color:var(--mint-ink)}.dw-choices button.no{opacity:.35;text-decoration:line-through}
+.dw-choices small{display:block;font-family:var(--f-b);font-size:12px;color:#4c5868}
+.dw-hint{font-family:var(--f-d);font-size:18px;letter-spacing:.16em;color:#2f5fd0;white-space:nowrap}
+.dw-hint i{font-style:normal;letter-spacing:0;margin-right:4px}
+.dw-time.warn{animation:dwpulse .45s ease-in-out infinite alternate}@keyframes dwpulse{to{transform:scale(1.14)}}
+.dw-conf{position:fixed;inset:0;pointer-events:none;z-index:40;overflow:hidden}.dw-conf i{position:absolute;top:-24px;width:10px;height:15px;border-radius:2px;animation:dwfall 1.7s cubic-bezier(.3,.1,.7,1) forwards}@keyframes dwfall{to{transform:translate(var(--dx),110vh) rotate(var(--r))}}
+.dw-gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px;max-height:min(52vh,420px);overflow:auto;padding:2px}
+.dw-gal button{padding:0;border:3px solid #e9dcc5;border-radius:12px;background:#fffdf7;overflow:hidden;cursor:pointer;color:var(--ink)}
+.dw-gal img{width:100%;display:block;aspect-ratio:4/3;object-fit:cover}.dw-gal span{display:block;font-weight:800;font-size:12px;padding:3px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dw-empty{text-align:center;color:#4c5868;font-weight:800;padding:18px 6px}
+.pk.cats button{flex:0 0 auto;min-width:42px;min-height:40px;font-size:18px;padding:2px 6px}
+.dw-team{display:inline-block;padding:2px 10px;border-radius:999px;color:#fff;font-weight:900}
+@media (prefers-reduced-motion:reduce){.dw-time.warn{animation:none}.dw-conf{display:none}}
+
 .dw-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
 .dw-chips button{min-height:54px;padding:8px 14px;border-radius:16px;border:3px solid var(--c,#ccc);background:#fff;font-weight:900;font-family:var(--f-d);cursor:pointer;font-size:16px;color:var(--ink)}
 .dw-word{font-family:var(--f-d);font-weight:900;font-size:clamp(34px,9vw,64px);text-align:center;line-height:1.05;color:var(--ink);word-break:break-word}
@@ -42,6 +59,7 @@
 .dw-slide .by{text-align:center;font-weight:800;color:#4c5868}
 .pk{display:flex;gap:6px;flex-wrap:wrap}.pk button{flex:1 1 70px;min-height:46px;border-radius:14px;border:2px solid var(--line);background:#fff;font-weight:800;cursor:pointer;color:var(--ink);padding:4px 6px}.pk button.on{border-color:var(--mint-ink);background:var(--mint)}
 .pk button small{display:block;font-weight:600;font-size:11px;color:#4c5868}
+.pk.modes button{flex:1 1 30%}
 .names{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:6px}.names input{min-height:40px;border-radius:12px;border:2px solid var(--line);padding:0 10px;font:inherit;font-weight:800;box-sizing:border-box;width:100%;user-select:text;-webkit-user-select:text}
 .ttl-scroll{max-height:calc(100dvh - 32px);overflow:auto}
 .tt-wide .tt-col{display:grid;gap:12px;align-content:start}
@@ -49,10 +67,10 @@
 .dw-cursor.down{background:rgba(27,36,48,.3)}
 .gp-focus{outline:4px solid #ffb703!important;outline-offset:3px}
 .dw-gp{flex-basis:100%;text-align:center;font-size:11px;font-weight:800;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7);line-height:1.3}
-.tt-wide .ig-row:last-child{position:sticky;bottom:-26px;background:var(--paper);padding:10px 0 14px;margin-bottom:-14px;z-index:2}
+.tt-wide .ig-row:has([data-a=play]){position:sticky;bottom:-26px;background:var(--paper);padding:10px 0 14px;margin-bottom:-14px;z-index:2}
 @media (min-width:760px) and (orientation:landscape){.tt-wide{width:min(940px,100%);grid-template-columns:1fr 1.1fr;column-gap:22px}}
-@media (orientation:portrait){.dw{grid-template-columns:1fr;grid-template-rows:auto auto auto;align-content:start;padding:60px 10px 10px}.dw-tools{flex-direction:row;flex-wrap:wrap;justify-content:center;align-self:start}.dw-pal{grid-template-columns:repeat(6,34px)}.dw-pal button{width:34px;height:34px}.dw-act{grid-template-columns:repeat(auto-fit,minmax(110px,1fr));width:100%}.dw-paper{width:100%;height:auto}}
-@media (orientation:landscape) and (max-height:500px){.dw{padding-top:56px}.dw-pal{grid-template-columns:repeat(4,30px)}.dw-pal button{width:30px;height:30px}.dw-row button{height:36px}.dw-act button{min-height:40px}}
+@media (orientation:portrait){.dw{grid-template-columns:1fr;grid-template-rows:auto auto auto;align-content:start;padding:60px 10px 10px}.dw-tools{display:grid;grid-template-columns:1fr 1fr;align-self:start;gap:8px}.dw-tools.guess{grid-template-columns:1fr}.dw-pal{grid-column:1/-1;grid-template-columns:repeat(6,1fr)}.dw-pal button{width:100%;height:36px;border-radius:14px}.dw-act{grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}.dw-choices{grid-template-columns:1fr 1fr}.dw-paper{width:100%;height:auto}}
+@media (orientation:landscape) and (max-height:500px){.dw{padding-top:56px}.dw-pal{grid-template-columns:repeat(4,30px)}.dw-pal button{width:30px;height:30px}.dw-grid button{height:34px}.dw-choices button{min-height:46px}.dw-act button{min-height:40px}}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
 </head><body>
@@ -66,380 +84,14 @@
 import * as E from '../engine/inoa3d.js';
 const { THREE, clamp, lerp, rnd, pick, hash, damp, SFX, $ } = E;
 
-/* ======================= words: "english|español|difficulty" ======================= */
-const WORDS_RAW = `cat|gato|1
-dog|perro|1
-fish|pez|1
-bird|pájaro|1
-house|casa|1
-tree|árbol|1
-sun|sol|1
-moon|luna|1
-star|estrella|1
-car|carro|1
-boat|barco|1
-ball|pelota|1
-apple|manzana|1
-pizza|pizza|1
-cake|pastel|1
-ice cream|helado|1
-flower|flor|1
-hat|sombrero|1
-shoe|zapato|1
-sock|calcetín|1
-chair|silla|1
-table|mesa|1
-bed|cama|1
-book|libro|1
-pencil|lápiz|1
-cup|taza|1
-spoon|cuchara|1
-fork|tenedor|1
-egg|huevo|1
-cookie|galleta|1
-bread|pan|1
-cheese|queso|1
-key|llave|1
-door|puerta|1
-window|ventana|1
-clock|reloj|1
-phone|teléfono|1
-snake|serpiente|1
-spider|araña|1
-snail|caracol|1
-frog|rana|1
-duck|pato|1
-cow|vaca|1
-pig|cerdo|1
-horse|caballo|1
-sheep|oveja|1
-rabbit|conejo|1
-mouse|ratón|1
-lion|león|1
-elephant|elefante|1
-giraffe|jirafa|1
-monkey|mono|1
-bear|oso|1
-penguin|pingüino|1
-turtle|tortuga|1
-butterfly|mariposa|1
-bee|abeja|1
-ant|hormiga|1
-owl|búho|1
-shark|tiburón|1
-whale|ballena|1
-octopus|pulpo|1
-crab|cangrejo|1
-rainbow|arcoíris|1
-cloud|nube|1
-rain|lluvia|1
-snowman|muñeco de nieve|1
-umbrella|paraguas|1
-kite|cometa|1
-balloon|globo|1
-banana|banana|1
-heart|corazón|1
-eye|ojo|1
-hand|mano|1
-foot|pie|1
-nose|nariz|1
-mouth|boca|1
-ear|oreja|1
-tooth|diente|1
-smile|sonrisa|1
-baby|bebé|1
-ghost|fantasma|1
-robot|robot|1
-train|tren|1
-bus|autobús|1
-bicycle|bicicleta|1
-airplane|avión|1
-rocket|cohete|1
-truck|camión|1
-drum|tambor|1
-guitar|guitarra|1
-crown|corona|1
-gift|regalo|1
-candle|vela|1
-lamp|lámpara|1
-coconut|coco|1
-mango|mango|1
-corn|maíz|1
-carrot|zanahoria|1
-pineapple|piña|1
-watermelon|sandía|1
-strawberry|fresa|1
-grapes|uvas|1
-lemon|limón|1
-mushroom|hongo|1
-cactus|cactus|1
-leaf|hoja|1
-worm|gusano|1
-helicopter|helicóptero|2
-submarine|submarino|2
-castle|castillo|2
-bridge|puente|2
-lighthouse|faro|2
-volcano|volcán|2
-island|isla|2
-mountain|montaña|2
-beach|playa|2
-waterfall|cascada|2
-desert|desierto|2
-palm tree|palmera|2
-sandwich|sándwich|2
-hamburger|hamburguesa|2
-hot dog|perro caliente|2
-taco|taco|2
-popcorn|palomitas|2
-piano|piano|2
-trumpet|trompeta|2
-microphone|micrófono|2
-camera|cámara|2
-computer|computadora|2
-television|televisión|2
-glasses|lentes|2
-sword|espada|2
-shield|escudo|2
-treasure|tesoro|2
-pirate|pirata|2
-dragon|dragón|2
-unicorn|unicornio|2
-mermaid|sirena|2
-wizard|mago|2
-king|rey|2
-queen|reina|2
-princess|princesa|2
-astronaut|astronauta|2
-doctor|doctor|2
-firefighter|bombero|2
-chef|cocinero|2
-farmer|granjero|2
-teacher|maestro|2
-clown|payaso|2
-superhero|superhéroe|2
-alien|extraterrestre|2
-tent|tienda de campaña|2
-campfire|fogata|2
-backpack|mochila|2
-ladder|escalera|2
-hammer|martillo|2
-scissors|tijeras|2
-toothbrush|cepillo de dientes|2
-soap|jabón|2
-bathtub|bañera|2
-pillow|almohada|2
-snowflake|copo de nieve|2
-sandcastle|castillo de arena|2
-fireworks|fuegos artificiales|2
-swing|columpio|2
-slide|tobogán|2
-skateboard|patineta|2
-roller skates|patines|2
-trophy|trofeo|2
-medal|medalla|2
-map|mapa|2
-compass|brújula|2
-anchor|ancla|2
-parachute|paracaídas|2
-hot air balloon|globo aerostático|2
-dinosaur|dinosaurio|2
-pyramid|pirámide|2
-mummy|momia|2
-knight|caballero|2
-hammock|hamaca|2
-maracas|maracas|2
-parrot|loro|2
-flamingo|flamenco|2
-domino|dominó|2
-baseball|béisbol|2
-nest|nido|2
-spiderweb|telaraña|2
-beehive|colmena|2
-mirror|espejo|2
-puddle|charco|2
-footprint|huella|2
-bubble|burbuja|2
-mustache|bigote|2
-beard|barba|2
-pajamas|pijama|2
-headphones|audífonos|2
-sunglasses|lentes de sol|2
-piggy bank|alcancía|2
-puzzle|rompecabezas|2
-wheel|rueda|2
-igloo|iglú|2
-fence|cerca|2
-windmill|molino de viento|2
-tractor|tractor|2
-ambulance|ambulancia|2
-police car|carro de policía|2
-fire truck|camión de bomberos|2
-ice cube|cubito de hielo|2
-fountain|fuente|2
-statue|estatua|2
-violin|violín|2
-paintbrush|pincel|2
-envelope|sobre|2
-stamp|sello|2
-calendar|calendario|2
-battery|batería|2
-magnet|imán|2
-run|correr|2
-jump|saltar|2
-swim|nadar|2
-sleep|dormir|2
-eat|comer|2
-drink|beber|2
-dance|bailar|2
-sing|cantar|2
-read|leer|2
-write|escribir|2
-laugh|reír|2
-cry|llorar|2
-fly|volar|2
-climb|escalar|2
-cook|cocinar|2
-paint|pintar|2
-kick|patear|2
-throw|lanzar|2
-catch|atrapar|2
-sneeze|estornudar|2
-yawn|bostezar|2
-wave|saludar|2
-hug|abrazar|2
-clap|aplaudir|2
-sweep|barrer|2
-surf|surfear|2
-ski|esquiar|2
-skate|patinar|2
-dig|cavar|2
-wash|lavar|2
-whistle|silbar|2
-snore|roncar|2
-hide|esconderse|2
-fish (verb)|pescar|2
-juggle|hacer malabares|3
-brush your teeth|cepillarse los dientes|3
-ride a bike|andar en bicicleta|3
-water the plants|regar las plantas|3
-knock on a door|tocar la puerta|3
-earthquake|terremoto|3
-tornado|tornado|3
-hurricane|huracán|3
-eclipse|eclipse|3
-echo|eco|3
-shadow|sombra|3
-reflection|reflejo|3
-dream|sueño|3
-music|música|3
-wind|viento|3
-electricity|electricidad|3
-telescope|telescopio|3
-microscope|microscopio|3
-skeleton|esqueleto|3
-fingerprint|huella digital|3
-traffic jam|embotellamiento|3
-roller coaster|montaña rusa|3
-carousel|carrusel|3
-ferris wheel|rueda de la fortuna|3
-escalator|escalera eléctrica|3
-elevator|ascensor|3
-vending machine|máquina expendedora|3
-washing machine|lavadora|3
-refrigerator|nevera|3
-microwave|microondas|3
-blender|licuadora|3
-traffic light|semáforo|3
-museum|museo|3
-library|biblioteca|3
-hospital|hospital|3
-airport|aeropuerto|3
-zoo|zoológico|3
-circus|circo|3
-birthday party|fiesta de cumpleaños|3
-wedding|boda|3
-picnic|pícnic|3
-sunrise|amanecer|3
-sunset|atardecer|3
-jungle|selva|3
-cave|cueva|3
-iceberg|iceberg|3
-constellation|constelación|3
-satellite|satélite|3
-black hole|agujero negro|3
-time travel|viaje en el tiempo|3
-invisible|invisible|3
-homework|tarea|3
-vacation|vacaciones|3
-secret|secreto|3
-surprise|sorpresa|3
-idea|idea|3
-happy|feliz|3
-angry|enojado|3
-scared|asustado|3
-tired|cansado|3
-hungry|hambriento|3
-teamwork|trabajo en equipo|3
-recycling|reciclaje|3
-sunscreen|protector solar|3
-haircut|corte de pelo|3
-hiccups|hipo|3
-bedtime|hora de dormir|3
-sleepwalking|sonambulismo|3
-daydream|soñar despierto|3
-magic trick|truco de magia|3
-hide and seek|escondidas|3
-tug of war|juego de la cuerda|3
-selfie|selfi|3
-password|contraseña|3
-wifi|wifi|3
-sandstorm|tormenta de arena|3
-avalanche|avalancha|3
-quicksand|arenas movedizas|3
-cocoon|capullo|3
-fossil|fósil|3
-carnival|carnaval|3
-gravity|gravedad|3
-lightning|relámpago|3
-thunder|trueno|3
-tide|marea|3
-melting|derretirse|3
-balance|equilibrio|3
-speed|velocidad|3
-noise|ruido|3
-silence|silencio|3
-friendship|amistad|3
-winter|invierno|3
-summer|verano|3
-autumn|otoño|3
-spring (season)|primavera|3
-morning|mañana|3
-midnight|medianoche|3
-weekend|fin de semana|3
-holiday|día festivo|3
-map reading|leer un mapa|3
-first place|primer lugar|3
-last place|último lugar|3
-road trip|viaje por carretera|3
-sleepover|pijamada|3
-tooth fairy|hada de los dientes|3
-snow day|día de nieve|3
-pet shop|tienda de mascotas|3
-bakery|panadería|3
-supermarket|supermercado|3
-lifeguard|salvavidas|3
-scarecrow|espantapájaros|3
-treasure map|mapa del tesoro|3
-haunted house|casa embrujada|3
-space station|estación espacial|3`;
-const WORDS = WORDS_RAW.trim().split('\n').map(l => { const [en, es, d] = l.split('|'); return { en, es, d: +d }; });
+/* ======================= words (games/draw-words.js: 700+ EN/ES pairs, difficulty + category) ======================= */
+import { WORDS, CATS } from './draw-words.js';
 
 /* ======================= strings ======================= */
 const L0 = (E.store.get('inoa.draw', {}).lang || E.profile().lang) === 'es' ? 'es' : 'en';
 const STR = {
-  en: { pass: n => `Pass the device to ${n}`, noPeek: 'Everyone else: no peeking! 🙈', show: 'Show my word', start: 'Start drawing ▶', skip: 'New word', drawThis: 'Draw this:', drawer: n => `🎨 ${n} is drawing — shout your guesses!`, guessed: '✓ Someone guessed it!', who: 'Who guessed it?', timeUp: 'Time’s up!', wordWas: 'The word was', nobody: 'Nobody got it this time.', next: 'Next ▶', peek: '👁 Peek', done: 'Done ✓', sketch: n => `Sketch ${n}`, saved: 'Saved to the gallery wall!', desc: n => `${n}: describe this drawing in a few words`, descPh: 'It looks like…', drawDesc: n => `${n}: draw this description!`, story: 'It started as…', said: n => `${n} said:`, drew: n => `${n} drew:`, ended: 'And it ended as…', points: 'points', undo: 'Undo', clear: 'Clear', eraser: 'Eraser', gallery: 'Gallery', yourTurn: n => `${n}, your turn!`, ok: 'OK', send: 'Send ▶', guessOut: 'Guess out loud!', color: n => `Colour ${n}`, brush: n => `Brush ${n}`, player: n => `Player ${n}`, description: 'Description', speed: 'Speed Sketch', bestSketch: 'Most sketches in one session', gp: '🎮 Stick + A draw · B undo · X eraser · LB/RB colour · LT/RT size · Y peek · Select done', copied: 'Copied! Paste it anywhere.' },
-  es: { pass: n => `Pásale el aparato a ${n}`, noPeek: '¡Los demás no miren! 🙈', show: 'Ver mi palabra', start: 'Empezar a dibujar ▶', skip: 'Otra palabra', drawThis: 'Dibuja esto:', drawer: n => `🎨 ${n} está dibujando — ¡griten sus respuestas!`, guessed: '✓ ¡Alguien adivinó!', who: '¿Quién adivinó?', timeUp: '¡Se acabó el tiempo!', wordWas: 'La palabra era', nobody: 'Esta vez nadie adivinó.', next: 'Siguiente ▶', peek: '👁 Ver', done: 'Listo ✓', sketch: n => `Boceto ${n}`, saved: '¡Guardado en la pared de la galería!', desc: n => `${n}: describe este dibujo en pocas palabras`, descPh: 'Parece…', drawDesc: n => `${n}: ¡dibuja esta descripción!`, story: 'Empezó como…', said: n => `${n} dijo:`, drew: n => `${n} dibujó:`, ended: 'Y terminó como…', points: 'puntos', undo: 'Deshacer', clear: 'Borrar todo', eraser: 'Borrador', gallery: 'Galería', yourTurn: n => `¡${n}, te toca!`, ok: 'OK', send: 'Enviar ▶', guessOut: '¡Adivinen en voz alta!', color: n => `Color ${n}`, brush: n => `Pincel ${n}`, player: n => `Jugador ${n}`, description: 'Descripción', speed: 'Boceto rápido', bestSketch: 'Más bocetos en una sesión', gp: '🎮 Palanca + A dibuja · B deshacer · X borrador · LB/RB color · LT/RT grosor · Y ver · Select listo', copied: '¡Copiado! Pégalo donde quieras.' }
+  en: { pass: n => `Pass the device to ${n}`, noPeek: 'Everyone else: no peeking! 🙈', show: 'Show my word', start: 'Start drawing ▶', skip: 'New word', drawThis: 'Draw this:', drawer: n => `🎨 ${n} is drawing — shout your guesses!`, guessed: '✓ Someone guessed it!', who: 'Who guessed it?', timeUp: 'Time’s up!', wordWas: 'The word was', nobody: 'Nobody got it this time.', next: 'Next ▶', peek: '👁 Peek', done: 'Done ✓', sketch: n => `Sketch ${n}`, saved: 'Saved to the gallery wall!', desc: n => `${n}: describe this drawing in a few words`, descPh: 'It looks like…', drawDesc: n => `${n}: draw this description!`, story: 'It started as…', said: n => `${n} said:`, drew: n => `${n} drew:`, ended: 'And it ended as…', points: 'points', undo: 'Undo', clear: 'Clear', eraser: 'Eraser', gallery: 'Gallery', yourTurn: n => `${n}, your turn!`, ok: 'OK', send: 'Send ▶', guessOut: 'Guess out loud!', color: n => `Colour ${n}`, brush: n => `Brush ${n}`, player: n => `Player ${n}`, description: 'Description', speed: 'Speed Sketch', bestSketch: 'Most sketches in one session', gp: '🎮 Stick + A draw · B undo · X eraser · LB/RB colour · LT/RT size · R3 tool · Y peek · Select done', copied: 'Copied! Paste it anywhere.' },
+  es: { pass: n => `Pásale el aparato a ${n}`, noPeek: '¡Los demás no miren! 🙈', show: 'Ver mi palabra', start: 'Empezar a dibujar ▶', skip: 'Otra palabra', drawThis: 'Dibuja esto:', drawer: n => `🎨 ${n} está dibujando — ¡griten sus respuestas!`, guessed: '✓ ¡Alguien adivinó!', who: '¿Quién adivinó?', timeUp: '¡Se acabó el tiempo!', wordWas: 'La palabra era', nobody: 'Esta vez nadie adivinó.', next: 'Siguiente ▶', peek: '👁 Ver', done: 'Listo ✓', sketch: n => `Boceto ${n}`, saved: '¡Guardado en la pared de la galería!', desc: n => `${n}: describe este dibujo en pocas palabras`, descPh: 'Parece…', drawDesc: n => `${n}: ¡dibuja esta descripción!`, story: 'Empezó como…', said: n => `${n} dijo:`, drew: n => `${n} dibujó:`, ended: 'Y terminó como…', points: 'puntos', undo: 'Deshacer', clear: 'Borrar todo', eraser: 'Borrador', gallery: 'Galería', yourTurn: n => `¡${n}, te toca!`, ok: 'OK', send: 'Enviar ▶', guessOut: '¡Adivinen en voz alta!', color: n => `Color ${n}`, brush: n => `Pincel ${n}`, player: n => `Jugador ${n}`, description: 'Descripción', speed: 'Boceto rápido', bestSketch: 'Más bocetos en una sesión', gp: '🎮 Palanca + A dibuja · B deshacer · X borrador · LB/RB color · LT/RT grosor · R3 herramienta · Y ver · Select listo', copied: '¡Copiado! Pégalo donde quieras.' }
 };
 const PAL = ['#1b2430', '#ffffff', '#e2443a', '#ff8a2a', '#ffd166', '#2fbf8a', '#1f7a4a', '#4fb3ff', '#2f5fd0', '#8c6cff', '#ff7bc0', '#8a5a36'];
 const PCOL = ['#ff6b6b', '#4fb3ff', '#ffd166', '#2fd18a', '#c9b8ff', '#ff9a3c', '#ff7bc0', '#9fe3cf'];
@@ -456,10 +108,16 @@ await E.loadPack('../packs/draw.json', R, p => ld.set(p));
 R.setLook({ background: 0x3a2b24, fog: 0x3a2b24, fogNear: 30, fogFar: 60, sun: 2.0, sunColor: 0xffcf9a, hemi: .55, skyHor: 0xffe2c4, ground: 0x6b4a32, exposure: .92, env: .3, bloom: .14, bloomThreshold: .9 });
 R.setEnv(E.ASSETS.hdri.interior);
 sun.position.set(-12, 7, -1); sun.target.position.set(0, 0, -1); sun.target.updateMatrixWorld(); sun.shadow.camera.far = 40;
-const S = Object.assign({ lang: L0, mode: 'party', players: 4, rounds: 1, diff: 0, sketchSec: 30, names: ['Ana', 'Leo', 'Mia', 'Rafa', 'Luz', 'Teo', 'Sol', 'Gabi'] }, E.store.get('inoa.draw', {}));
+const MODES = ['party', 'team', 'phone', 'sketch', 'daily', 'doodle'], NAMES0 = ['Ana', 'Leo', 'Mia', 'Rafa', 'Luz', 'Teo', 'Sol', 'Gabi'];
+const S = Object.assign({ lang: L0, mode: 'party', players: 4, rounds: 1, diff: 0, cat: 'all', roundSec: 60, hints: true, sketchSec: 30, names: NAMES0.slice() }, E.store.get('inoa.draw', {}));
+// sanitise old / hand-edited saves
+if (!MODES.includes(S.mode)) S.mode = 'party'; if (![0, 1, 2, 3].includes(S.diff)) S.diff = 0; if (S.cat !== 'all' && !CATS[S.cat]) S.cat = 'all';
+if (![45, 60, 90].includes(S.roundSec)) S.roundSec = 60; S.hints = S.hints !== false; S.players = clamp(Math.round(+S.players) || 4, 2, 8); S.rounds = clamp(Math.round(+S.rounds) || 1, 1, 3);
+if (!Array.isArray(S.names)) S.names = NAMES0.slice(); S.names = NAMES0.map((n, i) => String(S.names[i] || n).slice(0, 10));
 if (E.lang) S.lang = E.lang() === 'es' ? 'es' : 'en'; // shared settings (hub / settings panel) own the language
 const save = () => E.store.set('inoa.draw', S);
 const T = () => STR[S.lang];
+const L2 = (en, es) => S.lang === 'es' ? es : en;
 let G = null, music = null, hudEl = null;
 
 /* ======================= studio ======================= */
@@ -482,7 +140,7 @@ const wallM = E.pbr('paint', 0xefe2cc, [4, 2], { bump: 1.5 }), woodFloor = E.pbr
   const rug2 = new THREE.Mesh(new THREE.RingGeometry(1.9, 2.1, 48), new THREE.MeshStandardMaterial({ color: 0xffd166, roughness: 1 })); rug2.rotation.x = -Math.PI / 2; rug2.position.set(-.4, .015, -1.2); room.add(rug2);
 }
 // easel with the live drawing
-const padCanvas = $('pad'); const padCtx = padCanvas.getContext('2d');
+const padCanvas = $('pad'); const padCtx = padCanvas.getContext('2d', { willReadFrequently: true }); // CPU canvas: bucket fill + exact undo replays
 const easelTex = new THREE.CanvasTexture(padCanvas); easelTex.colorSpace = THREE.SRGBColorSpace; easelTex.anisotropy = 4;
 const easel = new THREE.Group(); {
   const wm = E.pbr('wood', 0xc58a52, [1, 3], { bump: 2 });
@@ -492,7 +150,7 @@ const easel = new THREE.Group(); {
   const ledge = new THREE.Mesh(new THREE.BoxGeometry(1.7, .07, .16), wm); ledge.position.set(0, .98, .08); ledge.castShadow = true; easel.add(ledge);
   const topbar = new THREE.Mesh(new THREE.BoxGeometry(.5, .06, .1), wm); topbar.position.set(0, 2.35, .02); easel.add(topbar);
   const board = new THREE.Mesh(new THREE.BoxGeometry(1.66, 1.26, .05), E.pbr('wood', 0xe9dcc5, [1, 1])); board.position.set(0, 1.66, .05); board.castShadow = true; easel.add(board);
-  const art = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.2), new THREE.MeshStandardMaterial({ map: easelTex, roughness: .9 })); art.position.set(0, 1.66, .081); easel.add(art);
+  const art = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.2), new THREE.MeshStandardMaterial({ map: easelTex, emissive: 0xffffff, emissiveMap: easelTex, emissiveIntensity: .32, roughness: .9 })); art.position.set(0, 1.66, .081); easel.add(art);
   easel.position.set(-.5, 0, -1.6); easel.rotation.y = .18; easel.traverse(o => { if (o.isMesh) o.receiveShadow = true; }); room.add(easel); easel.userData.art = art;
 }
 // work table with paint jars and brushes
@@ -525,14 +183,25 @@ let gallerySign = null; const frames = []; const emptyTex = (() => { const c = d
   for (let i = 0; i < GAL_MAX; i++) { const c = i % 4, r = Math.floor(i / 4); const g = new THREE.Group(); const fw = .92, fh = .72; const frame = new THREE.Mesh(new THREE.BoxGeometry(fw + .12, fh + .12, .06), fm[(i * 3) % 4]); frame.castShadow = true; g.add(frame); const mat = new THREE.Mesh(new THREE.PlaneGeometry(fw, fh), new THREE.MeshStandardMaterial({ map: emptyTex, roughness: .85 })); mat.position.z = .032; g.add(mat); g.position.set(5.93, 3.25 - r * 1.0, -3.4 + c * 1.2 + (r % 2) * .15); g.rotation.y = -Math.PI / 2; g.rotation.z = (hash(i, 3) - .5) * .05; room.add(g); frames.push({ g, mat }); }
   gallerySign = E.tag('🖼️', 'GALLERY', { width: 2.2, bg: '#ffd166' }); gallerySign.position.set(5.85, 4.1, -1.6); room.add(gallerySign); }
 function loadGallery() { const list = E.store.get(GAL_KEY, []); frames.forEach((f, i) => { const it = list[i]; if (f.mat.material.map && f.mat.material.map !== emptyTex) f.mat.material.map.dispose(); if (!it) { f.mat.material.map = emptyTex; f.mat.material.needsUpdate = true; return; } const img = new Image(); img.onload = () => { const t = new THREE.Texture(img); t.colorSpace = THREE.SRGBColorSpace; t.needsUpdate = true; f.mat.material.map = t; f.mat.material.needsUpdate = true; }; img.src = it.img; }); return list; }
-function saveToGallery(word) { const c = document.createElement('canvas'); c.width = 320; c.height = 240; const g = c.getContext('2d'); g.fillStyle = PAPER; g.fillRect(0, 0, 320, 240); g.drawImage(padCanvas, 0, 0, 320, 240); let url = ''; try { url = c.toDataURL('image/jpeg', .62); } catch (e) { return; } const list = E.store.get(GAL_KEY, []); list.unshift({ img: url, word, t: Date.now() }); while (list.length > GAL_MAX) list.pop(); E.store.set(GAL_KEY, list); if (E.store.get(GAL_KEY, []).length === 0 && list.length) { list.length = Math.max(1, Math.floor(list.length / 2)); E.store.set(GAL_KEY, list); } loadGallery(); }
+function saveToGallery(w) { const url = snapshotJpeg(400, 300, .66); if (!url) return; const list = E.store.get(GAL_KEY, []).filter(x => x && x.img); list.unshift({ img: url, word: wtxt(w), en: w.en, es: w.es, t: Date.now() }); while (list.length > GAL_MAX) list.pop(); storeList(GAL_KEY, list); loadGallery(); }
 
 /* ======================= drawing surface ======================= */
-const D = { strokes: [], cur: null, color: PAL[0], size: 1, eraser: false, enabled: false, ink: 0, dirty: false };
-function clearPad() { padCtx.fillStyle = PAPER; padCtx.fillRect(0, 0, 1024, 768); easelTex.needsUpdate = true; }
-function strokeWidth(s, pr) { return SIZES[s.s] * 1024 * (s.pen ? .35 + pr * 1.1 : 1); }
+// Ops in D.strokes (replayed in order): pen strokes {c, s, e, pen, p:[[x, y, pressure]], done}, fills {t:'fill', x, y, c},
+// shapes {t:'line'|'rect'|'circle', c, s, a, b}, stickers {t:'stk', k, x, y, r, c} and {clear:true}. Coordinates are 0..1.
+// Undo moves the last op to D.redo; any new op empties D.redo.
+const TOOLS = ['pen', 'fill', 'shape', 'sticker'];
+const SHAPES = ['line', 'rect', 'circle'], SHAPE_ICON = { line: '╱', rect: '▭', circle: '◯' };
+const STICKERS = ['star', 'heart', 'smile', 'flower', 'cloud', 'bolt'], STK_ICON = { star: '⭐', heart: '❤️', smile: '🙂', flower: '🌼', cloud: '☁️', bolt: '⚡' };
+const STK_R = [.035, .055, .085];
+const D = { strokes: [], redo: [], cur: null, color: PAL[0], size: 1, eraser: false, tool: 'pen', shape: 'line', sticker: 0, enabled: false, ink: 0, dirty: false };
+const W0 = 1024, H0 = 768, INK = '#1b2430';
+const offCanvas = () => { const c = document.createElement('canvas'); c.width = W0; c.height = H0; return c; };
+const cache = { ops: [], cv: offCanvas() }; const cacheCtx = cache.cv.getContext('2d');
+const baseCv = offCanvas(); const baseCtx = baseCv.getContext('2d');
+function clearPad() { padCtx.fillStyle = PAPER; padCtx.fillRect(0, 0, W0, H0); easelTex.needsUpdate = true; }
+function strokeWidth(s, pr) { return SIZES[s.s] * W0 * (s.pen ? .35 + pr * 1.1 : 1); }
 function drawStroke(s, from = 0) {
-  const g = padCtx, P = s.p, W = 1024, H = 768; g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = s.e ? PAPER : s.c; g.fillStyle = g.strokeStyle;
+  const g = padCtx, P = s.p, W = W0, H = H0; g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = s.e ? PAPER : s.c; g.fillStyle = g.strokeStyle;
   if (P.length === 1) { g.beginPath(); g.arc(P[0][0] * W, P[0][1] * H, strokeWidth(s, P[0][2]) / 2, 0, 7); g.fill(); return; }
   // quadratic smoothing through midpoints; drawn segment by segment so pen pressure can vary the width
   for (let i = Math.max(1, from); i < P.length; i++) {
@@ -540,19 +209,109 @@ function drawStroke(s, from = 0) {
     g.lineWidth = strokeWidth(s, (a[2] + b[2]) / 2); g.beginPath(); g.moveTo(m0[0] * W, m0[1] * H); g.quadraticCurveTo(a[0] * W, a[1] * H, m1[0] * W, m1[1] * H); if (i === P.length - 1 && s.done) g.lineTo(b[0] * W, b[1] * H); g.stroke();
   }
 }
-function redraw() { clearPad(); let start = 0; D.strokes.forEach((s, i) => { if (s.clear) start = i + 1; }); for (let i = start; i < D.strokes.length; i++) drawStroke(D.strokes[i]); D.dirty = true; }
-function resetPad() { D.strokes = []; D.cur = null; D.ink = 0; clearPad(); }
+function drawShape(op) {
+  const g = padCtx, ax = op.a[0] * W0, ay = op.a[1] * H0, bx = op.b[0] * W0, by = op.b[1] * H0; g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = op.c; g.lineWidth = SIZES[op.s] * W0; g.beginPath();
+  if (op.t === 'line') { g.moveTo(ax, ay); g.lineTo(bx, by); } else if (op.t === 'rect') g.rect(Math.min(ax, bx), Math.min(ay, by), Math.abs(bx - ax), Math.abs(by - ay));
+  else g.ellipse((ax + bx) / 2, (ay + by) / 2, Math.abs(bx - ax) / 2 + .5, Math.abs(by - ay) / 2 + .5, 0, 0, Math.PI * 2);
+  g.stroke();
+}
+// stickers: original simple shapes, filled with the current colour and outlined in ink (white outline on ink)
+function drawSticker(op) {
+  const g = padCtx, cx = op.x * W0, cy = op.y * H0, r = op.r * W0, c = op.c, ink = c === INK ? '#ffffff' : INK, lw = Math.max(3, r * .14);
+  const out = (path) => { g.lineJoin = 'round'; g.lineCap = 'round'; path(); g.lineWidth = lw; g.strokeStyle = ink; g.stroke(); g.fillStyle = c; g.fill(); };
+  const poly = pts => () => { g.beginPath(); pts.forEach(([x, y], i) => i ? g.lineTo(cx + x * r, cy + y * r) : g.moveTo(cx + x * r, cy + y * r)); g.closePath(); };
+  if (op.k === 'star') { const pts = []; for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, q = i % 2 ? .45 : 1; pts.push([Math.cos(a) * q, Math.sin(a) * q]); } out(poly(pts)); }
+  else if (op.k === 'heart') out(() => { g.beginPath(); g.moveTo(cx, cy + r * .85); g.bezierCurveTo(cx - r * 1.3, cy + r * .05, cx - r * .75, cy - r * 1.05, cx, cy - r * .4); g.bezierCurveTo(cx + r * .75, cy - r * 1.05, cx + r * 1.3, cy + r * .05, cx, cy + r * .85); g.closePath(); });
+  else if (op.k === 'smile') { out(() => { g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); }); g.fillStyle = ink; for (const sx of [-1, 1]) { g.beginPath(); g.arc(cx + sx * r * .35, cy - r * .22, r * .11, 0, 7); g.fill(); } g.beginPath(); g.arc(cx, cy + r * .02, r * .5, .18 * Math.PI, .82 * Math.PI); g.lineWidth = r * .1; g.strokeStyle = ink; g.lineCap = 'round'; g.stroke(); }
+  else if (op.k === 'flower') { const pet = []; for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3; pet.push([Math.cos(a) * .55, Math.sin(a) * .55]); } g.fillStyle = ink; pet.forEach(([x, y]) => { g.beginPath(); g.arc(cx + x * r, cy + y * r, r * .4 + lw / 2, 0, 7); g.fill(); }); g.fillStyle = c; pet.forEach(([x, y]) => { g.beginPath(); g.arc(cx + x * r, cy + y * r, r * .4, 0, 7); g.fill(); }); out(() => { g.beginPath(); g.arc(cx, cy, r * .34, 0, 7); }); g.fillStyle = c === '#ffd166' ? '#ff8a2a' : '#ffd166'; g.beginPath(); g.arc(cx, cy, r * .34, 0, 7); g.fill(); }
+  else if (op.k === 'cloud') { const C = [[-.5, .15, .42], [0, -.12, .58], [.52, .12, .42], [-.15, .3, .38], [.2, .3, .38]]; g.fillStyle = ink; C.forEach(([x, y, q]) => { g.beginPath(); g.arc(cx + x * r, cy + y * r, q * r + lw / 2, 0, 7); g.fill(); }); g.fillStyle = c; C.forEach(([x, y, q]) => { g.beginPath(); g.arc(cx + x * r, cy + y * r, q * r, 0, 7); g.fill(); }); }
+  else out(poly([[.2, -1], [-.55, .12], [-.05, .12], [-.25, 1], [.58, -.18], [.08, -.18]]));
+}
+const hexRgb = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+// bucket fill: scanline flood over similar colours, then grown by 1 px so no pale anti-aliasing halo is left at the edges
+function floodFill(op) {
+  const x0 = Math.round(clamp(op.x, 0, 1) * (W0 - 1)), y0 = Math.round(clamp(op.y, 0, 1) * (H0 - 1));
+  const img = padCtx.getImageData(0, 0, W0, H0), d = img.data, i0 = (y0 * W0 + x0) * 4, tr = d[i0], tg = d[i0 + 1], tb = d[i0 + 2];
+  const [cr, cg, cb] = hexRgb(op.c); if (Math.abs(tr - cr) < 10 && Math.abs(tg - cg) < 10 && Math.abs(tb - cb) < 10) return;
+  const TOL = 70, m = new Uint8Array(W0 * H0), ok = p => { if (m[p]) return false; const k = p * 4; return Math.abs(d[k] - tr) <= TOL && Math.abs(d[k + 1] - tg) <= TOL && Math.abs(d[k + 2] - tb) <= TOL; };
+  const st = [x0, y0];
+  while (st.length) {
+    const y = st.pop(), x = st.pop(), row = y * W0; if (!ok(row + x)) continue; let l = x, r = x;
+    while (l > 0 && ok(row + l - 1)) l--; while (r < W0 - 1 && ok(row + r + 1)) r++;
+    for (let i = l; i <= r; i++) m[row + i] = 1;
+    for (const ny of [y - 1, y + 1]) { if (ny < 0 || ny >= H0) continue; const nr = ny * W0; let span = false; for (let i = l; i <= r; i++) { const can = ok(nr + i); if (can && !span) { st.push(i, ny); span = true; } else if (!can) span = false; } }
+  }
+  for (let y = 0; y < H0; y++) { const row = y * W0; for (let x = 0; x < W0; x++) { const p = row + x; if (m[p] === 1 || (x > 0 && m[p - 1] === 1) || (x < W0 - 1 && m[p + 1] === 1) || (y > 0 && m[p - W0] === 1) || (y < H0 - 1 && m[p + W0] === 1)) { const k = p * 4; d[k] = cr; d[k + 1] = cg; d[k + 2] = cb; d[k + 3] = 255; } } }
+  padCtx.putImageData(img, 0, 0);
+}
+function drawOp(op) { if (op.t === 'fill') floodFill(op); else if (op.t === 'stk') drawSticker(op); else if (op.t) drawShape(op); else drawStroke(op); }
+function activeOps() { let st = 0; D.strokes.forEach((s, i) => { if (s.clear) st = i + 1; }); return D.strokes.slice(st); }
+// Replays the op list. A snapshot of "everything but the last op" is cached, so committing a stroke or undoing it
+// replays at most one op (fills are not cheap) and the committed canvas is always the canonical replay.
+function redraw() {
+  const O = activeOps(); let i0 = 0;
+  if (cache.ops.length && cache.ops.length <= O.length && cache.ops.every((o, k) => o === O[k])) { padCtx.drawImage(cache.cv, 0, 0); i0 = cache.ops.length; } else clearPad();
+  for (let i = i0; i < O.length; i++) { if (i === O.length - 1) { cacheCtx.drawImage(padCanvas, 0, 0); cache.ops = O.slice(0, i); } drawOp(O[i]); }
+  if (!O.length) cache.ops = [];
+  D.dirty = true;
+}
+function resetPad() { D.strokes = []; D.redo = []; D.cur = null; D.ink = 0; cache.ops = []; clearPad(); updEdit(); }
 function padPoint(e) { const r = padCanvas.getBoundingClientRect(); return [clamp((e.clientX - r.left) / r.width, 0, 1), clamp((e.clientY - r.top) / r.height, 0, 1), e.pointerType === 'pen' && e.pressure > 0 ? e.pressure : .5]; }
-function beginStroke(pt, pen) { D.cur = { c: D.color, s: D.size, e: D.eraser, pen: !!pen, p: [pt] }; D.strokes.push(D.cur); drawStroke(D.cur); scratch(true); }
-function extendStroke(pt) { const s = D.cur; if (!s) return; const last = s.p[s.p.length - 1]; const d = Math.hypot(pt[0] - last[0], pt[1] - last[1]); if (d < .002) return; s.p.push(pt); D.ink += d; drawStroke(s, s.p.length - 1); scratchSpeed(d); D.dirty = true; }
-function endStroke() { if (!D.cur) return; D.cur.done = true; const P = D.cur.p; if (P.length > 1) { const g = padCtx, a = P[P.length - 2], b = P[P.length - 1]; g.lineWidth = strokeWidth(D.cur, b[2]); g.strokeStyle = D.cur.e ? PAPER : D.cur.c; g.beginPath(); g.moveTo((a[0] + b[0]) / 2 * 1024, (a[1] + b[1]) / 2 * 768); g.lineTo(b[0] * 1024, b[1] * 768); g.stroke(); } D.cur = null; scratch(false); redraw(); }  // replay so the committed canvas is canonical: undo then restores it pixel-exactly
-let activePointer = null;
-padCanvas.addEventListener('pointerdown', e => { if (!D.enabled) return; e.preventDefault(); E.audio(); if (D.cur) endStroke(); activePointer = e.pointerId; try { padCanvas.setPointerCapture(e.pointerId); } catch (err) { } beginStroke(padPoint(e), e.pointerType === 'pen'); });
-padCanvas.addEventListener('pointermove', e => { if (e.pointerId !== activePointer || !D.cur) return; const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e]; for (const ev of (evs.length ? evs : [e])) extendStroke(padPoint(ev)); });
-const up = e => { if (e.pointerId !== activePointer) return; activePointer = null; endStroke(); };
+function previewOp() { padCtx.drawImage(baseCv, 0, 0); drawOp(D.cur); D.dirty = true; }
+function beginStroke(pt, pen) {
+  D.redo.length = 0; updEdit(); const tool = D.eraser ? 'pen' : D.tool;
+  if (tool === 'fill') { D.cur = null; D.strokes.push({ t: 'fill', x: pt[0], y: pt[1], c: D.color }); redraw(); E.noise(.28, .05, 700, .7); E.tone(330, .12, 'sine', .05, 160); return; }
+  if (tool === 'shape' || tool === 'sticker') {
+    baseCtx.drawImage(padCanvas, 0, 0);
+    D.cur = tool === 'shape' ? { t: D.shape, c: D.color, s: D.size, a: [pt[0], pt[1]], b: [pt[0], pt[1]] } : { t: 'stk', k: STICKERS[D.sticker], x: pt[0], y: pt[1], r: STK_R[D.size], r0: STK_R[D.size], c: D.color };
+    D.strokes.push(D.cur); previewOp(); if (tool === 'shape') scratch(true); return;
+  }
+  D.cur = { c: D.color, s: D.size, e: D.eraser, pen: !!pen, p: [pt] }; D.strokes.push(D.cur); drawStroke(D.cur); scratch(true);
+}
+function extendStroke(pt) {
+  const s = D.cur; if (!s) return;
+  if (s.t === 'stk') { s.r = clamp(Math.hypot(pt[0] - s.x, (pt[1] - s.y) * .75), s.r0, .3); previewOp(); return; }
+  if (s.t) { const d = Math.hypot(pt[0] - s.b[0], pt[1] - s.b[1]); s.b = [pt[0], pt[1]]; D.ink += d; previewOp(); scratchSpeed(d); return; }
+  const last = s.p[s.p.length - 1]; const d = Math.hypot(pt[0] - last[0], pt[1] - last[1]); if (d < .002) return; s.p.push(pt); D.ink += d; drawStroke(s, s.p.length - 1); scratchSpeed(d); D.dirty = true;
+}
+function endStroke() {
+  if (!D.cur) return; const s = D.cur; s.done = true;
+  if (!s.t) { const P = s.p; if (P.length > 1) { const g = padCtx, a = P[P.length - 2], b = P[P.length - 1]; g.lineWidth = strokeWidth(s, b[2]); g.strokeStyle = s.e ? PAPER : s.c; g.beginPath(); g.moveTo((a[0] + b[0]) / 2 * W0, (a[1] + b[1]) / 2 * H0); g.lineTo(b[0] * W0, b[1] * H0); g.stroke(); } }
+  else if (s.t !== 'stk' && Math.hypot(s.b[0] - s.a[0], s.b[1] - s.a[1]) < .006) { const k = D.strokes.lastIndexOf(s); if (k >= 0) D.strokes.splice(k, 1); } // a tap with a shape tool draws nothing
+  else if (s.t === 'stk') SFX.pop();
+  D.cur = null; scratch(false); redraw(); updEdit();
+}
+function dropCur() { const s = D.cur; if (!s) return; const k = D.strokes.lastIndexOf(s); if (k >= 0) D.strokes.splice(k, 1); D.cur = null; scratch(false); redraw(); }
+// pointers: pen pressure, coalesced samples, palm rejection (touches right after the pen, or with a huge contact patch, are
+// ignored; a palm line that started just before the pen lands is dropped), a second finger never draws, two-finger tap = undo
+let activePointer = null, activeType = '', lastPen = -1e9, touchT0 = 0, lastMove = 0, multi = null;
+padCanvas.addEventListener('pointerdown', e => {
+  if (!D.enabled) return; e.preventDefault(); E.audio(); const now = performance.now();
+  if (e.pointerType === 'pen') lastPen = now;
+  if (e.pointerType === 'touch') {
+    if (now - lastPen < 1500 || (e.width || 0) * (e.height || 0) > 2500) { NAV.palm = (NAV.palm || 0) + 1; return; }
+    if (multi) { multi.ids.add(e.pointerId); return; }
+    if (activeType === 'touch' && D.cur && activePointer !== e.pointerId) {
+      if (now - touchT0 < 350 && (!D.cur.p || D.cur.p.length < 6)) { dropCur(); multi = { t0: now, ids: new Set([activePointer, e.pointerId]) }; activePointer = null; activeType = ''; return; }
+      if (now - lastMove < 1000) return;
+    }
+  }
+  if (e.pointerType === 'pen' && activeType === 'touch' && D.cur && now - touchT0 < 2000) dropCur();
+  if (D.cur) endStroke();
+  activePointer = e.pointerId; activeType = e.pointerType; touchT0 = lastMove = now;
+  try { padCanvas.setPointerCapture(e.pointerId); } catch (err) { }
+  beginStroke(padPoint(e), e.pointerType === 'pen');
+});
+padCanvas.addEventListener('pointermove', e => { if (e.pointerId !== activePointer || !D.cur) return; lastMove = performance.now(); if (e.pointerType === 'pen') lastPen = lastMove; const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e]; for (const ev of (evs.length ? evs : [e])) extendStroke(padPoint(ev)); });
+const up = e => {
+  if (multi && multi.ids.has(e.pointerId)) { multi.ids.delete(e.pointerId); if (!multi.ids.size) { if (performance.now() - multi.t0 < 600) undo(); multi = null; } return; }
+  if (e.pointerId !== activePointer) return; if (e.pointerType === 'pen') lastPen = performance.now(); activePointer = null; activeType = ''; endStroke();
+};
 padCanvas.addEventListener('pointerup', up); padCanvas.addEventListener('pointercancel', up); padCanvas.addEventListener('lostpointercapture', up);
-function undo() { if (D.cur) { endStroke(); activePointer = null; NAV.cur.drawing = false; } if (!D.strokes.length) return; D.strokes.pop(); redraw(); SFX.pop(); }
-function clearAll() { if (!D.strokes.length) return; D.strokes.push({ clear: true }); redraw(); E.noise(.3, .08, 1200, .6); }
+function undo() { if (D.cur) { endStroke(); activePointer = null; NAV.cur.drawing = false; } if (!D.strokes.length) return; D.redo.push(D.strokes.pop()); redraw(); updEdit(); SFX.pop(); }
+function redo() { if (D.cur || !D.redo.length) return; D.strokes.push(D.redo.pop()); redraw(); updEdit(); SFX.click(); }
+function clearAll() { if (!activeOps().length) return; D.redo.length = 0; D.strokes.push({ clear: true }); redraw(); updEdit(); E.noise(.3, .08, 1200, .6); }
+function updEdit() { const b = document.querySelector('#dwTools [data-t=redo]'); if (b) b.disabled = !D.redo.length; }
 // pencil scratch: looping filtered noise whose loudness follows stroke speed
 let scr = null;
 function scratch(on) { const ac = E.audio(); if (!ac || !E.profile().sound) return; if (!scr) { const len = ac.sampleRate; const buf = ac.createBuffer(1, len, ac.sampleRate); const ch = buf.getChannelData(0); for (let i = 0; i < len; i++) ch[i] = (Math.random() * 2 - 1) * (.6 + .4 * Math.sin(i / 37)); const src = ac.createBufferSource(); src.buffer = buf; src.loop = true; const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 3800; bp.Q.value = .9; const hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 1400; const gn = ac.createGain(); gn.gain.value = 0; src.connect(bp); bp.connect(hp); hp.connect(gn); gn.connect(ac.destination); src.start(); scr = { gn, bp, ac }; } if (!on) scr.gn.gain.setTargetAtTime(0, scr.ac.currentTime, .03); }
@@ -560,23 +319,34 @@ function scratchSpeed(d) { if (!scr || !E.profile().sound) return; const v = cla
 
 /* ---------- tools UI ---------- */
 let curActions = [];
+const TOOL_LABEL = { pen: ['Pencil', 'Lápiz'], fill: ['Fill bucket', 'Cubeta de pintura'], shape: ['Shapes', 'Figuras'], sticker: ['Stickers', 'Calcomanías'], redo: ['Redo', 'Rehacer'] };
+const tl = k => TOOL_LABEL[k][S.lang === 'es' ? 1 : 0];
+function toolIcon(k) { return k === 'pen' ? '✏️' : k === 'fill' ? '🪣' : k === 'shape' ? SHAPE_ICON[D.shape] : STK_ICON[STICKERS[D.sticker]]; }
 function tools(actions) {
-  const el = $('dwTools');
+  const el = $('dwTools'); el.classList.remove('guess');
   el.innerHTML = `<div class="dw-pal">${PAL.map((c, i) => `<button data-c="${c}" style="background:${c}" class="${!D.eraser && D.color === c ? 'on' : ''}" aria-label="${T().color(i + 1)}"></button>`).join('')}</div>
-  <div class="dw-row dw-size">${SIZES.map((s, i) => `<button data-s="${i}" class="${D.size === i ? 'on' : ''}" aria-label="${T().brush(i + 1)}"><i style="width:${6 + i * 7}px;height:${6 + i * 7}px"></i></button>`).join('')}</div>
-  <div class="dw-row"><button data-t="eraser" class="${D.eraser ? 'on' : ''}" title="${T().eraser}" aria-label="${T().eraser}">🧽</button><button data-t="undo" title="${T().undo}" aria-label="${T().undo}">↶</button><button data-t="clear" title="${T().clear}" aria-label="${T().clear}">🗑</button></div>
+  <div class="dw-grid dw-size">${SIZES.map((s, i) => `<button data-s="${i}" class="${D.size === i ? 'on' : ''}" aria-label="${T().brush(i + 1)}"><i style="width:${6 + i * 7}px;height:${6 + i * 7}px"></i></button>`).join('')}<button data-t="eraser" class="${D.eraser ? 'on' : ''}" title="${T().eraser}" aria-label="${T().eraser}">🧽</button></div>
+  <div class="dw-grid dw-tool">${TOOLS.map(k => `<button data-tool="${k}" class="${!D.eraser && D.tool === k ? 'on' : ''}" title="${tl(k)}" aria-label="${tl(k)}">${toolIcon(k)}</button>`).join('')}</div>
+  <div class="dw-grid dw-edit"><button data-t="undo" title="${T().undo}" aria-label="${T().undo}">↶</button><button data-t="redo" title="${tl('redo')}" aria-label="${tl('redo')}" ${D.redo.length ? '' : 'disabled'}>↷</button><button data-t="clear" title="${T().clear}" aria-label="${T().clear}">🗑</button></div>
   <div class="dw-act">${actions.map(a => `<button data-a="${a.id}" class="${a.cls || ''}">${a.label}</button>`).join('')}</div>`; $('dwGp').textContent = T().gp; $('dwGp').hidden = !NAV.padSeen;
   curActions = actions;
   el.querySelectorAll('.dw-pal button').forEach(b => b.onclick = () => { D.color = b.dataset.c; D.eraser = false; tools(actions); SFX.click(); });
-  el.querySelectorAll('.dw-size button').forEach(b => b.onclick = () => { D.size = +b.dataset.s; tools(actions); SFX.click(); });
+  el.querySelectorAll('.dw-size button[data-s]').forEach(b => b.onclick = () => { D.size = +b.dataset.s; tools(actions); SFX.click(); });
+  el.querySelectorAll('[data-tool]').forEach(b => b.onclick = () => pickTool(b.dataset.tool));
   el.querySelector('[data-t=eraser]').onclick = () => { D.eraser = !D.eraser; tools(actions); SFX.click(); };
-  el.querySelector('[data-t=undo]').onclick = undo; el.querySelector('[data-t=clear]').onclick = clearAll;
+  el.querySelector('[data-t=undo]').onclick = undo; el.querySelector('[data-t=redo]').onclick = redo; el.querySelector('[data-t=clear]').onclick = clearAll;
   actions.forEach(a => { const b = el.querySelector(`[data-a="${a.id}"]`); if (a.hold) { b.addEventListener('pointerdown', e => { e.preventDefault(); a.hold(true); }); ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => b.addEventListener(ev, () => a.hold(false))); } else b.onclick = a.fn; });
 }
+// tapping the selected shape / sticker tool again cycles it (line → rectangle → oval; star → heart → …)
+function pickTool(k) {
+  if (D.tool === k && !D.eraser) { if (k === 'shape') D.shape = SHAPES[(SHAPES.indexOf(D.shape) + 1) % SHAPES.length]; if (k === 'sticker') D.sticker = (D.sticker + 1) % STICKERS.length; }
+  D.tool = k; D.eraser = false; if (D.enabled) tools(curActions); SFX.click();
+}
+function nextTool() { pickTool(TOOLS[(TOOLS.indexOf(D.tool) + 1) % TOOLS.length]); }
 function fitPaper() { const st = $('dwStage'); const r = st.getBoundingClientRect(); const portrait = innerHeight > innerWidth; let w = r.width, h = w * .75; if (!portrait && h > r.height) { h = r.height; w = h / .75; } if (portrait) { const maxH = innerHeight * .5; if (h > maxH) { h = maxH; w = h / .75; } } $('dwPaper').style.width = Math.floor(w) + 'px'; $('dwPaper').style.height = Math.floor(h) + 'px'; }
 addEventListener('resize', () => { if (!$('dw').hidden) fitPaper(); });
 function openPad(prompt, sec, actions) { $('dw').hidden = false; D.enabled = true; $('dwPrompt').innerHTML = prompt; tools(actions); G.timer = sec ? { left: sec, max: sec } : null; $('dwTime').style.display = sec ? '' : 'none'; requestAnimationFrame(fitPaper); fitPaper(); showPad(false); }
-function closePad() { $('dw').hidden = true; D.enabled = false; endStroke(); activePointer = null; NAV.cur.drawing = false; curEl.style.display = 'none'; scratch(false); }
+function closePad() { $('dwTime').classList.remove('warn'); $('dw').hidden = true; D.enabled = false; endStroke(); activePointer = null; NAV.cur.drawing = false; curEl.style.display = 'none'; scratch(false); }
 
 /* ======================= camera ======================= */
 const VIEWS = { room: [new THREE.Vector3(2.6, 2.5, 5.6), new THREE.Vector3(-.4, 1.5, -2.2)], easel: [new THREE.Vector3(.1, 1.75, 1.35), new THREE.Vector3(-.5, 1.62, -1.6)], draw: [new THREE.Vector3(1.4, 2.2, 3.6), new THREE.Vector3(-.3, 1.5, -1.8)], gallery: [new THREE.Vector3(.4, 2.3, -.4), new THREE.Vector3(6, 2.2, -1.6)] };
@@ -588,74 +358,143 @@ function updateCamera(dt) { const [p, l] = VIEWS[cam.view]; const portrait = inn
 function later(sec, fn) { G.sched.push({ t: G.time + sec, fn }); }
 function runSched() { const due = G.sched.filter(e => e.t <= G.time); if (!due.length) return; G.sched = G.sched.filter(e => e.t > G.time); due.forEach(e => e.fn()); }
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-function wordPool() { return WORDS.filter(w => S.diff === 0 || w.d === S.diff); }
-function drawWord(exclude = []) { const pool = wordPool().filter(w => !exclude.includes(w)); return pick(pool.length ? pool : WORDS); }
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const wtxt = w => S.lang === 'es' ? w.es : w.en;
+const catName = c => CATS[c] ? CATS[c][S.lang === 'es' ? 1 : 0] : '';
+// word pool from the title options (difficulty + category); a tiny category/difficulty combo widens to the whole category
+function wordPool() { let p = WORDS.filter(w => (S.cat === 'all' || w.c === S.cat) && (S.diff === 0 || w.d === S.diff)); if (p.length < 12) p = WORDS.filter(w => S.cat === 'all' || w.c === S.cat); return p; }
+// No repeats: words used this session are excluded, and the last REC_MAX words drawn on this device (any session) are
+// skipped too; once a pool is used up, the least recently used words come back first.
+const REC_KEY = 'inoa.draw.recent', REC_MAX = 400;
+function drawWord(exclude = [], pool = wordPool(), key = REC_KEY) {
+  const rec = E.store.get(key, []); const recSet = new Set(rec);
+  let c = pool.filter(w => !exclude.includes(w) && !recSet.has(w.en));
+  if (!c.length) { c = pool.filter(w => !exclude.includes(w)); if (!c.length) c = pool.slice(); c.sort((a, b) => rec.indexOf(a.en) - rec.indexOf(b.en)); c = c.slice(0, Math.min(5, c.length)); }
+  const w = pick(c); remember(w, key); return w;
+}
+function remember(w, key = REC_KEY) { const r = E.store.get(key, []).filter(x => x !== w.en); r.push(w.en); while (r.length > REC_MAX) r.shift(); E.store.set(key, r); }
+// 4 options: the answer, 2 from the same category (so the drawing decides) and 1 from elsewhere, all reading differently
+function options(word, n = 4) {
+  const seen = new Set([wtxt(word)]), outp = [word]; const add = w => { if (outp.length < n && !seen.has(wtxt(w))) { seen.add(wtxt(w)); outp.push(w); } };
+  shuffle(WORDS.filter(w => w !== word && w.c === word.c && w.d <= Math.max(2, word.d))).slice(0, 4).forEach(w => outp.length < n - 1 && add(w));
+  shuffle(WORDS.filter(w => w.c !== word.c && w.d <= Math.max(2, word.d))).forEach(add);
+  return shuffle(outp);
+}
 function card(html, cls = '') { const d = document.createElement('div'); d.className = 'ig-screen ' + cls; d.innerHTML = `<div class="ig-card">${html}</div>`; document.body.appendChild(d); G && (G.cards = G.cards || []).push(d); return d; }
 function killCards() { document.querySelectorAll('.ig-screen:not(.ig-title):not(.ig-results), .dw-slide').forEach(d => d.remove()); }
 function start(opts = {}) {
   Object.assign(S, opts); save(); killCards();
   G = { mode: S.mode, time: 0, sched: [], timer: null, paused: false, cards: [], used: [] };
-  ensureHud(); applyLang(); resetPad(); loadGallery();
+  ensureHud(); applyLang(); resetPad(); loadGallery(); D.tool = 'pen'; D.eraser = false;
   if (music) music.stop(); music = E.music(E.SONGS.chill);
-  if (S.mode === 'party') partyStart(); else if (S.mode === 'sketch') sketchStart(); else phoneStart();
+  ({ party: partyStart, team: partyStart, sketch: sketchStart, daily: dailyStart, doodle: doodleStart }[S.mode] || phoneStart)();
+  hud();
 }
 
-/* ---------- (a) party pass-and-play ---------- */
-function partyStart() { const n = clamp(S.players, 2, 8); const phones = E.net.role === 'host' ? E.net.pads().slice(0, 8) : []; G.phones = phones.length >= 2; G.players = G.phones ? phones.map((p, i) => ({ name: p.name, score: 0, i, slot: p.slot })) : S.names.slice(0, n).map((nm, i) => ({ name: nm || `P${i + 1}`, score: 0, i })); G.turn = 0; const n2 = G.players.length; G.turns = n2 * clamp(S.rounds, 1, 3); partyPass(); }
+/* ---------- (a) party pass-and-play, (a2) teams ---------- */
+const TEAMS = [{ en: 'Team Sun', es: 'Equipo Sol', col: '#ff8a2a', icon: '☀️' }, { en: 'Team Wave', es: 'Equipo Ola', col: '#2f8fe0', icon: '🌊' }];
+const teamName = t => `${TEAMS[t].icon} ${S.lang === 'es' ? TEAMS[t].es : TEAMS[t].en}`;
+const teamBadge = t => `<span class="dw-team" style="background:${TEAMS[t].col}">${esc(teamName(t))}</span>`;
+function partyStart() {
+  const team = S.mode === 'team'; const n = clamp(S.players, team ? 4 : 2, 8);
+  const phones = !team && E.net.role === 'host' ? E.net.pads().slice(0, 8) : []; G.phones = phones.length >= 2;
+  G.players = G.phones ? phones.map((p, i) => ({ name: p.name, score: 0, i, slot: p.slot })) : S.names.slice(0, n).map((nm, i) => ({ name: nm || `P${i + 1}`, score: 0, i, team: i % 2 }));
+  if (team) G.teams = [0, 1].map(t => ({ score: 0, t }));
+  G.turn = 0; G.turns = G.players.length * clamp(S.rounds, 1, 3); partyPass();
+}
 function partyPass() {
   if (G.turn >= G.turns) { partyEnd(); return; }
   const dr = G.players[G.turn % G.players.length]; G.drawer = dr; G.word = drawWord(G.used); G.used.push(G.word); G.skipped = false; camView('room'); resetPad(); hud();
+  const kick = `${L2('Turn', 'Turno')} ${G.turn + 1}/${G.turns}`;
   if (G.phones) { // the secret word goes to the drawer's phone: no peeking, no passing
-    G.players.forEach(p => { p.wrong = false; if (p !== dr) E.NET.setLayout({ type: 'text', text: (S.lang === 'es' ? `🎨 ${dr.name} va a dibujar.\n¡Prepárate para adivinar!` : `🎨 ${dr.name} is drawing next.\nGet ready to guess!`) }, p.slot); });
-    E.NET.setLayout({ type: 'text', text: `✏️ ${S.lang === 'es' ? 'Dibuja' : 'Draw'}:\n${wtxt(G.word)}` }, dr.slot); E.NET.rumble(dr.slot, 200);
-    const c = card(`<div class="ig-kicker">${S.lang === 'es' ? 'Turno' : 'Turn'} ${G.turn + 1}/${G.turns}</div><h2 style="color:${PCOL[dr.i]}">🎨 ${esc(dr.name)}</h2><p class="ig-sub">📱 ${S.lang === 'es' ? 'Tu palabra secreta está en tu teléfono. Dibuja aquí; los demás adivinan en sus teléfonos.' : 'Your secret word is on your phone. Draw here; everyone else guesses on their phones.'}</p><button class="ig-btn" data-a="go">${T().start}</button>`);
-    E.say(S.lang === 'es' ? `${dr.name}, mira tu teléfono` : `${dr.name}, check your phone`, { lang: S.lang });
+    G.players.forEach(p => { p.wrong = false; if (p !== dr) E.NET.setLayout({ type: 'text', text: L2(`🎨 ${dr.name} is drawing next.\nGet ready to guess!`, `🎨 ${dr.name} va a dibujar.\n¡Prepárate para adivinar!`) }, p.slot); });
+    E.NET.setLayout({ type: 'text', text: `✏️ ${L2('Draw', 'Dibuja')}:\n${wtxt(G.word)}` }, dr.slot); E.NET.rumble(dr.slot, 200);
+    const c = card(`<div class="ig-kicker">${kick}</div><h2 style="color:${PCOL[dr.i]}">🎨 ${esc(dr.name)}</h2><p class="ig-sub">📱 ${L2('Your secret word is on your phone. Draw here; everyone else guesses on their phones.', 'Tu palabra secreta está en tu teléfono. Dibuja aquí; los demás adivinan en sus teléfonos.')}</p><button class="ig-btn" data-a="go">${T().start}</button>`);
+    E.say(L2(`${dr.name}, check your phone`, `${dr.name}, mira tu teléfono`), { lang: S.lang });
     c.querySelector('[data-a=go]').onclick = () => { c.remove(); partyDraw(); }; return;
   }
-  const c = card(`<div class="ig-kicker">${S.lang === 'es' ? 'Turno' : 'Turn'} ${G.turn + 1}/${G.turns}</div><h2 style="color:${PCOL[dr.i]}">${esc(T().pass(dr.name))}</h2><p class="ig-sub">${T().noPeek}</p><button class="ig-btn" data-a="show">🔒 ${T().show}</button>`);
+  const c = card(`<div class="ig-kicker">${kick}${G.teams ? ' · ' + teamBadge(dr.team) : ''}</div><h2 style="color:${PCOL[dr.i]}">${esc(T().pass(dr.name))}</h2><p class="ig-sub">${G.teams ? L2('Only the drawer looks at the screen now! 🙈', '¡Ahora solo mira quien dibuja! 🙈') : T().noPeek}</p><button class="ig-btn" data-a="show">🔒 ${T().show}</button>`);
   E.say(T().pass(dr.name), { lang: S.lang });
   c.querySelector('[data-a=show]').onclick = () => { c.remove(); partyPeek(); };
 }
 function partyPeek() {
-  const c = card(`<div class="ig-kicker">${T().drawThis}</div><div class="dw-word">${esc(wtxt(G.word))}<small>${'★'.repeat(G.word.d)}${S.lang === 'es' ? '' : ''}</small></div><div class="ig-row"><button class="ig-btn ghost" data-a="skip" ${G.skipped ? 'disabled' : ''}>🔁 ${T().skip}</button><button class="ig-btn" data-a="go">${T().start}</button></div>`);
+  const w = G.word;
+  const c = card(`<div class="ig-kicker">${T().drawThis}</div><div class="dw-word">${esc(wtxt(w))}<small>${CATS[w.c][2]} ${esc(catName(w.c))} · ${'★'.repeat(w.d)}</small></div><p class="ig-sub" style="text-align:center">${L2('No letters or numbers, just pictures!', '¡Sin letras ni números, solo dibujos!')}</p><div class="ig-row"><button class="ig-btn ghost" data-a="skip" ${G.skipped ? 'disabled' : ''}>🔁 ${T().skip}</button><button class="ig-btn" data-a="go">${T().start}</button></div>`);
   c.querySelector('[data-a=skip]').onclick = () => { if (G.skipped) return; G.skipped = true; G.word = drawWord(G.used); G.used.push(G.word); c.remove(); partyPeek(); SFX.pop(); };
   c.querySelector('[data-a=go]').onclick = () => { c.remove(); partyDraw(); };
   G.peekCard = c;
 }
+// hint for the guessers: category + letter blanks; one letter shows at half time, up to a third of them at 3/4 time
+function hintStage() { if (!S.hints || !G.timer) return 0; const f = 1 - G.timer.left / G.timer.max; return f >= .75 ? 2 : f >= .5 ? 1 : 0; }
+function hintHtml(stage) {
+  if (!S.hints) return ''; const txt = [...wtxt(G.word)], idx = txt.map((ch, i) => /\p{L}/u.test(ch) ? i : -1).filter(i => i >= 0);
+  const order = idx.slice().sort((a, b) => ((a * 7919 + txt.length * 31) % 101) - ((b * 7919 + txt.length * 31) % 101));
+  const nShow = stage >= 2 ? Math.max(1, Math.floor(idx.length / 3)) : stage >= 1 && idx.length >= 3 ? 1 : 0; const shown = new Set(order.slice(0, nShow));
+  const blanks = txt.map((ch, i) => shown.has(i) ? esc(ch) : idx.includes(i) ? '_' : ch === ' ' ? '&ensp;' : esc(ch)).join('');
+  return ` <span class="dw-hint" title="${esc(L2('Hint', 'Pista'))}"><i>${CATS[G.word.c][2]}</i>${blanks}</span>`;
+}
+function partyPrompt(peek) {
+  if (peek) { $('dwPrompt').innerHTML = `<b>${esc(wtxt(G.word))}</b>`; return; }
+  const dr = G.drawer; const who = G.teams ? L2(`🎨 ${esc(dr.name)} draws — ${esc(teamName(dr.team))}, guess!`, `🎨 ${esc(dr.name)} dibuja — ¡${esc(teamName(dr.team))}, adivinen!`) : esc(T().drawer(dr.name));
+  G.hintShown = hintStage(); $('dwPrompt').innerHTML = `<span>${who}</span>${hintHtml(G.hintShown)}`;
+}
 function partyDraw() {
-  G.phase = 'draw'; camView('draw'); resetPad();
-  openPad(`<span>${esc(T().drawer(G.drawer.name))}</span>`, 60, [{ id: 'peek', label: T().peek, cls: 'dw-peek', hold: on => { $('dwPrompt').innerHTML = on ? `<b>${esc(wtxt(G.word))}</b>` : `<span>${esc(T().drawer(G.drawer.name))}</span>`; } }, { id: 'got', label: T().guessed, cls: 'go', fn: partyWho }]);
-  big('🎨 ' + T().guessOut); E.say(T().guessOut, { lang: S.lang }); SFX.good();
-  if (G.phones) { const opts = [G.word, ...wordPool().filter(w => w !== G.word).sort(() => Math.random() - .5).slice(0, 3)].sort(() => Math.random() - .5); G.opts = opts; G.players.forEach(p => { if (p !== G.drawer) E.NET.setLayout({ type: 'choices', question: S.lang === 'es' ? '¿Qué están dibujando?' : 'What is being drawn?', choices: opts.map(wtxt) }, p.slot); }); }
+  G.phase = 'draw'; camView('draw'); resetPad(); G.peeking = false;
+  const got = G.teams ? { id: 'got', label: L2('✓ Our team got it!', '✓ ¡Lo adivinamos!'), cls: 'go', fn: partyWho } : { id: 'got', label: T().guessed, cls: 'go', fn: partyWho };
+  openPad('', S.roundSec, [{ id: 'peek', label: T().peek, cls: 'dw-peek', hold: on => { G.peeking = on; partyPrompt(on); } }, got]); partyPrompt(false);
+  const line = G.teams ? L2(`${teamName(G.drawer.team)}, guess out loud!`, `¡${teamName(G.drawer.team)}, adivinen en voz alta!`) : T().guessOut;
+  big('🎨 ' + line); E.say(line, { lang: S.lang }); SFX.good();
+  if (G.phones) { const opts = options(G.word); G.opts = opts; G.players.forEach(p => { if (p !== G.drawer) E.NET.setLayout({ type: 'choices', question: L2('What is being drawn?', '¿Qué están dibujando?'), choices: opts.map(wtxt) }, p.slot); }); }
 }
 E.net.on('msg', (p, m) => {
   if (!G || !G.phones || G.paused || m.t !== 'choice' || G.phase !== 'draw') return; const pl = G.players.find(x => x.slot === p.slot); if (!pl || pl === G.drawer || pl.wrong) return;
   if (G.opts[m.i] === G.word) { E.NET.rumble(pl.slot, 150); partyScore(pl); }
-  else { pl.wrong = true; SFX.bad(); E.NET.setLayout({ type: 'text', text: S.lang === 'es' ? '❌ ¡Uy! Esa no era. Espera la próxima ronda.' : '❌ Not that one! Wait for the next round.' }, pl.slot); if (G.players.every(x => x === G.drawer || x.wrong)) timeUp(); }
+  else { pl.wrong = true; SFX.bad(); E.NET.setLayout({ type: 'text', text: L2('❌ Not that one! Wait for the next round.', '❌ ¡Uy! Esa no era. Espera la próxima ronda.') }, pl.slot); if (G.players.every(x => x === G.drawer || x.wrong)) timeUp(); }
 });
 function partyWho() {
-  if (G.phase !== 'draw') return; G.phase = 'who'; G.timer && (G.timer.frozen = true);
+  if (G.phase !== 'draw') return;
+  if (G.teams) { teamScore(); return; }
+  G.phase = 'who'; G.timer && (G.timer.frozen = true);
   const others = G.players.filter(p => p !== G.drawer);
   const c = card(`<h2>${T().who}</h2><div class="dw-chips">${others.map(p => `<button data-i="${p.i}" style="--c:${PCOL[p.i]}">${esc(p.name)}</button>`).join('')}</div><button class="ig-btn ghost" data-a="back">↩</button>`);
   c.querySelectorAll('.dw-chips button').forEach(b => b.onclick = () => { c.remove(); partyScore(G.players[+b.dataset.i]); });
   c.querySelector('[data-a=back]').onclick = () => { c.remove(); G.phase = 'draw'; G.timer && (G.timer.frozen = false); };
 }
-function partyScore(guesser) {
-  const left = G.timer ? G.timer.left : 0; const gp = left >= 40 ? 3 : left >= 20 ? 2 : 1; guesser.score += gp; G.drawer.score += 2; partyReveal(guesser, gp);
+// points scale with the share of the round left (fair for 45 / 60 / 90 s rounds): 3 / 2 / 1; the drawer gets 2
+const quickPts = () => { const f = G.timer ? G.timer.left / G.timer.max : 0; return f >= 2 / 3 ? 3 : f >= 1 / 3 ? 2 : 1; };
+function partyScore(guesser) { const gp = quickPts(); guesser.score += gp; G.drawer.score += 2; partyReveal({ ok: true, line: `<b style="color:${PCOL[guesser.i]}">${esc(guesser.name)}</b> +${gp} · <b style="color:${PCOL[G.drawer.i]}">${esc(G.drawer.name)}</b> +2`, who: guesser.name, gp, guesser }); }
+function teamScore() { const gp = quickPts(), t = G.drawer.team; G.teams[t].score += gp; G.drawer.score += gp; partyReveal({ ok: true, line: `${teamBadge(t)} +${gp}`, who: teamName(t), gp }); }
+// teams: when the clock runs out the other team may steal the point with one guess
+function teamSteal() {
+  G.phase = 'steal'; G.timer = null; closePad(); const o = 1 - G.drawer.team;
+  const c = card(`<div class="ig-kicker">⏰ ${T().timeUp}</div><h2>${L2('Steal!', '¡Robo!')} ${teamBadge(o)}</h2><p class="ig-sub">${L2(`${esc(teamName(o))}: one guess, out loud. Did they get it?`, `${esc(teamName(o))}: una sola respuesta en voz alta. ¿Adivinaron?`)}</p><div class="ig-row"><button class="ig-btn ghost" data-a="no">✗ ${L2('No', 'No')}</button><button class="ig-btn" data-a="yes">⚡ ${L2('Yes, steal +1', 'Sí, robo +1')}</button></div>`);
+  E.say(L2(`${teamName(o)}, one guess to steal!`, `¡${teamName(o)}, una respuesta para robar!`), { lang: S.lang });
+  c.querySelector('[data-a=yes]').onclick = () => { c.remove(); G.teams[o].score += 1; partyReveal({ ok: true, line: `⚡ ${teamBadge(o)} +1`, who: teamName(o), gp: 1 }); };
+  c.querySelector('[data-a=no]').onclick = () => { c.remove(); partyReveal(null); };
+  G.stealCard = c;
 }
-function partyReveal(guesser, gp) {
+function partyReveal(res) {
   G.phase = 'reveal'; G.timer = null; closePad(); camView('easel'); D.dirty = true; hud();
-  if (G.phones) G.players.forEach(p => E.NET.setLayout({ type: 'text', text: `${guesser ? (p === guesser ? '🎉 +' + gp : '🎉 ' + guesser.name) : '⏰'}\n${wtxt(G.word)}\n\n${p.name}: ${p.score}` }, p.slot));
-  if (guesser) { SFX.win(); confettiBurst(); } else SFX.lose();
-  const w = wtxt(G.word); E.say(`${T().wordWas} ${w}`, { lang: S.lang });
-  later(1.1, () => { const c = card(`<div class="ig-kicker">${guesser ? '🎉' : '⏰ ' + T().timeUp}</div><div class="dw-word">${esc(w)}</div>${guesser ? `<p class="ig-sub" style="text-align:center"><b style="color:${PCOL[guesser.i]}">${esc(guesser.name)}</b> +${gp} · <b style="color:${PCOL[G.drawer.i]}">${esc(G.drawer.name)}</b> +2</p>` : `<p class="ig-sub" style="text-align:center">${T().nobody}</p>`}${board()}<button class="ig-btn" data-a="next">${T().next}</button>`);
+  if (G.phones) G.players.forEach(p => E.NET.setLayout({ type: 'text', text: `${res ? (p === res.guesser ? '🎉 +' + res.gp : '🎉 ' + res.who) : '⏰'}\n${wtxt(G.word)}\n\n${p.name}: ${p.score}` }, p.slot));
+  const w = wtxt(G.word);
+  if (res) celebrate(res.who); else SFX.lose();
+  E.say(res ? `${res.who}! ${T().wordWas} ${w}` : `${T().wordWas} ${w}`, { lang: S.lang });
+  later(1.1, () => { const c = card(`<div class="ig-kicker">${res ? '🎉' : '⏰ ' + T().timeUp}</div><div class="dw-word">${esc(w)}</div><p class="ig-sub" style="text-align:center">${res ? res.line : T().nobody}</p>${board()}<button class="ig-btn" data-a="next">${T().next}</button>`);
     c.querySelector('[data-a=next]').onclick = () => { c.remove(); G.turn++; partyPass(); }; G.revealCard = c; });
 }
-function board() { const rows = [...G.players].sort((a, b) => b.score - a.score); return `<div class="dw-board">${rows.map((p, k) => `<div><b>${k + 1}</b><span style="border-left:6px solid ${PCOL[p.i]};padding-left:8px">${esc(p.name)}</span><b>${p.score}</b></div>`).join('')}</div>`; }
+function board() {
+  if (G.teams) return `<div class="dw-board">${[...G.teams].sort((a, b) => b.score - a.score).map((t, k) => `<div><b>${k + 1}</b><span style="border-left:6px solid ${TEAMS[t.t].col};padding-left:8px">${esc(teamName(t.t))} <small style="color:#4c5868">${G.players.filter(p => p.team === t.t).map(p => esc(p.name)).join(', ')}</small></span><b>${t.score}</b></div>`).join('')}</div>`;
+  const rows = [...G.players].sort((a, b) => b.score - a.score); return `<div class="dw-board">${rows.map((p, k) => `<div><b>${k + 1}</b><span style="border-left:6px solid ${PCOL[p.i]};padding-left:8px">${esc(p.name)}</span><b>${p.score}</b></div>`).join('')}</div>`;
+}
 function partyEnd() {
-  if (G.ended) return; G.phase = 'end'; camView('room'); music && music.stop(); if (G.phones) E.NET.setLayout({ type: 'gamepad' }); const rows = [...G.players].sort((a, b) => b.score - a.score); const tie = rows.length > 1 && rows[0].score === rows[1].score; SFX.win(); confettiBurst();
-  finish({ gameId: 'draw', title: tie ? (S.lang === 'es' ? '¡Empate!' : 'It’s a tie!') : (S.lang === 'es' ? `¡Gana ${rows[0].name}!` : `${rows[0].name} wins!`), stats: rows.map((p, k) => [`${k + 1}. ${p.name}`, p.score]), xp: 40 + G.turns * 8, coins: 10 + G.turns * 2, bestLabel: T().bestSketch, won: true, onAgain: () => title(), share: S.lang === 'es' ? `¡${rows[0].name} ganó nuestra fiesta de Draw the Pact con ${rows[0].score} puntos! (Inoa Games) ${location.href}` : `${rows[0].name} won our Draw the Pact party with ${rows[0].score} points! (Inoa Games) ${location.href}` });
+  if (G.ended) return; G.phase = 'end'; camView('room'); music && music.stop(); if (G.phones) E.NET.setLayout({ type: 'gamepad' }); SFX.win(); confettiBurst();
+  if (G.teams) {
+    const [a, b] = G.teams, tie = a.score === b.score, win = a.score > b.score ? 0 : 1; const mvp = [...G.players].sort((x, y) => y.score - x.score)[0];
+    finish({ gameId: 'draw', title: tie ? L2('It’s a tie!', '¡Empate!') : L2(`${teamName(win)} wins!`, `¡Gana ${teamName(win)}!`), stats: [[teamName(0), a.score], [teamName(1), b.score], [L2('Best drawer', 'Mejor dibujante'), `${mvp.name} (${mvp.score})`]], xp: 40 + G.turns * 8, coins: 10 + G.turns * 2, won: true, onAgain: () => title(), share: L2(`${tie ? 'A tie' : teamName(win) + ' won'} in our Draw the Pact team game, ${Math.max(a.score, b.score)} to ${Math.min(a.score, b.score)}! (Inoa Games) ${location.href}`, `¡${tie ? 'Empate' : 'Ganó ' + teamName(win)} en nuestro juego por equipos de Draw the Pact, ${Math.max(a.score, b.score)} a ${Math.min(a.score, b.score)}! (Inoa Games) ${location.href}`) });
+    return;
+  }
+  const rows = [...G.players].sort((a, b) => b.score - a.score); const tie = rows.length > 1 && rows[0].score === rows[1].score;
+  finish({ gameId: 'draw', title: tie ? L2('It’s a tie!', '¡Empate!') : L2(`${rows[0].name} wins!`, `¡Gana ${rows[0].name}!`), stats: rows.map((p, k) => [`${k + 1}. ${p.name}`, p.score]), xp: 40 + G.turns * 8, coins: 10 + G.turns * 2, won: true, onAgain: () => title(), share: L2(`${rows[0].name} won our Draw the Pact party with ${rows[0].score} points! (Inoa Games) ${location.href}`, `¡${rows[0].name} ganó nuestra fiesta de Draw the Pact con ${rows[0].score} puntos! (Inoa Games) ${location.href}`) });
 }
 
 // Every mode ends here: E.results exactly once per round (G.ended guard), engine card localised.
@@ -663,18 +502,133 @@ function finish(o) { if (!G || G.ended) return null; G.ended = true; G.phase = '
 /* ---------- (b) solo speed sketch ---------- */
 function sketchStart() { G.n = 5; G.k = 0; G.done = []; G.inkTotal = 0; sketchNext(); }
 function sketchNext() {
-  if (G.k >= G.n) { sketchEnd(); return; } G.word = drawWord(G.used); G.used.push(G.word); resetPad(); G.phase = 'draw'; camView('draw');
+  if (G.k >= G.n) { sketchEnd(); return; } G.word = drawWord(G.used); G.used.push(G.word); resetPad(); G.phase = 'draw'; camView('draw'); hud();
   openPad(`<span>${T().sketch(G.k + 1 + '/' + G.n)}:</span> <b>${esc(wtxt(G.word))}</b>`, S.sketchSec, [{ id: 'done', label: T().done, cls: 'go', fn: sketchSave }]);
   E.say(wtxt(G.word), { lang: S.lang }); big(wtxt(G.word));
 }
 function sketchSave() {
-  if (G.phase !== 'draw') return; G.phase = 'saved'; G.timer = null; closePad(); G.inkTotal += D.ink; G.done.push({ word: G.word, ink: D.ink, strokes: D.strokes.filter(s => !s.clear).length });
-  saveToGallery(wtxt(G.word)); camView('gallery'); SFX.snap(); later(.3, () => { E.toast(T().saved, 1500); frames[0].g.scale.setScalar(1.25); });
+  if (G.phase !== 'draw') return; G.phase = 'saved'; G.timer = null; closePad(); G.inkTotal += D.ink; G.done.push({ word: G.word, ink: D.ink, strokes: activeOps().length });
+  if (activeOps().length) saveToGallery(G.word); camView('gallery'); SFX.snap(); later(.3, () => { E.toast(T().saved, 1300); frames[0].g.scale.setScalar(1.25); });
   later(2.2, () => { frames[0].g.scale.setScalar(1); G.k++; sketchNext(); });
 }
 function sketchEnd() {
   if (G.ended) return; G.phase = 'end'; camView('gallery'); music && music.stop(); SFX.win(); const n = G.done.filter(d => d.strokes > 0).length;
-  finish({ gameId: 'draw', title: S.lang === 'es' ? '¡Galería actualizada!' : 'Gallery updated!', stats: [[S.lang === 'es' ? 'Bocetos' : 'Sketches', `${n}/${G.n}`], [S.lang === 'es' ? 'Tinta' : 'Ink used', Math.round(G.inkTotal * 100) + ' cm'], [S.lang === 'es' ? 'Tiempo' : 'Timer', S.sketchSec + 's']], xp: 25 + n * 10, coins: 5 + n * 3, best: n, bestLabel: T().bestSketch, won: n > 0, onAgain: () => title(), share: S.lang === 'es' ? `¡Hice ${n} bocetos en Boceto rápido de Draw the Pact! (Inoa Games) ${location.href}` : `I sketched ${n} drawings in Draw the Pact Speed Sketch! (Inoa Games) ${location.href}` });
+  finish({ gameId: 'draw', title: L2('Gallery updated!', '¡Galería actualizada!'), stats: [[L2('Sketches', 'Bocetos'), `${n}/${G.n}`], [L2('Ink used', 'Tinta'), Math.round(G.inkTotal * 100) + ' cm'], [L2('Timer', 'Tiempo'), S.sketchSec + 's']], xp: 25 + n * 10, coins: 5 + n * 3, best: n, bestLabel: T().bestSketch, won: n > 0, onAgain: () => title(), share: L2(`I sketched ${n} drawings in Draw the Pact Speed Sketch! (Inoa Games) ${location.href}`, `¡Hice ${n} bocetos en Boceto rápido de Draw the Pact! (Inoa Games) ${location.href}`) });
+}
+
+/* ---------- (d) daily doodle: one prompt per calendar day, kept in a local gallery with a streak ---------- */
+const DAILY_KEY = 'inoa.draw.daily', DAILY_MAX = 30;
+const dayKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const DAILY_POOL = WORDS.filter(w => w.d <= 2 && !['actions', 'ideas'].includes(w.c));
+function dailyWord(day = dayKey()) { let h = 2166136261; for (const ch of 'inoa-draw-' + day) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; } return DAILY_POOL[h % DAILY_POOL.length]; }
+function dailyList() { const l = E.store.get(DAILY_KEY, []); return Array.isArray(l) ? l.filter(x => x && x.img && x.day) : []; }
+function dailyStreak(list = dailyList()) { const days = new Set(list.map(x => x.day)); let n = 0; const d = new Date(); if (!days.has(dayKey(d))) d.setDate(d.getDate() - 1); while (days.has(dayKey(d))) { n++; d.setDate(d.getDate() - 1); } return n; }
+function dailyStart() {
+  G.word = dailyWord(); G.phase = 'draw'; camView('draw'); resetPad(); const had = dailyList().some(x => x.day === dayKey());
+  openPad(`<span>🌞 ${L2('Daily doodle', 'Dibujo del día')}:</span> <b>${esc(wtxt(G.word))}</b>`, 120, [{ id: 'done', label: T().done, cls: 'go', fn: dailySave }]);
+  const line = L2(`Today's doodle: ${G.word.en}. Take your time!`, `El dibujo de hoy: ${G.word.es}. ¡Sin prisa!`); E.say(line, { lang: S.lang }); big('🌞 ' + wtxt(G.word));
+  if (had) E.toast(L2('You already drew today — this one replaces it.', 'Ya dibujaste hoy: este lo reemplaza.'), 2200);
+}
+function dailySave() {
+  if (G.phase !== 'draw') return; G.phase = 'saved'; G.timer = null; const drew = activeOps().length > 0; closePad();
+  let list = dailyList();
+  if (drew) { const img = snapshotJpeg(480, 360, .72); if (img) { list = list.filter(x => x.day !== dayKey()); list.unshift({ day: dayKey(), en: G.word.en, es: G.word.es, img, t: Date.now() }); while (list.length > DAILY_MAX) list.pop(); if (!storeList(DAILY_KEY, list)) list = dailyList(); } saveToGallery(G.word); }
+  camView('gallery'); SFX.snap(); const streak = dailyStreak(list); G.daily = { streak, total: list.length, drew };
+  later(1.4, () => dailyEnd());
+}
+function dailyEnd() {
+  if (G.ended) return; const { streak, total, drew } = G.daily; music && music.stop(); if (drew) { SFX.win(); confettiBurst(); }
+  finish({ gameId: 'draw', title: drew ? L2('Today’s doodle is on the wall!', '¡El dibujo de hoy está en la pared!') : L2('Come back and doodle!', '¡Vuelve a dibujar!'), stats: [[L2('Prompt', 'Tema'), wtxt(G.word)], [L2('Streak', 'Racha'), `🔥 ${streak}`], [L2('Days drawn', 'Días dibujados'), total]], xp: drew ? 30 + Math.min(streak, 7) * 5 : 10, coins: drew ? 8 + Math.min(streak, 7) : 2, won: drew, onAgain: () => title(), share: L2(`I drew today's Draw the Pact daily doodle: "${G.word.en}" (streak ${streak}) (Inoa Games) ${location.href}`, `Dibujé el dibujo del día de Draw the Pact: "${G.word.es}" (racha ${streak}) (Inoa Games) ${location.href}`) });
+}
+
+/* ---------- (e) guess the doodle: the pencil draws an original doodle, pick what it is before it finishes ---------- */
+const Q = 4 / 3; // y stretch so circles look round on the 4:3 paper
+function arc(cx, cy, rx, ry, a0 = 0, a1 = Math.PI * 2) { const n = Math.max(8, Math.ceil(Math.abs(a1 - a0) * Math.max(rx, ry) * 40)), p = []; for (let i = 0; i <= n; i++) { const a = a0 + (a1 - a0) * i / n; p.push([cx + Math.cos(a) * rx, cy + Math.sin(a) * ry]); } return p; }
+const circ = (cx, cy, r, a0, a1) => arc(cx, cy, r, r * Q, a0, a1);
+function ln(...pts) { const o = []; for (let i = 0; i < pts.length - 1; i++) { const a = pts[i], b = pts[i + 1], n = Math.max(2, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) * 40)); for (let k = i ? 1 : 0; k <= n; k++) o.push([a[0] + (b[0] - a[0]) * k / n, a[1] + (b[1] - a[1]) * k / n]); } return o; }
+const wavy = (x0, y0, x1, y1, amp, waves) => { const o = []; for (let i = 0; i <= 30; i++) { const t = i / 30, nx = -(y1 - y0), ny = x1 - x0, l = Math.hypot(nx, ny) || 1, s = Math.sin(t * Math.PI * 2 * waves) * amp; o.push([x0 + (x1 - x0) * t + nx / l * s, y0 + (y1 - y0) * t + ny / l * s]); } return o; };
+const starPts = (cx, cy, r, k = .45) => { const o = []; for (let i = 0; i <= 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, q = i % 2 ? k : 1; o.push([cx + Math.cos(a) * r * q, cy + Math.sin(a) * r * q * Q]); } return ln(...o); };
+const PI = Math.PI;
+const DOODLES = {
+  sun: () => [circ(.5, .5, .13), ...[...Array(8)].map((_, i) => { const a = i * PI / 4; return ln([.5 + Math.cos(a) * .18, .5 + Math.sin(a) * .18 * Q], [.5 + Math.cos(a) * .26, .5 + Math.sin(a) * .26 * Q]); })],
+  house: () => [ln([.3, .82], [.3, .5], [.7, .5], [.7, .82], [.3, .82]), ln([.25, .52], [.5, .22], [.75, .52]), ln([.45, .82], [.45, .66], [.55, .66], [.55, .82]), ln([.35, .57], [.42, .57], [.42, .65], [.35, .65], [.35, .57]), ln([.58, .57], [.65, .57], [.65, .65], [.58, .65], [.58, .57])],
+  tree: () => [ln([.46, .88], [.46, .655]), ln([.54, .88], [.54, .655]), arc(.5, .42, .17, .24), ln([.36, .9], [.64, .9])],
+  cat: () => [circ(.5, .56, .15), ln([.39, .44], [.4, .24], [.47, .37]), ln([.53, .37], [.6, .24], [.61, .44]), circ(.44, .52, .016), circ(.56, .52, .016), ln([.48, .585], [.52, .585], [.5, .61], [.48, .585]), ln([.46, .63], [.48, .655], [.5, .63], [.52, .655], [.54, .63]), ln([.43, .61], [.3, .58]), ln([.43, .64], [.3, .67]), ln([.57, .61], [.7, .58]), ln([.57, .64], [.7, .67])],
+  fish: () => [arc(.46, .5, .2, .17), ln([.65, .5], [.8, .35], [.8, .65], [.65, .5]), circ(.35, .46, .016), arc(.28, .53, .03, .025, -.5 * PI, .5 * PI), ln([.46, .33], [.54, .25], [.56, .35])],
+  star: () => [starPts(.5, .53, .26)],
+  heart: () => { const o = []; for (let i = 0; i <= 60; i++) { const t = i / 60 * PI * 2; o.push([.5 + 16 * Math.sin(t) ** 3 * .016, .5 - (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) * .016 * Q]); } return [o]; },
+  moon: () => [arc(.52, .5, .2, .3, .5 * PI, 1.5 * PI), arc(.52, .5, .07, .3, 1.5 * PI, .5 * PI), starPts(.72, .3, .04), starPts(.66, .66, .03)],
+  car: () => [ln([.18, .66], [.18, .52], [.31, .5], [.4, .37], [.62, .37], [.71, .5], [.83, .52], [.83, .66], [.18, .66]), circ(.33, .67, .06), circ(.68, .67, .06), ln([.42, .41], [.5, .41], [.5, .5], [.36, .5], [.42, .41]), ln([.54, .41], [.61, .41], [.66, .5], [.54, .5], [.54, .41])],
+  boat: () => [ln([.2, .6], [.8, .6], [.68, .74], [.32, .74], [.2, .6]), ln([.5, .6], [.5, .18]), ln([.5, .2], [.72, .55], [.5, .55]), wavy(.1, .82, .9, .82, .015, 4)],
+  flower: () => [ln([.5, .9], [.5, .5]), ln([.5, .74], [.57, .66], [.63, .67], [.58, .74], [.5, .74]), ...[...Array(6)].map((_, i) => { const a = i * PI / 3; return circ(.5 + Math.cos(a) * .09, .36 + Math.sin(a) * .09 * Q, .055); }), circ(.5, .36, .045)],
+  apple: () => { const o = []; for (let i = 0; i <= 64; i++) { const t = i / 64 * PI * 2, m = Math.min(t, PI * 2 - t); o.push([.5 + .18 * Math.sin(t) * (1 + .08 * Math.cos(t)), .58 - .21 * Math.cos(t) + .045 * Math.exp(-m * m * 4) - .02 * Math.exp(-(m - PI) * (m - PI) * 3)]); } return [o, ln([.5, .42], [.53, .26]), arc(.6, .3, .06, .03, PI, 2 * PI), arc(.6, .3, .06, .03, 0, PI)]; },
+  balloon: () => [arc(.5, .38, .14, .22), ln([.47, .63], [.5, .6], [.53, .63], [.47, .63]), wavy(.5, .63, .5, .92, .02, 2)],
+  umbrella: () => [arc(.5, .48, .28, .26, PI, 2 * PI), arc(.315, .48, .093, .05, 0, PI), arc(.5, .48, .093, .05, 0, PI), arc(.685, .48, .093, .05, 0, PI), ln([.5, .22], [.5, .8]), arc(.46, .8, .04, .05, 0, PI)],
+  cup: () => [ln([.33, .36], [.37, .76], [.6, .76], [.64, .36]), arc(.485, .36, .155, .04), arc(.65, .54, .07, .11, -.5 * PI, .5 * PI), wavy(.44, .3, .44, .14, .012, 1.5), wavy(.53, .3, .53, .12, .012, 1.5)],
+  key: () => [circ(.3, .5, .09), circ(.3, .5, .03), ln([.39, .5], [.8, .5]), ln([.72, .5], [.72, .62]), ln([.78, .5], [.78, .58])],
+  snowman: () => [circ(.5, .7, .14), circ(.5, .41, .1), circ(.5, .2, .065), circ(.48, .19, .008), circ(.53, .19, .008), ln([.5, .22], [.56, .23]), ln([.41, .4], [.27, .3]), ln([.59, .4], [.73, .3]), circ(.5, .62, .01), circ(.5, .72, .01)],
+  kite: () => [ln([.5, .12], [.66, .4], [.5, .72], [.34, .4], [.5, .12]), ln([.5, .12], [.5, .72]), ln([.34, .4], [.66, .4]), wavy(.5, .72, .62, .95, .025, 2.5)],
+  'ice cream': () => [ln([.38, .46], [.5, .9], [.62, .46]), ln([.42, .58], [.56, .7]), ln([.58, .58], [.44, .7]), arc(.5, .44, .14, .2, PI, 2 * PI), ln([.36, .46], [.64, .46]), circ(.5, .2, .025)],
+  rocket: () => [ln([.5, .1], [.6, .3], [.6, .7], [.4, .7], [.4, .3], [.5, .1]), circ(.5, .38, .04), ln([.4, .54], [.3, .76], [.4, .7]), ln([.6, .54], [.7, .76], [.6, .7]), ln([.44, .7], [.5, .88], [.56, .7])],
+  mushroom: () => [arc(.5, .5, .26, .3, PI, 2 * PI), ln([.24, .5], [.76, .5]), ln([.42, .5], [.41, .8], [.59, .8], [.58, .5]), circ(.4, .38, .03), circ(.56, .32, .035), circ(.63, .43, .025)],
+  cloud: () => [arc(.37, .53, .1, .13, .5 * PI, 1.5 * PI), arc(.5, .42, .14, .17, 1.05 * PI, 1.95 * PI), arc(.64, .52, .1, .14, 1.5 * PI, 2.5 * PI), ln([.64, .66], [.37, .66]), wavy(.4, .74, .38, .9, .01, 1), wavy(.52, .74, .5, .92, .01, 1), wavy(.63, .74, .61, .9, .01, 1)],
+  rainbow: () => [arc(.5, .78, .36, .5, PI, 2 * PI), arc(.5, .78, .29, .4, PI, 2 * PI), arc(.5, .78, .22, .3, PI, 2 * PI), arc(.17, .78, .08, .06, 0, 2 * PI), arc(.83, .78, .08, .06, 0, 2 * PI)],
+  glasses: () => [circ(.35, .5, .1), circ(.65, .5, .1), arc(.5, .5, .05, .04, PI, 2 * PI), ln([.25, .47], [.15, .4]), ln([.75, .47], [.85, .4])],
+  crown: () => [ln([.25, .7], [.25, .34], [.37, .54], [.5, .28], [.63, .54], [.75, .34], [.75, .7], [.25, .7]), ln([.25, .62], [.75, .62]), circ(.5, .48, .025), circ(.25, .3, .02), circ(.75, .3, .02), circ(.5, .24, .02)],
+  candle: () => [ln([.43, .86], [.43, .42], [.57, .42], [.57, .86], [.43, .86]), ln([.5, .42], [.5, .35]), arc(.5, .29, .04, .08, .1 * PI, .9 * PI), ln([.46, .3], [.5, .17], [.54, .3]), arc(.5, .86, .14, .04)],
+  ladder: () => [ln([.38, .1], [.38, .92]), ln([.62, .1], [.62, .92]), ...[.2, .34, .48, .62, .76, .88].map(y => ln([.38, y], [.62, y]))],
+  snail: () => { const sp = []; for (let i = 0; i <= 80; i++) { const t = i / 80 * PI * 5, r = .15 * (1 - i / 92); sp.push([.47 + Math.cos(t) * r, .5 + Math.sin(t) * r * Q]); } return [sp.reverse(), ln([.18, .74], [.8, .74], [.82, .6]), ln([.79, .62], [.76, .46]), ln([.82, .6], [.86, .45]), circ(.76, .45, .012), circ(.86, .44, .012)]; },
+  envelope: () => [ln([.24, .3], [.76, .3], [.76, .72], [.24, .72], [.24, .3]), ln([.24, .3], [.5, .54], [.76, .3]), ln([.24, .72], [.42, .48]), ln([.76, .72], [.58, .48])],
+  bicycle: () => [circ(.29, .66, .13), circ(.71, .66, .13), ln([.29, .66], [.45, .45], [.63, .45], [.71, .66]), ln([.45, .45], [.5, .66], [.29, .66]), ln([.5, .66], [.63, .45]), ln([.45, .45], [.43, .38]), ln([.38, .38], [.49, .38]), ln([.63, .45], [.6, .35], [.67, .33])],
+  tent: () => [ln([.18, .8], [.5, .26], [.82, .8], [.18, .8]), ln([.5, .26], [.42, .8]), ln([.5, .26], [.58, .8]), ln([.5, .26], [.5, .14], [.6, .17], [.5, .2]), ln([.08, .8], [.92, .8])],
+  butterfly: () => [ln([.5, .3], [.5, .74]), arc(.37, .4, .13, .14), arc(.63, .4, .13, .14), arc(.4, .62, .1, .1), arc(.6, .62, .1, .1), ln([.5, .3], [.44, .16]), ln([.5, .3], [.56, .16])],
+  spider: () => [circ(.5, .55, .09), circ(.5, .36, .05), ...[-1, 1].flatMap(sx => [0, 1, 2, 3].map(k => { const y = .48 + k * .05; return ln([.5 + sx * .07, y], [.5 + sx * .2, y - .1 + k * .03], [.5 + sx * .26, y + .06 + k * .05]); })), wavy(.5, .31, .5, .05, .005, 1)],
+  turtle: () => [arc(.48, .6, .2, .24, PI, 2 * PI), ln([.28, .6], [.68, .6]), ln([.4, .45], [.48, .38], [.56, .45], [.48, .52], [.4, .45]), circ(.75, .53, .05), circ(.76, .51, .008), ln([.33, .6], [.31, .68]), ln([.62, .6], [.64, .68]), ln([.28, .58], [.21, .62])],
+  pizza: () => [ln([.28, .22], [.72, .22], [.5, .86], [.28, .22]), arc(.5, .22, .22, .05, PI, 2 * PI), circ(.45, .36, .035), circ(.56, .42, .03), circ(.5, .58, .03)]
+};
+const DOODLE_WORDS = Object.keys(DOODLES).map(k => WORDS.find(w => w.en === k)).filter(Boolean);
+const DOODLE_N = 8, DOODLE_SEC = 12, DOODLE_DRAW = 7;
+function doodleStart() { G.n = DOODLE_N; G.k = 0; G.score = 0; G.right = 0; G.streak = 0; G.bestStreak = 0; E.say(L2('Watch the pencil and pick what it is drawing!', '¡Mira el lápiz y elige qué está dibujando!'), { lang: S.lang, once: true }); doodleNext(); }
+function doodleNext() {
+  if (G.k >= G.n) { doodleEnd(); return; }
+  G.word = drawWord(G.used, DOODLE_WORDS, 'inoa.draw.recentDoodle'); G.used.push(G.word); G.opts = options(G.word); G.tries = 0;
+  const strokes = DOODLES[G.word.en](); G.dd = { strokes, n: strokes.reduce((a, s) => a + s.length, 0), shown: 0, si: 0, pi: 0 };
+  resetPad(); G.phase = 'guess'; camView('draw'); hud();
+  $('dw').hidden = false; D.enabled = false; $('dwPrompt').innerHTML = `<span>🔍 ${L2('What is the pencil drawing?', '¿Qué está dibujando el lápiz?')}</span> <b>${G.k + 1}/${G.n}</b>`;
+  G.timer = { left: DOODLE_SEC, max: DOODLE_SEC }; $('dwTime').style.display = ''; renderChoices(); requestAnimationFrame(fitPaper); fitPaper(); showPad(false);
+}
+function renderChoices() {
+  const el = $('dwTools'); el.classList.add('guess'); curActions = [];
+  el.innerHTML = `<div class="dw-choices">${G.opts.map((w, i) => `<button data-o="${i}"><small>${i + 1}</small>${esc(wtxt(w))}</button>`).join('')}</div>`;
+  el.querySelectorAll('[data-o]').forEach(b => b.onclick = () => doodlePick(+b.dataset.o));
+}
+function doodleStep(dt) { // reveal the doodle point by point, like a pencil
+  const dd = G.dd; if (!dd || dd.si >= dd.strokes.length) return; let todo = Math.ceil(dd.n / DOODLE_DRAW * dt * (G.phase === 'guess' ? 1 : 6));
+  while (todo-- > 0 && dd.si < dd.strokes.length) {
+    const st = dd.strokes[dd.si], pt = [...st[dd.pi], .5];
+    if (dd.pi === 0) { D.cur = { c: INK, s: 1, e: false, pen: false, p: [pt] }; D.strokes.push(D.cur); drawStroke(D.cur); scratch(true); }
+    else { D.cur.p.push(pt); drawStroke(D.cur, D.cur.p.length - 1); scratchSpeed(.01); }
+    dd.pi++; if (dd.pi >= st.length) { D.cur.done = true; D.cur = null; dd.si++; dd.pi = 0; scratch(false); redraw(); }
+  }
+  D.dirty = true;
+}
+function doodlePick(i) {
+  if (G.phase !== 'guess') return; const w = G.opts[i], b = $('dwTools').querySelector(`[data-o="${i}"]`);
+  if (w !== G.word) { G.tries++; G.streak = 0; if (b) { b.classList.add('no'); b.disabled = true; } SFX.bad(); E.tone(220, .15, 'square', .04); return; }
+  const gp = G.tries ? 1 : quickPts(); G.score += gp; G.right++; G.streak++; G.bestStreak = Math.max(G.bestStreak, G.streak); if (b) b.classList.add('ok');
+  doodleReveal(true, gp);
+}
+function doodleTimeout() { G.streak = 0; const k = G.opts.indexOf(G.word), b = $('dwTools').querySelector(`[data-o="${k}"]`); if (b) b.classList.add('ok'); doodleReveal(false, 0); }
+function doodleReveal(ok, gp) {
+  G.phase = 'shown'; G.timer = null; $('dwTime').classList.remove('warn'); $('dwTools').querySelectorAll('button').forEach(x => x.disabled = true); hud();
+  $('dwPrompt').innerHTML = `<span>${ok ? `🎉 +${gp}` : '⏰'}</span> <b>${esc(wtxt(G.word))}</b>`;
+  if (ok) celebrate(wtxt(G.word)); else { big(wtxt(G.word)); SFX.lose(); }
+  E.say(wtxt(G.word), { lang: S.lang });
+  later(ok ? 1.6 : 2.2, () => { while (G.dd.si < G.dd.strokes.length) doodleStep(1); G.k++; doodleNext(); });
+}
+function doodleEnd() {
+  if (G.ended) return; G.phase = 'end'; closePad(); camView('room'); music && music.stop(); SFX.win(); const max = G.n * 3;
+  finish({ gameId: 'draw', title: G.score >= max * .75 ? L2('Doodle detective!', '¡Detective de dibujos!') : L2('Nice guessing!', '¡Bien adivinado!'), stats: [[L2('Points', 'Puntos'), `${G.score}/${max}`], [L2('Guessed', 'Adivinados'), `${G.right}/${G.n}`], [L2('Best streak', 'Mejor racha'), G.bestStreak]], xp: 20 + G.score * 3, coins: 5 + G.score, won: G.right > 0, onAgain: () => title(), share: L2(`I guessed ${G.right}/${G.n} doodles in Draw the Pact (${G.score} points)! (Inoa Games) ${location.href}`, `¡Adiviné ${G.right}/${G.n} dibujos en Draw the Pact (${G.score} puntos)! (Inoa Games) ${location.href}`) });
 }
 
 /* ---------- (c) telephone ---------- */
@@ -682,7 +636,7 @@ function phoneStart() { const n = clamp(S.players, 3, 8); G.players = S.names.sl
 function phonePass() {
   if (G.step >= G.players.length) { phoneShow(); return; }
   const pl = G.players[G.step], drawStep = G.step % 2 === 0; camView('room'); G.cur = pl; hud();
-  const c = card(`<div class="ig-kicker">${S.lang === 'es' ? 'Teléfono' : 'Telephone'} · ${G.step + 1}/${G.players.length}</div><h2 style="color:${PCOL[pl.i]}">${esc(T().pass(pl.name))}</h2><p class="ig-sub">${T().noPeek}</p><button class="ig-btn" data-a="go">${esc(T().yourTurn(pl.name))}</button>`);
+  const c = card(`<div class="ig-kicker">${L2('Telephone', 'Teléfono')} · ${G.step + 1}/${G.players.length}</div><h2 style="color:${PCOL[pl.i]}">${esc(T().pass(pl.name))}</h2><p class="ig-sub">${T().noPeek}</p><button class="ig-btn" data-a="go">${esc(T().yourTurn(pl.name))}</button>`);
   E.say(T().pass(pl.name), { lang: S.lang });
   c.querySelector('[data-a=go]').onclick = () => { c.remove(); drawStep ? phoneDraw() : phoneDescribe(); };
 }
@@ -700,7 +654,7 @@ function phoneDescribe() {
   const send = () => { const v = inp.value.trim(); if (!v) { inp.focus(); E.toast('✏️', 600); return; } c.remove(); G.chain.push({ kind: 'text', text: v, by: pl.name, i: pl.i }); SFX.pop(); G.step++; later(.2, phonePass); };
   c.querySelector('[data-a=send]').onclick = send; G.descCard = { c, inp, send };
 }
-function restoreStrokes(st) { D.strokes = (st || []).slice(); redraw(); }
+function restoreStrokes(st) { D.strokes = (st || []).slice(); D.redo = []; redraw(); }
 function phoneShow() {
   G.phase = 'show'; camView('easel'); G.slide = 0; music && music.stop(); music = E.music(E.SONGS.bright); slideNext();
 }
@@ -708,33 +662,101 @@ function slideNext() {
   document.querySelectorAll('.dw-slide').forEach(d => d.remove());
   const k = G.slide; if (k >= G.chain.length + 1) { phoneEnd(); return; }
   let html; const it = G.chain[k];
-  if (k === G.chain.length) { const last = G.chain[G.chain.length - 1]; html = `<div class="ig-kicker">🎬 ${T().ended}</div><div class="says">${esc(G.chain[0].text)} ➜ ${last.kind === 'text' ? '“' + esc(last.text) + '”' : '🖼️'}</div>${last.kind === 'draw' ? `<img class="dw-show" src="${last.img}" alt="">` : ''}`; SFX.win(); confettiBurst(); E.say(`${G.chain[0].text}… ${last.kind === 'text' ? last.text : ''}`, { lang: S.lang }); }
+  if (k === G.chain.length) { const last = G.chain[G.chain.length - 1]; html = `<div class="ig-kicker">🎬 ${T().ended}</div><div class="says">${esc(G.chain[0].text)} ➜ ${last.kind === 'text' ? '“' + esc(last.text) + '”' : '🖼️'}</div>${last.kind === 'draw' ? `<img class="dw-show" src="${last.img}" alt="">` : ''}`; SFX.win(); confettiBurst(); domConfetti(); E.say(`${G.chain[0].text}… ${last.kind === 'text' ? last.text : ''}`, { lang: S.lang }); }
   else if (it.kind === 'word') { html = `<div class="ig-kicker">📜 ${T().story}</div><div class="dw-word">${esc(it.text)}</div>`; E.say(`${T().story} ${it.text}`, { lang: S.lang }); E.tone(523, .2, 'triangle', .08); }
   else if (it.kind === 'draw') { html = `<div class="by" style="color:${PCOL[it.i]}">${esc(T().drew(it.by))}</div><img class="dw-show" src="${it.img}" alt="">`; restoreStrokes(it.strokes); D.dirty = true; E.tone(392 + k * 40, .25, 'triangle', .08); E.noise(.15, .06, 3000, 1); }
   else { html = `<div class="by" style="color:${PCOL[it.i]}">${esc(T().said(it.by))}</div><div class="says">“${esc(it.text)}”</div>`; E.say(it.text, { lang: S.lang }); [660, 520, 780].forEach((f, j) => E.tone(f, .1, 'square', .05, 0, j * .08)); }
-  const d = document.createElement('div'); d.className = 'dw-slide'; d.innerHTML = `<div class="ig-card">${html}<p class="ig-sub" style="text-align:center;font-size:12px">${k + 1}/${G.chain.length + 1} · ${S.lang === 'es' ? 'toca para seguir' : 'tap to continue'}</p></div>`; document.body.appendChild(d);
+  const d = document.createElement('div'); d.className = 'dw-slide'; d.innerHTML = `<div class="ig-card">${html}<p class="ig-sub" style="text-align:center;font-size:12px">${k + 1}/${G.chain.length + 1} · ${L2('tap to continue', 'toca para seguir')}</p></div>`; document.body.appendChild(d);
   d.addEventListener('pointerdown', advanceSlide); G.slideT = 4.2;
 }
 function advanceSlide() { if (!G || G.phase !== 'show') return; G.slideT = 4.2; G.slide++; slideNext(); }
-function phoneEnd() { if (G.ended) return; G.phase = 'end'; document.querySelectorAll('.dw-slide').forEach(d => d.remove()); music && music.stop(); const draws = G.chain.filter(c => c.kind === 'draw').length; finish({ gameId: 'draw', title: S.lang === 'es' ? '¡Qué teléfono descompuesto!' : 'What a telephone!', stats: [[S.lang === 'es' ? 'Empezó' : 'Started', G.chain[0].text], [S.lang === 'es' ? 'Dibujos' : 'Drawings', draws], [S.lang === 'es' ? 'Jugadores' : 'Players', G.players.length]], xp: 30 + G.players.length * 8, coins: 8 + G.players.length * 2, bestLabel: T().bestSketch, won: true, onAgain: () => title(), share: S.lang === 'es' ? `Nuestro teléfono de Draw the Pact empezó como "${G.chain[0].text}" y terminó como "${(G.chain.filter(c => c.kind === 'text').pop() || {}).text || '…'}" 😂 (Inoa Games) ${location.href}` : `Our Draw the Pact telephone started as "${G.chain[0].text}" and ended as "${(G.chain.filter(c => c.kind === 'text').pop() || {}).text || '…'}" 😂 (Inoa Games) ${location.href}` }); }
+function phoneEnd() { if (G.ended) return; G.phase = 'end'; document.querySelectorAll('.dw-slide').forEach(d => d.remove()); music && music.stop(); const draws = G.chain.filter(c => c.kind === 'draw').length; const lastTxt = (G.chain.filter(c => c.kind === 'text').pop() || {}).text || '…'; finish({ gameId: 'draw', title: L2('What a telephone!', '¡Qué teléfono descompuesto!'), stats: [[L2('Started', 'Empezó'), G.chain[0].text], [L2('Drawings', 'Dibujos'), draws], [L2('Players', 'Jugadores'), G.players.length]], xp: 30 + G.players.length * 8, coins: 8 + G.players.length * 2, won: true, onAgain: () => title(), share: L2(`Our Draw the Pact telephone started as "${G.chain[0].text}" and ended as "${lastTxt}" 😂 (Inoa Games) ${location.href}`, `Nuestro teléfono de Draw the Pact empezó como "${G.chain[0].text}" y terminó como "${lastTxt}" 😂 (Inoa Games) ${location.href}`) }); }
+
+/* ---------- local gallery viewer + share card (images stay on this device; sharing is the player's own choice) ---------- */
+function storeList(key, list) { for (let tries = 0; tries < 6; tries++) { E.store.set(key, list); const back = E.store.get(key, null); if (Array.isArray(back) && back.length === list.length) return true; if (list.length <= 1) return false; list.length = Math.max(1, Math.floor(list.length * .7)); } return false; }
+function snapshotJpeg(w, h, q) { const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); g.fillStyle = PAPER; g.fillRect(0, 0, w, h); g.drawImage(padCanvas, 0, 0, w, h); try { return c.toDataURL('image/jpeg', q); } catch (e) { return ''; } }
+function galleryItems(kind) { return kind === 'daily' ? dailyList().map(x => ({ img: x.img, word: S.lang === 'es' ? x.es : x.en, day: x.day, t: x.t })) : E.store.get(GAL_KEY, []).filter(x => x && x.img).map(x => ({ img: x.img, word: x.en ? (S.lang === 'es' ? x.es : x.en) : x.word, t: x.t })); }
+function openGallery(kind = 'sketch') {
+  document.querySelectorAll('.dw-galcard').forEach(d => d.remove());
+  const items = galleryItems(kind), nS = galleryItems('sketch').length, nD = dailyList().length, streak = dailyStreak();
+  const c = card(`<div class="ig-kicker">🖼️ ${L2('Your gallery', 'Tu galería')} · ${L2('saved only on this device', 'guardada solo en este aparato')}</div>
+    <div class="pk" style="margin:8px 0"><button data-k="sketch" class="${kind === 'sketch' ? 'on' : ''}">⏱ ${T().speed} (${nS})</button><button data-k="daily" class="${kind === 'daily' ? 'on' : ''}">🌞 ${L2('Daily doodles', 'Dibujos del día')} (${nD})</button></div>
+    ${kind === 'daily' ? `<p class="ig-sub">🔥 ${L2('Streak', 'Racha')}: <b>${streak}</b> · ${L2('Today', 'Hoy')}: <b>${esc(wtxt(dailyWord()))}</b></p>` : ''}
+    ${items.length ? `<div class="dw-gal">${items.map((it, i) => `<button data-i="${i}" aria-label="${esc(it.word)}"><img src="${it.img}" alt=""><span>${esc(it.word)}${it.day ? ' · ' + it.day.slice(5) : ''}</span></button>`).join('')}</div>` : `<div class="dw-empty">${kind === 'daily' ? L2('No daily doodles yet. Play Daily doodle from the menu!', 'Aún no hay dibujos del día. ¡Juega Dibujo del día!') : L2('No sketches yet. Play Speed Sketch to fill the wall!', 'Aún no hay bocetos. ¡Juega Boceto rápido para llenar la pared!')}</div>`}
+    <div class="ig-row"><button class="ig-btn ghost" data-a="back">↩ ${L2('Back', 'Volver')}</button></div>`, 'dw-galcard');
+  c.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { SFX.click(); openGallery(b.dataset.k); });
+  c.querySelectorAll('.dw-gal [data-i]').forEach(b => b.onclick = () => { SFX.click(); viewItem(kind, +b.dataset.i); });
+  c.querySelector('[data-a=back]').onclick = () => { c.remove(); SFX.click(); };
+  camView('gallery'); return c;
+}
+function viewItem(kind, i) {
+  const it = galleryItems(kind)[i]; if (!it) return; document.querySelectorAll('.dw-galcard').forEach(d => d.remove());
+  const c = card(`<div class="ig-kicker">${kind === 'daily' ? '🌞 ' + L2('Daily doodle', 'Dibujo del día') + ' · ' + it.day : '⏱ ' + T().speed}</div><div class="dw-word" style="font-size:clamp(26px,6vw,40px)">${esc(it.word)}</div><img class="dw-show" src="${it.img}" alt="${esc(it.word)}">
+    <div class="ig-row" style="margin-top:10px"><button class="ig-btn ghost" data-a="back">↩</button><button class="ig-btn ghost" data-a="del">🗑 ${L2('Remove', 'Quitar')}</button><button class="ig-btn sun" data-a="card">📤 ${L2('Share card', 'Tarjeta')}</button></div>`, 'dw-galcard');
+  c.querySelector('[data-a=back]').onclick = () => openGallery(kind);
+  c.querySelector('[data-a=card]').onclick = () => shareCard(kind, i);
+  c.querySelector('[data-a=del]').onclick = () => { if (kind === 'daily') { const l = dailyList(); l.splice(i, 1); E.store.set(DAILY_KEY, l); } else { const l = E.store.get(GAL_KEY, []); l.splice(i, 1); E.store.set(GAL_KEY, l); loadGallery(); } SFX.pop(); openGallery(kind); };
+}
+const loadImg = src => new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = src; });
+async function makeCard(kind, i) {
+  const it = galleryItems(kind)[i]; if (!it) return null; const im = await loadImg(it.img);
+  const c = document.createElement('canvas'); c.width = 1080; c.height = 1350; const g = c.getContext('2d');
+  const bg = g.createLinearGradient(0, 0, 0, 1350); bg.addColorStop(0, '#ffe9c9'); bg.addColorStop(1, '#ffb48c'); g.fillStyle = bg; g.fillRect(0, 0, 1080, 1350);
+  g.fillStyle = 'rgba(255,255,255,.35)'; for (let k = 0; k < 14; k++) { g.beginPath(); g.arc((k * 197) % 1080, (k * 331) % 1350, 18 + (k % 4) * 10, 0, 7); g.fill(); }
+  g.textAlign = 'center'; g.fillStyle = '#1b2430'; g.font = '900 72px Unbounded, "Arial Black", sans-serif'; g.fillText('Draw the Pact', 540, 140);
+  g.font = '800 34px Manrope, Arial, sans-serif'; g.fillStyle = '#7a5232'; g.fillText(kind === 'daily' ? `🌞 ${L2('Daily doodle', 'Dibujo del día')} · ${it.day}` : `⏱ ${T().speed}`, 540, 200);
+  g.save(); g.translate(540, 640); g.rotate(-.02); g.fillStyle = 'rgba(0,0,0,.18)'; g.fillRect(-452, -334, 920, 700); g.fillStyle = '#7a5232'; g.fillRect(-460, -350, 920, 700); g.fillStyle = '#e9dcc5'; g.fillRect(-440, -330, 880, 660); g.drawImage(im, -420, -315, 840, 630); g.restore();
+  g.fillStyle = '#1b2430'; g.font = '900 84px Unbounded, "Arial Black", sans-serif'; let fs = 84; while (g.measureText(it.word).width > 960 && fs > 40) { fs -= 6; g.font = `900 ${fs}px Unbounded, "Arial Black", sans-serif`; } g.fillText(it.word, 540, 1110);
+  g.font = '800 32px Manrope, Arial, sans-serif'; g.fillStyle = '#4c5868'; g.fillText(L2('Drawn by me · Inoa Games', 'Lo dibujé yo · Inoa Games'), 540, 1180);
+  g.fillStyle = '#ffd166'; [[150, 1250], [930, 1250], [540, 1270]].forEach(([x, y]) => { g.beginPath(); for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, r = k % 2 ? 12 : 28; g.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r); } g.closePath(); g.fill(); });
+  return { canvas: c, name: `draw-the-pact-${String(it.word).toLowerCase().replace(/[^a-z0-9áéíóúñü]+/g, '-')}.png` };
+}
+async function shareCard(kind, i) {
+  const m = await makeCard(kind, i); if (!m) return null; const blob = await new Promise(r => m.canvas.toBlob(r, 'image/png')); if (!blob) return null;
+  const file = new File([blob], m.name, { type: 'image/png' });
+  if (navigator.canShare && navigator.share) { try { if (navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'Draw the Pact' }); return 'shared'; } } catch (e) { if (e && e.name === 'AbortError') return 'cancel'; } }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = m.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  E.toast(L2('Share card saved to your downloads!', '¡Tarjeta guardada en tus descargas!'), 1800); return 'download';
+}
 
 /* ======================= HUD / fx ======================= */
 function ensureHud() { if (hudEl) { document.querySelector('.ig-top').hidden = false; return; } hudEl = E.shell({ title: 'Draw the Pact', onPause: pause, buttons: [] }); }
 function showPad(on) { if (hudEl) hudEl.pad.hidden = !on; }
-function hud() { if (!hudEl || !G) return; let h = ''; if (G.mode === 'party' && G.players) h = G.players.map(p => `<span class="ig-chip" style="border-bottom:4px solid ${PCOL[p.i]}">${esc(p.name)} <b>${p.score}</b></span>`).join(''); else if (G.mode === 'sketch') h = `<span class="ig-chip">✏️ <b>${Math.min(G.k + 1, G.n)}/${G.n}</b></span>`; else if (G.players) h = `<span class="ig-chip">📞 <b>${Math.min(G.step + 1, G.players.length)}/${G.players.length}</b></span>`; hudEl.hud.innerHTML = h; }
+function hud() {
+  if (!hudEl || !G) return; let h = '';
+  if (G.teams) h = G.teams.map(t => `<span class="ig-chip" style="border-bottom:4px solid ${TEAMS[t.t].col}">${esc(teamName(t.t))} <b>${t.score}</b></span>`).join('');
+  else if (G.mode === 'party' && G.players) h = G.players.map(p => `<span class="ig-chip" style="border-bottom:4px solid ${PCOL[p.i]}">${esc(p.name)} <b>${p.score}</b></span>`).join('');
+  else if (G.mode === 'sketch') h = `<span class="ig-chip">✏️ <b>${Math.min(G.k + 1, G.n)}/${G.n}</b></span>`;
+  else if (G.mode === 'daily') h = `<span class="ig-chip">🌞 <b>${esc(L2('Daily doodle', 'Dibujo del día'))}</b></span><span class="ig-chip">🔥 <b>${dailyStreak()}</b></span>`;
+  else if (G.mode === 'doodle') h = `<span class="ig-chip">🔍 <b>${Math.min(G.k + 1, G.n)}/${G.n}</b></span><span class="ig-chip">⭐ <b>${G.score}</b></span>`;
+  else if (G.players) h = `<span class="ig-chip">📞 <b>${Math.min(G.step + 1, G.players.length)}/${G.players.length}</b></span>`;
+  hudEl.hud.innerHTML = h;
+}
 function big(t) { const d = document.createElement('div'); d.className = 'ig-big'; d.style.fontSize = 'clamp(30px,8vw,72px)'; d.style.textAlign = 'center'; d.style.width = '90vw'; d.style.zIndex = 26; d.textContent = t; document.body.appendChild(d); d.animate([{ transform: 'translate(-50%,-50%) scale(.5)', opacity: 0 }, { transform: 'translate(-50%,-50%) scale(1.1)', opacity: 1, offset: .25 }, { transform: 'translate(-50%,-50%) scale(1)', opacity: 1, offset: .7 }, { transform: 'translate(-50%,-60%) scale(1)', opacity: 0 }], { duration: 1200, easing: 'ease-out' }); setTimeout(() => d.remove(), 1200); }
 const P = new E.Particles(scene);
 function confettiBurst() { for (let k = 0; k < 4; k++) P.burst(new THREE.Vector3(-.5 + rnd(-1, 1), 2.6, -1.2), { color: pick([0xffd166, 0xff7b6b, 0x9fe3cf, 0x8c6cff, 0x4fb3ff]), n: 26, speed: 2.4, up: 3.5, size: .12, life: 1.6, additive: false, gravity: 4 }); }
+function domConfetti(n = 46) { if (E.reducedMotion && E.reducedMotion()) return; const d = document.createElement('div'); d.className = 'dw-conf'; const cols = ['#ffd166', '#ff6b6b', '#2fbf8a', '#4fb3ff', '#8c6cff', '#ff7bc0']; d.innerHTML = Array.from({ length: n }, (_, i) => `<i style="left:${(i * 37 + Math.random() * 30) % 100}%;background:${cols[i % cols.length]};--dx:${Math.round(rnd(-80, 80))}px;--r:${Math.round(rnd(360, 900))}deg;animation-delay:${(Math.random() * .35).toFixed(2)}s"></i>`).join(''); document.body.appendChild(d); setTimeout(() => d.remove(), 2300); }
+function celebrate(who) { SFX.win(); confettiBurst(); domConfetti(); big(`🎉 ${who}!`); [523, 659, 784, 1047].forEach((f, j) => E.tone(f, .14, 'triangle', .06, 0, .05 + j * .09)); }
 
 /* ======================= auto-draw (tests + demo) ======================= */
 function autoDraw(n = 6) {
-  const seed = Math.random() * 100; for (let k = 0; k < n; k++) {
+  const seed = Math.random() * 100, tool = D.tool, col = D.color, size = D.size; D.tool = 'pen'; for (let k = 0; k < n; k++) {
     D.color = PAL[(k * 5 + 2) % PAL.length === 1 ? 0 : (k * 5 + 2) % PAL.length]; D.size = k % 3; D.eraser = false;
     const cx = .5 + Math.sin(seed + k * 1.7) * .25, cy = .5 + Math.cos(seed + k * 2.3) * .2, r = .06 + (k % 4) * .04; const kind = k % 3;
     const pts = []; for (let i = 0; i <= 36; i++) { const t = i / 36; let x, y; if (kind === 0) { x = cx + Math.cos(t * 6.3) * r * 1.2; y = cy + Math.sin(t * 6.3) * r; } else if (kind === 1) { x = cx - r * 1.5 + t * r * 3; y = cy + Math.sin(t * 9 + k) * r * .5; } else { x = cx + Math.cos(t * 12) * r * t; y = cy + Math.sin(t * 12) * r * t; } pts.push([clamp(x, .02, .98), clamp(y, .02, .98), .5]); }
     beginStroke(pts[0], false); for (const p of pts.slice(1)) extendStroke(p); endStroke();
   }
-  D.dirty = true;
+  D.tool = tool; D.color = col; D.size = size; D.dirty = true;
+}
+// a finished, coloured picture for the tile art / title backdrop: a house on a hill with the new tools
+function demoPicture() {
+  resetPad(); const t0 = D.tool, c0 = D.color, s0 = D.size; const op = o => { D.strokes.push(o); };
+  op({ t: 'rect', c: INK, s: 1, a: [.33, .42], b: [.62, .78] }); op({ t: 'line', c: INK, s: 1, a: [.3, .42], b: [.475, .2] }); op({ t: 'line', c: INK, s: 1, a: [.475, .2], b: [.65, .42] }); op({ t: 'line', c: INK, s: 1, a: [.3, .42], b: [.65, .42] });
+  op({ t: 'rect', c: INK, s: 1, a: [.44, .6], b: [.51, .78] }); op({ t: 'circle', c: INK, s: 1, a: [.07, .08], b: [.25, .32] });
+  op({ c: '#1f7a4a', s: 2, e: false, pen: false, p: arc(.5, 1.25, .75, .45, 1.08 * PI, 1.92 * PI).map(q => [...q, .5]), done: true });
+  op({ t: 'fill', x: .47, y: .55, c: '#ff8a2a' }); op({ t: 'fill', x: .475, y: .35, c: '#e2443a' }); op({ t: 'fill', x: .16, y: .2, c: '#ffd166' }); op({ t: 'fill', x: .5, y: .1, c: '#bfe3ff' }); op({ t: 'fill', x: .85, y: .9, c: '#7ed39c' }); op({ t: 'fill', x: .475, y: .7, c: '#8a5a36' });
+  op({ t: 'stk', k: 'heart', x: .82, y: .3, r: .05, c: '#ff7bc0' }); op({ t: 'stk', k: 'flower', x: .2, y: .82, r: .05, c: '#ffffff' }); op({ t: 'stk', k: 'star', x: .7, y: .14, r: .035, c: '#ffd166' }); op({ t: 'stk', k: 'smile', x: .8, y: .7, r: .055, c: '#ffd166' }); op({ t: 'stk', k: 'cloud', x: .38, y: .1, r: .045, c: '#ffffff' });
+  redraw(); D.tool = t0; D.color = c0; D.size = s0;
 }
 
 /* ======================= loop ======================= */
@@ -743,15 +765,23 @@ function update(dt) {
   P.update(dt); padPoll(dt);
   if (G && !G.paused) {
     G.time += dt; runSched();
-    if (G.timer && !G.timer.frozen) { const before = Math.ceil(G.timer.left); G.timer.left -= dt; const after = Math.ceil(G.timer.left); if (after !== before && after <= 10 && after >= 0) E.tone(after <= 3 ? 1100 : 820, .05, 'sine', .05); $('dwSec').textContent = Math.max(0, Math.ceil(G.timer.left)); const k = clamp(G.timer.left / G.timer.max, 0, 1); $('dwRing').setAttribute('stroke-dashoffset', String(138.2 * (1 - k))); $('dwRing').setAttribute('stroke', k < .2 ? '#ff6b6b' : k < .5 ? '#ffd166' : '#9fe3cf'); if (G.timer.left <= 0) { G.timer = null; timeUp(); } }
+    if (G.mode === 'doodle' && G.dd) doodleStep(dt);
+    if (G.timer && !G.timer.frozen) { const before = Math.ceil(G.timer.left); G.timer.left -= dt; const after = Math.ceil(G.timer.left); if (after !== before && after <= 10 && after >= 0) E.tone(after <= 3 ? 1100 : 820, .05, 'sine', .05); $('dwSec').textContent = Math.max(0, Math.ceil(G.timer.left)); const k = clamp(G.timer.left / G.timer.max, 0, 1); $('dwRing').setAttribute('stroke-dashoffset', String(138.2 * (1 - k))); $('dwRing').setAttribute('stroke', k < .2 ? '#ff6b6b' : k < .5 ? '#ffd166' : '#9fe3cf'); $('dwTime').classList.toggle('warn', G.timer.left <= 10 && G.timer.max >= 20); if ((G.mode === 'party' || G.mode === 'team') && G.phase === 'draw' && !G.peeking && hintStage() !== G.hintShown) { partyPrompt(false); E.tone(880, .08, 'triangle', .05); } if (G.timer.left <= 0) { G.timer = null; timeUp(); } }
     if (G.phase === 'show' && G.slideT != null) { G.slideT -= dt; if (G.slideT <= 0) { G.slide++; slideNext(); } }
   }
   texT += dt; if (D.dirty && texT > .1) { texT = 0; D.dirty = false; easelTex.needsUpdate = true; }
   lampLights.forEach((l, i) => l.intensity = 7 + Math.sin(performance.now() / 700 + i) * .25);
   updateCamera(dt);
 }
-function timeUp() { closePad(); big(T().timeUp); if (G.mode !== 'party') E.tone(440, .25, 'triangle', .08, -120); if (G.mode === 'party') partyReveal(null, 0); else if (G.mode === 'sketch') { G.phase = 'draw'; sketchSave(); } else { G.phase = 'draw'; phoneDrawn(); } }
+function timeUp() {
+  $('dwTime').classList.remove('warn');
+  if (G.mode === 'doodle') { if (G.phase === 'guess') doodleTimeout(); return; }
+  if (G.mode === 'team') { if (G.phase === 'draw') { big(T().timeUp); teamSteal(); } return; }
+  closePad(); big(T().timeUp); if (G.mode !== 'party') E.tone(440, .25, 'triangle', .08, -120);
+  if (G.mode === 'party') partyReveal(null); else if (G.mode === 'sketch') { G.phase = 'draw'; sketchSave(); } else if (G.mode === 'daily') { G.phase = 'draw'; dailySave(); } else { G.phase = 'draw'; phoneDrawn(); }
+}
 function pause() { if (!G || G.paused || G.phase === 'end') return; G.paused = true; music && music.stop(); locScreen(E.pauseMenu({ onResume: () => { G.paused = false; music = E.music(E.SONGS.chill); }, onRestart: () => { G.paused = false; closePad(); start(); } })); }
+
 /* ======================= language for engine-made UI ======================= */
 const ES_UI = { 'Hub': 'Inicio', 'Play': 'Jugar', 'Paused': 'Pausa', 'Restart': 'Reiniciar', 'Resume': 'Seguir', 'Play again': 'Jugar otra vez', 'ROUND OVER': 'FIN DE LA RONDA', 'NEW BEST': '¡NUEVO RÉCORD!', '📣 Share': '📣 Compartir' };
 // The engine builds title/pause/results cards in English; translate them in place so the chosen language is used everywhere.
@@ -781,8 +811,10 @@ const NAV = { prev: {}, rep: 0, dir: '', padSeen: false, cur: { x: .5, y: .5, dr
 const curEl = document.createElement('div'); curEl.className = 'dw-cursor'; $('dwPaper').appendChild(curEl);
 let navFocus = null;
 const PRIMARY = '[data-a=play],[data-a=resume],[data-a=next],[data-a=go],[data-a=show],[data-a=send],[data-a=again]';
-function activeScreen() { const sl = document.querySelector('.dw-slide'); if (sl) return sl; const sc = [...document.querySelectorAll('.ig-screen')].filter(s => s.getClientRects().length); return sc[sc.length - 1] || null; }
-function focusables(root) { return [...root.querySelectorAll('button, a.ig-btn')].filter(b => !b.disabled && b.getClientRects().length); }
+function activeScreen() { const sl = document.querySelector('.dw-slide'); if (sl) return sl; const sc = [...document.querySelectorAll('.ig-screen')].filter(s => s.getClientRects().length); if (sc.length) return sc[sc.length - 1]; const tl = $('dwTools'); return !$('dw').hidden && tl.classList.contains('guess') ? tl : null; } // guess-the-doodle answers are a menu too
+// buttons hidden under another element (e.g. scrolled beneath the title's sticky Play row) are skipped; off-screen ones stay reachable (they scroll into view)
+function covered(b) { const r = b.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2; if (x < 0 || y < 0 || x > innerWidth || y > innerHeight) return false; const hit = document.elementFromPoint(x, y); return !!hit && hit !== b && !b.contains(hit) && !hit.closest('.dw-conf'); }
+function focusables(root) { return [...root.querySelectorAll('button, a.ig-btn')].filter(b => !b.disabled && b.getClientRects().length && !covered(b)); }
 function setFocus(el) { document.querySelectorAll('.gp-focus').forEach(x => x.classList.remove('gp-focus')); navFocus = el; if (el) { el.classList.add('gp-focus'); try { el.focus({ preventScroll: true }); } catch (e) { } el.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } }
 function curFocus(root) { return navFocus && navFocus.isConnected && root.contains(navFocus) ? navFocus : null; }
 function primaryOf(root) { const list = focusables(root); return list.find(b => b.matches(PRIMARY)) || list[0]; }
@@ -807,7 +839,7 @@ function padPoll(dt) {
   if (!pads.length) { endPadStroke(); NAV.prev = {}; return; }
   const btn = i => pads.some(p => p.buttons[i] && (p.buttons[i].pressed || p.buttons[i].value > .5));
   let ax = 0, ay = 0; for (const p of pads) { if (Math.abs(p.axes[0] || 0) > .18) ax = p.axes[0]; if (Math.abs(p.axes[1] || 0) > .18) ay = p.axes[1]; }
-  const now = {}; for (let i = 0; i < 16; i++) now[i] = btn(i);
+  const now = {}; for (let i = 0; i < 17; i++) now[i] = btn(i);
   if (now[14]) ax = -1; if (now[15]) ax = 1; if (now[12]) ay = -1; if (now[13]) ay = 1;
   const pressed = i => now[i] && !NAV.prev[i], released = i => !now[i] && NAV.prev[i];
   if (!NAV.padSeen && (Object.values(now).some(Boolean) || ax || ay)) { NAV.padSeen = true; refreshTools(); }
@@ -825,6 +857,7 @@ function padPoll(dt) {
     if (pressed(0) && activePointer == null) { if (D.cur) endStroke(); activePointer = 'pad'; NAV.cur.drawing = true; beginStroke([NAV.cur.x, NAV.cur.y, .5], false); showCursor(); }
     else if (NAV.cur.drawing && (ax || ay)) extendStroke([NAV.cur.x, NAV.cur.y, .5]);
     if (released(0)) endPadStroke();
+    if (pressed(11)) nextTool();
     if (pressed(1)) undo(); if (pressed(2)) toggleEraser(); if (pressed(4)) cycleColor(-1); if (pressed(5)) cycleColor(1); if (pressed(6)) setSize(D.size - 1); if (pressed(7)) setSize(D.size + 1);
     if (pressed(3)) peekHold(true); if (released(3)) peekHold(false);
     if (pressed(8)) primaryDraw();
@@ -835,6 +868,7 @@ const DIRS = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRig
 addEventListener('keydown', e => {
   if (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
   const root = activeScreen();
+  if (G && G.mode === 'doodle' && G.phase === 'guess' && !G.paused && root && root.id === 'dwTools' && /^(Digit|Numpad)[1-4]$/.test(e.code)) { doodlePick(+e.code.slice(-1) - 1); return; }
   if (root) {
     if (DIRS[e.code]) { e.preventDefault(); navMove(root, ...DIRS[e.code]); return; }
     if (e.code === 'Enter' || e.code === 'NumpadEnter' || e.code === 'Space') { const ae = document.activeElement; if (ae && ae !== document.body && root.contains(ae) && ae.matches('button,a')) return; e.preventDefault(); if (!e.repeat) navActivate(root); return; }
@@ -844,8 +878,11 @@ addEventListener('keydown', e => {
   if (e.code === 'Escape' || e.code === 'KeyP') { pause(); return; }
   if (!D.enabled || root) return;
   if (e.code === 'Enter' || e.code === 'NumpadEnter') { e.preventDefault(); if (!e.repeat) primaryDraw(); return; }
+  if ((e.ctrlKey || e.metaKey) && (e.code === 'KeyY' || (e.shiftKey && e.code === 'KeyZ'))) { e.preventDefault(); redo(); return; }
   if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') { e.preventDefault(); undo(); return; }
   if (e.code === 'KeyZ') undo();
+  else if (e.code === 'KeyY') redo();
+  else if (e.code === 'KeyD') pickTool('pen'); else if (e.code === 'KeyF') pickTool('fill'); else if (e.code === 'KeyS') pickTool('shape'); else if (e.code === 'KeyT') pickTool('sticker');
   else if (e.code === 'KeyE') toggleEraser();
   else if (/^Digit[1-3]$/.test(e.code)) setSize(+e.code.slice(5) - 1);
   else if (e.code === 'BracketLeft') cycleColor(-1); else if (e.code === 'BracketRight') cycleColor(1);
@@ -858,21 +895,48 @@ addEventListener('inoa:settings', e => { const v = e.detail && e.detail.settings
 document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
 
 /* ======================= title ======================= */
+const MODE_INFO = {
+  party: ['🎉', 'Party', 'Fiesta', 'one draws, all guess', 'uno dibuja, todos adivinan', 'Pass the device. The drawer sees a secret word; everyone else shouts guesses. Faster guesses score more.', 'Pasen el aparato. Quien dibuja ve una palabra secreta; los demás gritan sus respuestas. Adivinar rápido da más puntos.'],
+  team: ['🤝', 'Teams', 'Equipos', '2 teams, steal points', '2 equipos, roba puntos', 'Two teams take turns. Your team guesses your drawing; if time runs out, the other team gets one guess to steal.', 'Dos equipos se turnan. Tu equipo adivina tu dibujo; si se acaba el tiempo, el otro equipo tiene una respuesta para robar.'],
+  phone: ['📞', 'Telephone', 'Teléfono', 'draw → describe → draw', 'dibuja → describe → dibuja', 'A word becomes a drawing, the drawing becomes words, and so on. See how it changed at the end!', 'Una palabra se vuelve dibujo, el dibujo se vuelve palabras, y así. ¡Al final verán cómo cambió!'],
+  sketch: ['⏱', 'Speed Sketch', 'Boceto rápido', 'solo, to the gallery', 'solo, a la galería', 'Five quick drawings on your own. Each one hangs on the studio gallery wall.', 'Cinco dibujos rápidos tú solo. Cada uno se cuelga en la pared de la galería.'],
+  daily: ['🌞', 'Daily doodle', 'Dibujo del día', 'one prompt a day', 'un tema al día', 'One prompt a day, the same for everyone. Take your time, keep your streak and collect them in your gallery.', 'Un tema al día, el mismo para todos. Sin prisa: mantén tu racha y guárdalos en tu galería.'],
+  doodle: ['🔍', 'Guess the doodle', 'Adivina el dibujo', 'the pencil draws, you guess', 'el lápiz dibuja, tú adivinas', 'The pencil draws a picture. Pick the right word before it finishes: the sooner, the more stars.', 'El lápiz dibuja algo. Elige la palabra correcta antes de que termine: cuanto antes, más estrellas.']
+};
+const usesPlayers = m => m === 'party' || m === 'team' || m === 'phone', usesWords = m => m !== 'daily' && m !== 'doodle', usesRound = m => m === 'party' || m === 'team';
+const minPlayers = m => m === 'team' ? 4 : m === 'phone' ? 3 : 2;
 function title() {
-  killCards(); closePad(); G = null; if (hudEl) document.querySelector('.ig-top').hidden = true; if (music) music.stop(); music = E.music(E.SONGS.chill); camView('room'); loadGallery(); resetPad(); autoDraw(5); D.strokes = [];
-  applyLang(); const es = S.lang === 'es';
-  const extra = `<div><p class="ig-sub" style="margin-bottom:6px">${es ? 'Modo' : 'Mode'}</p><div class="pk" id="pM"><button data-m="party" class="${S.mode === 'party' ? 'on' : ''}">🎉 ${es ? 'Fiesta' : 'Party'}<small>${es ? 'uno dibuja, todos adivinan' : 'one draws, everyone guesses'}</small></button><button data-m="sketch" class="${S.mode === 'sketch' ? 'on' : ''}">⏱ ${T().speed}<small>${es ? 'solo, a la galería' : 'solo, to the gallery'}</small></button><button data-m="phone" class="${S.mode === 'phone' ? 'on' : ''}">📞 ${es ? 'Teléfono' : 'Telephone'}<small>${es ? 'dibuja → describe → dibuja' : 'draw → describe → draw'}</small></button></div></div>
+  killCards(); closePad(); G = null; if (hudEl) document.querySelector('.ig-top').hidden = true; if (music) music.stop(); music = E.music(E.SONGS.chill); camView('room'); loadGallery(); demoPicture(); D.strokes = []; D.redo = []; cache.ops = [];
+  applyLang(); const es = S.lang === 'es', I = (m, k) => MODE_INFO[m][k + (es ? 1 : 0)];
+  const nGal = galleryItems('sketch').length + dailyList().length;
+  const extra = `<div><p class="ig-sub" style="margin-bottom:6px">${es ? 'Modo' : 'Mode'}</p><div class="pk modes" id="pM">${MODES.map(m => `<button data-m="${m}" class="${S.mode === m ? 'on' : ''}">${MODE_INFO[m][0]} ${I(m, 1)}<small>${I(m, 3)}</small></button>`).join('')}</div><p class="ig-sub" id="pInfo" style="margin:6px 0 0;font-size:13px"></p></div>
   <div id="pPl"><p class="ig-sub" style="margin-bottom:6px">${es ? 'Jugadores' : 'Players'}</p><div class="pk" id="pN">${[2, 3, 4, 5, 6, 8].map(n => `<button data-n="${n}" class="${n === S.players ? 'on' : ''}">${n}</button>`).join('')}</div><div class="names" style="margin-top:6px">${S.names.map((nm, i) => `<input data-i="${i}" maxlength="10" value="${esc(nm)}" style="border-left:6px solid ${PCOL[i]}" ${i < S.players ? '' : 'hidden'} aria-label="${esc(T().player(i + 1))}">`).join('')}</div></div>
-  <div><p class="ig-sub" style="margin-bottom:6px">${es ? 'Palabras' : 'Words'} · <span id="pT"></span></p><div class="pk" id="pD">${[[0, es ? 'Todas' : 'Mixed'], [1, es ? 'Fácil' : 'Easy'], [2, es ? 'Media' : 'Medium'], [3, es ? 'Difícil' : 'Hard']].map(([d, l]) => `<button data-d="${d}" class="${S.diff === d ? 'on' : ''}">${l}</button>`).join('')}</div></div>
-  <div class="pk" id="pL"><button data-l="en" class="${!es ? 'on' : ''}">🇬🇧 English</button><button data-l="es" class="${es ? 'on' : ''}">🇪🇸 Español</button></div>`;
-  const how = es ? [['✏️', 'Dibuja con el dedo, el mouse o un lápiz (con presión). 12 colores, 3 grosores, borrador, deshacer (Z), borrador (E), grosor (1-3), color ([ ]), Enter = listo'], ['🎮', 'Control: palanca + A dibuja, B deshacer, X borrador, LB/RB color, LT/RT grosor, Y ver, Select listo; la cruceta mueve los menús'], ['🙈', 'Pasa el aparato: solo quien dibuja ve la palabra'], ['🖼️', 'Tus bocetos rápidos se cuelgan en la pared de la galería']] : [['✏️', 'Draw with finger, mouse or stylus (pressure works). 12 colours, 3 sizes, eraser, undo (Z), eraser (E), sizes (1-3), colours ([ ]), Enter = done'], ['🎮', 'Gamepad: stick + A to draw, B undo, X eraser, LB/RB colour, LT/RT size, Y peek, Select done; D-pad moves through menus'], ['🙈', 'Pass the device: only the drawer sees the word'], ['🖼️', 'Speed sketches hang on the studio gallery wall']];
-  const d = locScreen(E.titleScreen({ party: { label: es ? 'Adivinar con teléfonos' : 'Guess with phones', hint: es ? 'En modo Fiesta, cada teléfono es un jugador: quien dibuja ve la palabra en su teléfono y los demás adivinan en el suyo.' : 'In Party mode each phone is a player: the drawer sees the word on their phone, everyone else guesses on theirs.' }, title: 'Draw the Pact', kicker: es ? 'Inoa Games · Dibuja y adivina' : 'Inoa Games · Draw & guess', lead: es ? 'Un estudio de arte acogedor para dibujar, adivinar y reír en el mismo aparato.' : 'A cozy art studio for drawing, guessing and laughing together on one device.', how, extra, onPlay: () => { save(); E.say(es ? '¡A dibujar!' : 'Let’s draw!', { lang: S.lang }); start(); } }));
+  <div id="pRd"><p class="ig-sub" style="margin-bottom:6px">${es ? 'Ronda' : 'Round'}</p><div class="pk" id="pS">${[45, 60, 90].map(n => `<button data-s="${n}" class="${S.roundSec === n ? 'on' : ''}">⏱ ${n}s</button>`).join('')}${[1, 2, 3].map(n => `<button data-r="${n}" class="${S.rounds === n ? 'on' : ''}">🔁 ${n}×</button>`).join('')}<button data-h="1" class="${S.hints ? 'on' : ''}">💡 ${es ? 'Pistas' : 'Hints'}</button></div></div>
+  <div id="pWd"><p class="ig-sub" style="margin-bottom:6px">${es ? 'Palabras' : 'Words'} · <span id="pT"></span></p><div class="pk" id="pD">${[[0, es ? 'Todas' : 'Mixed'], [1, es ? 'Fácil' : 'Easy'], [2, es ? 'Media' : 'Medium'], [3, es ? 'Difícil' : 'Hard']].map(([d, l]) => `<button data-d="${d}" class="${S.diff === d ? 'on' : ''}">${l}</button>`).join('')}</div>
+  <div class="pk cats" id="pC" style="margin-top:6px">${[['all', '🎲', es ? 'Todas las categorías' : 'All categories'], ...Object.entries(CATS).map(([k, v]) => [k, v[2], v[es ? 1 : 0]])].map(([k, ic, nm]) => `<button data-c="${k}" class="${S.cat === k ? 'on' : ''}" title="${esc(nm)}" aria-label="${esc(nm)}">${ic}</button>`).join('')}</div></div>
+  <div class="pk" id="pL"><button data-l="en" class="${!es ? 'on' : ''}">🇬🇧 English</button><button data-l="es" class="${es ? 'on' : ''}">🇪🇸 Español</button><button data-g="1">🖼️ ${es ? 'Galería' : 'Gallery'} (${nGal})</button></div>`;
+  const how = es ? [['✏️', 'Dibuja con el dedo, el mouse o un lápiz (con presión). Lápiz, cubeta de pintura, figuras y calcomanías; deshacer y rehacer. Toque con dos dedos = deshacer'], ['⌨️', 'Teclas: Z deshacer, Y rehacer, E borrador, D lápiz, F cubeta, S figuras, T calcomanías, 1-3 grosor, [ ] color, Enter listo'], ['🎮', 'Control: palanca + A dibuja, B deshacer, X borrador, LB/RB color, LT/RT grosor, R3 herramienta, Y ver, Select listo; la cruceta mueve los menús'], ['🙈', 'Pasen el aparato: solo quien dibuja ve la palabra. Con pistas, aparecen letras a mitad del tiempo'], ['🖼️', 'Tus dibujos se guardan solo en este aparato: galería, dibujo del día y tarjetas para compartir']] : [['✏️', 'Draw with finger, mouse or stylus (pressure works). Pencil, fill bucket, shapes and stickers; undo and redo. Two-finger tap = undo'], ['⌨️', 'Keys: Z undo, Y redo, E eraser, D pencil, F fill, S shapes, T stickers, 1-3 size, [ ] colour, Enter done'], ['🎮', 'Gamepad: stick + A to draw, B undo, X eraser, LB/RB colour, LT/RT size, R3 tool, Y peek, Select done; D-pad moves through menus'], ['🙈', 'Pass the device: only the drawer sees the word. With hints on, letters appear at half time'], ['🖼️', 'Your drawings stay on this device: gallery, daily doodles and share cards']];
+  const d = locScreen(E.titleScreen({ party: { label: es ? 'Adivinar con teléfonos' : 'Guess with phones', hint: es ? 'En modo Fiesta, cada teléfono es un jugador: quien dibuja ve la palabra en su teléfono y los demás adivinan en el suyo.' : 'In Party mode each phone is a player: the drawer sees the word on their phone, everyone else guesses on theirs.' }, title: 'Draw the Pact', kicker: es ? 'Inoa Games · Dibuja y adivina' : 'Inoa Games · Draw & guess', lead: es ? 'Un estudio de arte acogedor para dibujar, adivinar y reír juntos en el mismo aparato.' : 'A cozy art studio for drawing, guessing and laughing together on one device.', how, extra, onPlay: () => { save(); E.say(es ? '¡A dibujar!' : 'Let’s draw!', { lang: S.lang }); start(); } }));
   wideTitle(d);
-  const sync = () => { $('pPl').hidden = S.mode === 'sketch'; const min = S.mode === 'phone' ? 3 : 2; if (S.players < min) S.players = min; d.querySelectorAll('#pN button').forEach(b => { b.classList.toggle('on', +b.dataset.n === S.players); b.disabled = +b.dataset.n < min; b.style.opacity = +b.dataset.n < min ? .4 : 1; }); d.querySelectorAll('.names input').forEach(inp => inp.hidden = +inp.dataset.i >= S.players); $('pT').textContent = `${wordPool().length} ${es ? 'palabras' : 'words'}`; };
-  d.querySelectorAll('#pM button').forEach(b => b.onclick = () => { S.mode = b.dataset.m; d.querySelectorAll('#pM button').forEach(x => x.classList.toggle('on', x === b)); sync(); SFX.click(); });
+  const sync = () => {
+    const m = S.mode; $('pPl').hidden = !usesPlayers(m); $('pRd').hidden = !usesRound(m); $('pWd').hidden = !usesWords(m);
+    const min = minPlayers(m); if (S.players < min) S.players = min;
+    d.querySelectorAll('#pN button').forEach(b => { b.classList.toggle('on', +b.dataset.n === S.players); b.disabled = +b.dataset.n < min; b.style.opacity = +b.dataset.n < min ? .4 : 1; });
+    d.querySelectorAll('.names input').forEach(inp => inp.hidden = +inp.dataset.i >= S.players);
+    $('pT').textContent = `${S.cat === 'all' ? '' : catName(S.cat) + ' · '}${wordPool().length} ${es ? 'palabras' : 'words'}`;
+    let info = I(m, 5); if (m === 'daily') { const did = dailyList().some(x => x.day === dayKey()); info += ` 🔥 ${dailyStreak()}${did ? (es ? ' · ✓ hoy ya dibujaste' : ' · ✓ drawn today') : ''}`; }
+    if (m === 'team') { const n = S.players; info += es ? ` (${Math.ceil(n / 2)} contra ${Math.floor(n / 2)})` : ` (${Math.ceil(n / 2)} vs ${Math.floor(n / 2)})`; }
+    $('pInfo').textContent = info;
+  };
+  d.querySelectorAll('#pM button').forEach(b => b.onclick = () => { S.mode = b.dataset.m; d.querySelectorAll('#pM button').forEach(x => x.classList.toggle('on', x === b)); sync(); SFX.click(); E.say(I(S.mode, 1), { lang: S.lang }); });
   d.querySelectorAll('#pN button').forEach(b => b.onclick = () => { S.players = +b.dataset.n; sync(); SFX.click(); });
+  d.querySelectorAll('#pS [data-s]').forEach(b => b.onclick = () => { S.roundSec = +b.dataset.s; d.querySelectorAll('#pS [data-s]').forEach(x => x.classList.toggle('on', x === b)); SFX.click(); });
+  d.querySelectorAll('#pS [data-r]').forEach(b => b.onclick = () => { S.rounds = +b.dataset.r; d.querySelectorAll('#pS [data-r]').forEach(x => x.classList.toggle('on', x === b)); SFX.click(); });
+  d.querySelector('#pS [data-h]').onclick = e => { S.hints = !S.hints; e.currentTarget.classList.toggle('on', S.hints); SFX.click(); };
   d.querySelectorAll('#pD button').forEach(b => b.onclick = () => { S.diff = +b.dataset.d; d.querySelectorAll('#pD button').forEach(x => x.classList.toggle('on', x === b)); sync(); SFX.click(); });
-  d.querySelectorAll('#pL button').forEach(b => b.onclick = () => { S.lang = b.dataset.l; save(); d.remove(); title(); });
+  d.querySelectorAll('#pC button').forEach(b => b.onclick = () => { S.cat = b.dataset.c; d.querySelectorAll('#pC button').forEach(x => x.classList.toggle('on', x === b)); sync(); SFX.click(); });
+  d.querySelectorAll('#pL [data-l]').forEach(b => b.onclick = () => { S.lang = b.dataset.l; save(); d.remove(); title(); });
+  d.querySelector('#pL [data-g]').onclick = () => { save(); SFX.click(); openGallery('sketch'); };
   d.querySelectorAll('.names input').forEach(inp => { inp.addEventListener('input', () => { S.names[+inp.dataset.i] = inp.value.trim() || `P${+inp.dataset.i + 1}`; }); inp.addEventListener('keydown', e => e.stopPropagation()); });
   sync();
 }
@@ -885,6 +949,7 @@ window.__GAME = { get G() { return G; }, S, D, WORDS, start, update, title, auto
   next: () => { document.querySelector('.ig-screen [data-a=next], .ig-screen [data-a=go], .ig-screen [data-a=show]')?.click(); },
   done: () => document.querySelector('#dwTools [data-a=done]')?.click(),
   describe: t => { if (G.descCard) { G.descCard.inp.value = t; G.descCard.send(); } },
-  gallery: () => E.store.get(GAL_KEY, []).length, camView, NAV, advanceSlide };
+  gallery: () => E.store.get(GAL_KEY, []).length, camView, NAV, advanceSlide, redo, pickTool, nextTool, drawWord, wordPool, options, dailyWord, dailyStreak, dailyList, openGallery, makeCard, shareCard, demoPicture, doodlePick, DOODLES, CATS,
+  hint: () => (document.querySelector('#dwPrompt .dw-hint') || {}).textContent || '', choices: () => [...document.querySelectorAll('#dwTools [data-o]')].map(b => b.textContent) };
 </script>
 </body></html>
