@@ -18,7 +18,7 @@ const DAILY = {
 const ES_GAMES = {
   pact: ['Cuatro héroes, una salida. Recorran juntos las islas Emberwood, revivan a sus amigos y venzan a Big Claw.', ['1–4 jugadores', '3–5 min', 'Jugar']],
   match: ['Daño, empujones y fuera del ring. Gana el último héroe en pie. Los bots llenan los huecos.', ['1–4 jugadores', '2–3 min', 'Jugar']],
-  safari: ['Un safari 3D donde alimentas a tu mascota solo con lo que es seguro para ti. Etiquetas leídas en voz alta, rol de Escáner para adultos y práctica de rescate paso a paso.', ['1–2 jugadores', '5 niveles', 'Jugar']],
+  safari: ['Alimenta a tu amiguito solo con lo que es seguro para ti, en 10 niveles: senderos, almuerzo escolar, una fiesta de cumpleaños, el supermercado, un picnic y un restaurante. Etiquetas y menús leídos en voz alta, un perfil por niño con sus propios alérgenos, un álbum de calcomanías y una práctica de rescate con calma.', ['1–2 jugadores', '10 niveles', 'Jugar']],
   depths: ['Bajo las islas con aliados IA, un segundo jugador o teléfonos. Dos actos de ocho salas, 19 dones distintos en cada partida, un capitán ahogado y un coloso de cristal.', ['1–4 jugadores', '10–15 min', '10+ años']],
   builders: ['Construye un hogar en tu isla, navega a dos islas nuevas, recibe vecinos en casitas, cumple sus deseos y completa tus postales. 21 misiones, compártela con un código.', ['Solo', '10–30 min', '8+ años']],
   tide: ['Batallas de pintura con cañones de agua en tres arenas: un muelle soleado, un jardín en la azotea y un mercado isleño. Cubre más suelo o domina las tres pozas de marea. Bots o hasta 8 teléfonos.', ['1–8 jugadores', '2,5 min', '8+ años']],
