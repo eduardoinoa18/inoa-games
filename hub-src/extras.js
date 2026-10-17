@@ -6,14 +6,14 @@ const STAT = {
   pact: ['Best level', 'Mejor nivel', '', false], match: null, safari: ['Best score', 'Mejor puntuación', '', false], depths: null,
   builders: ['Biggest island', 'Isla más grande', ' pcs', false], tide: ['Best turf', 'Mejor territorio', '%', false], drift: ['Best lap', 'Mejor vuelta', ' s', true],
   fit: ['Fastest tidy', 'Orden más rápido', ' s', true], tray: ['Best score', 'Mejor puntuación', '', false], junk: ['Fastest restore', 'Restauración más rápida', ' s', true],
-  brew: ['Café hearts', 'Corazones', '', false], trivia: ['Best solo', 'Mejor en solitario', '', false], draw: ['Most sketches', 'Más bocetos', '', false], bubbles: null, runner: ['Best run', 'Mejor carrera', ' m', false]
+  brew: ['Café hearts', 'Corazones', '', false], trivia: ['Best solo', 'Mejor en solitario', '', false], draw: ['Most sketches', 'Más bocetos', '', false], bubbles: null, runner: ['Best run', 'Mejor carrera', ' m', false], dominoes: ['Matches won', 'Partidas ganadas', '', false]
 };
 // Daily challenge goal per game (deterministic: the same game for everyone on a given local date)
 const DAILY = {
   pact: ['Clear a level of Pixel Pact', 'Supera un nivel de Pixel Pact'], safari: ['Finish a safari level', 'Termina un nivel del safari'], depths: ['Dive into the Depths', 'Explora las Profundidades'],
   builders: ['Build and sleep one island day', 'Construye y duerme un día en la isla'], tide: ['Play a Tide Lines match', 'Juega una partida de Tide Lines'], drift: ['Race a Grand Prix', 'Corre un Gran Premio'],
   fit: ['Tidy one box perfectly', 'Ordena una caja a la perfección'], tray: ['Deliver a tray course', 'Lleva una bandeja hasta el final'], junk: ['Restore a junker', 'Restaura un cacharro'],
-  brew: ['Serve a cozy shift', 'Sirve un turno acogedor'], trivia: ['Play a round of trivia', 'Juega una ronda de trivia'], draw: ['Finish a Speed Sketch round', 'Termina una ronda de Boceto Rápido'], runner: ['Run today’s daily course', 'Corre la ruta del día'], bubbles: ['Finish a Bubble Pop set', 'Termina una ronda de Bubble Pop']
+  brew: ['Serve a cozy shift', 'Sirve un turno acogedor'], trivia: ['Play a round of trivia', 'Juega una ronda de trivia'], draw: ['Finish a Speed Sketch round', 'Termina una ronda de Boceto Rápido'], runner: ['Run today’s daily course', 'Corre la ruta del día'], bubbles: ['Finish a Bubble Pop set', 'Termina una ronda de Bubble Pop'], dominoes: ['Play a match of dominoes', 'Juega una partida de dominó']
 };
 const ES_GAMES = {
   pact: ['Seis héroes, una salida. Diez islas con resortes, paredes secretas, pozas para nadar, palancas y lava. Encuentra Gemas Solares, revive a tus amigos y vence a la Reina Medusa y a la Pinza de Magma.', ['1–4 jugadores', '3–6 min', 'Jugar']],
@@ -30,6 +30,7 @@ const ES_GAMES = {
   trivia: ['Un concurso en 3D con más de 470 preguntas en 11 categorías: a pulsar, relámpago de verdadero o falso, tú eliges la categoría, el número más cercano y la apuesta final. Reto diario de 10, teléfonos como pulsadores, inglés y español.', ['1–4 jugadores', '6 min']],
   draw: ['Pasa el dispositivo, dibuja la palabra secreta y que los demás adivinen. También Boceto Rápido y Teléfono.', ['2–8 jugadores', '5 min']],
   bubbles: ['Revienta la burbuja que pide la voz: cuenta hasta 3, cuenta hasta 5, une números con grupos y suma uno más, hasta 10. En inglés y español, sin reloj, sin perder, una calcomanía por ronda y una tranquila Fiesta de burbujas.', ['De 3 a 6 años', '1 jugador', '3 min']],
+  dominoes: ['El clásico doble seis para 2–4 jugadores: robar o bloqueo, parejas con el compañero de frente, bots de tranquilo a astuto, pasar el aparato o teléfonos como mano secreta. Inglés y español.', ['1–4 jugadores', '10 min']],
   runner: ['Corre del paseo al atardecer a los muelles del puerto, un mercado de playa, un muelle de noche y un túnel de cristal bajo el arrecife. Misiones, una tienda de estelas y tablas con tu alcancía, una ruta diaria y el fantasma de tu mejor carrera.', ['Solo', '2–5 min']]
 };
 const HUB_ES = { // static page text: English source → Spanish (applied by setLang)
@@ -38,7 +39,7 @@ const HUB_ES = { // static page text: English source → Spanish (applied by set
   'A hub of quick, friendly browser games for one player or a whole couch. Build a hero once and grow it in every game, from the Pixel Pact islands to a 60-second drawer restock.': 'Juegos rápidos y amables en el navegador para una persona o todo el sofá. Crea un héroe y hazlo crecer en cada juego.',
   'Play Pixel Pact': 'Jugar Pixel Pact', 'See the games': 'Ver los juegos',
   'All ages': 'Todas las edades', 'no stranger chat': 'sin chat con extraños', 'Phone · laptop': 'Móvil · portátil', 'touch, keys, gamepad': 'táctil, teclado, mando', 'from day one': 'desde el primer día', 'Free': 'Gratis', 'while in preview': 'durante la vista previa',
-  'The shelf': 'La estantería', 'Fourteen games, one couch, one hero': 'Catorce juegos, un sofá, un héroe',
+  'The shelf': 'La estantería', 'Fifteen games, one couch, one hero': 'Quince juegos, un sofá, un héroe',
   'Co-op adventure and a brawler for game night, four signature 3D titles with real depth for adults, a kids’ allergy safari for families, and cozy one-minute games for the bus. Every one of them pays XP and coins into the same hero.': 'Aventura cooperativa y lucha para la noche de juegos, títulos 3D con profundidad, un safari sobre alergias para familias y juegos cortos y tranquilos. Todos dan XP y monedas al mismo héroe.',
   'Create your hero': 'Crea tu héroe', 'Make one hero. Grow it everywhere.': 'Un héroe. Crece en todas partes.',
   'Pick a class, shape the look, name it. Every game on the shelf adds XP and coins to the same hero, saved on this device.': 'Elige una clase, su aspecto y su nombre. Cada juego suma XP y monedas al mismo héroe, guardado en este dispositivo.',
@@ -88,8 +89,8 @@ function renderDaily() {
 }
 /* Shelf categories + search (docs/DECISIONS/0007-hub-categories.md): one primary category per tile, tags only feed search */
 const CATS = [['all', 'All games', 'Todos'], ['kids', 'Kids', 'Niños'], ['learn', 'Learn & Teach', 'Aprender'], ['adv', 'Adventures', 'Aventuras'], ['action', 'Action & Racing', 'Acción y carreras'], ['party', 'Cards & Party', 'Cartas y fiesta'], ['cozy', 'Cozy & Puzzle', 'Relax y puzles']];
-const CAT_OF = { safari: 'kids', bubbles: 'kids', trivia: 'learn', pact: 'adv', depths: 'adv', match: 'action', tide: 'action', drift: 'action', runner: 'action', tray: 'party', draw: 'party', fit: 'cozy', junk: 'cozy', brew: 'cozy', builders: 'cozy' };
-const TAGS = { safari: 'allergy food kids family alergia comida', bubbles: 'counting numbers math toddler preschool kids contar números burbujas niños', trivia: 'quiz questions school preguntas', draw: 'drawing guess learn words dibujo palabras', pact: 'platformer co-op 2d', match: 'brawler fight versus pelea', drift: 'kart race car carrera coche', runner: 'run endless correr', tide: 'paint team shooter pintura equipo', depths: 'roguelite dungeon mazmorra', builders: 'build island sandbox construir isla', fit: 'organize asmr ordenar', junk: 'restore car boat restaurar', brew: 'tea cafe idle té café', tray: 'physics party fiesta' };
+const CAT_OF = { safari: 'kids', bubbles: 'kids', trivia: 'learn', pact: 'adv', depths: 'adv', match: 'action', tide: 'action', drift: 'action', runner: 'action', tray: 'party', draw: 'party', dominoes: 'party', fit: 'cozy', junk: 'cozy', brew: 'cozy', builders: 'cozy' };
+const TAGS = { dominoes: 'domino dominó fichas tiles table board mesa capicúa capicua card room', safari: 'allergy food kids family alergia comida', bubbles: 'counting numbers math toddler preschool kids contar números burbujas niños', trivia: 'quiz questions school preguntas', draw: 'drawing guess learn words dibujo palabras', pact: 'platformer co-op 2d', match: 'brawler fight versus pelea', drift: 'kart race car carrera coche', runner: 'run endless correr', tide: 'paint team shooter pintura equipo', depths: 'roguelite dungeon mazmorra', builders: 'build island sandbox construir isla', fit: 'organize asmr ordenar', junk: 'restore car boat restaurar', brew: 'tea cafe idle té café', tray: 'physics party fiesta' };
 let shelfCat = 'all', shelfQ = '';
 function renderFilter() {
   const grid = document.getElementById('shelfGrid'); if (!grid) return;

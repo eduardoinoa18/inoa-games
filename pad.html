@@ -63,6 +63,21 @@ body.rot #bA{right:8%;top:50%}body.rot #bB{right:calc(8% + 128px);top:62%}body.r
 #choices .opts button.picked{outline:6px solid #fff}
 #choices .opts button:disabled{opacity:.45}
 @media (orientation:landscape){#choices .opts{grid-template-columns:1fr 1fr 1fr 1fr}}
+/* hand layout (Card Room: a private hand of tiles/cards; dominoes draw their pips) */
+#handL{position:fixed;inset:60px 12px max(12px,env(safe-area-inset-bottom));display:grid;grid-template-rows:auto 1fr auto;gap:10px}
+#handL .q{font-family:var(--f-d);font-size:clamp(17px,4.8vw,24px);line-height:1.2;text-align:center}
+#handL .q small{display:block;font-family:var(--f-b);font-weight:800;font-size:14px;opacity:.8;margin-top:4px}
+#handL .q small.warn{color:#ffb3a8;opacity:1}
+#htiles{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-content:center;overflow:auto;padding:8px 2px}
+#htiles button{width:clamp(50px,16vw,82px);aspect-ratio:1/2;border:0;border-radius:14px;background:linear-gradient(#fffdf6,#eadfc8);box-shadow:0 6px 0 rgba(0,0,0,.35);padding:4px;color:var(--ink);font-weight:900;font-size:18px;display:grid;place-items:center}
+#htiles button svg{width:100%;height:100%;display:block}
+#htiles button.ok{outline:4px solid #7dffd8;outline-offset:2px}
+#htiles button.no{opacity:.55}
+#htiles button.picked{transform:translateY(-8px);outline:5px solid var(--me);outline-offset:2px}
+#htiles button.on{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.35)}
+#hacts{display:flex;gap:10px}#hacts button{flex:1;min-height:64px;border:0;border-radius:20px;background:var(--me);color:var(--ink);font-family:var(--f-d);font-weight:900;font-size:clamp(16px,4.6vw,21px);box-shadow:0 7px 0 rgba(0,0,0,.35)}
+#hacts button.on{transform:translateY(5px);box-shadow:0 2px 0 rgba(0,0,0,.35)}
+@media (orientation:landscape){#htiles button{width:clamp(44px,8vw,70px)}}
 #onl{position:fixed;left:50%;bottom:max(12px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:6;border:0;border-radius:16px;padding:12px 18px;background:#fff;color:var(--ink);font-family:var(--f-d);font-weight:900;font-size:14px;box-shadow:0 6px 18px rgba(0,0,0,.4);white-space:nowrap}
 #msg{font-family:var(--f-d);font-size:clamp(22px,6vw,34px);line-height:1.2;padding:0 10px}
 .btn.ghost{background:transparent;color:inherit;border:2px solid rgba(255,255,255,.35);box-shadow:none;margin-top:10px}
@@ -92,6 +107,7 @@ body.rot #bA{right:8%;top:50%}body.rot #bB{right:calc(8% + 128px);top:62%}body.r
   </div>
   <div id="bq" hidden></div><button id="buzz" hidden>BUZZ</button>
   <div id="choices" hidden><div class="q" id="cq"></div><div class="opts" id="copts"></div></div>
+  <div id="handL" hidden><div class="q" id="hq"></div><div id="htiles"></div><div id="hacts"></div></div>
   <div class="screen" id="textL" hidden><div id="msg"></div></div>
   <button id="onl" hidden></button>
 </div>
@@ -182,12 +198,31 @@ addEventListener('resize', updateOrient); addEventListener('orientationchange', 
 $('bRot').onclick = () => { try { localStorage.setItem('inoa.pad.orient', wantSideways() ? 'upright' : 'sideways'); } catch (e) { } updateOrient(); };
 // Android Chrome can truly lock orientation, but only in fullscreen: enter it on the first tap of the play screen
 $('sPlay').addEventListener('pointerdown', () => { if (!document.fullscreenElement && document.documentElement.requestFullscreen && wantSideways()) document.documentElement.requestFullscreen({ navigationUI: 'hide' }).then(() => updateOrient()).catch(() => { }); }, { once: true });
+// hand layout: {type:'hand', title, note, warn, tiles:[[a,b]…] or labels:[text…], ok:[bool…]|null, picked, actions:[label…]}
+// sends {t:'choice', i} for a tile/card and {t:'act', i} for an action button. The host checks every move.
+const PIP = { 0: [], 1: [[.5, .5]], 2: [[.27, .27], [.73, .73]], 3: [[.27, .27], [.5, .5], [.73, .73]], 4: [[.27, .27], [.73, .27], [.27, .73], [.73, .73]], 5: [[.27, .27], [.73, .27], [.5, .5], [.27, .73], [.73, .73]], 6: [[.27, .25], [.27, .5], [.27, .75], [.73, .25], [.73, .5], [.73, .75]] };
+const PIPC = ['#1b2430', '#d33a2f', '#2a6fc0', '#178a57', '#c97700', '#7d45c4', '#b02a63'];
+function domSvg(a, b, color) { const half = (v, y0) => (PIP[v] || []).map(([x, y]) => `<circle cx="${x * 50}" cy="${y0 + y * 50}" r="5.6" fill="${color ? PIPC[v] : '#1b2430'}"/>`).join(''); return `<svg viewBox="0 0 50 100" aria-hidden="true"><line x1="6" y1="50" x2="44" y2="50" stroke="#b9a988" stroke-width="2.4" stroke-linecap="round"/>${half(a, 0)}${half(b, 50)}</svg>`; }
+function renderHand(L) {
+  const esc = t => String(t ?? '').replace(/[<>&]/g, '');
+  $('hq').innerHTML = esc(L.title) + (L.note ? `<small class="${L.warn ? 'warn' : ''}">${esc(L.note)}</small>` : '');
+  const box = $('htiles'); box.innerHTML = '';
+  const items = L.tiles || L.labels || [];
+  items.forEach((it, i) => { const b = document.createElement('button'); const tile = Array.isArray(it);
+    b.innerHTML = tile ? domSvg(+it[0], +it[1], L.color !== false) : esc(it); b.setAttribute('aria-label', tile ? `${it[0]} | ${it[1]}` : esc(it));
+    if (L.ok) b.classList.add(L.ok[i] ? 'ok' : 'no'); if (L.picked === i) b.classList.add('picked');
+    b.addEventListener('pointerdown', e => { e.preventDefault(); buzz(20); b.classList.add('on'); sendMsg({ t: 'choice', i }); }); b.addEventListener('pointerup', () => b.classList.remove('on')); b.addEventListener('pointercancel', () => b.classList.remove('on'));
+    box.appendChild(b); });
+  const acts = $('hacts'); acts.innerHTML = ''; acts.hidden = !(L.actions && L.actions.length);
+  (L.actions || []).forEach((a, i) => { const b = document.createElement('button'); b.textContent = a; b.addEventListener('pointerdown', e => { e.preventDefault(); buzz(25); b.classList.add('on'); sendMsg({ t: 'act', i }); }); b.addEventListener('pointerup', () => b.classList.remove('on')); acts.appendChild(b); });
+}
 function applyLayout(L) {
-  L = L || { type: 'gamepad' }; curType = L.type; curOrient = L.orient || null; setTimeout(updateOrient, 0); $('pad').hidden = L.type !== 'gamepad'; bz.hidden = L.type !== 'buzzer'; $('choices').hidden = L.type !== 'choices'; $('textL').hidden = L.type !== 'text';
+  L = L || { type: 'gamepad' }; curType = L.type; curOrient = L.orient || null; setTimeout(updateOrient, 0); $('pad').hidden = L.type !== 'gamepad'; bz.hidden = L.type !== 'buzzer'; $('choices').hidden = L.type !== 'choices'; $('textL').hidden = L.type !== 'text'; $('handL').hidden = L.type !== 'hand';
   if (L.type === 'gamepad') { const labels = L.labels || {}; for (const k of ['A', 'B', 'C', 'D']) { const b = $('b' + k); b.textContent = labels[k] ?? k; b.hidden = L.buttons ? !L.buttons.includes(k) : (k === 'D'); } }
   $('bq').hidden = !(L.type === 'buzzer' && L.question);
   if (L.type === 'buzzer') { bz.textContent = L.label || 'BUZZ'; const esc = t => String(t).replace(/[<>&]/g, ''); if (L.question) { $('bq').innerHTML = esc(L.question) + (L.choices ? `<small>${L.choices.map((c, i) => 'ABCD'[i] + ': ' + esc(c)).join(' · ')}</small>` : ''); requestAnimationFrame(() => document.documentElement.style.setProperty('--bqh', ($('bq').offsetHeight + 12) + 'px')); } bz.classList.toggle('q', !!L.question); }
   if (L.type === 'choices') { $('cq').textContent = L.question || ''; const box = $('copts'); box.innerHTML = ''; (L.choices || []).forEach((c, i) => { const b = document.createElement('button'); b.style.background = CHOICE_COLORS[i % 4]; b.innerHTML = `<b>${'ABCDEF'[i] || i + 1}</b><span>${String(c).replace(/[<>&]/g, '')}</span>`; b.disabled = !!L.locked || (L.out || []).includes(i); if (L.picked === i) b.classList.add('picked'); b.addEventListener('pointerdown', e => { e.preventDefault(); if (b.disabled) return; buzz(25); b.classList.add('on'); [...box.children].forEach(x => x.classList.toggle('picked', x === b)); sendMsg({ t: 'choice', i }); }); b.addEventListener('pointerup', () => b.classList.remove('on')); box.appendChild(b); }); }
+  if (L.type === 'hand') renderHand(L);
   if (L.type === 'text') { $('msg').textContent = L.text || ''; $('msg').style.whiteSpace = 'pre-line'; }
 }
 applyLayout({ type: 'gamepad' });
