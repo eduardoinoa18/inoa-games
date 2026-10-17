@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tester guide · Inoa Games</title><meta name="description" content="How to test Inoa Games on your phone in 10 minutes, and how to send feedback.">
+<meta name="theme-color" content="#0b2a3a"><link rel="icon" href="favicon.png">
+<style>
+:root{--bg:#0b2a3a;--ink:#e8f4f7;--sun:#ffd166;--card:rgba(255,255,255,.06)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:760px;margin:0 auto;padding:24px 16px 64px}a{color:var(--sun)}h1{font-size:30px;margin:.2em 0}h2{font-size:20px;margin-top:1.7em}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.lang button{font:inherit;font-weight:800;min-height:44px;min-width:52px;border-radius:12px;border:2px solid rgba(255,255,255,.3);background:transparent;color:var(--ink);cursor:pointer}
+.lang button[aria-pressed=true]{background:var(--sun);color:#132a36;border-color:transparent}
+ol li,ul li{margin:.45em 0}.card{background:var(--card);border-radius:16px;padding:14px 16px;margin:12px 0}
+label{display:flex;gap:10px;align-items:flex-start;padding:6px 0}input[type=checkbox]{width:22px;height:22px;flex:none;margin-top:2px}
+.btn{display:inline-flex;align-items:center;min-height:48px;padding:0 18px;border-radius:14px;background:var(--sun);color:#132a36;font-weight:900;text-decoration:none;border:0;font-size:16px;cursor:pointer}
+small{opacity:.8}
+</style>
+</head><body><main>
+<div class="top"><a href="index.html" data-t="back">← Inoa Games</a><div class="lang" role="group" aria-label="Language / Idioma"><button data-l="en">EN</button> <button data-l="es">ES</button></div></div>
+<h1 data-t="h1">Tester guide</h1>
+<p data-t="lead">Thank you for testing! Ten minutes on your own phone tells us more than any lab. Everything is free during the beta and no account is needed.</p>
+
+<h2 data-t="h2a">1. Play on your phone (5 minutes)</h2>
+<div class="card" id="checks">
+<label><input type="checkbox" data-k="c1"><span data-t="c1">Open two or three games from the hub and play one round of each.</span></label>
+<label><input type="checkbox" data-k="c2"><span data-t="c2">Notice: does it feel smooth or choppy? Is any text too small, or any button hard to tap?</span></label>
+<label><input type="checkbox" data-k="c3"><span data-t="c3">Turn the phone sideways and back. Does the game still fit the screen?</span></label>
+<label><input type="checkbox" data-k="c4"><span data-t="c4">Switch the language to Español (or English) in a game's ⚙️ settings. Does anything stay in the wrong language?</span></label>
+</div>
+
+<h2 data-t="h2b">2. Your phone as a controller (3 minutes, needs a second screen)</h2>
+<ol>
+<li data-t="p1">Open a game on a TV, laptop or tablet and tap <b>📱 Phones</b> on its title screen. A QR code and a 4-letter code appear.</li>
+<li data-t="p2">On your phone, scan the QR code (or open the hub's <b>📷 Scan</b>, or type the code at the pad page).</li>
+<li data-t="p3">Tap <b>Allow</b> on the big screen when your phone asks to join.</li>
+<li data-t="p4">For racing and action games the controller turns sideways: hold your phone like a game controller. Use ↻ at the top if you prefer it upright.</li>
+<li data-t="p5">Tell us: did it connect on the first try? Did the controls respond right away (⚡ means a direct connection, ☁ means relayed)?</li>
+</ol>
+
+<h2 data-t="h2c">3. Send feedback (1 minute)</h2>
+<p data-t="fb">Use <b>💬 Feedback</b> in any game's ⚙️ settings, at the end of a round, or on the hub. Pick a face, add a note if you like, and send. It automatically includes your phone type and how smoothly the game was running, so you don't need to describe your device.</p>
+<p><a class="btn" href="index.html" data-t="go">Open the games</a></p>
+<p><small data-t="priv">Feedback stores your note, the game, your screen size, a coarse device type (for example "android chrome") and the frame rate. No name or email unless you're signed in. See the <a href="privacy.html">privacy page</a>.</small></p>
+</main>
+<script>
+const ES = {
+  back: '← Inoa Games', h1: 'Guía para probadores', lead: '¡Gracias por probar! Diez minutos en tu propio teléfono nos enseñan más que cualquier laboratorio. Todo es gratis durante la beta y no necesitas cuenta.',
+  h2a: '1. Juega en tu teléfono (5 minutos)', c1: 'Abre dos o tres juegos desde el inicio y juega una ronda de cada uno.', c2: 'Fíjate: ¿se siente fluido o se traba? ¿Hay texto muy pequeño o botones difíciles de tocar?', c3: 'Gira el teléfono de lado y vuelve. ¿El juego sigue cabiendo en la pantalla?', c4: 'Cambia el idioma a English (o Español) en los ⚙️ ajustes de un juego. ¿Algo se queda en el idioma equivocado?',
+  h2b: '2. Tu teléfono como control (3 minutos, necesitas otra pantalla)', p1: 'Abre un juego en un televisor, laptop o tablet y toca <b>📱 Teléfonos</b> en su pantalla de título. Aparecen un código QR y un código de 4 letras.', p2: 'En tu teléfono, escanea el QR (o usa <b>📷 Escanear</b> en el inicio, o escribe el código en la página del control).', p3: 'Toca <b>Permitir</b> en la pantalla grande cuando tu teléfono pida entrar.', p4: 'En los juegos de carreras y acción el control se pone de lado: sostén el teléfono como un control. Usa ↻ arriba si lo prefieres vertical.', p5: 'Cuéntanos: ¿conectó al primer intento? ¿Los controles respondieron enseguida (⚡ conexión directa, ☁ por relevo)?',
+  h2c: '3. Envía tu opinión (1 minuto)', fb: 'Usa <b>💬 Opinión</b> en los ⚙️ ajustes de cualquier juego, al final de una ronda o en el inicio. Elige una carita, añade una nota si quieres y envía. Incluye automáticamente el tipo de teléfono y qué tan fluido iba el juego, así que no tienes que describir tu dispositivo.',
+  go: 'Abrir los juegos', priv: 'La opinión guarda tu nota, el juego, el tamaño de pantalla, un tipo de dispositivo aproximado (por ejemplo "android chrome") y los cuadros por segundo. Sin nombre ni correo salvo que hayas iniciado sesión. Mira la <a href="privacy.html">página de privacidad</a>.'
+};
+const EN = {}; document.querySelectorAll('[data-t]').forEach(el => EN[el.dataset.t] = el.innerHTML);
+function profLang() { try { const k = JSON.parse(localStorage.getItem('inoa.activeProfile') || 'null'); return JSON.parse(localStorage.getItem(typeof k === 'string' && k.startsWith('inoa.profile.u.') ? k : 'inoa.profile') || '{}').lang; } catch (e) { return null; } }
+function setLang(l) {
+  document.documentElement.lang = l; document.querySelectorAll('[data-t]').forEach(el => { el.innerHTML = l === 'es' ? ES[el.dataset.t] || EN[el.dataset.t] : EN[el.dataset.t]; });
+  document.querySelectorAll('.lang button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.l === l))); document.title = l === 'es' ? 'Guía para probadores · Inoa Games' : 'Tester guide · Inoa Games';
+}
+document.querySelector('.lang').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setLang(b.dataset.l); });
+// the checklist remembers ticks on this device only (a convenience, not data we collect)
+document.querySelectorAll('#checks input').forEach(c => { try { c.checked = localStorage.getItem('inoa.testers.' + c.dataset.k) === '1'; } catch (e) { } c.addEventListener('change', () => { try { localStorage.setItem('inoa.testers.' + c.dataset.k, c.checked ? '1' : '0'); } catch (e) { } }); });
+setLang(profLang() === 'es' || (!profLang() && (navigator.language || '').startsWith('es')) ? 'es' : 'en');
+</script>
+</body></html>
