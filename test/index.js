@@ -18,6 +18,18 @@ module.exports = async (p, shot) => {
   await p.evaluate(() => document.getElementById('heroShare').click()); const d = await dl;
   if (d) { const out = require('path').join(__dirname, 'out', 'hero_card.png'); await d.saveAs(out); console.log('hero card saved', out); } else console.log('hero card: no download event');
   await p.evaluate(() => document.querySelector('#langToggle [data-l=en]').click());
+  // shelf categories + search (docs/DECISIONS/0007): every tile in exactly one category, search by tag, EN/ES chips
+  const vis = () => p.evaluate(() => [...document.querySelectorAll('#shelfGrid > .game')].filter(e => !e.hidden).length);
+  const total = await vis(), counts = {};
+  for (const c of await p.evaluate(() => [...document.querySelectorAll('#shelfBar [data-c]')].map(b => b.dataset.c).filter(c => c !== 'all'))) { await p.click(`#shelfBar [data-c="${c}"]`); counts[c] = await vis(); }
+  await p.click('#shelfBar [data-c="all"]'); await p.fill('#shelfSearch', 'kart'); const kart = await p.evaluate(() => [...document.querySelectorAll('#shelfGrid > .game')].filter(e => !e.hidden).map(e => e.querySelector('b').textContent));
+  await p.fill('#shelfSearch', 'zzqx'); const none = await p.evaluate(() => !document.querySelector('#shelfBar .sb-none').hidden);
+  await p.fill('#shelfSearch', ''); await p.click('#shelfBar [data-c="cozy"]');
+  await p.evaluate(() => document.getElementById('shelf').scrollIntoView()); await shot('shelf_cozy');
+  await p.evaluate(() => document.querySelector('#langToggle [data-l=es]').click()); const esChip = await p.textContent('#shelfBar [data-c="action"]'); await p.evaluate(() => document.querySelector('#langToggle [data-l=en]').click()); await p.click('#shelfBar [data-c="all"]');
+  const sum = Object.values(counts).reduce((a, b) => a + b, 0);
+  console.log('shelf', JSON.stringify({ total, counts, sum, kart, none, esChip }));
+  if (sum !== total || kart.join() !== 'Island Drift' || !none || !/Acción/.test(esChip)) { console.log('SHELF_FILTER_FAILED'); process.exitCode = 1; }
   // 3D hero picker → profile.hero, read back through the engine's E.hero()
   await p.evaluate(() => { document.querySelector('#h3Models [data-m=cyborg-female]').click(); document.querySelector('#h3Colors [data-c="#2fbf8a"]').click(); const n = document.getElementById('h3Name'); n.value = '<b>Zoe</b>'; n.dispatchEvent(new Event('input')); });
   const h = await p.evaluate(() => { const P = JSON.parse(localStorage.getItem('inoa.profile')); return { hero: P.hero, name: P.name, panel: document.querySelector('.hp-name')?.innerHTML }; });

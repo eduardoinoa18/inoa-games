@@ -25,10 +25,11 @@ It is a **static site**: `index.html` (hub) + `games/*.html` (one page per game)
 | `tools/clean_textures.mjs` | Cleans character textures for all ages (survivor rigs) in `assets/models` before packing |
 | `tools/hero_portraits.js` | `node test/run.js drift tools/hero_portraits.js` → `thumbs/heroes/*.png` (hub hero picker) |
 | `tools/build_hub.py` | Rebuilds `index.html`; marks games LIVE if `games/<file>.html` exists, uses `thumbs/<file>.jpg` as tile art |
+| `tools/meta_tags.mjs` | Writes description + Open Graph tags into every game page and `hub-src/head.html` from the hub tile copy, and renders `thumbs/og-hub.jpg` (then rebuild the hub) |
 | `tools/make_thumb.py` | `python3 tools/make_thumb.py <game> <screenshot.png> [x y w h]` → 640×360 tile image |
 | `tools/convert.mjs`, `tools/slim.mjs` | GLTF→GLB conversion (Draco decode, unlit→lit) and meshoptimizer simplification |
 | `test/run.js` + `test/<game>.js` | Headless Playwright harness: serves the repo, routes three.js to `node_modules`, drives each game via `window.__GAME` hooks, saves screenshots to `test/out/` (portrait runs get `_p`). Also `test/engine.js` (engine contract), `test/index.js` (hub), `test/party*.js` (multiplayer), `test/pwa.js` (offline, `SW=1`), `test/hero.js` |
-| `docs/` | `MULTIPLAYER.md` (phones + online), `ENGINE.md` (builder guide, API, quality bar), `AUDIT.md` (living quality record), `audit-notes/<game>.md` (per-game agent notes, Safari allergist-review list), `models.txt`, `graphics-toolkit.md` |
+| `docs/` | `PRODUCT_INVENTORY.md` (canonical games/modes/URLs/categories), `ROADMAP.md` (dependency-ordered releases), `DECISIONS/` (merge/retirement/monetization records; nothing destructive without a DECIDED record), `ARCHITECTURE.md`, `TESTING.md`, `MULTIPLAYER.md` (phones + online), `ENGINE.md` (builder guide, API, quality bar), `AUDIT.md` (living quality record), `audit-notes/<game>.md` (per-game agent notes, Safari allergist-review list), `models.txt`, `graphics-toolkit.md` |
 | `legacy/` | Sources of the first builds: 2D Pixel Pact parts (`pixelpact-src`, a frozen snapshot: `games/pixelpact.html` is now the source of truth), Snack Squad Safari sources (`safari-src`), old landing pages |
 
 ## The games (all playable now — status per docs/AUDIT.md)
@@ -78,10 +79,11 @@ Hub **Party** section and every title screen open a room (QR + 4-letter code). P
 7. Don't break `engine/inoa3d.js` API used by 10+ games; extend it additively and re-run `npm run test:all`.
 
 ## Audit + enhancement backlog (status 2026-10-15; details in docs/AUDIT.md)
+**Current plan (2026-10-17):** `docs/ROADMAP.md` supersedes the list below for ordering; open product decisions live in `docs/DECISIONS/`. Do not retire, merge or redirect a game without a DECIDED record.
 1. ~~Re-verify everything~~ **Done (Phase 1)**: every game re-tested at 1000×560 + 390×844, screenshots reviewed, interrupted games finished. Open P2/P3 items listed per game in docs/AUDIT.md.
 2. **Load speed / PWA — mostly done**: manifest packs (real meshopt `.glb`, shared, hashed, JSON fallback, lazy `E.ensureModels`), service worker + offline play verified (`test/pwa.js`), install offer after a win. Left: real-device load/FPS numbers (headless numbers are not representative), Draco not used (meshopt is smaller to decode).
 3. **Engine upgrades — done**: limb aiming + `E.attach`/`E.weaponPivot`, pooled particles, render-on-demand, distance fog, shared settings panel (sound, music, read-aloud, EN/ES, reduced motion, quality), profile v2 with de-duped rewards, occluder fading, menu navigation. Left: migrate Depths/Tide Lines onto the shared limb/occluder helpers; `instance({fit:'height'})` over-sizes skinned rigs ~1.5× (fixing changes every game's scale — do with care).
-4. **Hub — mostly done**: tile best/plays, Continue row, daily challenge, hero card share image, EN/ES toggle, fresh thumbnails, honest copy. Left: hub settings panel (games have it).
+4. **Hub — mostly done**: tile best/plays, Continue row, daily challenge, hero card share image, EN/ES toggle, fresh thumbnails, honest copy, category chips + search (2026-10-17, `docs/DECISIONS/0007`), link previews on every page. Left: hub settings panel (games have it).
 5. **Hero everywhere — started**: hub 3D hero picker (6 rigs + colour + name) → `E.hero()`; Drift, Runner, Tide Lines, Tray (player 1) use it. Left: Builders, Depths (class-based), Safari (kid avatar).
 6. **Pixel Pact 3D** (Phase 5): rebuild adventure + Match on the engine, 10 levels in World 1, keep 2D as Classic.
 7. **Multiplayer (built 2026-10-14, see `docs/MULTIPLAYER.md`)**: phones as controllers in every engine game + Pixel Pact 2D, per-player phones in Trivia/Depths/Tide Lines/Draw, Island Drift online races on separate screens. Next: TURN relay for strict networks, self-hosted signaling or Cloudflare Durable Object rooms, online modes for Tide Lines/Depths (host-authoritative like Drift), Safari phone support, spectator view, real-device latency tuning.

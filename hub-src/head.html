@@ -1,4 +1,6 @@
 <title>Inoa Games</title>
+<!--meta--><meta name="description" content="13 free browser games for phones, laptops and TVs: co-op adventures, racing, party games, cozy puzzles and a kids' allergy-safety game. English and Spanish. No download.">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Inoa Games"><meta property="og:title" content="Inoa Games: free games for the whole family"><meta property="og:description" content="13 free browser games for phones, laptops and TVs: co-op adventures, racing, party games, cozy puzzles and a kids' allergy-safety game. English and Spanish. No download."><meta property="og:url" content="https://inoa-games.vercel.app/"><meta property="og:image" content="https://inoa-games.vercel.app/thumbs/og-hub.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><!--/meta-->
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon.png"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><meta name="theme-color" content="#0b2a3a">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -6,6 +8,10 @@
 <style>
 /*BASE*/
 /* Hub additions: the game shelf, hero creator, party steps */
+.shelf>[hidden]{display:none!important}
+#shelfBar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 16px}#shelfBar .sb-cats{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;max-width:100%;padding-bottom:2px}#shelfBar .sb-cats::-webkit-scrollbar{display:none}
+#shelfBar button{flex:none;font:inherit;font-weight:800;font-size:14px;min-height:44px;padding:0 16px;border-radius:999px;border:2px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:inherit;cursor:pointer}#shelfBar button[aria-pressed=true]{background:var(--sun,#ffd166);color:#132a36;border-color:transparent}
+#shelfBar input{font:inherit;font-size:16px;min-height:44px;padding:0 16px;border-radius:999px;border:2px solid rgba(255,255,255,.25);background:rgba(255,255,255,.95);color:#132a36;flex:1 1 200px;max-width:320px}#shelfBar .sb-none{width:100%;margin:4px 0 0;font-weight:700}
 .shelf{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
 .game{position:relative;background:var(--glass);border:1px solid var(--line);display:grid;grid-template-rows:150px auto;clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px);min-width:0;transition:transform .15s}
 .game:hover{transform:translateY(-3px)}

@@ -85,6 +85,31 @@ function renderDaily() {
   box.innerHTML = `<div class="dc-k">${T2('Daily challenge', 'Reto del día')} · ${new Date().toLocaleDateString(isES() ? 'es' : 'en', { weekday: 'long', month: 'short', day: 'numeric' })}</div><div class="dc-main">${g.thumb ? `<img src="${g.thumb}" alt="">` : ''}<div><b>${T2(goal[0], goal[1])}</b><p>${esc(g.name)} · ${st.done ? T2('Done! +40 coins added to your hero', '¡Hecho! +40 monedas para tu héroe') : T2('Finish it today for +40 coins', 'Termínalo hoy y gana 40 monedas')}</p></div>${st.done ? '<span class="dc-ok">✓</span>' : `<a class="btn" href="${g.href}">${T2('Play', 'Jugar')}</a>`}</div><small class="dc-note">${T2('Same game for everyone today. Saved on this device only, so it is for fun, not a leaderboard.', 'El mismo juego para todos hoy. Se guarda solo en este dispositivo: es para divertirse, no un ranking.')}</small>`;
   box.classList.toggle('done', !!st.done);
 }
+/* Shelf categories + search (docs/DECISIONS/0007-hub-categories.md): one primary category per tile, tags only feed search */
+const CATS = [['all', 'All games', 'Todos'], ['kids', 'Kids', 'Niños'], ['learn', 'Learn & Teach', 'Aprender'], ['adv', 'Adventures', 'Aventuras'], ['action', 'Action & Racing', 'Acción y carreras'], ['party', 'Cards & Party', 'Cartas y fiesta'], ['cozy', 'Cozy & Puzzle', 'Relax y puzles']];
+const CAT_OF = { safari: 'kids', trivia: 'learn', pact: 'adv', depths: 'adv', match: 'action', tide: 'action', drift: 'action', runner: 'action', tray: 'party', draw: 'party', fit: 'cozy', junk: 'cozy', brew: 'cozy', builders: 'cozy' };
+const TAGS = { safari: 'allergy food kids family alergia comida', trivia: 'quiz questions school preguntas', draw: 'drawing guess learn words dibujo palabras', pact: 'platformer co-op 2d', match: 'brawler fight versus pelea', drift: 'kart race car carrera coche', runner: 'run endless correr', tide: 'paint team shooter pintura equipo', depths: 'roguelite dungeon mazmorra', builders: 'build island sandbox construir isla', fit: 'organize asmr ordenar', junk: 'restore car boat restaurar', brew: 'tea cafe idle té café', tray: 'physics party fiesta' };
+let shelfCat = 'all', shelfQ = '';
+function renderFilter() {
+  const grid = document.getElementById('shelfGrid'); if (!grid) return;
+  let bar = document.getElementById('shelfBar');
+  if (!bar) {
+    bar = document.createElement('div'); bar.id = 'shelfBar'; grid.before(bar);
+    bar.innerHTML = '<div class="sb-cats" role="group"></div><input type="search" id="shelfSearch" autocomplete="off"><p class="sb-none" hidden></p>';
+    bar.querySelector('.sb-cats').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { shelfCat = b.dataset.c; renderFilter(); } });
+    bar.querySelector('input').addEventListener('input', e => { shelfQ = e.target.value.trim().toLowerCase(); renderFilter(); });
+  }
+  const cats = bar.querySelector('.sb-cats'), q = bar.querySelector('input');
+  cats.setAttribute('aria-label', T2('Game categories', 'Categorías de juegos'));
+  cats.innerHTML = CATS.filter(c => c[0] === 'all' || tiles.some(t => CAT_OF[t.g.id] === c[0])).map(c => `<button type="button" data-c="${c[0]}" aria-pressed="${c[0] === shelfCat}">${T2(c[1], c[2])}</button>`).join('');
+  q.placeholder = T2('Search games', 'Buscar juegos'); q.setAttribute('aria-label', q.placeholder);
+  let shown = 0;
+  tiles.forEach(t => { const el = t.el || t.cn.parentNode; if (!el) return; const e2 = ES_GAMES[t.g.id];
+    const hay = [t.g.name, t.g.kind, t.g.desc, e2 && e2[0], TAGS[t.g.id], ...CATS.filter(c => c[0] === CAT_OF[t.g.id]).flatMap(c => [c[1], c[2]])].join(' ').toLowerCase();
+    const ok = (shelfCat === 'all' || CAT_OF[t.g.id] === shelfCat) && (!shelfQ || shelfQ.split(/\s+/).every(w => hay.includes(w)));
+    el.hidden = !ok; if (ok) shown++; });
+  const none = bar.querySelector('.sb-none'); none.hidden = shown > 0; none.textContent = T2('No games match. Try another word.', 'Ningún juego coincide. Prueba otra palabra.');
+}
 /* EN/ES for the whole hub (shared with every game through the profile) */
 function setLang(l) { const P = readProfile(); P.lang = l; writeProfile(P); applyLang(); }
 function applyLang() {
@@ -96,7 +121,7 @@ function applyLang() {
     el.dataset.en ??= el.textContent.trim(); const tr = HUB_ES[el.dataset.en]; el.textContent = es && tr ? tr : el.dataset.en; });
   tiles.forEach(tl => { const g = tl.g, el = tl.cn.parentNode, e2 = ES_GAMES[g.id]; if (!el || !e2) return; const p = el.querySelector('.body p'), m = el.querySelector('.meta'); p.dataset.en ??= p.textContent; m.dataset.en ??= m.innerHTML; p.textContent = es ? e2[0] : p.dataset.en; m.innerHTML = es ? e2[1].map(x => `<span>${x}</span>`).join('') : m.dataset.en; });
   document.querySelectorAll('#langToggle button').forEach(b => b.classList.toggle('on', b.dataset.l === (es ? 'es' : 'en')));
-  renderTileStats(); renderContinue(); renderDaily(); renderHero3d(); if (typeof renderProfile === 'function') renderProfile();
+  renderTileStats(); renderFilter(); renderContinue(); renderDaily(); renderHero3d(); if (typeof renderProfile === 'function') renderProfile();
 }
 /* hero card share image (1080x1350 PNG drawn locally; no server) */
 async function heroCard() {
