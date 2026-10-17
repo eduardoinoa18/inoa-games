@@ -856,3 +856,49 @@ Engine and `net.js` unchanged.
 - A native speaker should read the Spanish.
 - The original 1-1 to 1-3 rely on running double jumps of 6–7 tiles, the edge of what Rook can do. Play-test them with Rook on Normal.
 
+
+## Phase 0 — reconciliation and decision validation (2026-10-17)
+Triggered by the v4 master plan. Inventory, architecture, roadmap and decision records were written from the repository, not from the plan. See `docs/PRODUCT_INVENTORY.md`, `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, `docs/DECISIONS/` and `docs/TESTING.md`.
+
+### Baseline
+Commit 3f1737d, plus this pass's page tags and hub shelf. 1000×560, `npm run test:all` suites run one after another in the sandbox:
+
+| Suite | Result | Time |
+| --- | --- | --- |
+| drift | NO_ERRORS (re-run after the tag change: NO_ERRORS) | 264 s |
+| runner | NO_ERRORS | 149 s |
+| tidelines | NO_ERRORS | 188 s |
+| fit | NO_ERRORS | 313 s |
+| junk | NO_ERRORS | 360 s |
+| brew | NO_ERRORS | 237 s |
+| builders | NO_ERRORS | 174 s |
+| tray | NO_ERRORS | 152 s |
+| trivia | NO_ERRORS | 368 s |
+| draw | NO_ERRORS | 213 s |
+| depths | NO_ERRORS (autopilot plays Act I + Act II to the final boss) | 43 s |
+| safari | NO_ERRORS | 218 s |
+| pixelpact | NO_ERRORS | 130 s |
+| index (hub, incl. new shelf checks) | NO_ERRORS, also at 390×844 | — |
+| pwa (`SW=1`) | NO_ERRORS | — |
+
+Portrait (390×844) runs and `npm run test:party` (9/9) were last run on 2026-10-16 with the Pixel Pact merge. Nothing in this pass touches the engine, `net.js` or game logic.
+
+### Plan vs repository: corrections
+- **Already built**, though the plan lists them as future work: accounts + cloud profile (Supabase), server-capped rewards, admin, feedback, invites, PWA/offline, phones as controllers, Drift online races, Capacitor apps. Billing is built and switched off.
+- **Counts:** 13 game products, 13 game pages and 14 hub tiles (Pixel Pact Adventure and Match share one page). No game has been merged or retired.
+- **Monetization conflict:** the approved Premium subscription and the referral credit "toward the monthly subscription" conflict with v4's "cosmetics only, no paywalls". Recorded as `DECISIONS/0006` for the owner. Nothing is charged today.
+- **Racing retirement:** Island Drift is the engine's reference game and the only online-race implementation. Recommend keeping it (`DECISIONS/0001`).
+- **Card Room:** play-money Poker and Blackjack would likely raise app-store age ratings and conflict with kids/family programs. Recorded in `DECISIONS/0004` (verify against current store docs); Dominoes recommended first.
+
+### New findings
+| ID | Sev. | Finding | Evidence | Plan |
+| --- | --- | --- | --- | --- |
+| F1 | P2 | Game-specific saves (`inoa.brew`, `inoa.builders`, `snacksquad`, `pixelpact3.progress`, …) are **device-wide and local only**: they don't follow a signed-in player to another device, and two players on one device share them. The shared profile (XP/coins/best) *is* account-scoped and synced | `docs/PRODUCT_INVENTORY.md` §4; `grep localStorage games/*.html` | Roadmap R3: `E.save()/E.load()` scoped to the active profile + `ig_save_*` RPC |
+| F2 | P2 → **fixed** | No page had a meta description or Open Graph tags, so shared invite and game links showed as bare URLs | `grep -c og:title` → 0 on all 14 pages | `tools/meta_tags.mjs` writes them from the hub tile copy; hub share image `thumbs/og-hub.jpg` |
+| F3 | P2 → **fixed** | The hub was a flat shelf of 14 tiles with no way to filter | — | Category chips + search (`DECISIONS/0007`), checked in `test/index.js` at both sizes |
+| F4 | P3 | Pixel Pact 2D carries its own copy of the reward/profile rules (`results(` count 0; it writes the profile directly). It matches the engine today but can drift | `games/pixelpact.html` | Keep in sync until the Phase 5 3D rebuild. A shared `engine/profile.js` without three.js would remove the copy |
+| F5 | P3 | `hub-src/hub.js` still holds stale per-tile labels (`PHASE 2`) and claude.ai preview links, though `tools/build_hub.py` rewrites them at build time | `hub-src/hub.js` lines 4–17 | Clean up the next time the hub source is edited |
+| F6 | P1 (risk) | **No real-device measurement exists** for any game or for phone-as-controller rooms over the live Realtime service | `docs/TESTING.md` "What headless tests cannot tell you" | Roadmap R1, needs the owner's and testers' phones |
+| F7 | P3 | No CI: tests are run by hand before each merge | — | Optional: a GitHub Action running `test:all` on push (~70 min of software WebGL; consider a nightly schedule) |
+
+No P0 found: no secret in the repo or the client bundle, user data isolated by RLS (DB tests), and no unsafe child-facing behaviour.
