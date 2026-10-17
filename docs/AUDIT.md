@@ -902,3 +902,24 @@ Portrait (390×844) runs and `npm run test:party` (9/9) were last run on 2026-10
 | F7 | P3 | No CI: tests are run by hand before each merge | — | Optional: a GitHub Action running `test:all` on push (~70 min of software WebGL; consider a nightly schedule) |
 
 No P0 found: no secret in the repo or the client bundle, user data isolated by RLS (DB tests), and no unsafe child-facing behaviour.
+
+## Pixel Pact Match — "effects make it laggy" (owner report, 2026-10-17)
+**Measured** with the new `test/pixelpact_perf.js`: a 4-fighter bot match, 60 simulated seconds on each of the 5 arenas, with wall-clock time emulated at 60 Hz. The lag was not a frame-rate problem: particles peaked at about 200 and drawing took about 3 ms in headless. Effects were **stopping the game clock**:
+
+| Per minute of Match | Before | After |
+| --- | --- | --- |
+| Wall time frozen by hit-stop | **15.6%** (≈130 freezes, up to 12 frames each) | **4.2%** |
+| Wall time in slow-motion (0.3×) | **13.5%** (≈38 slow-downs: every KO, every big launch) | **1.9%** (≈5) |
+| Frames with a screen flash | ≈770 | ≈140 |
+| Frames with a zoom punch | ≈1,450 | ≈390 |
+
+**Fixes** (`games/pixelpact.html`):
+- **Who it affects:** freezes, shake and punch now apply in full only when a human is the attacker or the victim. Bot-vs-bot hits get at most 1 frame of freeze and a third of the shake.
+- **Freeze cooldown:** `hitStop()` gives 16 frames of cooldown after each freeze, during which a follow-up freezes for 1 frame at most.
+- **Slow-motion in Match:** only on knockouts involving a human, with a 4 s cooldown, and always at match end. Big launches no longer slow the game. Ultimates freeze for 8 frames (3 for bots), down from 12.
+- **Cheaper particles:** in-place particle compaction (the old per-particle `splice` was O(n²)), a cached `rgba()` prefix, and a lower particle cap (520; 260 on battery or after the auto-quality drop).
+- Adventure keeps its feel: the same rationing applies, so co-op bursts no longer chain freezes, and boss and level-end slow-motion is unchanged.
+
+**Guard:** `test/pixelpact_perf.js` fails if any arena goes above 8% frozen or 5% slowed (`PP_FEEL_BUDGET_OK`).
+**Tests:** `test/pixelpact.js` passes at 1000×560 (full) and 390×844 (`PP_QUICK=1`); `test/party.js test/party_pact.js` passes; all `NO_ERRORS`.
+**Still open:** confirm on a real phone. Reduced motion (Settings) still switches off shake and slow-motion entirely.

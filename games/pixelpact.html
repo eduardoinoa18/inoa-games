@@ -376,7 +376,8 @@ const easeOut = t => 1 - Math.pow(1 - clamp(t, 0, 1), 3);
 const hash = (x, y) => { let h = (x * 374761393 + y * 668265263) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
 const FD = '"Unbounded", "Manrope", system-ui, sans-serif', FB = '"Manrope", system-ui, sans-serif', FP = '"Press Start 2P", ui-monospace, monospace';
 function hexRgb(h) { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
-function rgba(h, a) { const c = hexRgb(h); return `rgba(${c[0]},${c[1]},${c[2]},${a})`; }
+const rgbaPre = new Map(); // 'rgba(r,g,b,' per hex colour: particles call this hundreds of times a frame
+function rgba(h, a) { let p = rgbaPre.get(h); if (!p) { const c = hexRgb(h); p = `rgba(${c[0]},${c[1]},${c[2]},`; rgbaPre.set(h, p); } return p + a + ')'; }
 function rr(c, x, y, w, h, r) {
   if (typeof r === 'number') r = [r, r, r, r];
   const [tl, tr, br, bl] = r;
@@ -931,7 +932,7 @@ function nearestTarget(x, y) { const n = nearest(x, y, null); return n || { x, y
 
 function burst(x, y, n, cols, spd, life, o) {
   o = o || {};
-  if (parts.length > 800) parts.splice(0, parts.length - 700);
+  const cap = settings.quality === 'battery' || G.res < .9 ? 260 : 520; if (parts.length > cap) parts.splice(0, parts.length - cap + 60);
   for (let i = 0; i < n; i++) {
     const a = o.dir !== undefined ? o.dir + rnd(-(o.spread || .5), o.spread || .5) : rnd(0, TAU), s = rnd(spd * .35, spd);
     parts.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - (o.up || 0), life: rnd(life * .6, life), max: life, c: cols[(Math.random() * cols.length) | 0], g: o.g === undefined ? .25 : o.g, sz: rnd(o.sz || 2, (o.sz || 2) * 2), type: o.type || 'dot', drag: o.drag || .97, add: !!o.add });
@@ -940,7 +941,11 @@ function burst(x, y, n, cols, spd, life, o) {
 function ringFx(x, y, r0, r1, col, life, w) { parts.push({ x, y, vx: 0, vy: 0, g: 0, drag: 1, type: 'ring', r0, r1, c: col, life, max: life, sz: w || 3, add: true }); }
 function floatText(x, y, txt, col, size, o) { texts.push({ x, y, txt: typeof txt === 'string' ? tr(txt) : String(txt), c: col || '#fff', life: 52, size: size || 12, crit: o && o.crit }); }
 function addTrauma(v) { if (motionOK()) G.trauma = Math.min(1, G.trauma + v); }
-function slowmo(sec) { if (motionOK()) G.slowT = Math.max(G.slowT, sec); }
+// Freeze-frames and slow-mo are rationed: they sell a hit, but back-to-back they read as lag (a 4-fighter match spent ~30% of its time frozen or slowed).
+// hitStop: a short cooldown after each freeze caps follow-ups at 1 frame. slowmo in Match: only when forced (match end) or after a 4 s cooldown.
+function hitStop(n) { if ((G.hsCd || 0) > 0) n = Math.min(n, 1); if (n > G.hitstop) G.hitstop = n; if (n > 1) G.hsCd = 16; }
+function slowmo(sec, force) { if (!motionOK()) return; if (G.mode === 'match' && !force) { if ((G.slowCd || 0) > 0) return; G.slowCd = 240; } G.slowT = Math.max(G.slowT, sec); }
+const isHuman = q => !!q && !q.bot;
 function toast(msg, ms) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('on'), ms || 2600); }
 
 function makeEnemy(kind, tx, ty) {
@@ -1021,7 +1026,7 @@ function startLevel(fromCheckpoint) {
   if (!fromCheckpoint) checkpoint = start;
   players = players.map((p, i) => { const np = makePlayer({ idx: p.idx, src: p.src, hero: HEROES.indexOf(p.hero) }, checkpoint.x + i * 26, checkpoint.y); np.meter = meters[i] || 0; return np; });
   if (fromCheckpoint) for (const e of ents) if (e.kind === 'beacon' && Math.abs(e.x - checkpoint.x) < 40) e.on = true;
-  Object.assign(G, { hitstop: 0, trauma: 0, fade: 1, fadeDir: -1, levelDone: 0, levelT: 0, gameOver: 0, gameOverT: 0, cine: 0, flash: 0, hurtFlash: 0, matchOver: 0, countdown: 0, world: true });
+  Object.assign(G, { hitstop: 0, hsCd: 0, slowCd: 0, slowT: 0, trauma: 0, fade: 1, fadeDir: -1, levelDone: 0, levelT: 0, gameOver: 0, gameOverT: 0, cine: 0, flash: 0, hurtFlash: 0, matchOver: 0, countdown: 0, world: true });
   G.cam.cx = checkpoint.x + 120; G.cam.cy = checkpoint.y; G.cam.z = 1;
   if (!fromCheckpoint) { G.bannerT = 0; say(LEVEL.id + '. ' + tr(LEVEL.name) + '. ' + tr(players.length > 1 ? 'Stick together. Stand by a downed friend to revive them.' : 'Find 3 Pact Shells and reach the exit'), true); }
   Sound.play(LEVEL.song);
@@ -1045,7 +1050,7 @@ function startMatch() {
   STAGE.x0 = 1e9; STAGE.x1 = 0; STAGE.floorY = 0;
   for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) if (SOLID[map[ty][tx]]) { STAGE.x0 = Math.min(STAGE.x0, tx * TS); STAGE.x1 = Math.max(STAGE.x1, (tx + 1) * TS); STAGE.floorY = Math.max(STAGE.floorY, ty * TS); }
   players = players.map((p, i) => { const sp = spawns[i] || spawns[0]; const np = makePlayer({ idx: p.idx, src: p.src, hero: HEROES.indexOf(p.hero) }, sp.x, sp.y); np.facing = sp.x < MW * TS / 2 ? 1 : -1; np.inv = 0; return np; });
-  Object.assign(G, { hitstop: 0, trauma: 0, fade: 1, fadeDir: -1, levelDone: 0, gameOver: 0, cine: 0, flash: 0, hurtFlash: 0, matchOver: 0, matchT: 0, countdown: 200, hazardT: 0, hazardWarn: 0, world: true, bannerT: 999 });
+  Object.assign(G, { hitstop: 0, hsCd: 0, slowCd: 0, slowT: 0, trauma: 0, fade: 1, fadeDir: -1, levelDone: 0, gameOver: 0, cine: 0, flash: 0, hurtFlash: 0, matchOver: 0, matchT: 0, countdown: 200, hazardT: 0, hazardWarn: 0, world: true, bannerT: 999 });
   G.cam.cx = MW * TS / 2; G.cam.cy = MH * TS * .55; G.cam.z = 1;
   Sound.play(STAGE.song);
 }
@@ -1099,7 +1104,7 @@ function playerHurt(dmg, kx, ky, from) {
   if (G.mode === 'match') { hitPlayer(P, dmg, kx, ky, 'big', from || null); return true; }
   dmg = Math.max(1, Math.round(dmg * DIFF[settings.diff].dmg * (h.id === 'rook' ? .85 : 1)));
   P.hp -= dmg; P.inv = 72; P.hurtT = 18; P.vx = kx; P.vy = ky; P.atk = null; P.combo = 0; P.comboT = 0; P.wall = 0;
-  floatText(P.x + 10, P.y - 6, '-' + dmg, '#ff4d6d', 14); addTrauma(.45); G.hitstop = 5; G.hurtFlash = 1; Sound.sfx.hurt(); if (!P.bot && P.src === 'touch') buzz(40);
+  floatText(P.x + 10, P.y - 6, '-' + dmg, '#ff4d6d', 14); addTrauma(.45); hitStop(5); G.hurtFlash = 1; Sound.sfx.hurt(); if (!P.bot && P.src === 'touch') buzz(40);
   burst(P.x + 10, P.y + 18, 12, ['#ff4d6d', '#ffd0d8', '#ffffff'], 5, 26, { add: true, type: 'spark', g: .1 });
   if (P.hp <= 0) { P.hp = 0; downPlayer(P); }
   return true;
@@ -1144,7 +1149,7 @@ function startAttack(kind) {
   }
 }
 function useUlt() {
-  const h = P.hero; P.meter = 0; Sound.sfx.ult(); addTrauma(.8); G.hitstop = 12; G.flash = .8; G.punch = 1.07; buzz(80);
+  const h = P.hero, mineU = isHuman(P); P.meter = 0; Sound.sfx.ult(); addTrauma(mineU ? .7 : .35); hitStop(mineU ? 8 : 3); G.flash = Math.max(G.flash, mineU ? .6 : .3); G.punch = Math.max(G.punch, mineU ? 1.05 : 1.02); buzz(80);
   floatText(P.x + 10, P.y - 24, h.ult.toUpperCase() + '!', '#ffc65c', 18, { crit: true }); if (!P.bot && G.mode !== 'match') say(tr(h.ult) + '!', false);
   ringFx(P.x + 10, P.y + 20, 10, 220, h.c.glow, 30, 6);
   const onScreen = e => e.hp !== undefined && !e.dead && e.kind !== 'crate' && !(e.boss && e.state === 'sleep') && e.x + e.w > view.l - 20 && e.x < view.r + 20;
@@ -1396,11 +1401,12 @@ function hitPlayer(o, dmg, kx, ky, kind, from) {
   const dirx = sign(kx) || (from ? sign(o.x - from.x) || 1 : 1);
   o.vx = dirx * kb; o.vy = kind === 'light' ? -kb * .5 - 1 : Math.min(-kb * .85, ky * .5); o.hurtT = Math.round(10 + kb * 1.4); o.inv = kind === 'light' ? 6 : 10; o.atk = null; o.wall = 0; o.dodge = 0;
   floatText(o.x + 10, o.y - 8, dmg, kind === 'light' ? '#ffffff' : '#ffc65c', kind === 'light' ? 12 : 16, { crit: kind !== 'light' });
-  (kind === 'light' ? Sound.sfx.hit : Sound.sfx.hit2)(); G.hitstop = kind === 'light' ? 3 : 6 + Math.min(6, kb * .2 | 0); addTrauma(kind === 'light' ? .12 : .3 + Math.min(.4, kb * .02)); if (o.src === 'touch') buzz(kind === 'light' ? 12 : 30);
-  if (kind !== 'light') G.punch = Math.max(G.punch, 1.025);
+  const mine = isHuman(o) || isHuman(from); // bot-vs-bot hits don't freeze or shake the human's screen
+  (kind === 'light' ? Sound.sfx.hit : Sound.sfx.hit2)(); hitStop(mine ? (kind === 'light' ? 2 : 4 + Math.min(3, kb * .12 | 0)) : (kind === 'light' ? 0 : 1)); addTrauma((kind === 'light' ? .1 : .22 + Math.min(.3, kb * .015)) * (mine ? 1 : .35)); if (o.src === 'touch') buzz(kind === 'light' ? 12 : 30);
+  if (kind !== 'light' && mine && kb > 9) G.punch = Math.max(G.punch, 1.02);
   burst(o.x + 10, o.y + 20, kind === 'light' ? 8 : 14, ['#ffffff', '#ffe7a8', from ? from.hero.c.glow : '#fff'], kind === 'light' ? 5 : 7, 18, { add: true, type: 'spark', g: 0, drag: .88 });
   ringFx(o.x + 10, o.y + 20, 4, kind === 'light' ? 24 : 40, '#ffffff', 12, kind === 'light' ? 2.5 : 4);
-  if (kb > 18) { slowmo(.12); o.launch = 1; }
+  if (kb > 18) o.launch = 1;
 }
 function knockOut(o) {
   if (o.out || o.dead) return;
@@ -1408,7 +1414,7 @@ function knockOut(o) {
   if (G.mmode === 'coins' && o.score > 0) { const lose = Math.min(3, o.score); o.score -= lose; const sp = G.spots[(Math.random() * G.spots.length) | 0] || { x: MW * TS / 2, y: 200 }; for (let i = 0; i < lose; i++) ents.push({ kind: 'coin', x: sp.x - 8, y: sp.y - 60, w: 16, h: 16, t: i * 5, vx: rnd(-3, 3), vy: rnd(-8, -4), loose: 1 }); }
   const killer = (o.lastHit >= 0 && G.frame - o.lastHitT < 400) ? players.find(q => q.idx === o.lastHit) : null;
   if (killer) { killer.kos++; killer.meter = Math.min(100, killer.meter + 25); floatText(killer.x + 10, killer.y - 24, 'KO!', '#ffc65c', 20, { crit: true }); }
-  Sound.sfx.ko(); addTrauma(.9); G.flash = .7; G.punch = 1.06; slowmo(.5); buzz(60);
+  const mineKO = isHuman(o) || isHuman(killer); Sound.sfx.ko(); addTrauma(mineKO ? .7 : .3); G.flash = Math.max(G.flash, mineKO ? .45 : .2); if (mineKO) { G.punch = 1.04; slowmo(.3); } if (isHuman(o) || isHuman(killer)) buzz(60);
   const ex = clamp(o.x + 10, view.l + 30, view.r - 30), ey = clamp(o.y + 20, view.t + 30, view.b - 30);
   burst(ex, ey, 40, [o.col, '#ffffff', '#ffc65c'], 9, 40, { add: true, type: 'spark', g: .1 }); ringFx(ex, ey, 10, 160, o.col, 24, 6);
   floatText(ex, ey - 20, tr(o.bot ? 'BOT {0} OUT' : 'P{0} OUT', o.idx + 1), o.col, 16, { crit: true });
@@ -1436,11 +1442,11 @@ function updateModes() {
 }
 function endScoreMatch() {
   if (G.matchOver) return; const sc = p => G.mmode === 'hill' ? (p.hill || 0) : p.score, best = Math.max(...players.map(sc)), top = players.filter(p => sc(p) === best);
-  G.matchOver = 1; G.matchT = 0; if (top.length === 1 && best > 0) top[0].winner = 1; Sound.stop(); Sound.sfx.win(); slowmo(1); G.flash = 1; progress.matches = (progress.matches || 0) + 1; saveProgress();
+  G.matchOver = 1; G.matchT = 0; if (top.length === 1 && best > 0) top[0].winner = 1; Sound.stop(); Sound.sfx.win(); slowmo(1, true); G.flash = 1; progress.matches = (progress.matches || 0) + 1; saveProgress();
 }
 function checkMatchEnd() {
   const left = inPlay();
-  if (left.length <= 1 && players.length >= 2 && !G.matchOver) { G.matchOver = 1; G.matchT = 0; if (left[0]) { left[0].winner = 1; } Sound.stop(); Sound.sfx.win(); slowmo(1); G.flash = 1; progress.matches = (progress.matches || 0) + 1; saveProgress(); }
+  if (left.length <= 1 && players.length >= 2 && !G.matchOver) { G.matchOver = 1; G.matchT = 0; if (left[0]) { left[0].winner = 1; } Sound.stop(); Sound.sfx.win(); slowmo(1, true); G.flash = 1; progress.matches = (progress.matches || 0) + 1; saveProgress(); }
 }
 
 /* =========================================================
@@ -1469,7 +1475,7 @@ function hitEnemy(e, dmg, kx, ky, kind) {
   const big = kind !== 'light';
   floatText(e.x + e.w / 2, e.y - 8, dmg, stunned ? '#ff6b4a' : recent ? '#2de2c3' : big ? '#ffc65c' : '#ffffff', big ? 16 : 12, { crit: stunned || big });
   if (recent && G.frame % 3 === 0) floatText(e.x + e.w / 2, e.y - 26, 'TEAM!', '#2de2c3', 10);
-  (big ? Sound.sfx.hit2 : Sound.sfx.hit)(); G.hitstop = big ? 6 : 3; addTrauma(big ? .3 : .12); if (P.src === 'touch') buzz(big ? 25 : 10);
+  (big ? Sound.sfx.hit2 : Sound.sfx.hit)(); hitStop(big ? 5 : 2); addTrauma(big ? .3 : .12); if (P.src === 'touch') buzz(big ? 25 : 10);
   if (big) G.punch = Math.max(G.punch, 1.025);
   const hx = e.x + e.w / 2, hy = e.y + e.h / 2;
   burst(hx, hy, big ? 14 : 8, ['#ffffff', '#ffe7a8', P.hero.c.glow], big ? 7 : 5, 18, { add: true, type: 'spark', g: 0, drag: .88 });
@@ -1771,7 +1777,7 @@ function updateHazards() {
   for (const p of projs) if (p.owner === 'h' && (p.kind === 'tsunami')) for (const o of players) { if (o.out || o.dead || o.inv > 0 || o.dodge > 0 || p.hit['p' + o.idx] || !overlap(p, o)) continue; p.hit['p' + o.idx] = 1; hitPlayer(o, p.dmg, 8, -5, 'big', null); }
 }
 function updateFx() {
-  for (let i = parts.length - 1; i >= 0; i--) { const p = parts[i]; p.life--; p.vx *= p.drag; p.vy = p.vy * p.drag + p.g; p.x += p.vx; p.y += p.vy; if (p.life <= 0) parts.splice(i, 1); }
+  let pw = 0; for (let i = 0; i < parts.length; i++) { const p = parts[i]; p.life--; p.vx *= p.drag; p.vy = p.vy * p.drag + p.g; p.x += p.vx; p.y += p.vy; if (p.life > 0) parts[pw++] = p; } parts.length = pw; // in-place compaction (splice per dead particle was O(n²))
   for (let i = texts.length - 1; i >= 0; i--) { const t = texts[i]; t.life--; t.y -= t.life > 36 ? 1.4 : .3; if (t.life <= 0) texts.splice(i, 1); }
   G.flash = Math.max(0, G.flash - .05); G.hurtFlash = Math.max(0, G.hurtFlash - .04);
   G.trauma = Math.max(0, G.trauma - .022); G.punch = lerp(G.punch, 1, .1);
@@ -1840,6 +1846,7 @@ function step() {
   if (G.scene !== 'play') return;
   G.bannerT++;
   if (G.hitstop > 0) { G.hitstop--; return; }
+  if (G.hsCd > 0) G.hsCd--; if (G.slowCd > 0) G.slowCd--;
   if (G.countdown > 0) { const c = G.countdown; G.countdown--; if (c === 180 || c === 120 || c === 60) Sound.sfx.count(); if (c === 1) { Sound.sfx.go(); G.flash = .4; } for (const pl of players) { P = pl; updatePlayer(); } updateFx(); updateCamera(); return; }
   if (G.levelDone) {
     G.levelT++; for (const pl of players) { pl.anim = 'win'; if (raft) { pl.x = raft.x + 12 + (pl.idx % 4) * 14; pl.y = raft.y - pl.h; pl.facing = 1; } }
@@ -3220,7 +3227,7 @@ function boot() {
   try { if (window.claude && window.claude.hot && window.claude.hot.snapshot) window.claude.hot.snapshot(() => ({ heroes: settings.heroes })); } catch (e) {}
   requestAnimationFrame(t => { last = t; loop(t); });
   // headless test hooks (test/pixelpact.js): drive the fixed-step sim without real-time waits
-  window.__GAME = { G, levels: LEVELS, stages: STAGES, heroes: HEROES, progress, get players() { return players; }, get lobby() { return lobby; }, get ents() { return ents; }, get boss() { return boss; }, get arena() { return arena; }, get mapW() { return MW * TS; },
+  window.__GAME = { G, levels: LEVELS, stages: STAGES, heroes: HEROES, progress, get players() { return players; }, get parts() { return parts; }, get lobby() { return lobby; }, get ents() { return ents; }, get boss() { return boss; }, get arena() { return arena; }, get mapW() { return MW * TS; },
     start(mode, level = 0, o = {}) { G.mode = mode; G.level = level; if (o.stage != null) G.stage = o.stage; if (o.mode) settings.mmode = o.mode; if (o.hero != null) settings.heroes[0] = o.hero; lobby.slots = []; openLobby(); if (mode === 'match' || o.bots) { while (lobby.slots.length < 1 + (o.bots || 1)) addBot(); } startPlay(); },
     openMap() { openPicks('adventure'); }, loopStep(n = 1) { for (let i = 0; i < n; i++) { if (G.scene === 'play') { pollPlayers(); pollDropIn(); } step(); } }, down(i) { const pl = players[i]; if (pl) { pl.hp = 0; downPlayer(pl); } }, force(i, key) { const pl = players[i]; if (pl) { pl.force = key; if (key === 'ult') pl.meter = 100; } }, update(n = 1) { for (let i = 0; i < n; i++) { if (G.scene === 'play') pollPlayers(); step(); } if (G.world) drawPlay(); }, results: showResults };
   window.__ppTr = tr; window.__READY = true;
