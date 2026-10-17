@@ -164,11 +164,13 @@ function loadSave(raw) { const d = DEF(); const s = Object.assign(d, raw && type
   for (const k of ['visited', 'cards', 'seenRes']) if (!s[k] || typeof s[k] !== 'object' || Array.isArray(s[k])) s[k] = {};
   if (!Array.isArray(s.folk)) s.folk = []; s.folk = s.folk.filter(f => f && Number.isFinite(f.id) && FOLK[f.id]).slice(0, FOLK.length);
   for (const k of ['seed', 'day', 'dayT', 'q', 'built', 'coins', 'clock', 'wishes', 'trades', 'harvests', 'player']) s[k] = num(s[k], d[k]);
-  s.q = clamp(Math.floor(s.q), 0, QUESTS.length); s.dayT = ((s.dayT % 1) + 1) % 1; s.player = clamp(Math.floor(s.player), 0, 3);
+  s.q = clamp(Math.floor(s.q), 0, QUESTS.length); s.dayT = ((s.dayT % 1) + 1) % 1; s.player = clamp(Math.floor(s.player), 0, 4);
   if (s.v < 2) { if (s.q >= 10) toastLater = ['🗺️ New: chapter 2 — islands, islanders and postcards!', '🗺️ Nuevo: capítulo 2 — islas, vecinos y postales']; s.v = 2; }
   return s; }
 let toastLater = null;
 let S = loadSave(E.store.get(KEY, {}));
+// the hub hero (profile.hero) is a 5th builder choice and the default until the player picks one here
+const HERO = E.hero(); if (HERO.chosen && !S.picked) S.player = 4; if (S.player === 4 && !HERO.chosen) S.player = 0;
 const save = () => { if (G.visit) return; if (!G.boat) S.pos = [player.pos.x, player.pos.z, player.yaw]; E.store.set(KEY, S); };
 
 /* ================= engine ================= */
@@ -418,7 +420,7 @@ function cropAt(i, j) { return S.crops.find(c => c.i === i && c.j === j); }
 const player = { pos: V3(), yaw: 0, vel: V3(), y: 0, model: null, rig: null, t: 0, speed: 0, tool: null };
 const tools = {};
 function spawnPoint() { const ang = Math.PI / 2 + .3; for (let r = 30; r > 0; r -= .5) { const x = Math.cos(ang) * r, z = Math.sin(ang) * r; if (shoreD(x, z) > 8.5) return V3(x, 0, z); } return V3(0, 0, 0); }
-function buildPlayer() { if (player.root) world.remove(player.root); const root = new THREE.Group(); const m = E.instance(PLAYERS[S.player % 4][0], { scale: 1.7, fit: 'height', outline: false }); root.add(m); player.root = root; player.model = m; player.rig = E.bones(m); world.add(root);
+function buildPlayer() { if (player.root) world.remove(player.root); const root = new THREE.Group(); const m = E.instance(S.player === 4 && HERO.chosen ? HERO.model : PLAYERS[S.player % 4][0], { scale: 1.7, fit: 'height', outline: false }); root.add(m); player.root = root; player.model = m; player.rig = E.bones(m); world.add(root);
   const sh = new THREE.Mesh(new THREE.CircleGeometry(.35, 18), new THREE.MeshBasicMaterial({ color: 0, transparent: true, opacity: .22, depthWrite: false })); sh.rotation.x = -Math.PI / 2; sh.position.y = .03; root.add(sh); player.shadow = sh;
   // tools held in the right hand (hidden until used). Orientation is solved from the T-pose rest so the handle points forward out of the fist.
   const hand = player.rig.RightHand; root.updateMatrixWorld(true); const ws = hand.getWorldScale(V3()).x; const hqi = hand.getWorldQuaternion(new THREE.Quaternion()).invert(); const want = new THREE.Quaternion().setFromUnitVectors(V3(0, 1, 0), V3(0, .25, 1).normalize());
@@ -788,9 +790,9 @@ function start() {
 }
 function title() { G.mode = 'title';
   const prog = S.built || S.q ? `<p class="ig-sub db-prog">📜 ${tr('Quest', 'Misión')} ${Math.min(S.q + 1, QUESTS.length)}/${QUESTS.length} · 🏘️ ${S.folk.length} ${tr('islanders', 'vecinos')} · 📮 ${stampTotal()}/12 · ☀️ ${tr('Day', 'Día')} ${S.day}</p>` : '';
-  const extra = `${prog}<div><p class="ig-sub" style="margin-bottom:6px">${tr('Your builder', 'Tu constructor')}</p><div class="ig-row" id="dbP">${PLAYERS.map((p, i) => `<button class="ig-chipbtn ${i === S.player ? 'on' : ''}" data-i="${i}">${p[1]}</button>`).join('')}</div></div>`;
+  const extra = `${prog}<div><p class="ig-sub" style="margin-bottom:6px">${tr('Your builder', 'Tu constructor')}</p><div class="ig-row" id="dbP">${PLAYERS.map((p, i) => `<button class="ig-chipbtn ${i === S.player ? 'on' : ''}" data-i="${i}">${p[1]}</button>`).join('')}${HERO.chosen ? `<button class="ig-chipbtn ${S.player === 4 ? 'on' : ''}" data-i="4">⭐ ${HERO.name || tr('Your hero', 'Tu héroe')}</button>` : ''}</div></div>`;
   const d = E.titleScreen({ title: 'Driftwood Builders', kicker: tr('Inoa Games · Island sandbox', 'Inoa Games · Isla para construir'), lead: tr('Wash up on a tiny island, gather driftwood, stone and fibre, and build a cozy home by the sea. Sail to two little islands, welcome islanders into cottages and fill your postcards. Nights are safe — just darker, with lanterns glowing.', 'Llegas a una islita: junta madera, piedra y fibra, y construye una casa junto al mar. Navega a dos islas más, recibe vecinos en casitas y completa tus postales. Las noches son seguras — solo más oscuras, con faroles encendidos.'), how: [['🕹️', tr('Move: stick, WASD or arrows · drag to look · tap to walk', 'Mover: palanca, WASD o flechas · arrastra para mirar · toca para caminar')], ['✋', tr('Gather: Space/✋ next to trees, rocks, bushes and fruit', 'Recolectar: Espacio/✋ junto a árboles, rocas, arbustos y fruta')], ['🔨', tr('Build: E/🔨, pick a piece (Q/C, LB/RB), R/↻ rotates, ✅ places (green = fits)', 'Construir: E/🔨, elige pieza (Q/C, LB/RB), R/↻ gira, ✅ coloca (verde = cabe)')], ['🎮', tr('Gamepad: A gather/place · B run/rotate · X build · LB/RB pieces · LT undo · Back remove', 'Mando: A recolectar/colocar · B correr/girar · X construir · LB/RB piezas · LT deshacer · Back quitar')], ['📜', tr('21 quests unlock new build sets · 💌 grant islanders\' wishes · 📮 postcards · 🔗 share · 📷 photo', '21 misiones desbloquean piezas · 💌 cumple deseos · 📮 postales · 🔗 compartir · 📷 foto')]], extra, onPlay: start });
-  d.querySelectorAll('#dbP button').forEach(b => b.onclick = () => { S.player = +b.dataset.i; d.querySelectorAll('#dbP button').forEach(x => x.classList.toggle('on', x === b)); E.store.set(KEY, S); }); }
+  d.querySelectorAll('#dbP button').forEach(b => b.onclick = () => { S.player = +b.dataset.i; S.picked = true; d.querySelectorAll('#dbP button').forEach(x => x.classList.toggle('on', x === b)); E.store.set(KEY, S); }); }
 // switching EN/ES in the settings panel re-labels everything live
 addEventListener('inoa:settings', () => { const old = LANG; readLang(); if (old === LANG) return; hud(); drawQuest(); drawDay(); if (palEl) drawPalette(); drawSigns(); photoX.querySelector('button').textContent = `✕ ${tr('Exit photo', 'Salir de foto')}`; if (visitEl) visitEl.firstChild.textContent = `🏝️ ${tr('Visiting a friend\'s island', 'De visita en otra isla')} `; });
 document.addEventListener('visibilitychange', () => { if (document.hidden && G.mode === 'play') { save(); if (!G.modal) pause(); } });
