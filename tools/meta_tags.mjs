@@ -28,11 +28,13 @@ for (const t of tiles) {
   const desc = t.desc.length > 200 ? t.desc.slice(0, t.desc.lastIndexOf(' ', 196)) + '…' : t.desc;
   put(`games/${f}.html`, block({ title: `${t.name} · Inoa Games`, desc: desc + ' Free in your browser.', url: `${SITE}/games/${f}.html`, img: `${SITE}/thumbs/${f}.jpg`, w: 640, h: 360 }));
 }
-put('hub-src/head.html', block({ title: 'Inoa Games: free games for the whole family', desc: `${seen.size} free browser games for phones, laptops and TVs: co-op adventures, racing, party games, cozy puzzles and a kids' allergy-safety game. English and Spanish. No download.`, url: `${SITE}/`, img: `${SITE}/thumbs/og-hub.jpg`, w: 1200, h: 630 }));
+// GAME_COUNT=<n> overrides the count in the hub copy (e.g. while a game being built on another branch is already announced)
+const COUNT = +process.env.GAME_COUNT || seen.size;
+put('hub-src/head.html', block({ title: 'Inoa Games: free games for the whole family', desc: `${COUNT} free browser games for phones, laptops and TVs: co-op adventures, racing, party games, cozy puzzles and a kids' allergy-safety game. English and Spanish. No download.`, url: `${SITE}/`, img: `${SITE}/thumbs/og-hub.jpg`, w: 1200, h: 630 }));
 
 // hub share image: six game thumbnails around a title band
 const W = 1200, H = 630, cw = 400, ch = 225, pics = ['pixelpact', 'drift', 'safari', 'brew', 'tidelines', 'trivia'], comps = [];
 for (const [i, n] of pics.entries()) comps.push({ input: await sharp(`thumbs/${n}.jpg`).resize(cw, ch).toBuffer(), left: (i % 3) * cw, top: i < 3 ? 0 : H - ch });
-comps.push({ input: Buffer.from(`<svg width="${W}" height="${H - 2 * ch}" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="#0b2a3a"/><text x="600" y="92" font-family="DejaVu Sans, sans-serif" font-weight="900" font-size="72" fill="#ffd166" text-anchor="middle">Inoa Games</text><text x="600" y="145" font-family="DejaVu Sans, sans-serif" font-weight="700" font-size="32" fill="#ffffff" text-anchor="middle">${seen.size} free games · phones, laptops, TVs · English + Español</text></svg>`), left: 0, top: ch });
+comps.push({ input: Buffer.from(`<svg width="${W}" height="${H - 2 * ch}" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="#0b2a3a"/><text x="600" y="92" font-family="DejaVu Sans, sans-serif" font-weight="900" font-size="72" fill="#ffd166" text-anchor="middle">Inoa Games</text><text x="600" y="145" font-family="DejaVu Sans, sans-serif" font-weight="700" font-size="32" fill="#ffffff" text-anchor="middle">${COUNT} free games · phones, laptops, TVs · English + Español</text></svg>`), left: 0, top: ch });
 await sharp({ create: { width: W, height: H, channels: 3, background: '#0b2a3a' } }).composite(comps).jpeg({ quality: 82 }).toFile('thumbs/og-hub.jpg');
-console.log('meta tags:', seen.size, 'games + hub; share image thumbs/og-hub.jpg');
+console.log('meta tags:', seen.size, 'game pages,', COUNT, 'in the hub copy; share image thumbs/og-hub.jpg');

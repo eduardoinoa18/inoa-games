@@ -1,6 +1,6 @@
 # Inoa Games — product inventory (canonical)
 
-Verified against the repository on 2026-10-17, at commit 3f1737d on `main`, which is what is live at https://inoa-games.vercel.app. Edit this file whenever a game, mode, URL or category changes. Quality findings are in `docs/AUDIT.md`. Open decisions are in `docs/DECISIONS/`.
+Verified against the repository on 2026-10-17, at commit 3f1737d on `main`, which is what is live at https://inoa-games.vercel.app. **Update 2026-10-17:** game #15 Bubble Pop Counting added on its branch (#14, Dominoes, is being built in parallel; the hub copy already says 15). Edit this file whenever a game, mode, URL or category changes. Quality findings are in `docs/AUDIT.md`. Open decisions are in `docs/DECISIONS/`.
 
 ## 1. How we count
 | Count | Number | What it means |
@@ -33,6 +33,7 @@ Primary category uses the proposed hub categories (`docs/DECISIONS/0007-hub-cate
 | 11 | **Fail Tray** (`tray.html`) | All ages / party | 18 courses in 5 venues, slow-motion fail replay, Chill/Normal/Wild | 1–4 hot-seat + phones | Yes | Cards & Party | `inoa3d.js` | Real-phone feel |
 | 12 | **Pact Trivia** (`trivia.html`) | 8+ / family | 473 fact-checked questions in 11 categories; Full show, Classic, Daily 10 | 1–4 + phone buzzers | Yes | Learn & Teach | `inoa3d.js` | Native ES review. Phone buzz latency |
 | 13 | **Draw the Pact** (`draw.html`) | 6+ / party | Party, Teams, Telephone, Speed Sketch, Daily doodle, Guess the doodle; 704 words | 2–8 pass-and-play or phones | Yes | Cards & Party (tag: Learn) | `inoa3d.js` | Stylus hardware. Native ES words |
+| 15 | **Bubble Pop Counting** (`bubbles.html`) | 3–6 (pre-readers) | Counting: count to 3, count to 5, number ↔ group, "one more" up to 10, plus a free Pop party; stars + 12 stickers; adaptive ease | 1 (keyboard / gamepad / phones drive one soft cursor) | Yes, voice-first | Kids | `inoa3d.js` + Kids World shell (`engine/kids.js`) | Play test with real 3–6-year-olds. Native ES voice check |
 
 \* The proposed category list has no home for racing. Recommendation: rename "Action & Fighting" to **"Action & Racing"** (`docs/DECISIONS/0007-hub-categories.md`).
 
@@ -59,5 +60,5 @@ Rules live in `engine/savekeys.js`; details are in `docs/PLATFORM_ARCHITECTURE.m
 | Key | Owner | Scoped to the signed-in account? | Synced to the cloud? |
 | --- | --- | --- | --- |
 | `inoa.profile` / `inoa.profile.u.<id>` | Shared hero profile | Yes | XP, coins, achievements and per-game best/plays: yes (`ig_finish_round`) |
-| `inoa.drift`, `inoa.runner`, `inoa.tidelines`, `inoa.fit`, `inoa.junk`, `inoa.brew`, `inoa.builders`, `inoa.tray`, `inoa.depths`, `inoa.trivia.daily`, `inoa.trivia.stats`, `pixelpact3.progress` | Each game's own progress | Yes | **Yes** (`ig_saves`, ≤ 64 KB each) |
+| `inoa.drift`, `inoa.runner`, `inoa.tidelines`, `inoa.fit`, `inoa.junk`, `inoa.brew`, `inoa.builders`, `inoa.tray`, `inoa.depths`, `inoa.bubbles` (stars + sticker indexes only), `inoa.trivia.daily`, `inoa.trivia.stats`, `pixelpact3.progress` | Each game's own progress | Yes | **Yes** (`ig_saves`, ≤ 64 KB each) |
 | `snacksquad` (Safari child profiles + allergens), `inoa.draw` / `inoa.trivia` (settings with typed names), `inoa.draw.gallery`/`.daily` (drawings), `inoa.drift.ghost.*`, `inoa.trivia.seen2` | Device-only data | Yes | **No**, on purpose (children's health data, names, size) |
