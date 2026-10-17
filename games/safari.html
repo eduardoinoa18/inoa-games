@@ -418,7 +418,9 @@ const STICKERS = [
 const NLV = LEVELS.length;
 const save = E.store.get('snacksquad', {}) || {};
 const AVATARS = ['🦁', '🐼', '🦊', '🐢', '🦄', '🐸', '🐙', '🦉'];
-const newProfile = (o = {}) => ({ name: String(o.name || '').slice(0, 14), allergens: (Array.isArray(o.allergens) && o.allergens.filter(a => AL[a]).length ? o.allergens.filter(a => AL[a]) : ['peanut', 'milk']), stars: [...(Array.isArray(o.stars) ? o.stars : []), ...Array(NLV).fill(0)].slice(0, NLV).map(n => clamp(n | 0, 0, 3)), collection: Array.isArray(o.collection) ? o.collection : [], stickers: Array.isArray(o.stickers) ? o.stickers : [], avatar: AVATARS.includes(o.avatar) ? o.avatar : AVATARS[0], kid: o.kid === 'skater-male' ? 'skater-male' : 'skater-female', labels: o.labels | 0 });
+// a new player's rider starts as the hub hero when that hero is one of Safari's two riders
+const HERO_KID = (() => { const h = E.hero(); return h.chosen && /^skater-(fe)?male$/.test(h.model) ? h.model : null; })();
+const newProfile = (o = {}) => ({ name: String(o.name || '').slice(0, 14), allergens: (Array.isArray(o.allergens) && o.allergens.filter(a => AL[a]).length ? o.allergens.filter(a => AL[a]) : ['peanut', 'milk']), stars: [...(Array.isArray(o.stars) ? o.stars : []), ...Array(NLV).fill(0)].slice(0, NLV).map(n => clamp(n | 0, 0, 3)), collection: Array.isArray(o.collection) ? o.collection : [], stickers: Array.isArray(o.stickers) ? o.stickers : [], avatar: AVATARS.includes(o.avatar) ? o.avatar : AVATARS[0], kid: (o.kid || HERO_KID) === 'skater-male' ? 'skater-male' : 'skater-female', labels: o.labels | 0 });
 const S = { profiles: [], cur: 0, duo: !!save.duo, sound: save.sound !== false, motion: save.motion !== false, big: !!save.big, hc: !!save.hc, hints: save.hints !== false, lang: save.lang || 'en', voice: save.voice !== false, v: 3 };
 // v1/v2 saves had one player at the top level: it becomes player 1 (name, allergens, 5 level stars, collection kept)
 S.profiles = Array.isArray(save.profiles) && save.profiles.length ? save.profiles.slice(0, 6).map(newProfile) : [newProfile(save)];
