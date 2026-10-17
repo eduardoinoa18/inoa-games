@@ -38,7 +38,7 @@ const HUB_ES = { // static page text: English source → Spanish (applied by set
   'A hub of quick, friendly browser games for one player or a whole couch. Build a hero once and grow it in every game, from the Pixel Pact islands to a 60-second drawer restock.': 'Juegos rápidos y amables en el navegador para una persona o todo el sofá. Crea un héroe y hazlo crecer en cada juego.',
   'Play Pixel Pact': 'Jugar Pixel Pact', 'See the games': 'Ver los juegos',
   'All ages': 'Todas las edades', 'no stranger chat': 'sin chat con extraños', 'Phone · laptop': 'Móvil · portátil', 'touch, keys, gamepad': 'táctil, teclado, mando', 'from day one': 'desde el primer día', 'Free': 'Gratis', 'while in preview': 'durante la vista previa',
-  'The shelf': 'La estantería', 'Fifteen games, one couch, one hero': 'Quince juegos, un sofá, un héroe',
+  'The shelf': 'La estantería', 'Fourteen games, one couch, one hero': 'Catorce juegos, un sofá, un héroe',
   'Co-op adventure and a brawler for game night, four signature 3D titles with real depth for adults, a kids’ allergy safari for families, and cozy one-minute games for the bus. Every one of them pays XP and coins into the same hero.': 'Aventura cooperativa y lucha para la noche de juegos, títulos 3D con profundidad, un safari sobre alergias para familias y juegos cortos y tranquilos. Todos dan XP y monedas al mismo héroe.',
   'Create your hero': 'Crea tu héroe', 'Make one hero. Grow it everywhere.': 'Un héroe. Crece en todas partes.',
   'Pick a class, shape the look, name it. Every game on the shelf adds XP and coins to the same hero, saved on this device.': 'Elige una clase, su aspecto y su nombre. Cada juego suma XP y monedas al mismo héroe, guardado en este dispositivo.',

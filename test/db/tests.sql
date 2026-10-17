@@ -26,7 +26,7 @@ select t.fails($$ select public.ig_grant_owner_by_email('c@example.test') $$, 'o
 
 -- ================= anon =================
 set role anon; select set_config('request.jwt.claims', '{}', false);
-select t.ok((select count(*) from public.ig_game_catalog where is_active) = 13, 'anon reads the game catalog');
+select t.ok((select count(*) from public.ig_game_catalog where is_active) = 14, 'anon reads the game catalog');
 select t.fails($$ select * from public.ig_profiles $$, 'anon cannot read profiles');
 select t.fails($$ select public.ig_start_game('drift', 'anon-key-123') $$, 'anon cannot call start_game');
 select t.fails($$ select public.ig_grant_owner_by_email('a@example.test') $$, 'anon cannot run the owner bootstrap');

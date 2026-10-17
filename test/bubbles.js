@@ -142,7 +142,7 @@ module.exports = async (p, _shot) => {
   await p.evaluate(() => { const btn = () => ({ pressed: false, value: 0 }); window.__pad = { id: 'test pad', connected: true, axes: [0, 0, 0, 0], buttons: Array.from({ length: 17 }, btn) }; navigator.getGamepads = () => [window.__pad]; });
   await sim(.6);
   const gp0 = (await st()).pops; const lockG = await steer('pad'); log('padLock', lockG);
-  await p.evaluate(() => { window.__pad.buttons[0] = { pressed: true, value: 1 }; }); await sim(.05); await p.evaluate(() => { window.__pad.buttons[0] = { pressed: false, value: 0 }; }); await sim(.05);
+  await p.evaluate(() => { window.__pad.buttons[0] = { pressed: true, value: 1 }; }); await p.waitForTimeout(200); await sim(.05); // the engine polls pads on real frames: hold long enough under load await p.evaluate(() => { window.__pad.buttons[0] = { pressed: false, value: 0 }; }); await sim(.05);
   check(lockG !== false && (await st()).pops === gp0 + 1, 'gamepad: stick steers, A pops');
   await p.evaluate(() => { navigator.getGamepads = () => []; });
   /* ---- pause: Esc opens the pause menu; its Hub + settings are gated ---- */
