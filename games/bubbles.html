@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Bubble Pop Counting</title>
+<!--meta--><meta name="description" content="Pop the bubble the voice asks for: count to 3, count to 5, match numbers to groups and add one more, up to 10. Spoken in English and Spanish, no clock, no way to lose, a sticker for every set and… Free in your browser.">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Inoa Games"><meta property="og:title" content="Bubble Pop Counting · Inoa Games"><meta property="og:description" content="Pop the bubble the voice asks for: count to 3, count to 5, match numbers to groups and add one more, up to 10. Spoken in English and Spanish, no clock, no way to lose, a sticker for every set and… Free in your browser."><meta property="og:url" content="https://inoa-games.vercel.app/games/bubbles.html"><meta property="og:image" content="https://inoa-games.vercel.app/thumbs/bubbles.jpg"><meta property="og:image:width" content="640"><meta property="og:image:height" content="360"><meta name="twitter:card" content="summary_large_image"><!--/meta-->
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;800&family=Unbounded:wght@700;900&display=swap">
+<link rel="stylesheet" href="../engine/ui.css">
+<link rel="stylesheet" href="../engine/kids.css">
+<style>
+html,body{background:#cdeeff;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none}
+.ig-screen.ig-title{align-items:safe center}
+.ig-title .ig-btn,.ig-results .ig-btn{min-height:64px;font-size:17px}
+.ig-top .ig-chip{min-height:52px;min-width:52px;justify-content:center;font-size:20px}
+.ig-hud{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center}
+.bp-prog{display:flex;gap:6px;align-items:center;font-size:20px}
+.bp-prog i{display:inline-block;width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.6);box-shadow:inset 0 0 0 2px rgba(27,36,48,.25)}
+.bp-prog i.on{background:radial-gradient(circle at 35% 30%,#fff 0 18%,#7cc8ff 22% 100%);box-shadow:inset 0 0 0 2px #2f6f9f}
+.bp-prog i.now{box-shadow:inset 0 0 0 3px var(--mint-ink)}
+/* prompt card: what to pop (picture) + the repeat button */
+.bp-card{position:fixed;left:50%;top:calc(max(10px,env(safe-area-inset-top)) + 62px);transform:translateX(-50%);z-index:19;display:flex;align-items:center;gap:12px;background:rgba(255,248,238,.94);border-radius:26px;padding:8px 10px 8px 14px;box-shadow:0 10px 30px rgba(27,36,48,.18);pointer-events:auto}
+.bp-card[hidden]{display:none}
+.bp-card canvas{display:block}
+.bp-done{position:fixed;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:19;background:var(--mint-ink);color:#fff}
+.bp-done[hidden]{display:none}
+.bp-cursor{position:fixed;left:0;top:0;width:76px;height:76px;margin:-38px 0 0 -38px;border-radius:50%;z-index:18;pointer-events:none;box-shadow:0 0 0 5px #fff,0 0 0 9px var(--berry),0 6px 18px rgba(0,0,0,.25);transition:width .12s,height .12s,margin .12s}
+.bp-cursor.lock{width:96px;height:96px;margin:-48px 0 0 -48px;box-shadow:0 0 0 6px #fff,0 0 0 11px var(--mint-ink),0 6px 18px rgba(0,0,0,.25)}
+.bp-cursor[hidden]{display:none}
+/* title: stage picker */
+.bp-stages{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.bp-stage{display:grid;grid-template-columns:auto 1fr;align-items:center;justify-items:start;gap:4px 10px;min-height:84px;text-align:left;padding:10px 12px;border-radius:22px;background:#fff;box-shadow:inset 0 0 0 3px #d9ecf7,0 5px 0 #b9d8ea}
+.bp-stage .kd-ico{grid-row:span 2;font-size:38px}
+.bp-stage .kd-txt{font-size:16px;line-height:1.1}
+.bp-stage small{font:800 16px var(--f-b);color:#7a5a00;letter-spacing:2px}
+.bp-stage.rec{box-shadow:inset 0 0 0 4px var(--mint-ink),0 5px 0 #0a4234}
+.bp-party{width:100%;background:linear-gradient(90deg,#ffe3ee,#e0f2ff);font-size:18px}
+.bp-stickers{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;font-size:26px;line-height:1.2;background:#fff;border-radius:18px;padding:6px 8px;box-shadow:inset 0 0 0 2px var(--line)}
+.bp-stickers span.off{filter:grayscale(1);opacity:.28}
+.bp-lbl{font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#3f4b5a;margin:0 0 4px;text-align:center}
+.bp-grown{justify-self:center}
+.bp-extra{display:grid;gap:10px}
+@media (max-height:640px) and (min-width:720px){
+  .ig-title .ig-card{width:min(920px,100%);grid-template-columns:1fr 1.15fr;column-gap:22px;align-items:start}
+  .ig-title .ig-card>*{grid-column:1}
+  .ig-title .ig-card>.bp-extra{grid-column:2;grid-row:1/span 7}
+}
+.bp-opts{display:grid;gap:8px}
+.bp-opts .ig-chipbtn{min-height:56px;text-align:left;font-size:15px}
+.bp-opts .ig-chipbtn small{display:block;font-weight:600;color:#4c5868;font-size:12px}
+html.kd-hc .bp-card{background:#fff;box-shadow:0 0 0 4px #000}
+html.kd-hc .bp-stage{box-shadow:inset 0 0 0 3px #000,0 5px 0 #000}
+@media (max-width:420px){.bp-card{gap:8px;padding:6px 8px 6px 10px}.bp-stage{padding:8px 8px;gap:2px 6px}.bp-stage .kd-ico{font-size:30px}.bp-stage .kd-txt{font-size:14px}.bp-stage small{font-size:14px}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+</head><body>
+<canvas class="ig-gl" id="gl"></canvas>
+<div class="bp-cursor" id="cursor" hidden></div>
+<script type="module">
+import * as E from '../engine/inoa3d.js';
+import * as K from '../engine/kids.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+const { THREE, clamp, lerp, rnd, damp, SFX, $ } = E;
+const T = E.L, TAU = Math.PI * 2;
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+
+/* ---------------- content ---------------- */
+// Objects drawn procedurally on canvas (same look on every device). en/es: [singular, plural]; g: Spanish gender.
+const OBJ = {
+  duck: { en: ['duck', 'ducks'], es: ['patito', 'patitos'], g: 'm' },
+  fish: { en: ['fish', 'fish'], es: ['pez', 'peces'], g: 'm' },
+  apple: { en: ['apple', 'apples'], es: ['manzana', 'manzanas'], g: 'f' },
+  bug: { en: ['ladybug', 'ladybugs'], es: ['mariquita', 'mariquitas'], g: 'f' },
+  flower: { en: ['flower', 'flowers'], es: ['flor', 'flores'], g: 'f' },
+  star: { en: ['star', 'stars'], es: ['estrella', 'estrellas'], g: 'f' }
+};
+const STAGES = [
+  { id: 's1', e: '🐣', name: { en: 'Count to 3', es: 'Cuenta hasta 3' }, max: 3, theme: ['duck'], kinds: ['count', 'find', 'count', 'find', 'count'], intro: { en: "Let's count to three!", es: '¡Vamos a contar hasta tres!' } },
+  { id: 's2', e: '🐠', name: { en: 'Count to 5', es: 'Cuenta hasta 5' }, max: 5, theme: ['fish'], kinds: ['count', 'stars', 'find', 'count', 'stars'], intro: { en: "Let's count to five!", es: '¡Vamos a contar hasta cinco!' } },
+  { id: 's3', e: '🐞', name: { en: 'Number + group', es: 'Número y grupo' }, max: 6, theme: ['bug', 'apple', 'flower'], kinds: ['matchQ', 'matchN', 'matchQ', 'matchN', 'matchQ'], intro: { en: 'Match the number and the group!', es: '¡Une el número con el grupo!' } },
+  { id: 's4', e: '🐳', name: { en: 'One more', es: 'Uno más' }, max: 10, theme: ['duck', 'apple', 'fish'], kinds: ['more', 'more', 'more', 'more', 'more'], intro: { en: "One more! Let's add.", es: '¡Uno más! Vamos a sumar.' } }
+];
+const STICKERS = ['🐳', '🐙', '🦆', '🐠', '🐢', '🦋', '🐞', '🌈', '🐸', '🦀', '🌻', '🦄'];
+const HUES = [{ c: 0xffb8cc, rim: '#ff7aa2', ink: '#a3264f' }, { c: 0xb4dcff, rim: '#5aaef0', ink: '#16609e' }, { c: 0xc4f0c2, rim: '#5cc06a', ink: '#23702f' }, { c: 0xfff0a0, rim: '#f0c419', ink: '#7a5c00' }, { c: 0xd7c6ff, rim: '#9a7cf2', ink: '#4f32a6' }, { c: 0xffd1aa, rim: '#ff9a52', ink: '#9c4a10' }];
+
+/* ---------------- save (no names, no personal data) ---------------- */
+const S = (() => { let r = E.store.get('inoa.bubbles', {}); if (!r || typeof r !== 'object' || Array.isArray(r)) r = {};
+  const s = { v: 1, stars: {}, stickers: [], sets: 0, pops: 0, hc: !!r.hc, calm: !!r.calm };
+  for (const st of STAGES) { const v = r.stars && r.stars[st.id]; if (v > 0) s.stars[st.id] = clamp(Math.round(v), 1, 3); }
+  if (Array.isArray(r.stickers)) s.stickers = r.stickers.filter(x => Number.isInteger(x) && x >= 0 && x < STICKERS.length).filter((x, i, a) => a.indexOf(x) === i);
+  s.sets = Math.max(0, r.sets | 0); s.pops = Math.max(0, r.pops | 0); return s; })();
+const save = () => E.store.set('inoa.bubbles', S);
+const applyHC = () => document.documentElement.classList.toggle('kd-hc', S.hc);
+applyHC();
+
+/* ---------------- engine + scene ---------------- */
+const ld = E.loading('Bubble Pop Counting', T('Blowing bubbles…', 'Soplando burbujas…'));
+const R = E.createRenderer($('gl'), { fov: 50, portraitFov: 62, shadowSize: 24 });
+const { scene, camera, sun } = R;
+R.setLook({ skyTop: 0x6fbdf2, skyHor: 0xffdcea, skyGlow: 0xfff3c4, sunDir: [.3, .35, -.9], fog: 0xf9e3ee, fogNear: 70, fogFar: 230, sun: 1.25, sunColor: 0xfff2dc, hemi: .75, ground: 0xb9dfa6, exposure: .98, env: .45, bloom: .12, bloomThreshold: .97, clouds: true });
+R.setEnv(R.pmrem.fromScene(new RoomEnvironment(), .04).texture);
+R.vignette.uniforms.uAmt.value = .12;
+sun.position.set(6, 18, 10); sun.target.position.set(0, -6, -6);
+ld.set(.4);
+const CAM_Z = 16; camera.position.set(0, 0, CAM_Z); camera.lookAt(0, 0, 0);
+const input = E.createInput({ surface: $('gl') });
+const P = new E.Particles(scene, { capacity: 320 });
+
+// world: a pastel pond in a meadow (everything procedural, no models)
+const world = new THREE.Group(); scene.add(world);
+const grass = new THREE.Mesh(new THREE.PlaneGeometry(420, 420), E.pbr('grass', 0xa9de8f, [60, 60])); grass.rotation.x = -Math.PI / 2; grass.receiveShadow = true; world.add(grass);
+const pond = new THREE.Mesh(new THREE.CircleGeometry(17, 64), new THREE.MeshStandardMaterial({ color: 0x86d6ea, roughness: .1, metalness: .05, envMapIntensity: .8 })); pond.rotation.x = -Math.PI / 2; pond.position.set(0, .03, -8); pond.receiveShadow = true; world.add(pond);
+const rim = new THREE.Mesh(new THREE.TorusGeometry(17.1, .45, 10, 72), E.pbr('sand', 0xf3dfb5, [12, 1])); rim.rotation.x = -Math.PI / 2; rim.scale.z = .35; rim.position.copy(pond.position); world.add(rim);
+const ripples = []; const ringGeo = new THREE.RingGeometry(.85, 1, 40);
+for (let i = 0; i < 4; i++) { const m = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .4, depthWrite: false })); m.rotation.x = -Math.PI / 2; m.position.set(0, .06, -3.5); m.userData.t = i * .9; world.add(m); ripples.push(m); }
+const pad = (x, z, s, flower) => { const g = new THREE.Group(); const m = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, .08, 24, 1, false, .35, TAU - .5), E.mat(0x6fc27a, { roughness: .7 })); g.add(m); if (flower) { for (let k = 0; k < 6; k++) { const p = new THREE.Mesh(new THREE.SphereGeometry(.22, 10, 8), E.mat(0xffb3d1)); p.position.set(Math.cos(k / 6 * TAU) * .22, .18, Math.sin(k / 6 * TAU) * .22); p.scale.y = .6; g.add(p); } const c = new THREE.Mesh(new THREE.SphereGeometry(.13, 10, 8), E.mat(0xffe066)); c.position.y = .24; g.add(c); } g.position.set(x, .07, z); g.scale.setScalar(s); g.rotation.y = x * 1.7; world.add(g); };
+pad(-6.5, -6, 1.1, true); pad(7.5, -10, 1.3, false); pad(-10, -16, 1.4, false); pad(4.5, -4, .8, false); pad(11, -19, 1.2, true);
+// hills, trees, flowers
+[[-55, -95, 38, 12, 0x9fd99b], [10, -110, 48, 15, 0xb5e6a4], [70, -100, 40, 11, 0x92d29a], [-120, -120, 50, 16, 0xa9df9f], [130, -125, 55, 14, 0xb9e8ab]].forEach(([x, z, sx, sy, c]) => { const h = new THREE.Mesh(new THREE.SphereGeometry(1, 28, 16), E.mat(c, { roughness: .95 })); h.scale.set(sx, sy, sx * .5); h.position.set(x, -1, z); world.add(h); });
+const tree = (x, z, s, blossom) => { const g = new THREE.Group(); const tr = new THREE.Mesh(new THREE.CylinderGeometry(.28, .4, 3, 10), E.mat(0xb07a4f)); tr.position.y = 1.5; tr.castShadow = true; g.add(tr); const col = blossom ? 0xffc6dc : 0x86d48c; [[0, 3.6, 0, 1.7], [-.9, 3.1, .2, 1.2], [.95, 3.2, -.1, 1.25], [0, 4.6, 0, 1.15]].forEach(([a, b, c2, r]) => { const s2 = new THREE.Mesh(new THREE.SphereGeometry(r, 18, 12), E.mat(col, { roughness: .8 })); s2.position.set(a, b, c2); s2.castShadow = true; g.add(s2); }); g.position.set(x, 0, z); g.scale.setScalar(s); world.add(g); E.addOutline(g, 1.025); };
+tree(-9, -15, 1.2, true); tree(10.5, -18, 1.35, false); tree(-17, -28, 1.6, false); tree(19, -30, 1.7, true); tree(-6, -34, 1.3, false); tree(27, -20, 1.4, false); tree(-25, -18, 1.3, true);
+{ const n = 70, im = new THREE.InstancedMesh(new THREE.SphereGeometry(.2, 8, 6), new THREE.MeshStandardMaterial({ roughness: .8 }), n); const m4 = new THREE.Matrix4(), col = new THREE.Color(), cols = [0xffffff, 0xffd0e2, 0xfff09a, 0xd9c8ff];
+  for (let i = 0; i < n; i++) { let x, z; do { x = rnd(-40, 40); z = rnd(-45, 6); } while (Math.hypot(x, (z + 8) * 1.0) < 19); m4.makeTranslation(x, .15, z); im.setMatrixAt(i, m4); im.setColorAt(i, col.set(cols[i % 4])); } world.add(im); }
+// Bloop the whale: the friendly buddy in the pond (procedural spheres, toon outline)
+const whale = new THREE.Group(); { const blue = E.mat(0x8ccaf7, { roughness: .55 });
+  const body = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 24), blue); body.scale.set(1.5, 1.05, 1.15); body.castShadow = true; whale.add(body);
+  const belly = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 18), E.mat(0xe4f5ff)); belly.scale.set(1.15, .7, .9); belly.position.set(0, -.28, .32); whale.add(belly);
+  for (const sx of [-1, 1]) { const eye = new THREE.Mesh(new THREE.SphereGeometry(.15, 14, 10), E.mat(0x1b2430, { roughness: .3 })); eye.position.set(sx * .5, .28, .98); whale.add(eye); const hl = new THREE.Mesh(new THREE.SphereGeometry(.05, 8, 6), E.mat(0xffffff)); hl.position.set(sx * .5 + .05, .34, 1.11); whale.add(hl);
+    const ck = new THREE.Mesh(new THREE.SphereGeometry(.17, 12, 8), E.mat(0xffb3c7)); ck.scale.z = .35; ck.position.set(sx * .86, .0, .8); ck.lookAt(sx * 3, 0, 4); whale.add(ck);
+    const fin = new THREE.Mesh(new THREE.SphereGeometry(.5, 14, 10), blue); fin.scale.set(1, .28, .6); fin.position.set(sx * 1.45, -.35, .2); fin.rotation.z = sx * -.5; whale.add(fin); }
+  const smile = new THREE.Mesh(new THREE.TorusGeometry(.2, .04, 8, 18, Math.PI), E.mat(0x1b2430)); smile.position.set(0, .02, 1.13); smile.rotation.z = Math.PI; whale.add(smile);
+  const tail = new THREE.Group(); for (const sx of [-1, 1]) { const f = new THREE.Mesh(new THREE.SphereGeometry(.55, 14, 10), blue); f.scale.set(1, .25, .55); f.position.set(sx * .45, 0, 0); f.rotation.z = sx * .45; tail.add(f); } tail.position.set(0, .75, -1.2); tail.rotation.x = -.6; whale.add(tail); whale.userData.tail = tail;
+  E.addOutline(whale, 1.03); whale.scale.setScalar(1.3); whale.position.set(0, .2, -4); world.add(whale); }
+const WH = { hop: 0, tilt: 0 };
+
+/* ---------------- bubbles (pooled meshes, canvas faces redrawn only on spawn) ---------------- */
+const POOL = 12, sphereGeo = new THREE.SphereGeometry(1, 36, 24);
+const bubbles = [];
+for (let i = 0; i < POOL; i++) {
+  const cv = document.createElement('canvas'); cv.width = cv.height = 256; const ctx = cv.getContext('2d');
+  const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const face = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, fog: false })); face.scale.setScalar(2); face.position.z = .3; // the face sorts in front of the glossy shell: numerals stay crisp
+  const mat = new THREE.MeshPhysicalMaterial({ color: 0xffffff, transparent: true, opacity: .2, roughness: .06, metalness: 0, iridescence: .9, iridescenceIOR: 1.35, clearcoat: .7, depthWrite: false, envMapIntensity: 1.4 });
+  const shell = new THREE.Mesh(sphereGeo, mat);
+  const g = new THREE.Group(); g.add(face); g.add(shell); g.visible = false; scene.add(g);
+  bubbles.push({ i, g, face, shell, mat, cv, ctx, tex, state: 'off', x: 0, y: 0, z: 0, bx: 0, vy: 0, t: 0, ph: 0, r: 1, kind: 'num', val: 1, shape: 'star', hue: 0, hint: false, sp: 0 });
+}
+// pop rings (pooled)
+const ringTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'); x.strokeStyle = '#fff'; x.lineWidth = 7; x.beginPath(); x.arc(64, 64, 56, 0, TAU); x.stroke(); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; })();
+const rings = []; for (let i = 0; i < 5; i++) { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: ringTex, transparent: true, depthWrite: false, opacity: 0 })); s.visible = false; scene.add(s); rings.push({ s, t: 1 }); }
+let ringI = 0;
+const ringAt = (x, y, r) => { if (E.reducedMotion()) return; const o = rings[ringI++ % rings.length]; o.t = 0; o.r = r; o.s.position.set(x, y, .4); o.s.visible = true; };
+
+/* ---------------- canvas drawing: numerals, objects, groups ---------------- */
+const FONT = '"Unbounded","Manrope",system-ui,sans-serif';
+function shape(c, kind, x, y, s, hc) {
+  const k = s / 2; c.save(); c.translate(x, y); c.lineJoin = 'round'; c.lineWidth = Math.max(2, s * .07); c.strokeStyle = hc ? '#000' : 'rgba(40,30,30,.55)';
+  const circ = (cx, cy, r) => { c.beginPath(); c.arc(cx, cy, r, 0, TAU); };
+  if (kind === 'star') { c.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? k * .45 : k; c.lineTo(Math.cos(a) * rr, Math.sin(a) * rr + k * .06); } c.closePath(); c.fillStyle = hc ? '#ffbf00' : '#ffc83d'; c.fill(); c.stroke(); }
+  else if (kind === 'duck') { c.fillStyle = '#ffd23f'; c.beginPath(); c.ellipse(-k * .05, k * .28, k * .78, k * .52, 0, 0, TAU); c.fill(); c.stroke(); circ(k * .32, -k * .3, k * .38); c.fill(); c.stroke(); c.fillStyle = '#ff8a3d'; c.beginPath(); c.moveTo(k * .62, -k * .34); c.lineTo(k * .98, -k * .22); c.lineTo(k * .62, -k * .12); c.closePath(); c.fill(); c.stroke(); c.fillStyle = '#1b2430'; circ(k * .4, -k * .38, k * .08); c.fill(); }
+  else if (kind === 'fish') { c.fillStyle = '#ff9a5c'; c.beginPath(); c.moveTo(-k * .55, 0); c.lineTo(-k * .98, -k * .42); c.lineTo(-k * .98, k * .42); c.closePath(); c.fill(); c.stroke(); c.beginPath(); c.ellipse(k * .1, 0, k * .7, k * .48, 0, 0, TAU); c.fill(); c.stroke(); c.fillStyle = '#fff'; circ(k * .42, -k * .1, k * .14); c.fill(); c.fillStyle = '#1b2430'; circ(k * .45, -k * .1, k * .07); c.fill(); }
+  else if (kind === 'apple') { c.fillStyle = '#ff5f5f'; c.beginPath(); c.moveTo(0, -k * .5); c.bezierCurveTo(k * .95, -k * .95, k * 1.05, k * .55, 0, k * .9); c.bezierCurveTo(-k * 1.05, k * .55, -k * .95, -k * .95, 0, -k * .5); c.fill(); c.stroke(); c.strokeStyle = '#7a4a2a'; c.lineWidth = Math.max(2, s * .08); c.beginPath(); c.moveTo(0, -k * .5); c.lineTo(k * .08, -k * .88); c.stroke(); c.fillStyle = '#5cc06a'; c.beginPath(); c.ellipse(k * .3, -k * .72, k * .24, k * .12, -.5, 0, TAU); c.fill(); }
+  else if (kind === 'bug') { c.fillStyle = '#1b2430'; circ(0, -k * .62, k * .3); c.fill(); c.fillStyle = '#ff4f4f'; circ(0, k * .1, k * .72); c.fill(); c.stroke(); c.strokeStyle = '#1b2430'; c.lineWidth = Math.max(2, s * .06); c.beginPath(); c.moveTo(0, -k * .6); c.lineTo(0, k * .82); c.stroke(); c.fillStyle = '#1b2430'; [[-.36, -.1], [.36, -.1], [-.3, .42], [.3, .42]].forEach(([a, b]) => { circ(a * k, b * k, k * .12); c.fill(); }); }
+  else if (kind === 'flower') { c.fillStyle = '#ff9ccf'; for (let i = 0; i < 5; i++) { const a = i / 5 * TAU - Math.PI / 2; circ(Math.cos(a) * k * .5, Math.sin(a) * k * .5, k * .38); c.fill(); c.stroke(); } c.fillStyle = '#ffd23f'; circ(0, 0, k * .32); c.fill(); c.stroke(); }
+  else { c.fillStyle = '#7cc8ff'; circ(0, 0, k * .8); c.fill(); c.stroke(); }
+  c.restore();
+}
+// dice-like layouts for n objects (normalised −1..1)
+const LAY = { 1: [[0, 0]], 2: [[-.48, 0], [.48, 0]], 3: [[-.55, .38], [0, -.45], [.55, .38]], 4: [[-.45, -.45], [.45, -.45], [-.45, .45], [.45, .45]], 5: [[-.5, -.5], [.5, -.5], [0, 0], [-.5, .5], [.5, .5]],
+  6: [[-.45, -.62], [.45, -.62], [-.45, 0], [.45, 0], [-.45, .62], [.45, .62]], 7: [[-.6, -.6], [0, -.6], [.6, -.6], [0, 0], [-.6, .6], [0, .6], [.6, .6]], 8: [[-.6, -.6], [0, -.6], [.6, -.6], [-.32, 0], [.32, 0], [-.6, .6], [0, .6], [.6, .6]],
+  9: [[-.6, -.6], [0, -.6], [.6, -.6], [-.6, 0], [0, 0], [.6, 0], [-.6, .6], [0, .6], [.6, .6]], 10: [[-.8, -.32], [-.4, -.32], [0, -.32], [.4, -.32], [.8, -.32], [-.8, .32], [-.4, .32], [0, .32], [.4, .32], [.8, .32]] };
+const LSZ = [0, 1.25, .78, .7, .64, .56, .5, .46, .44, .42, .36];
+function group(c, kind, n, cx, cy, R, hc) { const L = LAY[n] || LAY[1]; for (const [a, b] of L) shape(c, kind, cx + a * R * .82, cy + b * R * .82, R * LSZ[n] * (n === 1 ? .9 : 1), hc); }
+function numeral(c, n, cx, cy, size, ink, hc) { c.save(); c.font = `900 ${size}px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineJoin = 'round'; c.lineWidth = size * .12; c.strokeStyle = '#fff'; const y = cy + size * .06; if (!hc) c.strokeText(String(n), cx, y); c.fillStyle = hc ? '#000' : ink; c.fillText(String(n), cx, y); c.restore(); }
+function drawBubble(b) {
+  const c = b.ctx, hc = S.hc, H = HUES[b.hue]; c.clearRect(0, 0, 256, 256);
+  if (hc) { c.fillStyle = '#fff'; c.beginPath(); c.arc(128, 128, 120, 0, TAU); c.fill(); c.lineWidth = 12; c.strokeStyle = '#000'; c.stroke(); }
+  else { const g = c.createRadialGradient(128, 128, 8, 128, 128, 127); g.addColorStop(0, 'rgba(255,255,255,.93)'); g.addColorStop(.62, 'rgba(255,255,255,.8)'); g.addColorStop(.85, H.rim + '55'); g.addColorStop(.96, H.rim + 'dd'); g.addColorStop(1, H.rim + '00'); c.fillStyle = g; c.beginPath(); c.arc(128, 128, 127, 0, TAU); c.fill(); }
+  if (b.kind === 'num') numeral(c, b.val, 128, 128, b.val >= 10 ? 116 : 150, H.ink, hc);
+  else if (b.kind === 'grp') group(c, b.shape, b.val, 128, 128, 80, hc);
+  else shape(c, b.shape, 128, 132, 150, hc);
+  if (!hc) { c.save(); c.fillStyle = 'rgba(255,255,255,.9)'; c.beginPath(); c.ellipse(70, 64, 26, 12, -.75, 0, TAU); c.fill(); c.globalAlpha = .7; c.beginPath(); c.arc(98, 40, 7, 0, TAU); c.fill(); c.restore(); }
+  b.tex.needsUpdate = true; b.mat.opacity = hc ? .1 : .2; b.mat.color.setHex(H.c);
+}
+
+/* ---------------- layout: the play area fits the screen (portrait + landscape) ---------------- */
+const V = { h: 10, w: 10, ppu: 50, top: 4, bottom: -5, halfW: 4, r: 1, lanes: 3 };
+const card = document.createElement('div'); card.className = 'bp-card'; card.hidden = true; card.innerHTML = '<canvas id="cardCv" role="img" aria-label="🫧"></canvas>'; document.body.appendChild(card);
+const cardCv = card.querySelector('canvas'), cardCtx = cardCv.getContext('2d'); card.appendChild(K.repeatButton());
+card.querySelector('.kd-repeat').addEventListener('pointerup', e => e.currentTarget.blur());
+const doneBtn = K.bigButton({ icon: '✔', text: T('All done', 'Ya terminé'), cls: 'bp-done', onClick: () => endParty() }); doneBtn.hidden = true; document.body.appendChild(doneBtn);
+let CW = 260, CH = 96;
+function layout() {
+  const port = innerHeight > innerWidth; const fov = camera.fov * Math.PI / 180;
+  V.h = 2 * CAM_Z * Math.tan(fov / 2); V.w = V.h * camera.aspect; V.ppu = innerHeight / V.h;
+  CW = port ? Math.min(230, innerWidth - 130) : 270; CH = port ? 88 : 96; const dpr = Math.min(2, devicePixelRatio || 1);
+  cardCv.width = Math.round(CW * dpr); cardCv.height = Math.round(CH * dpr); cardCv.style.width = CW + 'px'; cardCv.style.height = CH + 'px'; cardCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const targetPx = clamp(Math.min(innerWidth, innerHeight) * .22, 88, 150); V.r = targetPx / 2 / V.ppu;
+  const topPx = (card.hidden ? 70 : card.getBoundingClientRect().bottom || 170) + 8;
+  V.top = V.h / 2 - topPx / V.ppu; V.bottom = -V.h / 2;
+  V.halfW = Math.max(V.r * 1.2, Math.min(V.w / 2 - V.r * 1.5, port ? 99 : V.w * .36)); // edge lanes + wobble stay fully on screen
+  V.lanes = Math.max(2, Math.floor(2 * V.halfW / (V.r * 2.2)) + 1);
+  world.position.y = V.bottom;
+  for (const b of bubbles) if (b.state !== 'off') { b.r = V.r; b.g.scale.setScalar(V.r); }
+  drawCard();
+}
+addEventListener('resize', () => setTimeout(layout, 0));
+
+/* ---------------- game state ---------------- */
+let G = null, music = null, hudEl = null;
+const freshG = (mode, si) => ({ mode, si, stage: STAGES[si] || null, pi: -1, prompt: null, popped: 0, misses: 0, missesHere: 0, ease: S.calm ? .8 : .55, pops: 0, between: 0, spawnT: 0, lastHint: -9, t: 0, paused: false, rewardT: 0, overlay: null, partyN: 0, firstTry: 0, lastAns: 0 });
+const word = (n, g = 'm') => K.numberWord(n, E.lang(), g);
+const objName = (o, n) => { const O = OBJ[o]; return T(O.en[n === 1 ? 0 : 1], O.es[n === 1 ? 0 : 1]); };
+function promptLine(p) {
+  const n = p.answer, O = OBJ[p.obj], g = O ? O.g : 'm', en = K.numberWord(n, 'en'), es = K.numberWord(n, 'es'), esg = K.numberWord(n, 'es', g), esf = K.numberWord(n, 'es', 'f');
+  switch (p.kind) {
+    case 'count': return { en: `Pop ${en} bubble${n > 1 ? 's' : ''}!`, es: `¡Revienta ${esf} burbuja${n > 1 ? 's' : ''}!` };
+    case 'find': return { en: `Find the number ${en}!`, es: `¡Busca el número ${es}!` };
+    case 'stars': return { en: `Pop the bubble with ${en} star${n > 1 ? 's' : ''}!`, es: `¡Revienta la burbuja con ${esf} estrella${n > 1 ? 's' : ''}!` };
+    case 'matchQ': return { en: `Find ${en} ${O.en[n > 1 ? 1 : 0]}!`, es: `¡Busca ${esg} ${O.es[n > 1 ? 1 : 0]}!` };
+    case 'matchN': return { en: `How many ${O.en[1]}? Pop the number!`, es: `¿${g === 'f' ? 'Cuántas' : 'Cuántos'} ${O.es[1]} hay? ¡Revienta el número!` };
+    case 'more': { const a = n - 1, ae = K.numberWord(a, 'en'), as = K.numberWord(a, 'es', g); return { en: `${cap(ae)} ${O.en[a > 1 ? 1 : 0]}, and one more. How many now?`, es: `${cap(as)} ${O.es[a > 1 ? 1 : 0]} y ${g === 'f' ? 'una' : 'uno'} más. ¿${g === 'f' ? 'Cuántas' : 'Cuántos'} hay ahora?` }; }
+  }
+  return { en: '', es: '' };
+}
+function doneLine(p) {
+  const n = p.answer, O = OBJ[p.obj], g = O ? O.g : 'm', en = cap(K.numberWord(n, 'en')), es = cap(K.numberWord(n, 'es')), esg = K.numberWord(n, 'es', g), pr = K.praise();
+  switch (p.kind) {
+    case 'count': return { en: `${en}! You popped ${K.numberWord(n, 'en')}! ${pr.en}`, es: `¡${es}! ¡Reventaste ${K.numberWord(n, 'es', 'f')}! ${pr.es}` };
+    case 'find': return { en: `${en}! You found it!`, es: `¡${es}! ¡Lo encontraste!` };
+    case 'stars': return { en: `${en} star${n > 1 ? 's' : ''}! ${pr.en}`, es: `¡${cap(K.numberWord(n, 'es', 'f'))} estrella${n > 1 ? 's' : ''}! ${pr.es}` };
+    case 'matchQ': return { en: `Yes! ${en} ${O.en[n > 1 ? 1 : 0]}.`, es: `¡Sí! ${cap(esg)} ${O.es[n > 1 ? 1 : 0]}.` };
+    case 'matchN': return { en: `${en}! ${en} ${O.en[n > 1 ? 1 : 0]}!`, es: `¡${es}! ¡${cap(esg)} ${O.es[n > 1 ? 1 : 0]}!` };
+    case 'more': return { en: `${en}! ${cap(K.numberWord(n - 1, 'en'))} and one more makes ${K.numberWord(n, 'en')}!`, es: `¡${es}! ${cap(K.numberWord(n - 1, 'es'))} y uno más son ${K.numberWord(n, 'es')}.` };
+  }
+  return pr;
+}
+const hintLine = p => p.kind === 'find' || p.kind === 'matchN' || p.kind === 'more' ? { en: `Look for the number ${K.numberWord(p.answer, 'en')}.`, es: `Busca el número ${K.numberWord(p.answer, 'es')}.` } : { en: `Look for ${K.numberWord(p.answer, 'en')}.`, es: `Busca ${K.numberWord(p.answer, 'es', 'f')}.` };
+
+function makePrompt(stage, i) {
+  const kind = stage.kinds[i], obj = stage.theme[(G.si * 3 + i) % stage.theme.length];
+  let answer, lo = 1, hi = stage.max;
+  const pickNew = (a, b) => { let v, k = 0; do { v = ri(a, b); } while (v === G.lastAns && k++ < 8); return v; };
+  if (kind === 'count') answer = pickNew(i === 0 ? 1 : 2, stage.max);
+  else if (kind === 'more') { const top = i < 2 ? 4 : 9; answer = pickNew(2, top + 1); lo = Math.max(1, answer - 3); hi = Math.min(10, answer + 3); }
+  else answer = pickNew(1, stage.max);
+  G.lastAns = answer;
+  const bub = kind === 'count' ? 'obj' : kind === 'stars' ? 'grp' : kind === 'matchQ' ? 'grp' : 'num';
+  return { kind, obj: kind === 'stars' ? 'star' : obj, answer, need: kind === 'count' ? answer : 1, lo, hi, bub, shape: kind === 'stars' ? 'star' : obj };
+}
+
+/* ---------------- spawning ---------------- */
+const active = () => { let n = 0; for (const b of bubbles) if (b.state === 'rise') n++; return n; };
+const isCorrect = b => G && G.prompt && (G.prompt.kind === 'count' || b.val === G.prompt.answer);
+function cfg() { const e = clamp(G.ease + (S.calm ? .25 : 0), 0, 1); const party = G.mode === 'party'; return { max: party ? (S.calm ? 5 : 7) : Math.round(lerp(G.prompt && G.prompt.kind === 'count' ? 5 : 6, 3, e)), travel: lerp(party ? 7 : 8, party ? 10 : 13, e) * (S.calm ? 1.25 : 1) }; }
+let laneI = 0;
+function spawn(forceCorrect = false, y0 = null) {
+  const b = bubbles.find(x => x.state === 'off'); if (!b) return null;
+  const p = G.prompt, party = G.mode === 'party';
+  // lane: pick one whose bottom area is clear
+  let x = 0, best = -1; for (let k = 0; k < V.lanes; k++) { const lane = (laneI + 1 + Math.floor(Math.random() * V.lanes)) % V.lanes; const lx = V.lanes === 1 ? 0 : -V.halfW + lane * (2 * V.halfW / (V.lanes - 1)); const yy = y0 == null ? V.bottom - V.r : y0; let clear = Infinity; for (const o of bubbles) if (o.state === 'rise') clear = Math.min(clear, Math.hypot(o.bx - lx, o.y - yy)); if (clear > best) { best = clear; x = lx; laneI = lane; } if (clear > V.r * 2.6) break; }
+  b.bx = x + rnd(-.15, .15) * V.r; b.x = b.bx; b.y = y0 == null ? V.bottom - V.r * 1.1 : y0; b.z = (b.i % 4) * .06; b.t = 0; b.ph = rnd(0, TAU); b.r = V.r; b.hint = false; b.sp = 0; b.hue = Math.floor(Math.random() * HUES.length);
+  if (party) { const r = Math.random(); if (r < .45) { b.kind = 'num'; b.val = ri(1, 10); } else if (r < .75) { b.kind = 'grp'; b.shape = 'star'; b.val = ri(1, 5); } else { b.kind = 'obj'; b.shape = ['duck', 'fish', 'apple', 'bug', 'flower'][ri(0, 4)]; b.val = 1; } }
+  else { b.kind = p.bub; b.shape = p.shape; if (p.kind === 'count') b.val = 1; else { const correct = forceCorrect || Math.random() < (G.ease > .7 ? .45 : .3); if (correct) b.val = p.answer; else { let v, k = 0; do { v = ri(p.lo, p.hi); } while (v === p.answer && k++ < 20); if (v === p.answer) v = p.answer === p.lo ? p.answer + 1 : p.answer - 1; b.val = v; } if (G.missesHere >= 2 && b.val === p.answer) b.hint = true; } }
+  const { travel } = cfg(); b.vy = (V.top - V.bottom + V.r * 2) / travel * rnd(.9, 1.1);
+  drawBubble(b); b.state = 'rise'; b.g.visible = true; b.g.scale.setScalar(V.r); b.face.material.opacity = 1; b.shell.visible = true; b.g.position.set(b.x, b.y, b.z);
+  return b;
+}
+function needsCorrect() { if (!G.prompt || G.prompt.kind === 'count') return false; const lim = V.top - (V.top - V.bottom) * .3; for (const b of bubbles) if (b.state === 'rise' && b.val === G.prompt.answer && b.y < lim) return false; return true; }
+function clearBubbles(soft = true) { for (const b of bubbles) if (b.state === 'rise') { if (soft) { b.state = 'away'; b.t = 0; b.vy *= 2.2; } else { b.state = 'off'; b.g.visible = false; } } }
+
+/* ---------------- popping ---------------- */
+function popFx(b) {
+  b.state = 'pop'; b.t = 0; const H = HUES[b.hue];
+  P.burst(_p.set(b.x, b.y, b.z + .3), { color: H.c, n: E.reducedMotion() ? 6 : 16, speed: 3.2, up: 3.5, size: .45, life: .7, gravity: 6, additive: false });
+  P.burst(_p, { color: 0xffffff, n: E.reducedMotion() ? 3 : 8, speed: 2.4, up: 2.5, size: .3, life: .5, gravity: 3, additive: true });
+  ringAt(b.x, b.y, b.r); SFX.pop(); E.tone(880 + Math.random() * 200, .09, 'sine', .08, 500);
+}
+const _p = new THREE.Vector3();
+function tryPop(b) {
+  if (!G || G.paused || b.state !== 'rise') return false;
+  if (G.mode === 'party') { popFx(b); G.pops++; G.partyN = G.partyN % 10 + 1; K.chime(G.partyN - 1); drawCard(); if (G.partyN === 10) { K.speak({ en: 'Ten! Hooray!', es: '¡Diez! ¡Bravo!' }); cheerBurst(); WH.hop = 1; } else K.speak({ en: cap(K.numberWord(G.partyN, 'en')) + '!', es: '¡' + cap(K.numberWord(G.partyN, 'es')) + '!' }); return true; }
+  if (G.mode !== 'play' || !G.prompt || G.between > 0) return false;
+  if (isCorrect(b)) {
+    popFx(b); G.pops++; G.popped++; WH.hop = Math.max(WH.hop, .6);
+    if (G.prompt.kind === 'count') { K.chime(G.popped - 1); if (G.popped < G.prompt.need) K.speak({ en: cap(K.numberWord(G.popped, 'en')) + '!', es: '¡' + cap(K.numberWord(G.popped, 'es')) + '!' }); }
+    drawCard();
+    if (G.popped >= G.prompt.need) completePrompt();
+    return true;
+  }
+  // not the one: it floats away softly, an encouraging line, nothing lost
+  b.state = 'away'; b.t = 0; b.vy *= 1.8; G.misses++; G.missesHere++;
+  const line = K.gentle({ el: cardCv }); WH.tilt = 1;
+  if (G.missesHere >= 2) { G.ease = Math.min(1, G.ease + .15); for (const o of bubbles) if (o.state === 'rise' && isCorrect(o)) o.hint = true; }
+  if (G.t - G.lastHint > 2.2) { G.lastHint = G.t; const h = hintLine(G.prompt); K.speak({ en: line.en + ' ' + h.en, es: line.es + ' ' + h.es }); }
+  return false;
+}
+function completePrompt() {
+  const p = G.prompt; if (G.missesHere === 0) { G.firstTry++; G.ease = Math.max(0, G.ease - .1); } else if (G.missesHere >= 2) G.ease = Math.min(1, G.ease + .2);
+  K.success({ el: cardCv }); K.speak(doneLine(p)); G.between = 2.4; clearBubbles(true); cheerBurst(.5); WH.hop = 1;
+  hud();
+}
+function cheerBurst(k = 1) { const n = Math.round((E.reducedMotion() ? 8 : 26) * k); for (let i = 0; i < (k >= 1 ? 3 : 1); i++) P.burst(_p.set(rnd(-V.halfW, V.halfW) * .7, V.bottom + (V.top - V.bottom) * rnd(.35, .7), .5), { color: [0xffc83d, 0xff9ccf, 0x7cc8ff][i % 3], n, speed: 4, up: 5, size: .5, life: 1.1, gravity: 7, additive: false }); }
+function tapAt(px, py) {
+  if (!G || G.paused) return false; let best = null, bd = Infinity;
+  for (const b of bubbles) { if (b.state !== 'rise') continue; const sx = innerWidth / 2 + b.x * V.ppu, sy = innerHeight / 2 - b.y * V.ppu, d = Math.hypot(px - sx, py - sy), rp = b.g.scale.x * V.ppu; if (d <= Math.max(rp * 1.15, 40) && d < bd) { bd = d; best = b; } }
+  return best ? tryPop(best) : null;
+}
+$('gl').addEventListener('pointerdown', e => { E.audio(); cur.on = false; $('cursor').hidden = true; tapAt(e.clientX, e.clientY); });
+
+/* ---------------- soft cursor: arrows / stick + Space / A (phones as controllers too) ---------------- */
+const cur = { x: 0, y: 0, on: false, lock: null };
+function updateCursor(dt, s) {
+  const moving = Math.abs(s.x) > .18 || Math.abs(s.y) > .18, el = $('cursor');
+  if (!G || G.paused || G.mode === 'reward' || (G.mode !== 'play' && G.mode !== 'party')) { el.hidden = true; return; }
+  if (moving || s.aPressed) { if (!cur.on) { cur.on = true; cur.x = innerWidth / 2; cur.y = innerHeight * .6; } }
+  if (!cur.on) return;
+  const spd = Math.min(innerWidth, innerHeight) * 1.1;
+  if (moving) { cur.x = clamp(cur.x + s.x * spd * dt, 30, innerWidth - 30); cur.y = clamp(cur.y + s.y * spd * dt, 80, innerHeight - 30); cur.lock = null; }
+  // magnet: a bubble near the cursor is "held" and the cursor rides along with it
+  let near = null, nd = Infinity; for (const b of bubbles) { if (b.state !== 'rise') continue; const sx = innerWidth / 2 + b.x * V.ppu, sy = innerHeight / 2 - b.y * V.ppu, d = Math.hypot(cur.x - sx, cur.y - sy); if (d < nd) { nd = d; near = b; } }
+  const rp = V.r * V.ppu; cur.lock = near && nd < rp * 1.6 ? near : null;
+  if (cur.lock && !moving) { const sx = innerWidth / 2 + cur.lock.x * V.ppu, sy = innerHeight / 2 - cur.lock.y * V.ppu; cur.x = damp(cur.x, sx, .0005, dt); cur.y = damp(cur.y, sy, .0005, dt); }
+  if (s.aPressed) { if (cur.lock) tryPop(cur.lock); else tapAt(cur.x, cur.y); }
+  el.hidden = false; el.classList.toggle('lock', !!cur.lock); el.style.transform = `translate(${cur.x.toFixed(1)}px,${cur.y.toFixed(1)}px)`;
+}
+
+/* ---------------- prompt card ---------------- */
+function drawCard() {
+  const c = cardCtx, W = CW, H = CH, hc = S.hc; c.clearRect(0, 0, W, H); if (!G) return; const ink = hc ? '#000' : '#1f5f8f';
+  const p = G.prompt; let label = '';
+  if (G.mode === 'party') { shape(c, 'star', 40, H / 2, 54, hc); numeral(c, G.partyN || 0, W / 2 + 18, H / 2, 64, ink, hc); label = T(`Popped: ${G.partyN || 0}`, `Reventadas: ${G.partyN || 0}`); }
+  else if (p) {
+    const n = p.answer;
+    if (p.kind === 'count') { numeral(c, n, 34, H / 2, 64, ink, hc); const rr = Math.min(16, (W - 80) / (n * 2.4)), gap = rr * 2.4, x0 = 74 + rr; for (let i = 0; i < n; i++) { c.beginPath(); c.arc(x0 + i * gap, H / 2, rr, 0, TAU); if (i < G.popped) { c.fillStyle = hc ? '#000' : '#7cc8ff'; c.fill(); } c.lineWidth = 3; c.strokeStyle = hc ? '#000' : '#2f6f9f'; c.stroke(); } label = T(`Pop ${n}`, `Revienta ${n}`); }
+    else if (p.kind === 'find') { numeral(c, n, W / 2, H / 2, 74, ink, hc); label = T(`Find ${n}`, `Busca ${n}`); }
+    else if (p.kind === 'stars' || p.kind === 'matchQ') { numeral(c, n, W * .3, H / 2, 70, ink, hc); shape(c, p.shape, W * .66, H / 2, 58, hc); label = T(`Find ${n}`, `Busca ${n}`); }
+    else if (p.kind === 'matchN') { row(c, p.shape, n, 8, W - 8, H); label = T('How many?', '¿Cuántos?'); }
+    else if (p.kind === 'more') { const a = n - 1; const plusX = W - H * .95; row(c, p.shape, a, 6, plusX - 12, H); c.save(); c.font = `900 40px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = hc ? '#000' : '#e05a8a'; c.fillText('+', plusX, H / 2 + 2); c.restore(); if (!hc) { c.fillStyle = 'rgba(255,209,102,.55)'; c.beginPath(); c.arc(W - H * .42, H / 2, H * .38, 0, TAU); c.fill(); } shape(c, p.shape, W - H * .42, H / 2, H * .55, hc); label = T(`${a} and 1 more`, `${a} y 1 más`); }
+  }
+  cardCv.setAttribute('aria-label', label || '🫧');
+}
+function row(c, kind, n, x0, x1, H) { const rows = n > 5 ? 2 : 1, per = Math.ceil(n / rows), cell = Math.min((x1 - x0) / per, H / rows * .95), s = cell * .82; let k = 0; for (let r = 0; r < rows; r++) { const m = Math.min(per, n - k), w = m * cell, sx = (x0 + x1) / 2 - w / 2 + cell / 2, y = H / 2 + (r - (rows - 1) / 2) * cell; for (let i = 0; i < m; i++, k++) shape(c, kind, sx + i * cell, y, s, S.hc); } }
+
+/* ---------------- HUD ---------------- */
+function hud() {
+  if (!hudEl) return; if (!G) { hudEl.innerHTML = ''; return; }
+  if (G.mode === 'party') { hudEl.innerHTML = `<div class="ig-chip">🎉 ${T('Pop party', 'Fiesta de burbujas')}</div>`; return; }
+  const n = G.stage.kinds.length; hudEl.innerHTML = `<div class="ig-chip bp-prog" role="img" aria-label="${T(`Bubble ${Math.min(n, G.pi + 1)} of ${n}`, `Burbuja ${Math.min(n, G.pi + 1)} de ${n}`)}"><span aria-hidden="true">${G.stage.e}</span>${G.stage.kinds.map((_, i) => `<i class="${i < G.pi || (i === G.pi && G.between > 0) ? 'on' : i === G.pi ? 'now' : ''}"></i>`).join('')}</div>`;
+}
+function ensureShell() { if (hudEl) return; hudEl = E.shell({ title: 'Bubble Pop Counting', onPause: pause, party: false }).hud; }
+
+/* ---------------- flow ---------------- */
+async function startStage(si, { skipGate = false } = {}) {
+  if (!skipGate && !(await E.platformStart('bubbles'))) return;
+  closeScreens(); ensureShell(); G = freshG('play', si); card.hidden = false; doneBtn.hidden = true; layout(); clearBubbles(false); P.clear();
+  if (music) music.stop(); music = E.music(E.SONGS.chill);
+  K.speak(G.stage.intro); nextPrompt(true);
+}
+function nextPrompt(first = false) {
+  G.pi++; if (G.pi >= G.stage.kinds.length) { finishSet(); return; }
+  G.prompt = makePrompt(G.stage, G.pi); G.popped = 0; G.missesHere = 0; G.between = 0; G.lastHint = -9;
+  K.instruct(promptLine(G.prompt), { interrupt: !first });
+  // a few bubbles already on the way so nobody waits; the right one is always among them
+  const { max } = cfg(), n = Math.max(2, max - 1);
+  for (let k = 0; k < n; k++) spawn(k === 1, V.bottom + (V.top - V.bottom) * (k / n) * .78 - V.r * .3);
+  G.spawnT = 1.2; drawCard(); hud();
+}
+function finishSet() {
+  G.mode = 'reward'; G.prompt = null; card.hidden = true; clearBubbles(true); if (music) { music.stop(); music = null; }
+  const stars = G.misses <= 2 ? 3 : 2; G.stars = stars; const id = G.stage.id; S.stars[id] = Math.max(S.stars[id] || 0, stars); S.sets++; S.pops += G.pops;
+  let st = STICKERS.findIndex((_, i) => !S.stickers.includes(i)); if (st < 0) st = S.sets % STICKERS.length; else S.stickers.push(st); G.sticker = st; save();
+  G.overlay = K.rewardOverlay({ stars, max: 3, sticker: STICKERS[st], title: T('Hooray!', '¡Bravo!') });
+  K.speak({ en: `Hooray! You earned ${stars} stars and a new sticker!`, es: `¡Bravo! ¡Ganaste ${K.numberWord(stars, 'es', 'f')} estrellas y una calcomanía nueva!` });
+  SFX.win(); cheerBurst(1); WH.hop = 1.4; G.rewardT = 3.4; hud();
+}
+function showResults() {
+  if (G.overlay) { G.overlay.remove(); G.overlay = null; } G.mode = 'done'; $('cursor').hidden = true;
+  const si = G.si, st = G.stage, next = si + 1 < STAGES.length ? si + 1 : -1, stars = G.stars;
+  const xp = 30 + si * 6 + stars * 5, coins = 6 + stars * 3 + si;
+  const r = E.results({ gameId: 'bubbles', title: `${st.e} ${T(st.name)}`, stats: [[T('Stars', 'Estrellas'), '⭐'.repeat(stars)], [T('Bubbles popped', 'Burbujas'), G.pops], [T('Sticker', 'Calcomanía'), STICKERS[G.sticker]]], xp, coins, won: true, onAgain: () => startStage(stars >= 3 && next >= 0 ? next : si, { skipGate: true }) });
+  const again = r.querySelector('[data-a=again]'); if (again) again.textContent = stars >= 3 && next >= 0 ? T('Next ▶', 'Siguiente ▶') : T('Again ↻', 'Otra vez ↻');
+  const menu = document.createElement('button'); menu.className = 'ig-btn ghost'; menu.textContent = T('🫧 Games', '🫧 Juegos'); menu.onclick = () => { r.remove(); title(); }; r.querySelector('.ig-row').prepend(menu);
+  return r;
+}
+async function startParty({ skipGate = false } = {}) {
+  if (!skipGate && !(await E.platformStart('bubbles'))) return;
+  closeScreens(); ensureShell(); G = freshG('party', -1); G.ease = .4; card.hidden = false; doneBtn.hidden = false; layout(); clearBubbles(false); P.clear();
+  if (music) music.stop(); music = E.music(E.SONGS.bright);
+  K.instruct({ en: 'Pop party! Pop as many bubbles as you like. Tap All done when you finish.', es: '¡Fiesta de burbujas! Revienta todas las que quieras. Toca Ya terminé cuando acabes.' });
+  for (let k = 0; k < 5; k++) spawn(false, V.bottom + (V.top - V.bottom) * (k / 5) * .7);
+  drawCard(); hud();
+}
+function endParty() {
+  if (!G || G.mode !== 'party') return; G.mode = 'done'; doneBtn.hidden = true; card.hidden = true; clearBubbles(true); if (music) { music.stop(); music = null; } $('cursor').hidden = true;
+  S.pops += G.pops; save(); K.speak({ en: `What a party! You popped ${G.pops} bubbles.`, es: `¡Qué fiesta! Reventaste ${G.pops} burbujas.` });
+  const xp = Math.min(40, 10 + G.pops), coins = Math.min(12, 2 + Math.floor(G.pops / 4));
+  const r = E.results({ gameId: 'bubbles', title: `🎉 ${T('Pop party', 'Fiesta de burbujas')}`, stats: [[T('Bubbles popped', 'Burbujas'), G.pops]], xp, coins, onAgain: () => startParty({ skipGate: true }) });
+  const menu = document.createElement('button'); menu.className = 'ig-btn ghost'; menu.textContent = T('🫧 Games', '🫧 Juegos'); menu.onclick = () => { r.remove(); title(); }; r.querySelector('.ig-row').prepend(menu);
+  return r;
+}
+function pause() {
+  if (!G || G.paused || (G.mode !== 'play' && G.mode !== 'party')) return; G.paused = true; if (music) { music.stop(); music = null; } try { window.speechSynthesis && speechSynthesis.cancel(); } catch (e) { }
+  E.pauseMenu({ onResume: () => { G.paused = false; music = E.music(G.mode === 'party' ? E.SONGS.bright : E.SONGS.chill); K.repeat(); }, onRestart: () => G.mode === 'party' ? startParty({ skipGate: true }) : startStage(G.si, { skipGate: true }) });
+}
+document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
+function closeScreens() { document.querySelectorAll('.ig-screen:not(.kd-gate),.kd-reward').forEach(e => e.remove()); }
+
+/* ---------------- title: stage picker, Pop party, sticker book, grown-ups ---------------- */
+const recommended = () => { const i = STAGES.findIndex(s => (S.stars[s.id] || 0) < 3); return i < 0 ? 0 : i; };
+function title() {
+  closeScreens(); if (G && G.overlay) G.overlay.remove(); G = null; card.hidden = true; doneBtn.hidden = true; clearBubbles(true); if (music) { music.stop(); music = null; } hud(); $('cursor').hidden = true;
+  const rec = recommended();
+  const extra = `<div class="bp-extra"><div class="bp-stages" id="bpStages"></div><div id="bpParty"></div><div><p class="bp-lbl">${T('Sticker book', 'Álbum de calcomanías')} · ${S.stickers.length}/${STICKERS.length}</p><div class="bp-stickers" role="img" aria-label="${T(`${S.stickers.length} of ${STICKERS.length} stickers`, `${S.stickers.length} de ${STICKERS.length} calcomanías`)}">${STICKERS.map((s, i) => `<span class="${S.stickers.includes(i) ? '' : 'off'}" aria-hidden="true">${S.stickers.includes(i) ? s : '🫧'}</span>`).join('')}</div></div><button type="button" class="ig-chipbtn bp-grown" data-kids-gate="1" id="bpGrown">👪 ${T('Grown-ups', 'Adultos')}</button></div>`;
+  const d = E.titleScreen({ title: 'Bubble Pop Counting', kicker: T('Inoa Games · Ages 3–6 · Counting', 'Inoa Games · De 3 a 6 años · Contar'), lead: T('Listen, then pop the bubble the voice asks for. No clock and no way to lose: just counting, popping and stickers.', 'Escucha y revienta la burbuja que pide la voz. Sin reloj y sin perder: solo contar, reventar y calcomanías.'), how: [['🔊', T('A voice says what to pop. Tap the yellow speaker to hear it again', 'Una voz dice qué reventar. Toca la bocina amarilla para escucharlo otra vez')], ['⌨️', T('Arrows + Space · gamepad or phone: stick + A', 'Flechas + Espacio · mando o teléfono: palanca + A')]], extra, onPlay: () => startStage(recommended(), { skipGate: true }) });
+  const box = d.querySelector('#bpStages');
+  STAGES.forEach((s, i) => { const stv = S.stars[s.id] || 0; const b = K.bigButton({ icon: s.e, text: T(s.name), label: `${T(s.name)} · ${stv}/3 ${T('stars', 'estrellas')}`, cls: 'bp-stage' + (i === rec ? ' rec' : ''), onClick: () => { E.audio(); startStage(i); } }); b.dataset.stage = i; const sm = document.createElement('small'); sm.setAttribute('aria-hidden', 'true'); sm.textContent = '★'.repeat(stv) + '☆'.repeat(3 - stv); b.appendChild(sm); box.appendChild(b); });
+  d.querySelector('#bpParty').appendChild(K.bigButton({ icon: '🎉', text: T('Pop party', 'Fiesta de burbujas'), cls: 'bp-party', onClick: () => { E.audio(); startParty(); } }));
+  d.querySelector('#bpGrown').addEventListener('click', grownups);
+  setTimeout(() => d.querySelector('.bp-stage.rec')?.focus({ preventScroll: true }), 60);
+  return d;
+}
+// Grown-ups panel: opened only through the parent gate (data-kids-gate on its button); its own links are not gated twice.
+function grownups() {
+  const d = document.createElement('div'); d.className = 'ig-screen'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true'); d.dataset.kidsUnlocked = '1'; d.id = 'bpGrownPanel';
+  const draw = () => { d.innerHTML = `<div class="ig-card"><h2>👪 ${T('For grown-ups', 'Para adultos')}</h2><p class="ig-sub">${T('Bubble Pop Counting saves only stars and stickers on this device. No names, no chat, no ads.', 'Bubble Pop Counting solo guarda estrellas y calcomanías en este dispositivo. Sin nombres, sin chat, sin anuncios.')}</p>
+    <div class="bp-opts"><button type="button" class="ig-chipbtn ${S.hc ? 'on' : ''}" data-o="hc" aria-pressed="${S.hc}">🔲 ${T('High contrast', 'Alto contraste')}<small>${T('Black and white bubbles, thick outlines', 'Burbujas en blanco y negro, bordes gruesos')}</small></button><button type="button" class="ig-chipbtn ${S.calm ? 'on' : ''}" data-o="calm" aria-pressed="${S.calm}">🐢 ${T('Calm bubbles', 'Burbujas tranquilas')}<small>${T('Fewer, slower bubbles from the start', 'Menos burbujas y más lentas desde el principio')}</small></button></div>
+    <div class="ig-row"><button type="button" class="ig-btn ghost" data-a="settings">⚙️ ${T('Settings', 'Ajustes')}</button><button type="button" class="ig-btn ghost" data-a="phones">📱 ${T('Phones', 'Teléfonos')}</button></div>
+    <div class="ig-row"><a class="ig-btn ghost" href="../index.html">⌂ ${T('All games', 'Todos los juegos')}</a><button type="button" class="ig-btn" data-a="close">${T('Done', 'Listo')}</button></div></div>`;
+    d.querySelectorAll('[data-o]').forEach(b => b.onclick = () => { const k = b.dataset.o; S[k] = !S[k]; save(); applyHC(); for (const x of bubbles) if (x.state !== 'off') drawBubble(x); drawCard(); SFX.click(); draw(); });
+    d.querySelector('[data-a=settings]').onclick = () => E.settingsPanel(); d.querySelector('[data-a=phones]').onclick = () => E.NET.partyPanel({}); d.querySelector('[data-a=close]').onclick = () => { d.remove(); if (document.querySelector('.ig-title')) title(); }; };
+  draw(); document.body.appendChild(d); setTimeout(() => d.querySelector('[data-a=close]')?.focus({ preventScroll: true }), 30); return d;
+}
+K.guardLinks();
+// language switch from the shared settings panel: rebuild the visible text in place (the settings panel stays on top)
+addEventListener('inoa:settings', e => { if (!e.detail || e.detail.key !== 'lang') return; hud(); drawCard(); doneBtn.querySelector('.kd-txt').textContent = T('All done', 'Ya terminé'); doneBtn.setAttribute('aria-label', T('All done', 'Ya terminé')); card.querySelector('.kd-repeat').setAttribute('aria-label', T('Hear it again', 'Escúchalo otra vez'));
+  if (document.querySelector('.ig-title')) { const keep = [...document.querySelectorAll('.ig-settings, #bpGrownPanel')]; keep.forEach(k => k.remove()); title(); keep.forEach(k => document.body.appendChild(k)); } });
+
+/* ---------------- update loop ---------------- */
+function update(dt) {
+  const s = input.poll();
+  if (s.pausePressed) pause();
+  for (const r of rings) if (r.s.visible) { r.t += dt * 2.2; const k = r.t; r.s.scale.setScalar(r.r * 2 * (1 + k * .8)); r.s.material.opacity = Math.max(0, .9 * (1 - k)); if (k >= 1) r.s.visible = false; }
+  // whale: idle bob, hops on success, a curious tilt on a miss
+  const tt = performance.now() / 1000, rm = E.reducedMotion(); WH.hop = Math.max(0, WH.hop - dt * 1.6); WH.tilt = Math.max(0, WH.tilt - dt * 1.4);
+  whale.position.y = .2 + Math.sin(tt * 1.6) * (rm ? .03 : .1) + Math.sin(Math.min(1, WH.hop) * Math.PI) * (rm ? .2 : 1.1); whale.rotation.z = Math.sin(WH.tilt * Math.PI) * .25; whale.rotation.y = Math.sin(tt * .5) * .15; whale.userData.tail.rotation.x = -.6 + Math.sin(tt * 2.4) * .18;
+  for (const m of ripples) { m.userData.t += dt; const k = (m.userData.t % 3.6) / 3.6; m.scale.setScalar(1.2 + k * 4); m.material.opacity = .35 * (1 - k); }
+  P.update(dt);
+  if (!G || G.paused) { updateCursor(dt, s); return; }
+  G.t += dt;
+  if (G.mode === 'reward') { G.rewardT -= dt; if (G.rewardT <= 0) showResults(); }
+  if (G.mode === 'play' && G.between > 0) { G.between -= dt; if (G.between <= 0) nextPrompt(); }
+  // spawner
+  if ((G.mode === 'play' && G.prompt && G.between <= 0) || G.mode === 'party') { G.spawnT -= dt; const c = cfg(); if (G.spawnT <= 0 && active() < c.max) { spawn(G.mode === 'play' && needsCorrect()); G.spawnT = c.travel / c.max * rnd(.75, 1.15); } else if (G.mode === 'play' && needsCorrect() && active() >= c.max) { /* make room: the highest wrong bubble drifts off */ let hi = null; for (const b of bubbles) if (b.state === 'rise' && !isCorrect(b) && (!hi || b.y > hi.y)) hi = b; if (hi && hi.y > V.bottom + (V.top - V.bottom) * .4) { hi.state = 'away'; hi.t = 0; } } }
+  const wob = rm ? .06 : .22;
+  for (const b of bubbles) {
+    if (b.state === 'off') continue; b.t += dt;
+    if (b.state === 'rise') { b.y += b.vy * dt; b.x = b.bx + Math.sin(b.t * .9 + b.ph) * wob * b.r; const br = 1 + Math.sin(b.t * 2.2 + b.ph) * (rm ? .005 : .025); let sc = b.r * br;
+      if (b.hint) { sc *= 1 + .07 * (.5 + .5 * Math.sin(b.t * 6)); b.sp -= dt; if (b.sp <= 0 && !rm) { b.sp = .5; P.burst(_p.set(b.x + rnd(-1, 1) * b.r * .8, b.y + rnd(-1, 1) * b.r * .8, b.z + .4), { color: 0xfff1a8, n: 3, speed: .6, up: .8, size: .35, life: .6, gravity: 0, additive: true }); } }
+      b.g.scale.setScalar(sc); if (b.y > V.top - b.r * .3) { b.state = 'away'; b.t = 0; } }
+    else if (b.state === 'away') { b.y += b.vy * 1.4 * dt; b.x += Math.sin(b.t * 9) * (rm ? 0 : .02); const k = Math.min(1, b.t / .9); b.face.material.opacity = 1 - k; b.mat.opacity = (S.hc ? .1 : .2) * (1 - k); if (k >= 1) { b.state = 'off'; b.g.visible = false; b.mat.opacity = S.hc ? .1 : .2; } }
+    else if (b.state === 'pop') { const k = Math.min(1, b.t / .16); b.g.scale.setScalar(b.r * (1 + k * .35)); b.face.material.opacity = 1 - k; b.shell.visible = k < .5; if (k >= 1) { b.state = 'off'; b.g.visible = false; } }
+    b.g.position.set(b.x, b.y, b.z);
+  }
+  updateCursor(dt, s);
+}
+
+/* ---------------- boot ---------------- */
+ld.set(1); layout(); title(); ld.done(); window.__READY = true;
+E.loop(dt => { update(dt); R.render(dt); });
+
+// test hooks (headless harness)
+const view = b => ({ i: b.i, val: b.val, kind: b.kind, correct: !!isCorrect(b), hint: b.hint, x: innerWidth / 2 + b.x * V.ppu, y: innerHeight / 2 - b.y * V.ppu, d: 2 * b.r * V.ppu });
+window.__GAME = {
+  get state() { return G ? { mode: G.mode, stage: G.si, pi: G.pi, kind: G.prompt && G.prompt.kind, answer: G.prompt && G.prompt.answer, need: G.prompt && G.prompt.need, popped: G.popped, misses: G.misses, missesHere: G.missesHere, ease: +G.ease.toFixed(2), pops: G.pops, between: G.between, paused: G.paused, partyN: G.partyN, active: active() } : { mode: 'title' }; },
+  S, STAGES, update, title, startStage: i => startStage(i, { skipGate: true }), startParty: () => startParty({ skipGate: true }), endParty, layout,
+  prompt: () => G && G.prompt ? { kind: G.prompt.kind, answer: G.prompt.answer, need: G.prompt.need, popped: G.popped, text: K.lastLine() } : null,
+  bubbles: () => bubbles.filter(b => b.state === 'rise').map(view),
+  // make sure a matching (or non-matching) bubble is on screen and return it (screen coordinates for real taps)
+  ensure(correct = true) { if (!G || (G.mode !== 'play' && G.mode !== 'party')) return null; let b = bubbles.find(x => x.state === 'rise' && !!isCorrect(x) === correct && x.y > V.bottom + V.r && x.y < V.top - V.r * 1.5); if (!b) { const y = V.bottom + (V.top - V.bottom) * .45; b = spawn(correct, y); if (b && !correct && isCorrect(b)) { b.val = G.prompt.answer === G.prompt.lo ? G.prompt.answer + 1 : G.prompt.answer - 1; drawBubble(b); } } return b ? view(b) : null; },
+  popIndex: i => tryPop(bubbles[i]), popValue(v) { const b = bubbles.find(x => x.state === 'rise' && x.val === v); return b ? tryPop(b) : null; },
+  popCorrect() { const v = this.ensure(true); return v ? tryPop(bubbles[v.i]) : false; }, popWrong() { const v = this.ensure(false); return v ? tryPop(bubbles[v.i]) : null; },
+  tapAt, cursor: () => ({ on: cur.on, x: cur.x, y: cur.y, lock: cur.lock ? cur.lock.i : -1 }),
+  minBubblePx: () => Math.round(2 * V.r * V.ppu), minTargetPx: () => K.minTargetPx(), gate: () => K.guardStats(), gateOpen: () => K.gateOpen(), lastLine: () => K.lastLine(), V
+};
+</script>
+</body></html>
