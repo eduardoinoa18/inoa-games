@@ -91,6 +91,32 @@ const STR = {
 export const t = k => (STR[lang()] || STR.en)[k] ?? STR.en[k] ?? k;
 export function addStrings(table) { for (const l in table) Object.assign(STR[l] ||= {}, table[l]); }
 
+/* ---------------- static baking (draw-call budget) ---------------- */
+// bakeStatic(group): merges every non-skinned mesh under `group` into one mesh per material (world transforms applied),
+// so a scene of many multi-part CC0 models costs a handful of draw calls. Same technique as Tide Runner's scenery.
+// The returned group replaces the originals (which are left untouched for the caller to drop). Skinned/instanced meshes are skipped.
+const _bv = new THREE.Vector3(), _bn = new THREE.Vector3(), _b3 = new THREE.Matrix3();
+function mergeBaked(list) {
+  let total = 0; for (const { geo } of list) total += geo.index ? geo.index.count : geo.attributes.position.count;
+  const pos = new Float32Array(total * 3), nor = new Float32Array(total * 3), uv = new Float32Array(total * 2); let o = 0;
+  for (const { geo, m } of list) { const P = geo.attributes.position, N = geo.attributes.normal, U = geo.attributes.uv, I = geo.index; _b3.getNormalMatrix(m); const n = I ? I.count : P.count;
+    for (let k = 0; k < n; k++, o++) { const i = I ? I.getX(k) : k; _bv.fromBufferAttribute(P, i).applyMatrix4(m); pos.set([_bv.x, _bv.y, _bv.z], o * 3); if (N) { _bn.fromBufferAttribute(N, i).applyMatrix3(_b3).normalize(); nor.set([_bn.x, _bn.y, _bn.z], o * 3); } if (U) uv.set([U.getX(i), U.getY(i)], o * 2); } }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.BufferAttribute(nor, 3)); g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); g.computeBoundingSphere(); g.computeBoundingBox(); return g;
+}
+export function bakeStatic(group, { shadow = true } = {}) {
+  group.updateMatrixWorld(true); const by = new Map();
+  // models loaded from different files carry their own copies of identical materials: group by appearance, not identity
+  const look = m => Array.isArray(m) ? m : [m.type, m.color && m.color.getHex(), m.map ? m.map.source.uuid : '', m.emissive && m.emissive.getHex(), m.roughness, m.metalness, m.transparent, m.opacity, m.side, m.vertexColors, m.flatShading].join('|');
+  const keyOf = new Map();
+  group.traverse(o => { if (o.isMesh && !o.isSkinnedMesh && !o.isInstancedMesh && o.visible) { const L = look(o.material); let k = keyOf.get(L); if (!k) keyOf.set(L, k = o.material); if (!by.has(k)) by.set(k, []); by.get(k).push({ geo: o.geometry, m: o.matrixWorld }); } });
+  const out = new THREE.Group();
+  for (const [mat, list] of by) {
+    if (Array.isArray(mat)) { for (const { geo, m } of list) { const c = new THREE.Mesh(geo, mat); m.decompose(c.position, c.quaternion, c.scale); c.castShadow = c.receiveShadow = shadow; out.add(c); } continue; } // multi-material meshes stay as they are
+    const m = new THREE.Mesh(mergeBaked(list), mat); m.castShadow = m.receiveShadow = shadow && !(mat && mat.side === THREE.BackSide); out.add(m);
+  }
+  return out;
+}
+
 /* ---------------- renderer ---------------- */
 export function createRenderer(canvas, opts = {}) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: !!opts.preserve });
