@@ -2,6 +2,7 @@
 // round results, local-progress import, offline queue. Loaded lazily by the engine and by account/pricing/admin pages.
 // Everything is OFF unless /platform.json has {"enabled": true}; then the server (RLS + RPC, see supabase/migrations) is the
 // authority and this file only displays and forwards. Design: docs/PLATFORM_ARCHITECTURE.md.
+import { SAVE_SYNCED, saveKey } from './savekeys.js';
 const ROOT = new URL('../', import.meta.url);
 const AUTH_KEY = 'inoa.auth', QUEUE_KEY = 'inoa.queue';
 const S = { cfg: null, auth: null, status: null, listeners: new Set() };
@@ -59,7 +60,9 @@ const api = {
   async init() {
     // invite links (…/?ref=CODE): remember the code for 30 days so it counts when this visitor signs up later
     try { const r = new URLSearchParams(location.search).get('ref'); if (r && /^[A-Za-z2-9]{6}$/.test(r)) ls.set('inoa.ref', { c: r.toUpperCase(), at: Date.now() }); } catch (e) { }
-    await loadConfig(); S.auth = ls.get(AUTH_KEY, null); if (S.auth) ls.set('inoa.activeProfile', 'inoa.profile.u.' + S.auth.user.id); else ls.set('inoa.activeProfile', null); return api.state(); },
+    await loadConfig(); S.auth = ls.get(AUTH_KEY, null); if (S.auth) ls.set('inoa.activeProfile', 'inoa.profile.u.' + S.auth.user.id); else ls.set('inoa.activeProfile', null);
+    if (S.early) { const ks = [...S.early]; S.early = null; ks.forEach(k => api._onLocalSave(k)); }
+    if (api.enabled && S.auth && !S.synced) { S.synced = true; setTimeout(() => api.syncSaves().catch(() => { }), 0); } return api.state(); },
   get enabled() { return !!(S.cfg && S.cfg.enabled); },
   // beta = everything free (server: ig_app_config.access_mode); billing UI only when the config allows it and never inside the native apps
   get native() { return !!(globalThis.Capacitor && globalThis.Capacitor.isNativePlatform && globalThis.Capacitor.isNativePlatform()); },
@@ -82,15 +85,16 @@ const api = {
     const prev = S.auth && S.auth.user.id;
     const d = await http('/auth/v1/token', { query: '?grant_type=password', body: { email, password } });
     if (prev && prev !== d.user.id) api._forgetUser(prev);
-    saveAuth(d); ls.set('inoa.activeProfile', 'inoa.profile.u.' + d.user.id); await api.refreshStatus().catch(() => { }); emit(); return api.state();
+    saveAuth(d); ls.set('inoa.activeProfile', 'inoa.profile.u.' + d.user.id); await api.refreshStatus().catch(() => { }); emit(); api.syncSaves().catch(() => { }); return api.state();
   },
   async signOut() {
+    await Promise.race([api.pushDirty().catch(() => { }), new Promise(r => setTimeout(r, 3000))]); // upload unsaved progress first
     const t = S.auth && S.auth.access_token, uid = S.auth && S.auth.user.id;
     if (t) http('/auth/v1/logout', { token: t }).catch(() => { });
     if (uid) api._forgetUser(uid);
     saveAuth(null); S.status = null; ls.set('inoa.activeProfile', null); emit();
   },
-  _forgetUser(uid) { for (const k of ['inoa.status', 'inoa.profile']) ls.set(`${k}.u.${uid}`, null); try { for (const k of Object.keys(sessionStorage)) if (k.startsWith('inoa.sess.')) sessionStorage.removeItem(k); } catch (e) { } ls.set(QUEUE_KEY, null); },
+  _forgetUser(uid) { for (const k of ['inoa.status', 'inoa.profile']) ls.set(`${k}.u.${uid}`, null); api._forgetSaves(uid); try { for (const k of Object.keys(sessionStorage)) if (k.startsWith('inoa.sess.')) sessionStorage.removeItem(k); } catch (e) { } ls.set(QUEUE_KEY, null); },
   async requestPasswordReset(email, redirectTo) { await http('/auth/v1/recover', { query: redirectTo ? '?redirect_to=' + encodeURIComponent(redirectTo) : '', body: { email } }); return true; }, // same answer whether or not the account exists
   async resendVerification(email, redirectTo) { await http('/auth/v1/resend', { query: redirectTo ? '?redirect_to=' + encodeURIComponent(redirectTo) : '', body: { type: 'signup', email } }); return true; },
   async updatePassword(password) { if (String(password || '').length < 8) throw new PlatformError('weak_password', 'Use at least 8 characters'); const t = await token(); if (!t) throw new PlatformError('auth'); await http('/auth/v1/user', { method: 'PUT', token: t, body: { password } }); return true; },
@@ -101,7 +105,7 @@ const api = {
     if (h.has('error')) return { type: 'error', error: h.get('error_description') || h.get('error') };
     const access_token = h.get('access_token'), refresh_token = h.get('refresh_token'), type = h.get('type') || 'signup';
     const user = await http('/auth/v1/user', { method: 'GET', token: access_token });
-    saveAuth({ access_token, refresh_token, expires_in: +h.get('expires_in') || 3600, user }); await api.refreshStatus().catch(() => { }); emit();
+    saveAuth({ access_token, refresh_token, expires_in: +h.get('expires_in') || 3600, user }); ls.set('inoa.activeProfile', 'inoa.profile.u.' + user.id); await api.refreshStatus().catch(() => { }); emit(); api.syncSaves().catch(() => { });
     return { type };
   },
   async refreshStatus() { const st = await rpc('ig_my_status'); cacheStatus(st); mirrorProfile(st); emit(); return st; },
@@ -184,7 +188,69 @@ const api = {
     }
     ls.set(QUEUE_KEY, keep); return { sent, dropped, left: keep.length };
   },
-  rpc
+  rpc,
+  // ---- cloud game saves (ig_saves; docs/PLATFORM_ARCHITECTURE.md §15) ----
+  // meta per player: { key: { rev: server revision we last agreed on, t: last local change (ms), dirty: local change not uploaded } }
+  liveKeys: [],         // set by the engine: save keys the open game holds in memory (newer cloud copies are offered, not written)
+  _meta() { return ls.get(userKey('inoa.savemeta'), {}) || {}; },
+  _setMeta(m) { ls.set(userKey('inoa.savemeta'), m); },
+  _onLocalSave(key) {
+    if (!SAVE_SYNCED.includes(key)) return; if (!S.cfg) { (S.early = S.early || new Set()).add(key); return; } // saved before init finished
+    if (!api.enabled || !S.auth) return;
+    const m = api._meta(), e = m[key] || { rev: 0 }; e.dirty = true; e.t = Date.now(); m[key] = e; api._setMeta(m);
+    clearTimeout(api._timers[key]); api._timers[key] = setTimeout(() => api.pushSave(key).catch(() => { }), 2500);
+  },
+  _timers: {},
+  async pushSave(key) {
+    if (!S.auth) return null; const uid = S.auth.user.id, m = api._meta(), e = m[key]; if (!e || !e.dirty) return null;
+    const raw = localStorage.getItem(saveKey(key, uid)); if (raw == null) return null;
+    if (raw.length > 60000) { e.dirty = false; e.tooBig = true; api._setMeta(m); return { ok: false, reason: 'too_large' }; }
+    const t0 = e.t, data = JSON.parse(raw);
+    let r = await rpc('ig_save_put', { p_key: key, p_data: data, p_base_rev: e.rev || 0 });
+    if (r && r.conflict) {
+      // both devices changed it: keep whichever changed last
+      if (Date.parse(r.updated_at) > t0) { api._adopt(key, r, uid); return { ok: true, adopted: true }; }
+      r = await rpc('ig_save_put', { p_key: key, p_data: data, p_base_rev: null });
+    }
+    if (r && r.ok) { const m2 = api._meta(), e2 = m2[key] || {}; e2.rev = r.rev; if (e2.t === t0) e2.dirty = false; m2[key] = e2; api._setMeta(m2); }
+    return r;
+  },
+  async pushDirty() { const m = api._meta(); for (const k of Object.keys(m)) if (m[k].dirty) await api.pushSave(k).catch(() => { }); },
+  _adopt(key, r, uid) {
+    const m = api._meta();
+    if (api.liveKeys.includes(key) && m[key] && m[key].t) { api._offered = Object.assign(api._offered || {}, { [key]: r }); dispatchEvent(new CustomEvent('inoa:cloudsave', { detail: { keys: [key], live: true } })); return; }
+    localStorage.setItem(saveKey(key, uid), JSON.stringify(r.data)); m[key] = { rev: r.rev, t: Date.parse(r.updated_at), dirty: false }; api._setMeta(m);
+    dispatchEvent(new CustomEvent('inoa:cloudsave', { detail: { keys: [key], live: false } }));
+  },
+  // the player accepted a newer cloud copy of a key the open game holds: write it (the page then reloads)
+  acceptOffered() { const uid = S.auth && S.auth.user.id; if (!uid || !api._offered) return false; const m = api._meta(); for (const [k, r] of Object.entries(api._offered)) { localStorage.setItem(saveKey(k, uid), JSON.stringify(r.data)); m[k] = { rev: r.rev, t: Date.parse(r.updated_at), dirty: false }; } api._setMeta(m); api._offered = null; return true; },
+  // pull newer copies, upload local ones the server lacks or that changed offline. Returns the keys that changed locally.
+  async syncSaves() {
+    if (!api.enabled || !S.auth) return { changed: [] }; const uid = S.auth.user.id;
+    const list = await rpc('ig_save_list'); const remote = new Map((list || []).map(r => [r.key, r])), m = api._meta(), need = [];
+    for (const [k, r] of remote) { if (!SAVE_SYNCED.includes(k)) continue; const e = m[k]; if (!e || (!e.dirty && r.rev > (e.rev || 0))) need.push(k); }
+    const changed = [];
+    if (need.length) for (const r of (await rpc('ig_save_get', { p_keys: need })) || []) {
+      const e = m[r.key];
+      if (api.liveKeys.includes(r.key) && localStorage.getItem(saveKey(r.key, uid)) != null && JSON.stringify(r.data) !== localStorage.getItem(saveKey(r.key, uid))) { api._offered = Object.assign(api._offered || {}, { [r.key]: r }); continue; }
+      localStorage.setItem(saveKey(r.key, uid), JSON.stringify(r.data)); m[r.key] = { rev: r.rev, t: Date.parse(r.updated_at), dirty: false }; changed.push(r.key); void e;
+    }
+    // local progress the server has never seen (made before sign-in, or before cloud saves existed)
+    for (const k of SAVE_SYNCED) if (!remote.has(k) && !m[k] && localStorage.getItem(saveKey(k, uid)) != null) m[k] = { rev: 0, t: Date.now(), dirty: true };
+    api._setMeta(m);
+    if (api._offered) dispatchEvent(new CustomEvent('inoa:cloudsave', { detail: { keys: Object.keys(api._offered), live: true } }));
+    if (changed.length) dispatchEvent(new CustomEvent('inoa:cloudsave', { detail: { keys: changed, live: false } }));
+    await api.pushDirty();
+    return { changed, offered: api._offered ? Object.keys(api._offered) : [] };
+  },
+  // shared devices: after sign-out, this player's synced saves leave the device (anything not uploaded yet stays until next sign-in)
+  _forgetSaves(uid) {
+    const m = ls.get(`inoa.savemeta.u.${uid}`, {}) || {}; let keep = false;
+    for (const k of SAVE_SYNCED) { if (m[k] && m[k].dirty) { keep = true; continue; } try { localStorage.removeItem(`${k}.u.${uid}`); } catch (e) { } }
+    if (!keep) ls.set(`inoa.savemeta.u.${uid}`, null);
+  },
 };
 export default api;
 addEventListener('online', () => { if (api.enabled && S.auth) api.flushQueue().catch(() => { }); });
+addEventListener('inoa:save', e => api._onLocalSave(e.detail && e.detail.key));
+addEventListener('visibilitychange', () => { if (document.hidden && api.enabled && S.auth) api.pushDirty().catch(() => { }); });

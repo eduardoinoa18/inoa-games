@@ -264,7 +264,7 @@ const recipeOpen = r => isOpen(r) && r.need.every(ingOpen);
 function unlocksAt(l) { const out = []; for (const [id, s] of Object.entries(SEEDS)) if (s.lv === l && (!s.season || s.season === season())) out.push(s.e + ' ' + nm(s)); for (const [id, v] of Object.entries(PANTRY)) if (v === l && v > 1) out.push(ING_INFO[id][0] + ' ' + ingName(id)); for (const r of RECIPES) if (r.lv === l && (!r.season || r.season === season())) out.push(r.e + ' ' + nm(r)); for (const d of DECOR) if (d.lv === l && l > 1) out.push(d.e + ' ' + nm(d)); if (l === 9) out.push('✨ ' + T().goldPot); if (l === 10) out.push('🏆 ' + T().masterSign); return out; }
 
 /* ================= engine ================= */
-const ld = E.loading('Brew and Bloom', 'Warming the teapot…');
+const ld = E.loading('Brew and Bloom', E.lang() === 'es' ? 'Calentando la tetera…' : 'Warming the teapot…');
 const R = E.createRenderer($('gl'), { fov: 36, portraitFov: 50, shadowSize: 11, far: 700 });
 const { scene, camera, sun, hemi } = R;
 await E.loadPack('../packs/brew.json', R, p => ld.set(p));

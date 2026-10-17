@@ -923,3 +923,13 @@ No P0 found: no secret in the repo or the client bundle, user data isolated by R
 **Guard:** `test/pixelpact_perf.js` fails if any arena goes above 8% frozen or 5% slowed (`PP_FEEL_BUDGET_OK`).
 **Tests:** `test/pixelpact.js` passes at 1000×560 (full) and 390×844 (`PP_QUICK=1`); `test/party.js test/party_pact.js` passes; all `NO_ERRORS`.
 **Still open:** confirm on a real phone. Reduced motion (Settings) still switches off shake and slow-motion entirely.
+
+## Roadmap R3–R5 + owner requests (2026-10-17)
+- **R3 cloud game saves (F1 fixed).** `engine/savekeys.js` scopes every game save to the signed-in player, and `ig_saves` syncs game progress across devices. Conflicts are resolved by revision, and a newer copy found while that game is open is offered with "Load it / Keep this one" instead of being written underneath it. Signing out on a shared device removes the player's synced saves from it. **Safari child profiles (names + allergens) and typed player names are never uploaded.** The migration is applied to the shared Supabase project; the security advisor shows only the expected RPC-only pattern. Tests: `test/db/tests.sql` (revisions, conflicts, limits, isolation) and `test/cloudsave.js` (guest claim → upload → new device → shared device → live offer → Pixel Pact): `CLOUD_E2E_PASSED`.
+- **R4 Spanish leak check.** `test/i18n.js` opens every game's title screen and settings in Spanish and scans for English. It found 17 leaks: 7 English loading lines, the "Hub" and "Phones" chips (Pixel Pact, Safari, `net.js` party widget), and Depths' boss-intro placeholder. All are fixed: `I18N_CLEAN` (13/13).
+- **R5 accessibility scan.** `test/a11y.js` runs axe-core (WCAG 2.1 A/AA, serious + critical) on the hub, account and legal pages, the pad and 13 title screens. It found:
+  - a pinch-zoom lock on the pad;
+  - low-contrast text in Depths (locked classes), Tide Lines (team names), Fit (room stars) and Tray (venue stars, locked course nodes).
+  All are fixed: `A11Y_CLEAN` (19 pages).
+- **Tide Lines bots camping the rival base** (an intermittent test failure: camp 8 of a limit of 6). Bots now have a keep-out ring that stops fights or refills pulling them into the enemy spawn. Camping measured 0 in 3 runs.
+- **Phone controller orientation** (owner request): the gamepad goes sideways, with a true landscape lock on Android and a turned UI on iPhone or with rotation lock on. Buzzer, choices and text stay upright, and ↻ flips. See `docs/MULTIPLAYER.md`; tested in `test/party_pad.js`.

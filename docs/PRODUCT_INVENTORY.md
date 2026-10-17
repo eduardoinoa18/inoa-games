@@ -53,10 +53,11 @@ Planning text sometimes lists these as future work. Each one exists today:
 | PWA: installable, offline after first play | Live | `sw.js`, `manifest.webmanifest`, `test/pwa.js` |
 | Native apps (iOS/Android) | Capacitor projects built, **not submitted** | `app/`, `store/`, `docs/APP_STORES.md` |
 
-## 4. Saved data per game (device storage)
+## 4. Saved data per game
+Rules live in `engine/savekeys.js`; details are in `docs/PLATFORM_ARCHITECTURE.md` §15.
+
 | Key | Owner | Scoped to the signed-in account? | Synced to the cloud? |
 | --- | --- | --- | --- |
-| `inoa.profile` / `inoa.profile.u.<id>` | Shared hero profile | Yes | XP, coins, achievements and per-game best/plays: yes |
-| `inoa.drift`, `inoa.runner`, `inoa.tidelines`, `inoa.fit`, `inoa.junk`, `inoa.brew`, `inoa.builders`, `inoa.tray`, `inoa.trivia*`, `inoa.draw*`, `inoa.depths`, `snacksquad` (Safari, incl. each child's allergen profile), `pixelpact3.progress` | Each game's own save (unlocks, levels, shop, café, island…) | **No**: shared by everyone on the device | **No** |
-
-See AUDIT Phase 0 finding F1 (P2): game-specific progress does not follow an account between devices, and is shared between users of one device.
+| `inoa.profile` / `inoa.profile.u.<id>` | Shared hero profile | Yes | XP, coins, achievements and per-game best/plays: yes (`ig_finish_round`) |
+| `inoa.drift`, `inoa.runner`, `inoa.tidelines`, `inoa.fit`, `inoa.junk`, `inoa.brew`, `inoa.builders`, `inoa.tray`, `inoa.depths`, `inoa.trivia.daily`, `inoa.trivia.stats`, `pixelpact3.progress` | Each game's own progress | Yes | **Yes** (`ig_saves`, ≤ 64 KB each) |
+| `snacksquad` (Safari child profiles + allergens), `inoa.draw` / `inoa.trivia` (settings with typed names), `inoa.draw.gallery`/`.daily` (drawings), `inoa.drift.ghost.*`, `inoa.trivia.seen2` | Device-only data | Yes | **No**, on purpose (children's health data, names, size) |

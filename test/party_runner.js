@@ -8,7 +8,7 @@ module.exports = async ({ open, shot, wait, ready, log }) => {
   await host.evaluate(() => { const g = window.__GAME; for (let i = 0; i < 90; i++) g.update(1 / 60); g.G.invT = 99; });
   const step = n => host.evaluate(n => { const g = window.__GAME; for (let i = 0; i < n; i++) g.update(1 / 60); return { lane: g.G.lane, vy: g.G.vy, slide: g.G.slideT, state: g.G.state }; }, n);
   const s0 = await step(1);
-  await pad.evaluate(() => { const z = document.getElementById('stickZone'); const r = z.getBoundingClientRect(); const o = { pointerId: 7, bubbles: true, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 }; z.dispatchEvent(new PointerEvent('pointerdown', o)); z.dispatchEvent(new PointerEvent('pointermove', { ...o, clientX: o.clientX + 60 })); });
+  await pad.evaluate(() => { const z = document.getElementById('stickZone'); const r = z.getBoundingClientRect(); const o = { pointerId: 7, bubbles: true, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 }; z.dispatchEvent(new PointerEvent('pointerdown', o)); z.dispatchEvent(new PointerEvent('pointermove', document.body.classList.contains('rot') ? { ...o, clientY: o.clientY + 60 } : { ...o, clientX: o.clientX + 60 })); /* stick right (a sideways pad turns screen-down into right) */ });
   await host.waitForTimeout(600); const s1 = await step(40); // holding the stick must not keep changing lanes
   await pad.evaluate(() => { const z = document.getElementById('stickZone'); z.dispatchEvent(new PointerEvent('pointerup', { pointerId: 7, bubbles: true })); });
   await host.waitForTimeout(400); await step(5);

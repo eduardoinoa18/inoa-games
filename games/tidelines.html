@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;800&family=Unbounded:wght@700;900&display=swap">
 <link rel="stylesheet" href="../engine/ui.css">
 <style>
-:root{--teal:#16c2b0;--coralT:#ff6f59}
+:root{--teal:#16c2b0;--coralT:#ff6f59;--tealText:#0a7268;--coralText:#c23a26} /* *Text: same hues dark enough for text on the light cards (WCAG AA) */
 .ig-screen{justify-content:safe center;align-items:safe center}
 .pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:6px}
 .pick button{min-height:38px;border-radius:14px;border:2px solid var(--line);background:#fff;font-weight:800;cursor:pointer;padding:4px 6px;font-size:13px;line-height:1.15}
@@ -533,6 +533,8 @@ function botControl(u, dt) {
   let tx = b.tx, tz = b.tz, fire = false, aim = u.aimH;
   if (b.state === 'fight' && b.target) { b.fightT += dt; const e = b.target, d = Math.hypot(e.x - u.x, e.z - u.z); const ea = Math.atan2(e.x - u.x, e.z - u.z); const keep = 5.2; const strafe = Math.sin(G.t * 1.3 + u.x) * 2.5; tx = e.x - Math.sin(ea) * keep + Math.cos(ea) * strafe; tz = e.z - Math.cos(ea) * keep - Math.sin(ea) * strafe; u.errT = (u.errT || 0) - dt; if (u.errT <= 0) { u.err = rnd(-sk.err, sk.err); u.errT = .6; } aim = ea + u.err; fire = d < sk.range + .5 && u.ink > 2; }
   else if (b.state === 'paint') { fire = u.ink > 6; }
+  // keep-out ring: no movement target inside the rival base (fights and refills used to drag bots into spawn-camping spots)
+  { const eb = TEAMS[1 - u.team].base; let ex = tx - eb.x, ez = tz - eb.z, ed = Math.hypot(ex, ez); if (ed < 4.2) { if (ed < .01) { ex = u.x - eb.x; ez = u.z - eb.z; ed = Math.hypot(ex, ez) || 1; } tx = eb.x + ex / ed * 4.2; tz = eb.z + ez / ed * 4.2; } }
   const wp = route(u, tx, tz); tx = wp.x; tz = wp.z;
   let dx = tx - u.x, dz = tz - u.z; const dl = Math.hypot(dx, dz); let mx = 0, mz = 0; if (dl > .4) { mx = dx / dl; mz = dz / dl; }
   if (b.sideT > 0) { const a = Math.atan2(mx, mz) + b.side * 1.2; mx = Math.sin(a); mz = Math.cos(a); }
@@ -810,7 +812,7 @@ function title() {
   <div><p class="ig-sub tl-lbl">${tr('Mode', 'Modo')}</p><div class="pick" id="pO">${Object.entries(MODES).map(([k, v]) => `<button data-o="${k}" class="${k === S.mode ? 'on' : ''}">${tr(...v.label)}<small>${tr(...v.desc)}</small></button>`).join('')}</div></div>
   <div><p class="ig-sub tl-lbl">${tr('Bots', 'Bots')}</p><div class="pick" id="pS">${Object.entries(SKILL).map(([k, v]) => `<button data-s="${k}" class="${k === S.skill ? 'on' : ''}">${tr(...v.label)}<small>${tr(...v.desc)}</small></button>`).join('')}</div></div>
   <div><p class="ig-sub tl-lbl">${tr('Your painter', 'Tu pintor')}</p><div class="pick" id="pC">${CHARS.map((c, i) => `<button data-i="${i}" class="${i === S.char ? 'on' : ''}">${c.name}</button>`).join('')}</div></div>
-  <p class="ig-sub" style="font-size:12px;margin:0">${tr('4 vs 4 · 2:30 · Team', '4 contra 4 · 2:30 · Equipo')} <b style="color:var(--teal)">${TEAMS[0].shape} ${teamName(0)}</b> vs <b style="color:var(--coralT)">${teamName(1)} ${TEAMS[1].shape}</b> · ${tr('win on Chill ★, Normal ★★, Fierce ★★★', 'gana en Tranqui ★, Normal ★★, Feroz ★★★')}</p></div>`;
+  <p class="ig-sub" style="font-size:12px;margin:0">${tr('4 vs 4 · 2:30 · Team', '4 contra 4 · 2:30 · Equipo')} <b style="color:var(--tealText)">${TEAMS[0].shape} ${teamName(0)}</b> vs <b style="color:var(--coralText)">${teamName(1)} ${TEAMS[1].shape}</b> · ${tr('win on Chill ★, Normal ★★, Fierce ★★★', 'gana en Tranqui ★, Normal ★★, Feroz ★★★')}</p></div>`;
   const d = E.titleScreen({ party: { label: tr('Phones as controllers (up to 8 players, 4v4)', 'Teléfonos como controles (hasta 8 jugadores, 4 contra 4)'), hint: tr('Phone 1 plays you. Phones 2-4 join your team, phones 5-8 the other team: up to 8 players, 4v4!', 'El teléfono 1 eres tú. Los teléfonos 2-4 se unen a tu equipo y los 5-8 al otro: ¡hasta 8 jugadores, 4 contra 4!') }, title: 'Tide Lines', kicker: tr('Inoa Games · 4v4 Team Paint', 'Inoa Games · Pintura 4 contra 4'), lead: tr('Grab a water cannon and cover the arena in teal. Three arenas, two modes!', 'Toma un cañón de agua y pinta la arena de turquesa. ¡Tres arenas, dos modos!'), how: [['🕹️', tr('Move: WASD, arrows, left stick', 'Moverse: WASD, flechas, stick izquierdo')], ['💦', tr('Spray: hold Space / mouse / 💦 (drag 💦 or right stick to aim)', 'Rociar: mantén Espacio / ratón / 💦 (arrastra 💦 o el stick derecho para apuntar)')], ['🪣', tr('Refill: stand on your own colour', 'Recargar: párate sobre tu color')], ['💣', tr('Ink bomb: E / 💣 / pad X · the ring shows where it lands', 'Bomba de tinta: E / 💣 / botón X · el aro muestra dónde cae')], ['💥', tr('Splat rivals: they pop back at base (bases are safe)', 'Salpica rivales: vuelven a su base (las bases son seguras)')]], extra, onPlay: () => { save(); startMatch(); } });
   const refreshMaps = () => { d.querySelector('#pM').innerHTML = mapBtns(); bindMaps(); };
   const bindMaps = () => d.querySelectorAll('#pM button').forEach(b => b.onclick = () => { S.map = b.dataset.m; save(); refreshMaps(); SFX.click(); buildMap(S.map); ZG.visible = S.mode === 'pools'; showcase(); E.say(tr(...MAPS[S.map].name), { interrupt: true }); });

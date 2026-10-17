@@ -98,7 +98,7 @@ const SHOWS = { full: [['buzz', 4], ['tf', 5], ['pick', 3], ['num', 2]], classic
 const SKILL = { easy: { acc: .72, react: 1.6 }, normal: { acc: 1, react: 1 }, hard: { acc: 1.12, react: .72 } };
 
 /* ======================= engine ======================= */
-const ld = E.loading('Pact Trivia', 'Warming up the studio lights…');
+const ld = E.loading('Pact Trivia', E.lang() === 'es' ? 'Encendiendo las luces del estudio…' : 'Warming up the studio lights…');
 const R = E.createRenderer($('gl'), { fov: 42, portraitFov: 62, shadowSize: 12, far: 200 });
 const { scene, camera, sun, hemi } = R;
 await E.loadPack('../packs/trivia.json', R, p => ld.set(p));

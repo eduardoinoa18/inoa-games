@@ -33,7 +33,7 @@ There is no build step for the site. `tools/` scripts regenerate the hub, the pa
 | Data | Where | Authority |
 | --- | --- | --- |
 | Hero profile (XP, coins, level, hero, per-game best/plays) | `localStorage` `inoa.profile` (guest) or `inoa.profile.u.<uid>` (signed in) | Local first; signed in → `ig_finish_round` caps and records rewards server-side, de-duplicated by round id |
-| Game saves (unlocks, café, island, shop…) | `localStorage` per game (`docs/PRODUCT_INVENTORY.md` §4) | **Device only.** Not account-scoped, not synced (AUDIT Phase 0 F1) |
+| Game saves (unlocks, café, island, shop…) | `localStorage`, scoped `<key>.u.<uid>` when signed in (`engine/savekeys.js`) | Local first; synced keys go to `ig_saves` with revision checks (`PLATFORM_ARCHITECTURE.md` §15). Safari child profiles are never uploaded |
 | Accounts, status, entitlements, events, feedback, referrals | Supabase `ig_*` tables, RLS on, direct table access revoked, RPC-only | Server |
 | Party rooms | Supabase Realtime channels (ephemeral) + peer-to-peer WebRTC | The host browser is authoritative |
 
@@ -44,7 +44,7 @@ There is no build step for the site. `tools/` scripts regenerate the hub, the pa
 - Communication is limited to private room codes, host approval for each phone and preset reactions. There is no chat, no free-text messaging and no public profiles.
 
 ## 5. Known architectural debts
-1. Game saves are device-wide and local only (F1).
+1. ~~Game saves are device-wide and local only (F1)~~: fixed 2026-10-17 (cloud saves).
 2. Pixel Pact 2D duplicates the engine's reward and profile logic.
 3. There is no shared i18n catalogue or completeness check.
 4. Online play on separate screens exists only in Drift. A generic host-authoritative room helper does not exist yet. It is needed for Card Room, online Tide Lines and Depths.

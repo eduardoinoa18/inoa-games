@@ -58,3 +58,10 @@ Lines, Draw), `party_pact`.
 Phones join by scanning the QR with the camera app, by **📷 Scan QR code** on `pad.html` (in-app scanner: the phone's
 BarcodeDetector, else jsQR), from the hub's Party section (📷 Scan), or by typing the 4 letters. Every new phone needs
 **Allow** on the big screen.
+
+## Controller orientation (2026-10-17)
+- **Gamepad layout: sideways.** On Android Chrome the pad enters fullscreen on the first tap and locks to landscape. When the page is still upright (iPhone, which can't lock, or rotation lock on), the play screen turns 90° (`body.rot`) so the phone is simply held sideways. The stick maps the turned axes (screen-down = stick-right).
+- **Buzzer / choices / text: upright.**
+- **↻ in the pad's top bar** flips between sideways and upright. The choice is remembered per phone (`inoa.pad.orient`).
+- **A game can ask** with `layout.orient: 'sideways' | 'upright'` in the layout it sends. Otherwise the layout type decides.
+- Covered by `test/party_pad.js` (turned on an upright phone, stick direction, buzzer upright, ↻ flips).

@@ -31,9 +31,23 @@ export const hash = (x, y = 0) => { let h = (x * 374761393 + y * 668265263) | 0;
 export const $ = id => document.getElementById(id);
 
 /* ---------------- storage + shared profile ---------------- */
+import { SAVE_SCOPED, SAVE_SYNCED, saveKey, gameSaveKeys } from './savekeys.js';
+export { SAVE_SCOPED, SAVE_SYNCED, saveKey };
+// Game saves are per player: when someone is signed in, a game's keys live under `<key>.u.<userId>` (two accounts on one
+// device never share a café or an island), and the cloud copy follows them to other devices (engine/platform.js, ig_saves).
+// A signed-in player's first read of a key they never saved starts from this device's guest save (copied, never moved).
+// Writes to synced keys raise 'inoa:save' so platform.js can push them; nothing here waits on the network.
 export const store = {
-  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
-  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } }
+  get(k, d) {
+    try {
+      const sk = saveKey(k); let v = localStorage.getItem(sk);
+      if (v == null && sk !== k) { v = localStorage.getItem(k); if (v != null) localStorage.setItem(sk, v); } // claim this device's guest progress
+      return v == null ? d : JSON.parse(v);
+    } catch (e) { return d; }
+  },
+  set(k, v) {
+    try { const sk = saveKey(k); localStorage.setItem(sk, JSON.stringify(v)); if (sk !== k && SAVE_SYNCED.includes(k)) dispatchEvent(new CustomEvent('inoa:save', { detail: { key: k } })); } catch (e) { }
+  }
 };
 const PROFILE_KEY_GUEST = 'inoa.profile';
 // Signed-in players get a per-user profile cache (written by engine/platform.js from the server); guests use the device profile.
@@ -454,6 +468,20 @@ applySettings();
 // Off unless /platform.json enables it; then the server decides starts and rewards (engine/platform.js, docs/PLATFORM_ARCHITECTURE.md).
 const _pf = import('./platform.js').then(m => m.default.init().then(() => m.default)).catch(() => null);
 let _fbOK = false, _billing = false; _pf.then(P => { if (P) { _fbOK = P.feedbackAvailable; _billing = P.billing; } });
+// cloud saves: tell the platform which saves this page holds in memory; a newer copy from another device is offered, never
+// written underneath a running game (its next save would overwrite it)
+_pf.then(P => { if (P) P.liveKeys = gameSaveKeys(gameIdFromUrl() || ''); });
+addEventListener('inoa:cloudsave', async e => {
+  if (!e.detail || !e.detail.live || document.querySelector('.ig-cloud')) return; const P = await _pf; if (!P) return;
+  const d = document.createElement('div'); d.className = 'ig-screen ig-cloud'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true');
+  d.innerHTML = `<div class="ig-card"><div class="ig-kicker">INOA GAMES</div><h2>${t('cloudT')}</h2><p class="ig-sub">${t('cloudP')}</p><div class="ig-row"><button class="ig-btn" data-a="load">${t('cloudLoad')}</button><button class="ig-btn ghost" data-a="keep">${t('cloudKeep')}</button></div></div>`;
+  document.body.appendChild(d); say(t('cloudT'), { once: true });
+  d.querySelector('[data-a=load]').onclick = () => { if (P.acceptOffered()) location.reload(); };
+  d.querySelector('[data-a=keep]').onclick = () => { const keys = Object.keys(P._offered || {}); P._offered = null; keys.forEach(k => P._onLocalSave(k)); d.remove(); };
+  setTimeout(() => d.querySelector('[data-a=load]').focus({ preventScroll: true }), 30);
+});
+addStrings({ en: { cloudT: 'Newer progress found', cloudP: 'You played this game on another device more recently. Load that progress here?', cloudLoad: 'Load it', cloudKeep: 'Keep this one' },
+  es: { cloudT: 'Hay progreso más nuevo', cloudP: 'Jugaste este juego en otro dispositivo más recientemente. ¿Cargar ese progreso aquí?', cloudLoad: 'Cargarlo', cloudKeep: 'Quedarme con este' } });
 
 /* ---------------- beta feedback (rating + note; guest or signed in) — form lives in feedback.js (shared with the hub) ---------------- */
 export async function feedbackForm({ game = gameIdFromUrl(), onClose } = {}) {

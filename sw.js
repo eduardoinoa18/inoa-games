@@ -1,8 +1,8 @@
 // Inoa Games service worker: offline hub + engine, each game cached after its first play.
 // Bump VERSION whenever engine/ or the hub changes shape; old caches are deleted on activate.
-const VERSION = 'v2';
+const VERSION = 'v3';
 const CORE = `inoa-core-${VERSION}`, RUNTIME = `inoa-run-${VERSION}`, ASSETS = 'inoa-assets-v1';
-const PRECACHE = ['./', 'index.html', 'engine/inoa3d.js', 'engine/ui.css', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'favicon.png', '404.html'];
+const PRECACHE = ['./', 'index.html', 'engine/inoa3d.js', 'engine/savekeys.js', 'engine/ui.css', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'favicon.png', '404.html'];
 const THREE_CDN = /^https:\/\/cdn\.jsdelivr\.net\/npm\/three@0\.170\.0\//;
 const FONTS = /^https:\/\/fonts\.(googleapis|gstatic)\.com\//;
 

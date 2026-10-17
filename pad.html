@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0d1b26">
 <title>Inoa Pad</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -41,6 +41,14 @@ input{font:inherit;font-weight:900;text-align:center;border:0;border-radius:18px
 #bC{width:84px;height:84px;right:calc(8% + 30px);top:calc(50% - 98px);background:#8be0ff;font-size:22px}
 #bD{width:66px;height:66px;right:calc(8% + 140px);top:calc(50% - 60px);background:#c9b8ff;font-size:18px}
 @media (orientation:portrait){#pad{grid-template-columns:1fr;grid-template-rows:1fr 1fr}#stickBase,#stickKnob{left:50%;top:50%}.stickHint{left:50%;top:calc(50% + 92px)}#bA{right:12%;top:30%}#bB{right:calc(12% + 128px);top:48%}#bC{right:calc(12% + 20px);top:calc(30% - 90px)}#bD{right:calc(12% + 150px);top:calc(30% - 40px)}}
+/* sideways gamepad: when the gamepad layout is up but the page is upright (rotation lock on, or iPhone, which can't lock),
+   the play screen itself turns 90° so the phone is simply held sideways. Sizes come from JS (#sPlay gets the screen's H × W). */
+body.rot #sPlay{position:fixed;top:0;transform-origin:0 0;transform:rotate(90deg)}
+body.rot #pad{grid-template-columns:1fr 1fr;grid-template-rows:none;padding:56px 22px 16px}
+body.rot #stickBase,body.rot #stickKnob{left:30%;top:55%}body.rot .stickHint{left:30%;top:calc(55% + 92px)}
+body.rot #bA{right:8%;top:50%}body.rot #bB{right:calc(8% + 128px);top:62%}body.rot #bC{right:calc(8% + 30px);top:calc(50% - 98px)}body.rot #bD{right:calc(8% + 140px);top:calc(50% - 60px)}
+#rotHint{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:9;background:#fff;color:var(--ink);border-radius:22px;padding:16px 20px;font-family:var(--f-d);font-weight:900;font-size:18px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.45);pointer-events:none}
+#rotHint b{display:block;font-size:44px;line-height:1}
 /* buzzer / choices / text layouts */
 #bq{position:fixed;left:14px;right:14px;top:58px;text-align:center;font-family:var(--f-d);font-size:clamp(15px,4.2vw,21px);line-height:1.25}#bq small{display:block;font-family:var(--f-b);font-weight:800;opacity:.7;font-size:13px;margin-top:6px}
 #buzz.q{top:calc(70px + var(--bqh,0px))}
@@ -77,7 +85,7 @@ input{font:inherit;font-weight:900;text-align:center;border:0;border-radius:18px
 <div class="screen" id="sWait" hidden><div class="brand">INOA<span>GAMES</span></div><h1 id="waitT">Connecting…</h1><p id="waitP">Looking for the room.</p></div>
 
 <div id="sPlay" hidden>
-  <div class="bar"><div class="badge"><i id="meDot"></i><span id="meName">P1</span></div><div class="game" id="gameName">Inoa Games</div><span class="conn" id="conn"></span><button class="pill" id="bPause" aria-label="Pause">⏸</button></div>
+  <div class="bar"><div class="badge"><i id="meDot"></i><span id="meName">P1</span></div><div class="game" id="gameName">Inoa Games</div><span class="conn" id="conn"></span><button class="pill" id="bRot" aria-label="Turn the controller">↻</button><button class="pill" id="bPause" aria-label="Pause">⏸</button></div><div id="rotHint" hidden><b>📱↻</b><span id="rotT">Turn your phone sideways</span></div>
   <div id="pad">
     <div id="stickZone"><div id="stickBase"></div><div id="stickKnob"></div><div class="stickHint">drag anywhere on this side</div></div>
     <div id="btns"><button class="b" id="bA">A</button><button class="b" id="bB">B</button><button class="b" id="bC">C</button><button class="b" id="bD">D</button></div>
@@ -97,7 +105,7 @@ const state = { x: 0, y: 0, a: false, b: false, c: false, d: false, pause: false
 const buzz = ms => { try { if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate(ms); } catch (e) { } }; // browsers block vibration before the first tap
 let wake = null; const keepAwake = async () => { try { wake = await navigator.wakeLock?.request('screen'); } catch (e) { } };
 document.addEventListener('visibilitychange', () => { if (!document.hidden) keepAwake(); });
-function show(id) { for (const s of ['sJoin', 'sWait', 'sPlay']) $(s).hidden = s !== id; }
+function show(id) { for (const s of ['sJoin', 'sWait', 'sPlay']) $(s).hidden = s !== id; if (id === 'sPlay') setTimeout(updateOrient, 0); }
 async function go() {
   const code = $('code').value.trim().toUpperCase(), name = $('name').value.trim();
   try { localStorage.setItem('inoa.pad', JSON.stringify({ code, name })); } catch (e) { }
@@ -143,8 +151,11 @@ net.on('msg', m => { if (m.t === 'text') { applyLayout({ type: 'text', text: m.t
 
 /* ---- gamepad ---- */
 const zone = $('stickZone'), base = $('stickBase'), knob = $('stickKnob'); let sid = null, cx = 0, cy = 0;
-zone.addEventListener('pointerdown', e => { e.preventDefault(); sid = e.pointerId; try { zone.setPointerCapture(sid); } catch (x) { } const r = zone.getBoundingClientRect(); cx = e.clientX; cy = e.clientY; for (const el of [base, knob]) { el.style.left = (cx - r.left) + 'px'; el.style.top = (cy - r.top) + 'px'; } knob.style.transform = 'translate(-50%,-50%)'; buzz(8); });
-zone.addEventListener('pointermove', e => { if (e.pointerId !== sid) return; let dx = e.clientX - cx, dy = e.clientY - cy; const m = 55, l = Math.hypot(dx, dy); if (l > m) { dx *= m / l; dy *= m / l; } state.x = +(dx / m).toFixed(2); state.y = +(dy / m).toFixed(2); knob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`; push(); });
+// pointer → stick space: when the play screen is turned 90° (body.rot) screen-down is stick-right and screen-left is stick-down
+const rotated = () => document.body.classList.contains('rot');
+const local = (e, r) => rotated() ? [e.clientY - r.top, r.right - e.clientX] : [e.clientX - r.left, e.clientY - r.top];
+zone.addEventListener('pointerdown', e => { e.preventDefault(); sid = e.pointerId; try { zone.setPointerCapture(sid); } catch (x) { } const r = zone.getBoundingClientRect(); cx = e.clientX; cy = e.clientY; const [lx, ly] = local(e, r); for (const el of [base, knob]) { el.style.left = lx + 'px'; el.style.top = ly + 'px'; } knob.style.transform = 'translate(-50%,-50%)'; buzz(8); });
+zone.addEventListener('pointermove', e => { if (e.pointerId !== sid) return; let dx = e.clientX - cx, dy = e.clientY - cy; if (rotated()) [dx, dy] = [dy, -dx]; const m = 55, l = Math.hypot(dx, dy); if (l > m) { dx *= m / l; dy *= m / l; } state.x = +(dx / m).toFixed(2); state.y = +(dy / m).toFixed(2); knob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`; push(); });
 const endStick = e => { if (e.pointerId !== sid) return; sid = null; state.x = state.y = 0; knob.style.transform = 'translate(-50%,-50%)'; push(); };
 zone.addEventListener('pointerup', endStick); zone.addEventListener('pointercancel', endStick);
 for (const [id, key] of [['bA', 'a'], ['bB', 'b'], ['bC', 'c'], ['bD', 'd'], ['bPause', 'pause']]) { const b = $(id); const down = e => { e.preventDefault(); state[key] = true; b.classList.add('on'); buzz(key === 'a' ? 18 : 12); push(); }; const up = () => { if (!state[key]) return; state[key] = false; b.classList.remove('on'); push(); }; b.addEventListener('pointerdown', down); b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up); b.addEventListener('pointerleave', up); }
@@ -154,8 +165,25 @@ setInterval(push, 200); // heartbeat so the host never misses a release
 const bz = $('buzz'); bz.addEventListener('pointerdown', e => { e.preventDefault(); state.a = true; bz.classList.add('on'); buzz(40); push(); sendMsg({ t: 'buzz', at: Date.now() }); }); const bzUp = () => { state.a = false; bz.classList.remove('on'); push(); }; bz.addEventListener('pointerup', bzUp); bz.addEventListener('pointercancel', bzUp);
 /* ---- layouts ---- */
 const CHOICE_COLORS = ['#ff6b6b', '#5bb8ff', '#ffd166', '#2fbf8a'];
+/* ---- orientation: gamepad sideways, buzzer/choices/text upright (↻ flips it; remembered per phone) ---- */
+let curType = 'gamepad', curOrient = null; // a game may ask for L.orient: 'sideways' | 'upright'
+const ES = (navigator.language || '').toLowerCase().startsWith('es');
+const orientPref = () => { try { return localStorage.getItem('inoa.pad.orient') || 'auto'; } catch (e) { return 'auto'; } };
+const wantSideways = () => { const def = curOrient ? curOrient === 'sideways' : curType === 'gamepad'; const pr = orientPref(); return pr === 'auto' ? def : pr === 'sideways'; };
+let hinted = false;
+function tryLock(o) { try { if (screen.orientation && screen.orientation.lock && document.fullscreenElement) screen.orientation.lock(o).catch(() => { }); } catch (e) { } }
+function updateOrient() {
+  const side = wantSideways(), upright = innerHeight > innerWidth; tryLock(side ? 'landscape' : 'portrait');
+  const rot = side && upright; document.body.classList.toggle('rot', rot);
+  const sp = $('sPlay'); if (rot) { sp.style.width = innerHeight + 'px'; sp.style.height = innerWidth + 'px'; sp.style.left = innerWidth + 'px'; } else { sp.style.width = sp.style.height = sp.style.left = ''; }
+  if (rot && !hinted && !$('sPlay').hidden) { hinted = true; const h = $('rotHint'); $('rotT').textContent = ES ? 'Gira tu teléfono de lado' : 'Turn your phone sideways'; h.hidden = false; setTimeout(() => { h.hidden = true; }, 2600); }
+}
+addEventListener('resize', updateOrient); addEventListener('orientationchange', () => setTimeout(updateOrient, 150));
+$('bRot').onclick = () => { try { localStorage.setItem('inoa.pad.orient', wantSideways() ? 'upright' : 'sideways'); } catch (e) { } updateOrient(); };
+// Android Chrome can truly lock orientation, but only in fullscreen: enter it on the first tap of the play screen
+$('sPlay').addEventListener('pointerdown', () => { if (!document.fullscreenElement && document.documentElement.requestFullscreen && wantSideways()) document.documentElement.requestFullscreen({ navigationUI: 'hide' }).then(() => updateOrient()).catch(() => { }); }, { once: true });
 function applyLayout(L) {
-  L = L || { type: 'gamepad' }; $('pad').hidden = L.type !== 'gamepad'; bz.hidden = L.type !== 'buzzer'; $('choices').hidden = L.type !== 'choices'; $('textL').hidden = L.type !== 'text';
+  L = L || { type: 'gamepad' }; curType = L.type; curOrient = L.orient || null; setTimeout(updateOrient, 0); $('pad').hidden = L.type !== 'gamepad'; bz.hidden = L.type !== 'buzzer'; $('choices').hidden = L.type !== 'choices'; $('textL').hidden = L.type !== 'text';
   if (L.type === 'gamepad') { const labels = L.labels || {}; for (const k of ['A', 'B', 'C', 'D']) { const b = $('b' + k); b.textContent = labels[k] ?? k; b.hidden = L.buttons ? !L.buttons.includes(k) : (k === 'D'); } }
   $('bq').hidden = !(L.type === 'buzzer' && L.question);
   if (L.type === 'buzzer') { bz.textContent = L.label || 'BUZZ'; const esc = t => String(t).replace(/[<>&]/g, ''); if (L.question) { $('bq').innerHTML = esc(L.question) + (L.choices ? `<small>${L.choices.map((c, i) => 'ABCD'[i] + ': ' + esc(c)).join(' · ')}</small>` : ''); requestAnimationFrame(() => document.documentElement.style.setProperty('--bqh', ($('bq').offsetHeight + 12) + 'px')); } bz.classList.toggle('q', !!L.question); }
@@ -163,6 +191,6 @@ function applyLayout(L) {
   if (L.type === 'text') { $('msg').textContent = L.text || ''; $('msg').style.whiteSpace = 'pre-line'; }
 }
 applyLayout({ type: 'gamepad' });
-window.__PAD = { net, state, go };
+window.__PAD = { net, state, go, applyLayout };
 </script>
 </body></html>

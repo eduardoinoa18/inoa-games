@@ -412,14 +412,18 @@ const reduceOS = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const settings = { sfx: 80, music: 60, diff: 0, btn: 68, haptics: 1, motion: reduceOS ? 0 : 1, quality: 'auto', fps: 0, touch: 'auto', depth: 1, stocks: 3, hazards: 1, heroes: [0, 1, 2, 3], mmode: 'stock', lang: '' };
 const progress = { levels: {}, matches: 0 };
 try { Object.assign(settings, JSON.parse(localStorage.getItem('pixelpact3.settings') || '{}')); } catch (e) {}
-try { Object.assign(progress, JSON.parse(localStorage.getItem('pixelpact3.progress') || '{}')); } catch (e) {}
+// progress is a per-player save (engine/savekeys.js rules): signed-in players use 'pixelpact3.progress.u.<id>', synced by engine/platform.js
+const ppUid = () => { try { const k = JSON.parse(localStorage.getItem('inoa.activeProfile') || 'null'); return typeof k === 'string' && k.startsWith('inoa.profile.u.') ? k.slice(15) : null; } catch (e) { return null; } };
+const progKey = () => ppUid() ? 'pixelpact3.progress.u.' + ppUid() : 'pixelpact3.progress';
+function readProgress() { let raw = localStorage.getItem(progKey()); if (raw == null && ppUid()) { raw = localStorage.getItem('pixelpact3.progress'); if (raw != null) localStorage.setItem(progKey(), raw); } return JSON.parse(raw || '{}'); }
+try { Object.assign(progress, readProgress()); } catch (e) {}
 settings.diff = clamp(settings.diff | 0, 0, 2); if (!Array.isArray(settings.heroes) || settings.heroes.length !== 4) settings.heroes = [0, 1, 2, 3]; settings.heroes = settings.heroes.map(h => clamp(h | 0, 0, 5));
 const saveSettings = () => { try { localStorage.setItem('pixelpact3.settings', JSON.stringify(settings)); } catch (e) {} };
-const saveProgress = () => { try { localStorage.setItem('pixelpact3.progress', JSON.stringify(progress)); } catch (e) {} };
+const saveProgress = () => { try { localStorage.setItem(progKey(), JSON.stringify(progress)); if (ppUid()) dispatchEvent(new CustomEvent('inoa:save', { detail: { key: 'pixelpact3.progress' } })); } catch (e) {} };
 const DIFF = [{ hp: .75, dmg: .6, bot: .45, name: 'Friendly', lives: 99 }, { hp: 1, dmg: 1, bot: .7, name: 'Normal', lives: 3 }, { hp: 1.35, dmg: 1.5, bot: 1, name: 'Brutal', lives: 3 }];
 const motionOK = () => settings.motion === 1;
 let LANG = (settings.lang || (window.__inoaProfile && window.__inoaProfile().lang)) === 'es' ? 'es' : 'en';
-const ES = {
+const ES = { '⌂ Hub': '⌂ Inicio',
   // title + menus
   'World 1 · Emberwood Isles · 2050': 'Mundo 1 · Islas Emberwood · 2050', 'Adventure': 'Aventura', 'Match': 'Duelo',
   '1–4 players co-op. Ten islands, Pact Shells, Sun Gems and bosses.': '1–4 jugadores en equipo. Diez islas, Conchas del Pacto, Gemas Solares y jefes.',
@@ -3184,6 +3188,9 @@ on('btnSettingsBack', () => { saveSettings(); Sound.vol(); Sound.sfx.back(); res
 on('btnLobbyBack', () => { Sound.sfx.back(); openPicks(G.mode); });
 // account platform (engine/platform.js): a qualifying start before play; when accounts are off this resolves immediately
 const PF = import('../engine/platform.js').then(m => m.default.init().then(() => m.default)).catch(() => null);
+// a newer cloud copy of the progress (played on another device): adopt it outside play; progress is a plain object, so no reload
+PF.then(P => { if (P) P.liveKeys = ['pixelpact3.progress']; });
+addEventListener('inoa:cloudsave', e => { if (!e.detail || !e.detail.keys.includes('pixelpact3.progress')) return; const apply = () => PF.then(P => { if (!P) return; if (e.detail.live) P.acceptOffered(); try { Object.assign(progress, readProgress()); } catch (x) {} }); if (G.scene === 'play') { const iv = setInterval(() => { if (G.scene !== 'play') { clearInterval(iv); apply(); } }, 1000); } else apply(); });
 async function gate() { const P = await PF; if (!P || !P.enabled || P.sessionValid('pixelpact')) return true; const r = await P.startGame('pixelpact'); if (r.allowed) return true;
   const next = encodeURIComponent('games/pixelpact.html'); location.href = (r.reason === 'signin' || r.reason === 'unverified' || r.reason === 'not_authenticated') ? '../account.html?next=' + next : (r.reason === 'limit' || r.reason === 'premium_only' || r.reason === 'offline_limit') ? '../pricing.html?next=' + next : '../index.html'; return false; }
 window.__inoaRound = (won, rw) => PF.then(P => P && P.enabled && P.finishRound('pixelpact', { score: G.mode === 'match' ? null : (won ? G.level + 1 : null), xp: rw ? rw.xp : won ? 80 : 40, coins: rw ? rw.coins : won ? 25 : 10 })).catch(() => { });

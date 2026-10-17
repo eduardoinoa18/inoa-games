@@ -172,7 +172,7 @@ let S = loadSave(E.store.get(KEY, {}));
 const save = () => { if (G.visit) return; if (!G.boat) S.pos = [player.pos.x, player.pos.z, player.yaw]; E.store.set(KEY, S); };
 
 /* ================= engine ================= */
-const ld = E.loading('Driftwood Builders', 'Washing driftwood ashore…');
+const ld = E.loading('Driftwood Builders', E.lang() === 'es' ? 'La marea trae madera a la orilla…' : 'Washing driftwood ashore…');
 const R = E.createRenderer($('gl'), { fov: 55, portraitFov: 72, shadowSize: 24, far: 700 });
 const { scene, camera, sun, hemi } = R;
 await E.loadPack('../packs/builders.json', R, p => ld.set(p));

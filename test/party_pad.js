@@ -13,6 +13,21 @@ module.exports = async ({ open, shot, wait, ready, log }) => {
   log('pad me', await pad.evaluate(() => JSON.stringify(window.__PAD.net.me)));
   await wait(host, () => document.querySelector('.inoa-pp .list').textContent.includes('P1'));
   await shot(host, 'host_panel_joined'); await shot(pad, 'pad_gamepad');
+  // orientation: gamepad turns sideways on an upright phone; the stick follows the turned screen; buzzer stays upright; ↻ flips
+  const rot = () => pad.evaluate(() => document.body.classList.contains('rot'));
+  await pad.waitForTimeout(200); if (!(await rot())) throw new Error('gamepad should turn sideways on an upright phone'); log('pad sideways', true);
+  const zr = await pad.$eval('#stickZone', e => { const r = e.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
+  await pad.locator('#stickZone').dispatchEvent('pointerdown', { pointerId: 7, clientX: zr.x, clientY: zr.y, isPrimary: true });
+  await pad.locator('#stickZone').dispatchEvent('pointermove', { pointerId: 7, clientX: zr.x, clientY: zr.y + 60, isPrimary: true });
+  const st = await pad.evaluate(() => ({ x: window.__PAD.state.x, y: window.__PAD.state.y }));
+  await pad.locator('#stickZone').dispatchEvent('pointerup', { pointerId: 7, clientX: zr.x, clientY: zr.y + 60, isPrimary: true });
+  log('sideways stick (screen-down drag)', JSON.stringify(st)); if (!(st.x > .9 && Math.abs(st.y) < .1)) throw new Error('turned stick should read right');
+  await shot(pad, 'pad_sideways');
+  await pad.evaluate(() => window.__PAD.applyLayout({ type: 'buzzer', label: 'BUZZ' })); await pad.waitForTimeout(100);
+  if (await rot()) throw new Error('buzzer should stay upright'); log('buzzer upright', true);
+  await pad.evaluate(() => window.__PAD.applyLayout({ type: 'gamepad' })); await pad.waitForTimeout(100);
+  await pad.click('#bRot'); await pad.waitForTimeout(100); const flipped = !(await rot()); await pad.click('#bRot'); await pad.waitForTimeout(100);
+  if (!flipped || !(await rot())) throw new Error('↻ should flip between upright and sideways'); log('↻ flips', true);
   await host.click('.inoa-pp [data-x]');
   // pad A: first press focuses Play, second press clicks it
   const tapA = async () => { await pad.locator('#bA').dispatchEvent('pointerdown'); await pad.waitForTimeout(250); await pad.locator('#bA').dispatchEvent('pointerup'); await pad.waitForTimeout(250); };

@@ -148,3 +148,24 @@ All commercial code paths (limit, Stripe checkout/webhooks/portal, entitlement) 
 - **Referral credit**: a visitor who arrives via `?ref=CODE` (remembered 30 days in `localStorage['inoa.ref']`) and then signs up is attributed to the inviter (`ig_referrals`, pending). When the new account **confirms its email**, the inviter gets **$1** (`referral_credit_cents`) in `ig_credit_ledger`, up to **5 per UTC month** (`referral_monthly_cap`; extra ones are recorded as `capped`, unpaid). One referral per new account; self-referral impossible; codes are 6 characters without look-alikes.
 - Credits are a **promise toward Premium**, not cash. During the free beta they accumulate; when paid plans launch they are applied as a Stripe customer-balance credit (web) or an equivalent store mechanism (apps) and recorded as `applied_to_subscription` ledger rows. Terms must state: no cash value, can't be transferred, may be revoked for abuse (fake/disposable accounts). **[OWNER TO CONFIRM in terms.html]**
 - Owner view: referral tiles on `admin.html` (sign-ups, credited, over cap, waiting for email, credit outstanding).
+
+## 15. Cloud game saves (2026-10-17, roadmap R3)
+Each game's own save (Brew's café, Builders' island, unlocks, best laps…) is per player and follows them to other devices.
+- **Keys:** `engine/savekeys.js` is the single source. `SAVE_SCOPED` keys are stored as `<key>.u.<userId>` while signed in, so two accounts on one device never share progress. A player's first read of a key they never saved copies this device's guest save; it is never moved. `SAVE_SYNCED` is the subset uploaded to `ig_saves`.
+- **Deliberately not synced** (data minimisation):
+  - Safari's `snacksquad`: children's names and allergen lists, which is health data about kids.
+  - Draw/Trivia settings (typed player names).
+  - Drawings and Drift ghosts (size).
+  These stay scoped but local.
+- **Server** (`20261017000008_cloud_saves.sql`): `ig_saves(user_id, key, data jsonb ≤ 64 KB, rev, updated_at)`, RLS on, no direct table access. RPCs:
+  - `ig_save_list()`: metadata only.
+  - `ig_save_get(keys jsonb)`.
+  - `ig_save_put(key, data, base_rev)`: refuses a stale write and returns the newer copy.
+  Limit: 40 keys per player. Rows are deleted with the account (FK cascade).
+- **Client** (`engine/platform.js`):
+  - `E.store.set` raises `inoa:save`, and the key is pushed 2.5 s later or when the page is hidden.
+  - `syncSaves()` runs on page load and on sign-in. It pulls newer copies and uploads local-only or offline changes.
+  - Per-player meta `inoa.savemeta.u.<id>` keeps `{rev, t, dirty}`.
+- **Conflicts:** the copy changed last wins. If the open game holds the key in memory (`liveKeys`, set by the engine from the page's game), a newer cloud copy is **offered** ("Newer progress found → Load it / Keep this one") and never written underneath the running game. Pixel Pact 2D adopts it outside play without a reload.
+- **Sign-out on a shared device:** dirty saves are uploaded first (3 s budget). Synced copies are then removed from the device; anything not yet uploaded stays until the next sign-in.
+- **Tests:** `test/db/tests.sql` covers revisions, conflicts, size and key limits, cross-player isolation and guest refusal. `test/cloudsave.js` (e2e) covers the guest claim, upload, a new device, a shared device, the live-game offer and Pixel Pact.

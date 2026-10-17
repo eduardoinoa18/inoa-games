@@ -102,7 +102,7 @@ const STAGES = [
 const AUTO = .92; // auto-complete threshold
 
 /* ---------------- engine ---------------- */
-const ld = E.loading('Junkyard to Jewel', 'Opening the garage…');
+const ld = E.loading('Junkyard to Jewel', E.lang() === 'es' ? 'Abriendo el taller…' : 'Opening the garage…');
 const R = E.createRenderer($('gl'), { fov: 42, portraitFov: 62, shadowSize: 7 });
 const { scene, camera, sun, renderer, hemi } = R;
 await E.loadPack('../packs/junk.json', R, p => ld.set(p));

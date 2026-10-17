@@ -58,7 +58,7 @@ body{background:#07080d}
 .dp-big{top:42%;font-size:clamp(28px,8vw,64px);line-height:1.02;text-align:center;width:max-content;max-width:92vw;opacity:0;text-shadow:0 5px 0 rgba(0,0,0,.45),0 0 28px rgba(0,0,0,.5);transition:none}
 @media (max-width:640px){.ig-toast{top:21%}}
 .dp-big small{display:block;font:800 clamp(14px,3.6vw,20px) var(--f-b);letter-spacing:.02em;margin-top:6px;color:#ffe7c2;text-shadow:0 2px 0 rgba(0,0,0,.6)}
-.pick button.lock{opacity:.55;cursor:not-allowed}
+.pick button.lock{opacity:.78;filter:grayscale(.6);cursor:not-allowed}
 .pick button .new{display:inline-block;margin-left:4px;font:900 10px var(--f-d);color:#fff;background:#ff7b6b;border-radius:8px;padding:1px 5px;vertical-align:middle}
 @media (max-width:640px){.ig-hud{flex-wrap:nowrap;gap:6px}.ig-hud .ig-chip{padding:6px 9px;font-size:13px;min-height:36px}}
 .ig-float.dp-d{font-size:20px}
@@ -104,7 +104,7 @@ body:not(.dp-touch) .ig-pad{display:none}
 <canvas class="ig-gl" id="gl"></canvas>
 <div class="dp-party" id="party" hidden></div>
 <div class="dp-boss" id="boss" hidden><b id="bossName">Captain Brinehollow</b><div class="dp-bbar"><u id="bossLag"></u><i id="bossFill"></i><s style="left:33%"></s><s style="left:66%"></s></div></div>
-<div class="dp-intro" id="intro"><small id="introK">The Sunken Deep</small><b id="introN">Captain Brinehollow</b><i id="introS">Terror of the drowned fleet</i></div>
+<div class="dp-intro" id="intro"><small id="introK"></small><b id="introN"></b><i id="introS"></i></div>
 <div class="dp-fade" id="fade"></div>
 <script type="module">
 import * as E from '../engine/inoa3d.js';
@@ -199,7 +199,7 @@ const FOE = {
 const STATIC = t => t === 'cannon' || t === 'shard';
 const FISH_YAW = 0; // the fish model's nose axis vs +Z
 /* ================= engine setup ================= */
-const ld = E.loading('Pixel Pact: Depths', 'Lighting the torches…');
+const ld = E.loading('Pixel Pact: Depths', E.lang() === 'es' ? 'Encendiendo las antorchas…' : 'Lighting the torches…');
 const R = E.createRenderer($('gl'), { fov: 40, portraitFov: 56, shadowSize: 17, far: 220 });
 const { scene, camera, sun } = R;
 await E.loadPack('../packs/depths.json', R, p => ld.set(p));

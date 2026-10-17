@@ -43,7 +43,7 @@ html,body{background:#efe6d8}
 @media (max-width:640px){.pf-keyhint{display:none}}
 .pf-rooms{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px}
 .pf-room{display:grid;justify-items:center;gap:1px;min-height:58px;padding:5px 4px;border-radius:14px;border:2px solid var(--line);background:#fff;cursor:pointer;color:var(--ink);font:inherit;line-height:1.1}
-.pf-room span{font-size:18px}.pf-room b{font-size:12px}.pf-room small{font-size:10px;font-weight:800;color:#b8891c}
+.pf-room span{font-size:18px}.pf-room b{font-size:12px}.pf-room small{font-size:10px;font-weight:800;color:#6f5200}
 .pf-room.on{border-color:var(--mint-ink);background:#dff4ea}.pf-room:disabled{opacity:.45;cursor:not-allowed}
 .pf-goal{margin-top:8px;font-size:13px;line-height:1.35;color:#3c4656;background:#fff8ea;border:2px dashed #ecd9b0;border-radius:12px;padding:6px 10px}
 .pf-goal small{color:#6a5a36;font-weight:700}
@@ -116,7 +116,7 @@ const LIDX = Object.fromEntries(LEVELS.map((L, i) => [L.id, i]));
 const ORDER = ROOMS.flatMap(r => r.levels.map(id => LIDX[id]));
 const roomOf = li => ROOMS.findIndex(r => r.levels.includes(LEVELS[li].id));
 /* ---------------- engine ---------------- */
-const ld = E.loading('Perfect Fit', 'Folding the napkins…');
+const ld = E.loading('Perfect Fit', E.lang() === 'es' ? 'Doblando las servilletas…' : 'Folding the napkins…');
 const R = E.createRenderer($('gl'), { fov: 38, portraitFov: 52, shadowSize: 16 });
 const { scene, camera, sun, renderer } = R;
 await E.loadPack('../packs/fit.json', R, p => ld.set(p));

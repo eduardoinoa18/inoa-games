@@ -15,7 +15,7 @@ module.exports = async ({ open, shot, wait, ready, log }) => {
   log('pad2 buttons', await p2.evaluate(() => ['bA', 'bB', 'bC', 'bD'].map(id => document.getElementById(id).textContent).join(' ')));
   // P2 phone moves its hero
   const before = await host.evaluate(() => { const h = window.__GAME.G.heroes.find(h => h.ctrl === 'net'); return h.x; });
-  await p2.evaluate(() => { const z = document.getElementById('stickZone'); const r = z.getBoundingClientRect(); const o = { pointerId: 7, bubbles: true, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 }; z.dispatchEvent(new PointerEvent('pointerdown', o)); z.dispatchEvent(new PointerEvent('pointermove', { ...o, clientX: o.clientX + 60 })); });
+  await p2.evaluate(() => { const z = document.getElementById('stickZone'); const r = z.getBoundingClientRect(); const o = { pointerId: 7, bubbles: true, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 }; z.dispatchEvent(new PointerEvent('pointerdown', o)); z.dispatchEvent(new PointerEvent('pointermove', document.body.classList.contains('rot') ? { ...o, clientY: o.clientY + 60 } : { ...o, clientX: o.clientX + 60 })); /* stick right (a sideways pad turns screen-down into right) */ });
   await p2.waitForTimeout(500);
   await host.evaluate(() => { for (let i = 0; i < 30; i++) window.__GAME.update(1 / 30); });
   const after = await host.evaluate(() => { const h = window.__GAME.G.heroes.find(h => h.ctrl === 'net'); return h.x; });

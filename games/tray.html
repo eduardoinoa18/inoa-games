@@ -46,13 +46,13 @@
 .map{display:grid;gap:8px}
 .vrow{border-radius:16px;padding:7px 9px 8px;background:color-mix(in srgb,var(--vc) 16%,#fff);border:2px solid color-mix(in srgb,var(--vc) 45%,#fff)}
 .vrow .vh{display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:13px;margin-bottom:5px;color:var(--ink)}
-.vrow .vh small{font-weight:800;color:#c08a00;letter-spacing:.5px}
-.vrow.lockd{filter:grayscale(.7);opacity:.7}
+.vrow .vh small{font-weight:800;color:#6f5000;letter-spacing:.5px}
+.vrow.lockd{filter:grayscale(.85)}
 .nodes{display:flex;flex-wrap:wrap;gap:6px;position:relative}
 .nodes button{position:relative;width:46px;height:46px;border-radius:50%;border:3px solid #fff;background:var(--vc);color:#fff;font-family:var(--f-d);font-weight:900;font-size:15px;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.18);display:grid;place-items:center;padding:0;line-height:1}
-.nodes button i{position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);font-style:normal;font-size:9px;letter-spacing:-1px;color:#e0a100;background:#fff;border-radius:8px;padding:0 3px;white-space:nowrap;font-family:var(--f-b,inherit)}
+.nodes button i{position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);font-style:normal;font-size:9px;letter-spacing:-1px;color:#8a6200;background:#fff;border-radius:8px;padding:0 3px;white-space:nowrap;font-family:var(--f-b,inherit)}
 .nodes button.on{outline:3px solid var(--ink);outline-offset:2px;transform:scale(1.08)}
-.nodes button.lock{background:#b9c0c8;color:#eef}
+.nodes button.lock{background:#4f5863;color:#fff}
 .nodes button.lock:after{content:"🔒";position:absolute;font-size:12px;top:-6px;right:-6px}
 .lvinfo{background:#fff;border:2px solid var(--line);border-radius:16px;padding:9px 12px;display:grid;gap:4px;font-size:14px}
 .lvinfo h3{margin:0;font-family:var(--f-d);font-size:17px}
@@ -178,7 +178,7 @@ const IS = 1.5; for (const k in ITEMS) ITEMS[k].base *= IS;
 const PATH_W = 2.4, DS = .1, CRUISE = 2.6, RUN = 4.6, TRAY_Y = 2.02, FPS_REC = 30, REC_SEC = 3;
 
 /* ================= engine ================= */
-const ld = E.loading('Fail Tray', 'Stacking the plates…');
+const ld = E.loading('Fail Tray', E.lang() === 'es' ? 'Apilando los platos…' : 'Stacking the plates…');
 const R = E.createRenderer($('gl'), { fov: 55, portraitFov: 72, shadowSize: 14, far: 500 });
 const { scene, camera, sun } = R;
 await E.loadPack('../packs/tray.json', R, p => ld.set(p));

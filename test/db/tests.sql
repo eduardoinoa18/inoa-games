@@ -242,4 +242,27 @@ select t.ok((public.ig_admin_referrals(30) ->> 'credited')::int = 1 and (public.
 select t.as_user('00000000-0000-0000-0000-00000000000b');
 select t.fails($$select public.ig_admin_referrals(30)$$, 'non-owner cannot read referral totals');
 reset role;
+
+-- ---------- cloud saves (R3) ----------
+set role authenticated; select t.as_user('00000000-0000-0000-0000-00000000000a');
+select t.ok((public.ig_save_put('inoa.brew', '{"level":3,"teas":["mint"]}'::jsonb, null) ->> 'rev')::int = 1, 'first save of a key is revision 1');
+select t.ok((public.ig_save_put('inoa.brew', '{"level":4}'::jsonb, 1) ->> 'rev')::int = 2, 'write based on the current revision bumps it');
+select t.ok((public.ig_save_put('inoa.brew', '{"level":9}'::jsonb, 1) ->> 'conflict')::boolean and (public.ig_save_put('inoa.brew', '{"level":9}'::jsonb, 1) -> 'data' ->> 'level') = '4', 'stale write is refused and returns the newer copy');
+select t.ok((public.ig_save_put('inoa.brew', '{"level":5}'::jsonb, null) ->> 'rev')::int = 3, 'forced write (client chose its copy) wins');
+select t.ok((public.ig_save_get('["inoa.brew"]'::jsonb) -> 0 -> 'data' ->> 'level') = '5' and jsonb_array_length(public.ig_save_list()) = 1, 'owner reads back the latest copy');
+select t.fails($$select public.ig_save_put('Bad Key!', '{}'::jsonb, null)$$, 'malformed save key refused');
+select t.fails($$select public.ig_save_put('inoa.big', jsonb_build_object('x', repeat('a', 70000)), null)$$, 'save over 64 KB refused');
+select t.fails($$select * from public.ig_saves$$, 'saves table not readable directly');
+select t.as_user('00000000-0000-0000-0000-00000000000b');
+select t.ok(jsonb_array_length(public.ig_save_list()) = 0 and jsonb_array_length(public.ig_save_get('["inoa.brew"]'::jsonb)) = 0, 'another player cannot see A''s saves');
+select t.ok((public.ig_save_put('inoa.brew', '{"level":1}'::jsonb, null) ->> 'rev')::int = 1, 'B''s save of the same key is separate');
+set role anon; select t.as_user(null);
+select t.fails($$select public.ig_save_list()$$, 'guests cannot use cloud saves');
+reset role;
+update public.ig_app_config set value = '2' where key = 'save_max_keys';
+set role authenticated; select t.as_user('00000000-0000-0000-0000-00000000000b');
+select public.ig_save_put('inoa.fit', '{}'::jsonb, null);
+select t.fails($$select public.ig_save_put('inoa.junk', '{}'::jsonb, null)$$, 'per-player key limit enforced');
+reset role; update public.ig_app_config set value = '40' where key = 'save_max_keys';
+select t.ok((select data ->> 'level' from public.ig_saves where user_id = '00000000-0000-0000-0000-00000000000a' and key = 'inoa.brew') = '5', 'A''s save untouched by B');
 \echo SQL_TESTS_DONE

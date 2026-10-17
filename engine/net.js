@@ -210,10 +210,11 @@ const WCSS = `@media (max-width:760px){.inoa-party{display:none}}
 .inoa-pp .online{display:grid;gap:8px;border-top:2px dashed rgba(27,36,48,.12);padding-top:12px}.inoa-pp .st{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#0f5c48}`;
 function css() { if (document.getElementById('inoaPartyCss')) return; const s = document.createElement('style'); s.id = 'inoaPartyCss'; s.textContent = WCSS; document.head.appendChild(s); }
 // Floating "📱 phones" chip for game pages; opens the party panel.
+const isEs = () => { try { const k = JSON.parse(localStorage.getItem('inoa.activeProfile') || 'null'); const p = JSON.parse(localStorage.getItem(typeof k === 'string' && k.startsWith('inoa.profile.u.') ? k : 'inoa.profile') || '{}'); return (p.lang || document.documentElement.lang || '').startsWith('es'); } catch (e) { return (document.documentElement.lang || '').startsWith('es'); } };
 export function partyWidget({ hint = 'Phones join as controllers. Player 1 = first phone.', online = null } = {}) {
   if (net.role === 'client' || new URLSearchParams(location.search).has('join')) return null;
-  css(); const w = document.createElement('div'); w.className = 'inoa-party'; w.innerHTML = '<button aria-label="Phone controllers">📱 <span class="lbl">Phones</span><span class="dots"></span></button>'; document.body.appendChild(w);
-  const render = () => { const pads = net.pads(); w.querySelector('.lbl').textContent = net.status === 'ready' ? (pads.length ? pads.length : 'Add') : net.status === 'connecting' ? '…' : 'Phones'; w.querySelector('.dots').innerHTML = pads.map(p => `<i style="background:${p.color}"></i>`).join(''); };
+  css(); const w = document.createElement('div'); w.className = 'inoa-party'; w.innerHTML = `<button aria-label="${isEs() ? 'Teléfonos como controles' : 'Phone controllers'}">📱 <span class="lbl">${isEs() ? 'Teléfonos' : 'Phones'}</span><span class="dots"></span></button>`; document.body.appendChild(w);
+  const render = () => { const pads = net.pads(); w.querySelector('.lbl').textContent = net.status === 'ready' ? (pads.length ? pads.length : (isEs() ? 'Añadir' : 'Add')) : net.status === 'connecting' ? '…' : (isEs() ? 'Teléfonos' : 'Phones'); w.querySelector('.dots').innerHTML = pads.map(p => `<i style="background:${p.color}"></i>`).join(''); };
   on('change', render); on('status', render); render();
   w.querySelector('button').onclick = () => partyPanel({ hint, online });
   return w;
