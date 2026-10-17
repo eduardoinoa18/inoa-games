@@ -53,6 +53,8 @@
 .dw-word{font-family:var(--f-d);font-weight:900;font-size:clamp(34px,9vw,64px);text-align:center;line-height:1.05;color:var(--ink);word-break:break-word}
 .dw-word small{display:block;font-size:.32em;color:#4c5868;margin-top:8px;font-family:var(--f-b)}
 .dw-board{display:grid;gap:6px}.dw-board div{display:grid;grid-template-columns:30px 1fr auto;gap:8px;align-items:center;background:#fff;border:2px solid var(--line);border-radius:14px;padding:8px 12px;font-weight:800}.dw-board b{font-family:var(--f-d)}
+.ig-card:has(.dw-osk) .dw-show{max-height:24vh;width:auto;max-width:100%;display:block;margin:0 auto}.ig-card:has(.dw-osk) h2{font-size:18px;margin:.2em 0}
+.dw-osk{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;margin-top:8px}.dw-osk button{min-height:44px;border-radius:10px;border:2px solid var(--line);background:#fff;font:inherit;font-weight:900;font-size:16px;color:var(--ink);cursor:pointer;padding:0}.dw-osk button.wide{grid-column:span 3}
 .dw-in{width:100%;min-height:52px;border-radius:14px;border:2px solid var(--line);padding:0 14px;font:inherit;font-weight:800;font-size:18px;box-sizing:border-box;user-select:text;-webkit-user-select:text}
 .dw-show{max-width:100%;border-radius:16px;box-shadow:0 0 0 5px #e9dcc5,0 0 0 8px #7a5232;background:#fffdf7;display:block;margin:0 auto;max-height:46vh;aspect-ratio:4/3;object-fit:contain}
 .dw-slide{position:fixed;inset:0;z-index:28;display:grid;place-items:center;padding:16px;box-sizing:border-box;background:radial-gradient(120% 90% at 50% 40%,rgba(30,22,48,.55),rgba(10,8,20,.85));cursor:pointer}
@@ -655,6 +657,15 @@ function phoneDescribe() {
   const inp = c.querySelector('input'); inp.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') send(); }); setTimeout(() => inp.focus(), 50);
   const send = () => { const v = inp.value.trim(); if (!v) { inp.focus(); E.toast('✏️', 600); return; } c.remove(); G.chain.push({ kind: 'text', text: v, by: pl.name, i: pl.i }); SFX.pop(); G.step++; later(.2, phonePass); };
   c.querySelector('[data-a=send]').onclick = send; G.descCard = { c, inp, send };
+  if (NAV.padSeen) addOsk(c, inp);
+}
+// on-screen letters for gamepad players (no physical keyboard): ordinary buttons, so the D-pad focus ring + A type them
+function addOsk(c, inp) {
+  const keys = [...'QWERTYUIOPASDFGHJKLZXCVBNM', ...(S.lang === 'es' ? ['Ñ'] : [])];
+  const k = document.createElement('div'); k.className = 'dw-osk'; k.setAttribute('aria-label', S.lang === 'es' ? 'Teclado en pantalla' : 'On-screen keyboard');
+  k.innerHTML = keys.map(l => `<button type="button" data-k="${l}">${l}</button>`).join('') + `<button type="button" class="wide" data-k=" ">${S.lang === 'es' ? 'espacio' : 'space'}</button><button type="button" class="wide" data-k="del" aria-label="${S.lang === 'es' ? 'Borrar' : 'Delete'}">⌫</button>`;
+  k.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const v = b.dataset.k; inp.value = v === 'del' ? inp.value.slice(0, -1) : (inp.value + (inp.value ? v.toLowerCase() : v)).slice(0, 60); SFX.click(); });
+  c.querySelector('[data-a=send]').before(k);
 }
 function restoreStrokes(st) { D.strokes = (st || []).slice(); D.redo = []; redraw(); }
 function phoneShow() {

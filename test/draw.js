@@ -87,7 +87,11 @@ module.exports = async (p) => {
   pl0 = await plays();
   await clean(); await g(() => window.__GAME.start({ mode: 'phone', players: 4, lang: 'es' }));
   await sim(.3); await g(() => window.__GAME.next()); await sim(.3); await g(() => window.__GAME.autoDraw(7)); await shot('phone_draw'); await g(() => window.__GAME.done()); await sim(.8);
-  await g(() => window.__GAME.next()); await sim(.5); await shot('phone_describe'); await g(() => window.__GAME.describe('un gato con sombrero')); await sim(.5);
+  await g(() => { window.__GAME.NAV.padSeen = true; window.__GAME.next(); }); await sim(.5); await shot('phone_describe');
+  // gamepad players get on-screen letters (Ñ in Spanish); typing + delete fill the description field
+  const osk = await p.evaluate(() => { const k = document.querySelector('.dw-osk'); if (!k) return null; for (const l of ['G', 'A', 'T', 'O', 'X']) k.querySelector(`[data-k="${l}"]`).click(); k.querySelector('[data-k="del"]').click(); return { val: document.querySelector('.dw-in').value, n: k.querySelector('[data-k="Ñ"]') ? 'ñ' : '' }; });
+  console.log('osk', JSON.stringify(osk)); if (!osk || osk.val !== 'Gato' || !osk.n) throw new Error('on-screen keyboard for gamepad players failed');
+  await p.evaluate(() => { document.querySelector('.dw-in').value = ''; }); await g(() => window.__GAME.describe('un gato con sombrero')); await sim(.5);
   await g(() => window.__GAME.next()); await sim(.3); await g(() => window.__GAME.autoDraw(6)); await g(() => window.__GAME.done()); await sim(.8);
   await g(() => window.__GAME.next()); await sim(.5); await g(() => window.__GAME.describe('¿un pulpo bailando?')); await sim(.6);
   console.log('show', JSON.stringify(await sim(1))); await shot('phone_slide1');
