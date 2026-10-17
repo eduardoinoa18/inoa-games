@@ -5,12 +5,12 @@ Verified against the repository on 2026-10-17, at commit 3f1737d on `main`, whic
 ## 1. How we count
 | Count | Number | What it means |
 | --- | --- | --- |
-| **Game products** | **13** | Each one is a separate game with its own page in `games/`. The hub says "13 games", which matches |
-| Hub tiles | 14 | Pixel Pact has two tiles: Adventure, and Match. Both open `games/pixelpact.html` |
-| Game pages (URLs) | 13 | `games/<file>.html` |
+| **Game products** | **14** | Each one is a separate game with its own page in `games/`. The hub says "14 games" / "Fourteen games", which matches (Dominoes added 2026-10-17) |
+| Hub tiles | 15 | Pixel Pact has two tiles: Adventure, and Match. Both open `games/pixelpact.html` |
+| Game pages (URLs) | 14 | `games/<file>.html` |
 | Support pages | 8 | `index.html` (hub), `pad.html` (phone controller), `account.html`, `admin.html`, `pricing.html`, `privacy.html`, `terms.html`, `404.html` |
 | Retired games | 0 | — |
-| Proposed new games (not built) | 15 | Card Room 6, quick-play 3, young-kids pack 6. See `docs/ROADMAP.md` |
+| Proposed new games (not built) | 14 | Card Room 5 (Dominoes is built), quick-play 3, young-kids pack 6. See `docs/ROADMAP.md` |
 | Flagship (not built) | — | "Hometown & the Depths" is a plan to grow Pixel Pact: Depths. It is not a separate product yet |
 
 Earlier planning text that mixed "13 entries", "10 standalone games + flagship", two merges and a racing retirement described *proposals*. None of those merges or the retirement has happened.
@@ -33,6 +33,7 @@ Primary category uses the proposed hub categories (`docs/DECISIONS/0007-hub-cate
 | 11 | **Fail Tray** (`tray.html`) | All ages / party | 18 courses in 5 venues, slow-motion fail replay, Chill/Normal/Wild | 1–4 hot-seat + phones | Yes | Cards & Party | `inoa3d.js` | Real-phone feel |
 | 12 | **Pact Trivia** (`trivia.html`) | 8+ / family | 473 fact-checked questions in 11 categories; Full show, Classic, Daily 10 | 1–4 + phone buzzers | Yes | Learn & Teach | `inoa3d.js` | Native ES review. Phone buzz latency |
 | 13 | **Draw the Pact** (`draw.html`) | 6+ / party | Party, Teams, Telephone, Speed Sketch, Daily doodle, Guess the doodle; 704 words | 2–8 pass-and-play or phones | Yes | Cards & Party (tag: Learn) | `inoa3d.js` | Stylus hardware. Native ES words |
+| 14 | **Dominoes** (`dominoes.html`) | 6+ / family | First Card Room game (0004): double-six, **Block** and **Draw**, 2–4 players, optional teams of 2 (partners across), first to 50/100/150/200, optional capicúa +25, colour pips, hints; bots Chill/Normal/Sharp | 1–4 on one screen (vs bots or pass-and-play with a privacy screen) + phones as private hands | Yes + read-aloud | Cards & Party | `inoa3d.js` + `engine/cardroom.js` (rules: `games/dominoes-rules.js`) | Real-phone feel. Online on separate screens waits for R7. Native ES read-through |
 
 \* The proposed category list has no home for racing. Recommendation: rename "Action & Fighting" to **"Action & Racing"** (`docs/DECISIONS/0007-hub-categories.md`).
 
@@ -59,5 +60,5 @@ Rules live in `engine/savekeys.js`; details are in `docs/PLATFORM_ARCHITECTURE.m
 | Key | Owner | Scoped to the signed-in account? | Synced to the cloud? |
 | --- | --- | --- | --- |
 | `inoa.profile` / `inoa.profile.u.<id>` | Shared hero profile | Yes | XP, coins, achievements and per-game best/plays: yes (`ig_finish_round`) |
-| `inoa.drift`, `inoa.runner`, `inoa.tidelines`, `inoa.fit`, `inoa.junk`, `inoa.brew`, `inoa.builders`, `inoa.tray`, `inoa.depths`, `inoa.trivia.daily`, `inoa.trivia.stats`, `pixelpact3.progress` | Each game's own progress | Yes | **Yes** (`ig_saves`, ≤ 64 KB each) |
+| `inoa.drift`, `inoa.runner`, `inoa.tidelines`, `inoa.fit`, `inoa.junk`, `inoa.brew`, `inoa.builders`, `inoa.tray`, `inoa.depths`, `inoa.dominoes`, `inoa.trivia.daily`, `inoa.trivia.stats`, `pixelpact3.progress` | Each game's own progress | Yes | **Yes** (`ig_saves`, ≤ 64 KB each) |
 | `snacksquad` (Safari child profiles + allergens), `inoa.draw` / `inoa.trivia` (settings with typed names), `inoa.draw.gallery`/`.daily` (drawings), `inoa.drift.ghost.*`, `inoa.trivia.seen2` | Device-only data | Yes | **No**, on purpose (children's health data, names, size) |
