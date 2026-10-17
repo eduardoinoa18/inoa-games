@@ -975,3 +975,6 @@ No P0 found: no secret in the repo or the client bundle, user data isolated by R
 - Optional rules not in the UI: `countAll` (partner's pips), "keep 2 in the boneyard" variants, re-deal when no double is dealt.
 - Opponents are name plates + standing tiles, not characters; seat 0 is always at the bottom in pass-and-play (the view does not rotate to the current player).
 - Sharp bots are good but not expert (no end-locking or tranque-forcing strategy).
+
+## Depths: freeze rationing (2026-10-17, same issue as the Pixel Pact Match report)
+Measured over 90 s of an autopilot run (3,800 fight frames): **8.9% of fight time frozen** by hit-stop, because 3 AI allies chained freezes. Now: after a real freeze (≥ 0.03 s), follow-ups for 0.25 s are capped at ~1 frame; AI allies' hits freeze 0 (heavy/crit: 1 frame); the player's own hits keep their punch. Result: **5.8%**. `test/depths.js` still plays both acts to the final boss, `NO_ERRORS`.

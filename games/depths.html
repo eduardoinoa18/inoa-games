@@ -672,7 +672,8 @@ function edges(e, c) { const p = e.ctlPrev; c.aP = c.a && !p.a; c.bP = c.b && !p
 function p2JoinPressed() { if (p2Active) return false; const kb = K.Numpad1 || K.Numpad0 || K.Enter || K.NumpadEnter; const p = readPad(1); return !!(kb || (p && (p.buttons[0]?.pressed || p.buttons[9]?.pressed))); }
 
 /* ================= combat core ================= */
-function hitStop(t) { G.freeze = Math.max(G.freeze, t); }
+// freezes sell a hit, but chained (3 AI allies hitting) they read as lag: after a real freeze, follow-ups for 0.25 s are capped at ~1 frame
+function hitStop(t) { if (G.freezeCd > 0) t = Math.min(t, .012); if (t > G.freeze) G.freeze = t; if (t >= .03) G.freezeCd = .25; }
 function shake(a) { camState.shake = Math.min(.7, Math.max(camState.shake, a)); }
 let floatN = 0;
 function popText(text, pos, cls) { if (floatN > 14) return; const s = E.toScreen(pos, camera); if (s.x < 0 || s.y < 0 || s.x > innerWidth || s.y > innerHeight) return; floatN++; setTimeout(() => floatN--, 1000); E.floatText(text, s.x + rnd(-12, 12), s.y, cls); }
@@ -707,7 +708,7 @@ function damageFoe(t, amount, src, o = {}) {
   popDmg(t, dmg, crit, false, src);
   burst(_v1.set(t.x, 1.1, t.z), { color: crit ? 0xffd166 : 0xfff2c8, n: crit ? 14 : 8, speed: 3.5, up: 2.5, size: .35, life: .3, gravity: 6 });
   crit ? SND.crit() : SND.hit();
-  if (src && src.kind === 'hero') { src.ult = Math.min(100, src.ult + (3 + dmg * .05) * (1 + boon('trance') * .4)); src.stats.dmg += dmg; if (boon('leech')) healHero(src, dmg * .05 * boon('leech'), true); hitStop(src.ctrl === 'bot' ? ((o.heavy || crit) ? .03 : .012) : (o.heavy || crit) ? .07 : .045); }
+  if (src && src.kind === 'hero') { src.ult = Math.min(100, src.ult + (3 + dmg * .05) * (1 + boon('trance') * .4)); src.stats.dmg += dmg; if (boon('leech')) healHero(src, dmg * .05 * boon('leech'), true); hitStop(src.ctrl === 'bot' ? ((o.heavy || crit) ? .012 : 0) : (o.heavy || crit) ? .07 : .045); }
   if (t.hp <= 0) killFoe(t, src);
   return dmg;
 }
@@ -1401,6 +1402,7 @@ function update(dt) {
   if (G.cardsOpen) { cardsInput(dt); placeCamera(dt); idleVisuals(dt); return; }
   if (G.paused) return;
   if (G.freeze > 0) { G.freeze -= dt; placeCamera(dt); return; }
+  if (G.freezeCd > 0) G.freezeCd -= dt;
   if (G.slow > 0) { G.slow -= dt; dt *= G.won ? .35 : .4; }
   G.t += dt; if (!G.over && !G.won && G.room.phase !== 'intro') G.runT += dt;
   for (let i = timers.length - 1; i >= 0; i--) { timers[i].t -= dt; if (timers[i].t <= 0) { const f = timers[i].fn; timers.splice(i, 1); f(); } }
