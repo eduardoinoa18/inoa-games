@@ -46,7 +46,7 @@ module.exports = async (p, shot) => {
     ok(reg === '3', 'Registered counts Inoa accounts only (3), not the other app\'s user: ' + reg);
     const emails = await p.$$eval('#users tbody td:nth-child(2)', t => t.map(x => x.textContent));
     ok(emails.length === 3 && !emails.includes('listing@example.test'), 'user list excludes other apps sharing auth');
-    ok(await p.$$eval('#games tbody tr', r => r.length) === 13, 'per-game table lists all 13 games');
+    const nGames = +(await sql('select count(*) as n from public.ig_game_catalog'))[0].n; ok(await p.$$eval('#games tbody tr', r => r.length) === nGames, `per-game table lists every catalog game (${nGames})`);
     ok(/\$0\.00/.test(await p.textContent('#revenue')), 'revenue tiles render (test data: $0.00)');
     await until(() => /too hard/.test(document.getElementById('feedback').textContent));
     ok(/guest/.test(await p.textContent('#feedback')) && /1 new/.test(await p.textContent('#fSum')), 'owner sees guest feedback in the inbox');

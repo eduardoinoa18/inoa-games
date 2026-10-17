@@ -3053,7 +3053,7 @@ function loop(now) {
   requestAnimationFrame(loop);
   let dt = (now - last) / 1000; last = now; if (dt > .1) dt = .1; if (dt < 0) dt = 0;
   fpsN++; fpsT += dt;
-  if (fpsT >= 1) { G.fps = fpsN; fpsN = 0; fpsT = 0; if (settings.quality === 'auto' && G.scene === 'play') { if (G.fps < 46) slowStreak++; else slowStreak = 0; if (slowStreak >= 2 && G.res > .6) { G.res = Math.max(.6, G.res - .15); slowStreak = 0; resize(); } } }
+  if (fpsT >= 1) { G.fps = fpsN; fpsN = 0; fpsT = 0; if (G.scene === 'play') globalThis.__inoaPerf = { fps: G.fps, low: G.res < .9 }; if (settings.quality === 'auto' && G.scene === 'play') { if (G.fps < 46) slowStreak++; else slowStreak = 0; if (slowStreak >= 2 && G.res > .6) { G.res = Math.max(.6, G.res - .15); slowStreak = 0; resize(); } } }
   if (G.slowT > 0) { G.slowT -= dt; G.timeScale = .3; } else G.timeScale = lerp(G.timeScale, 1, .08);
   acc += dt * G.timeScale;
   let steps = 0;

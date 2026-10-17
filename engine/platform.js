@@ -130,7 +130,10 @@ const api = {
   async sendFeedback({ rating = null, body = '', game = null, kind = 'general' } = {}) {
     await loadConfig(); if (!api.feedbackAvailable) throw new PlatformError('unavailable', 'Feedback is not set up');
     const t = await token().catch(() => null);
-    const context = { platform: api.native ? (globalThis.Capacitor.getPlatform ? globalThis.Capacitor.getPlatform() : 'native') : 'web', version: S.cfg.version || '', lang: (document.documentElement.lang || '').slice(0, 5), screen: `${innerWidth}x${innerHeight}`, page: location.pathname.split('/').slice(-2).join('/'), mode: api.mode };
+    const perf = globalThis.__inoaPerf || {}, ua = navigator.userAgent || '';
+    // coarse device class only (no model, no IDs): enough to find which phones run a game slowly
+    const device = (/iPhone|iPad|iPod/.test(ua) ? 'ios' : /Android/.test(ua) ? 'android' : /Mac/.test(ua) ? 'mac' : /Windows/.test(ua) ? 'windows' : 'other') + ' ' + (/SamsungBrowser/.test(ua) ? 'samsung' : /Edg\//.test(ua) ? 'edge' : /Firefox|FxiOS/.test(ua) ? 'firefox' : /Chrome|CriOS/.test(ua) ? 'chrome' : /Safari/.test(ua) ? 'safari' : 'other') + (navigator.hardwareConcurrency ? ' ' + navigator.hardwareConcurrency + 'c' : '');
+    const context = { platform: api.native ? (globalThis.Capacitor.getPlatform ? globalThis.Capacitor.getPlatform() : 'native') : 'web', version: S.cfg.version || '', lang: (document.documentElement.lang || '').slice(0, 5), screen: `${innerWidth}x${innerHeight}`, page: location.pathname.split('/').slice(-2).join('/'), mode: api.mode, device, fps: perf.fps != null ? String(perf.fps) : '', quality: perf.low ? 'reduced' : (perf.fps != null ? 'full' : '') };
     return http('/rest/v1/rpc/ig_submit_feedback', { body: { p_rating: rating, p_body: String(body || '').slice(0, 1000), p_game: game, p_kind: kind, p_context: context }, token: t });
   },
   async importLocal() {

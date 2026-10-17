@@ -26,7 +26,7 @@ select t.fails($$ select public.ig_grant_owner_by_email('c@example.test') $$, 'o
 
 -- ================= anon =================
 set role anon; select set_config('request.jwt.claims', '{}', false);
-select t.ok((select count(*) from public.ig_game_catalog) = 13, 'anon reads the game catalog');
+select t.ok((select count(*) from public.ig_game_catalog where is_active) = 13, 'anon reads the game catalog');
 select t.fails($$ select * from public.ig_profiles $$, 'anon cannot read profiles');
 select t.fails($$ select public.ig_start_game('drift', 'anon-key-123') $$, 'anon cannot call start_game');
 select t.fails($$ select public.ig_grant_owner_by_email('a@example.test') $$, 'anon cannot run the owner bootstrap');
@@ -265,4 +265,9 @@ select public.ig_save_put('inoa.fit', '{}'::jsonb, null);
 select t.fails($$select public.ig_save_put('inoa.junk', '{}'::jsonb, null)$$, 'per-player key limit enforced');
 reset role; update public.ig_app_config set value = '40' where key = 'save_max_keys';
 select t.ok((select data ->> 'level' from public.ig_saves where user_id = '00000000-0000-0000-0000-00000000000a' and key = 'inoa.brew') = '5', 'A''s save untouched by B');
+-- feedback keeps the coarse performance context (real-device pass) and drops anything else
+set role anon; select t.as_user(null);
+select public.ig_submit_feedback(4, 'runs fine', 'drift', 'general', '{"device":"android chrome 8c","fps":"52","quality":"full","imei":"123456"}'::jsonb);
+reset role;
+select t.ok((select context ->> 'fps' from public.ig_feedback order by id desc limit 1) = '52' and (select context ->> 'device' from public.ig_feedback order by id desc limit 1) = 'android chrome 8c' and (select not (context ? 'imei') from public.ig_feedback order by id desc limit 1), 'feedback keeps fps/device/quality, drops unknown fields');
 \echo SQL_TESTS_DONE

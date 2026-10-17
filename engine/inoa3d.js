@@ -116,7 +116,7 @@ export function createRenderer(canvas, opts = {}) {
   function render(dt) {
     if (fogK) { const d = Math.max(1, camera.position.distanceTo(focus)); scene.fog.near = d * fogK[0]; scene.fog.far = d * fogK[1]; }
     if (window.__NORENDER || (onDemand && !dirty)) return; dirty = false;
-    fpsAcc += dt; fpsN++; if (fpsAcc > 3) { const fps = fpsN / fpsAcc; fpsAcc = 0; fpsN = 0; if (fps < 40 && !low && Q !== 'high') { low = true; renderer.setPixelRatio(Math.min(DPR, 1.25)); bloom.enabled = false; resize(); } }
+    fpsAcc += dt; fpsN++; if (fpsAcc > 3) { const fps = fpsN / fpsAcc; fpsAcc = 0; fpsN = 0; globalThis.__inoaPerf = { fps: Math.round(fps), low }; /* read by feedback (real-device tuning) */ if (fps < 40 && !low && Q !== 'high') { low = true; renderer.setPixelRatio(Math.min(DPR, 1.25)); bloom.enabled = false; resize(); } }
     composer.render();
   }
   // Look presets: sky, fog, light balance. Keeps the house style consistent across games.
