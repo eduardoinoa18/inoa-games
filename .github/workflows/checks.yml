@@ -1,0 +1,66 @@
+# Fast, deterministic checks on every push to main and on pull requests (AUDIT Phase 0 F7).
+# The full game suite (npm run test:all, ~70 min of software WebGL) stays a manual/nightly job; see docs/TESTING.md.
+name: checks
+on:
+  push: { branches: [main] }
+  pull_request:
+  workflow_dispatch:
+  schedule: [{ cron: '17 7 * * *' }]   # nightly: also runs the full game suite (job "games")
+permissions: { contents: read }
+jobs:
+  quick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_HOST_AUTH_METHOD: trust }
+        ports: ['55432:5432']
+        options: --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    env: { PGHOST: localhost, PGPORT: '55432' }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Engine syntax
+        run: for f in engine/*.js; do node --check "$f"; done
+      - name: Database (RLS, rewards, referrals, cloud saves)
+        run: mkdir -p /tmp/pgt && bash test/db/run.sh
+      - name: Hub
+        run: node test/run.js index test/index.js | tee out.txt && grep -q NO_ERRORS out.txt
+      - name: Spanish leak check
+        run: node test/run.js index test/i18n.js | tee out.txt && grep -q I18N_CLEAN out.txt
+      - name: Accessibility (axe, serious + critical)
+        run: node test/run.js index test/a11y.js | tee out.txt && grep -q A11Y_CLEAN out.txt
+      - name: Pixel Pact Match feel budget
+        run: PP_SECS=30 node test/run.js pixelpact test/pixelpact_perf.js | tee out.txt && grep -q PP_FEEL_BUDGET_OK out.txt
+      - name: Cloud saves e2e
+        run: node test/run.js fit test/cloudsave.js | tee out.txt && grep -q CLOUD_E2E_PASSED out.txt
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with: { name: screenshots, path: test/out, retention-days: 7 }
+  games:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Every game
+        run: |
+          fail=0
+          for g in $(node -e "console.log(require('./package.json').scripts['test:all'].match(/for g in ([^;]+);/)[1])"); do
+            node test/run.js $g test/$g.js > out_$g.txt 2>&1 || true
+            if grep -q NO_ERRORS out_$g.txt; then echo "ok $g"; else echo "FAIL $g"; tail -20 out_$g.txt; fail=1; fi
+          done
+          exit $fail
+      - name: Phones as controllers
+        run: npm run test:party | tee out.txt && ! grep -q "ERRORS:" out.txt
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with: { name: game-screenshots, path: test/out, retention-days: 7 }

@@ -7,7 +7,7 @@ const b64u = b => Buffer.from(b).toString('base64url');
 const sign = (claims) => { const h = b64u(JSON.stringify({ alg: 'HS256', typ: 'JWT' })), p = b64u(JSON.stringify(claims)); return `${h}.${p}.${crypto.createHmac('sha256', SECRET).update(h + '.' + p).digest('base64url')}`; };
 const verify = (tok) => { try { const [h, p, s] = tok.split('.'); if (crypto.createHmac('sha256', SECRET).update(h + '.' + p).digest('base64url') !== s) return null; const c = JSON.parse(Buffer.from(p, 'base64url')); return c.exp > Date.now() / 1000 ? c : null; } catch (e) { return null; } };
 
-module.exports = function start({ port, db = 'inoa_test', host = '/tmp/pgt', pgport = 55432, accessTtl = 3600 } = {}) {
+module.exports = function start({ port, db = 'inoa_test', host = process.env.PGHOST || '/tmp/pgt', pgport = +process.env.PGPORT || 55432, accessTtl = 3600 } = {}) {
   const pool = new Pool({ host, port: pgport, user: 'postgres', database: db, max: 8 });
   const pw = new Map(), refresh = new Map(), outbox = [];
   const session = (u) => { const exp = Math.floor(Date.now() / 1000) + accessTtl; const rt = crypto.randomBytes(16).toString('hex'); refresh.set(rt, u.id); return { access_token: sign({ sub: u.id, email: u.email, role: 'authenticated', exp }), refresh_token: rt, expires_in: accessTtl, expires_at: exp, token_type: 'bearer', user: { id: u.id, email: u.email } }; };

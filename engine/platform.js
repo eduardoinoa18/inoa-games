@@ -85,7 +85,7 @@ const api = {
     const prev = S.auth && S.auth.user.id;
     const d = await http('/auth/v1/token', { query: '?grant_type=password', body: { email, password } });
     if (prev && prev !== d.user.id) api._forgetUser(prev);
-    saveAuth(d); ls.set('inoa.activeProfile', 'inoa.profile.u.' + d.user.id); await api.refreshStatus().catch(() => { }); emit(); api.syncSaves().catch(() => { }); return api.state();
+    saveAuth(d); ls.set('inoa.activeProfile', 'inoa.profile.u.' + d.user.id); await api.refreshStatus().catch(() => { }); emit(); await api._syncSoon(); return api.state();
   },
   async signOut() {
     await Promise.race([api.pushDirty().catch(() => { }), new Promise(r => setTimeout(r, 3000))]); // upload unsaved progress first
@@ -105,7 +105,7 @@ const api = {
     if (h.has('error')) return { type: 'error', error: h.get('error_description') || h.get('error') };
     const access_token = h.get('access_token'), refresh_token = h.get('refresh_token'), type = h.get('type') || 'signup';
     const user = await http('/auth/v1/user', { method: 'GET', token: access_token });
-    saveAuth({ access_token, refresh_token, expires_in: +h.get('expires_in') || 3600, user }); ls.set('inoa.activeProfile', 'inoa.profile.u.' + user.id); await api.refreshStatus().catch(() => { }); emit(); api.syncSaves().catch(() => { });
+    saveAuth({ access_token, refresh_token, expires_in: +h.get('expires_in') || 3600, user }); ls.set('inoa.activeProfile', 'inoa.profile.u.' + user.id); await api.refreshStatus().catch(() => { }); emit(); await api._syncSoon();
     return { type };
   },
   async refreshStatus() { const st = await rpc('ig_my_status'); cacheStatus(st); mirrorProfile(st); emit(); return st; },
@@ -218,6 +218,8 @@ const api = {
     if (r && r.ok) { const m2 = api._meta(), e2 = m2[key] || {}; e2.rev = r.rev; if (e2.t === t0) e2.dirty = false; m2[key] = e2; api._setMeta(m2); }
     return r;
   },
+  // after sign-in, wait (≤ 4 s) for the cloud saves so the game opened next reads them instead of this device's guest copy
+  _syncSoon() { return Promise.race([api.syncSaves().catch(() => { }), new Promise(r => setTimeout(r, 4000))]); },
   async pushDirty() { const m = api._meta(); for (const k of Object.keys(m)) if (m[k].dirty) await api.pushSave(k).catch(() => { }); },
   _adopt(key, r, uid) {
     const m = api._meta();
