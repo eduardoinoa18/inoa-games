@@ -1406,7 +1406,7 @@ function hitPlayer(o, dmg, kx, ky, kind, from) {
   o.vx = dirx * kb; o.vy = kind === 'light' ? -kb * .5 - 1 : Math.min(-kb * .85, ky * .5); o.hurtT = Math.round(10 + kb * 1.4); o.inv = kind === 'light' ? 6 : 10; o.atk = null; o.wall = 0; o.dodge = 0;
   floatText(o.x + 10, o.y - 8, dmg, kind === 'light' ? '#ffffff' : '#ffc65c', kind === 'light' ? 12 : 16, { crit: kind !== 'light' });
   const mine = isHuman(o) || isHuman(from); // bot-vs-bot hits don't freeze or shake the human's screen
-  (kind === 'light' ? Sound.sfx.hit : Sound.sfx.hit2)(); hitStop(mine ? (kind === 'light' ? 2 : 4 + Math.min(3, kb * .12 | 0)) : (kind === 'light' ? 0 : 1)); addTrauma((kind === 'light' ? .1 : .22 + Math.min(.3, kb * .015)) * (mine ? 1 : .35)); if (o.src === 'touch') buzz(kind === 'light' ? 12 : 30);
+  (kind === 'light' ? Sound.sfx.hit : Sound.sfx.hit2)(); if (mine) hitStop(kind === 'light' ? 2 : 4 + Math.min(3, kb * .12 | 0)); addTrauma((kind === 'light' ? .1 : .22 + Math.min(.3, kb * .015)) * (mine ? 1 : .35)); if (o.src === 'touch') buzz(kind === 'light' ? 12 : 30);
   if (kind !== 'light' && mine && kb > 9) G.punch = Math.max(G.punch, 1.02);
   burst(o.x + 10, o.y + 20, kind === 'light' ? 8 : 14, ['#ffffff', '#ffe7a8', from ? from.hero.c.glow : '#fff'], kind === 'light' ? 5 : 7, 18, { add: true, type: 'spark', g: 0, drag: .88 });
   ringFx(o.x + 10, o.y + 20, 4, kind === 'light' ? 24 : 40, '#ffffff', 12, kind === 'light' ? 2.5 : 4);

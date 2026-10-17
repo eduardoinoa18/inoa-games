@@ -33,6 +33,7 @@ module.exports = async (p, shot) => {
   const avg = k => +(out.reduce((a, r) => a + r[k], 0) / out.length).toFixed(2);
   console.log('perf avg', JSON.stringify({ wallFrozenPct: avg('wallFrozenPct'), wallSlowPct: avg('wallSlowPct'), frozenPct: avg('frozenPct'), slowPct: avg('slowPct'), partPeak: Math.max(...out.map(r => r.partPeak)), drawMs: avg('drawMs'), simMsPerFrame: avg('simMsPerFrame') }));
   // guard (2026-10-17 tuning): before it, ~16% of a 4-fighter match was hit-stop and ~14% slow-mo, which players felt as lag
-  const bad = out.filter(r => r.wallFrozenPct > 8 || r.wallSlowPct > 5);
+  // budget: average over arenas ≤ 6% frozen / ≤ 4% slowed, and no single arena above 10% / 6% (bots are random: one spiky arena alone is not a regression)
+  const bad = out.filter(r => r.wallFrozenPct > 10 || r.wallSlowPct > 6); if (avg('wallFrozenPct') > 6 || avg('wallSlowPct') > 4) bad.push({ stage: 'avg' });
   if (bad.length) { console.log('PP_FEEL_BUDGET_FAILED', JSON.stringify(bad.map(r => r.stage))); process.exitCode = 1; } else console.log('PP_FEEL_BUDGET_OK');
 };
