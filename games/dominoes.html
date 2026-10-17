@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Dominoes</title>
+<!--meta--><meta name="description" content="The classic double-six game for 2–4 players: Draw or Block, teams of two with partners across the table, bots from Chill to Sharp, pass-and-play or phones as private hands. English and Spanish. Free in your browser.">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Inoa Games"><meta property="og:title" content="Dominoes · Inoa Games"><meta property="og:description" content="The classic double-six game for 2–4 players: Draw or Block, teams of two with partners across the table, bots from Chill to Sharp, pass-and-play or phones as private hands. English and Spanish. Free in your browser."><meta property="og:url" content="https://inoa-games.vercel.app/games/dominoes.html"><meta property="og:image" content="https://inoa-games.vercel.app/thumbs/dominoes.jpg"><meta property="og:image:width" content="640"><meta property="og:image:height" content="360"><meta name="twitter:card" content="summary_large_image"><!--/meta-->
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;800&family=Unbounded:wght@700;900&display=swap">
+<link rel="stylesheet" href="../engine/ui.css">
+<style>
+:root{--s0:#ff6b6b;--s1:#4fb3ff;--s2:#ffd166;--s3:#2fd18a;--tw:clamp(40px,11.2vw,60px)}
+/* title setup */
+.dm-setup{display:grid;gap:6px;min-width:0}
+.dm-lbl{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#4c5868;margin-top:4px}
+.pick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.pick.three{grid-template-columns:repeat(3,minmax(0,1fr))}.pick.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+.pick button{min-height:44px;border-radius:14px;border:2px solid var(--line);background:#fff;font-weight:800;cursor:pointer;padding:6px 8px;font-size:14px;color:var(--ink);line-height:1.15;text-align:center}
+.pick button.on{border-color:var(--mint-ink);background:var(--mint)}
+.pick button:disabled{opacity:.45;cursor:default}
+.pick small{display:block;font-weight:600;color:#4c5868;font-size:11px;margin-top:2px}
+.dm-names{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:6px}
+.dm-names input{min-height:42px;border-radius:12px;border:2px solid var(--line);padding:0 10px;font:inherit;font-weight:800;box-sizing:border-box;width:100%;user-select:text;-webkit-user-select:text;color:var(--ink);background:#fff}
+.dm-rec{font-weight:800;color:var(--mint-ink);font-size:14px;margin:0}
+.ig-title .ig-card{max-height:calc(100dvh - 32px);overflow:auto}
+.ig-title .ig-card>.ig-row{position:sticky;bottom:-26px;background:var(--paper);padding:8px 0 4px;z-index:2}
+@media (orientation:landscape) and (min-width:700px){
+  .ig-title .ig-card{width:min(980px,100%);grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);column-gap:22px;row-gap:10px;align-items:start;padding:18px 22px}
+  .ig-title .ig-card>*{grid-column:1}
+  .ig-title .ig-card>.dm-setup{grid-column:2;grid-row:1/span 9}
+  .ig-title .ig-card h1{font-size:40px}
+  .ig-title .ig-card>.ig-row{position:static;padding:0}
+  .ig-title .ig-how div{font-size:13px;padding:6px 8px}
+}
+/* seats around the table */
+.dm-seat{position:fixed;z-index:19;display:flex;align-items:center;gap:6px;background:rgba(255,248,238,.93);color:var(--ink);border-radius:16px;padding:6px 10px;font-weight:800;font-size:13px;box-shadow:0 4px 14px rgba(0,0,0,.25);border-left:6px solid var(--c);pointer-events:none;max-width:44vw;transition:transform .2s,box-shadow .2s}
+.dm-seat .e{font-size:18px}.dm-seat .n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px}
+.dm-seat .k{font-family:var(--f-d);font-size:12px;background:var(--ink);color:#fff;border-radius:9px;padding:2px 6px;white-space:nowrap}
+.dm-seat .st{font-size:11px;color:#4c5868;white-space:nowrap}
+.dm-seat.turn{box-shadow:0 0 0 3px #fff,0 0 22px 4px var(--c);transform:scale(1.06)}
+.dm-seat.top{left:50%;top:max(60px,calc(env(safe-area-inset-top) + 52px));transform:translateX(-50%)}.dm-seat.top.turn{transform:translateX(-50%) scale(1.06)}
+.dm-seat.left{left:max(8px,env(safe-area-inset-left));top:42%}.dm-seat.right{right:max(8px,env(safe-area-inset-right));top:42%}
+.dm-seat.bottom{left:50%;bottom:calc(max(14px,env(safe-area-inset-bottom)) + var(--trayH,0px));transform:translateX(-50%)}.dm-seat.bottom.turn{transform:translateX(-50%) scale(1.06)}
+.dm-seat.tr{right:max(8px,env(safe-area-inset-right));top:max(108px,calc(env(safe-area-inset-top) + 100px))}.dm-seat.tl{left:max(8px,env(safe-area-inset-left));top:max(108px,calc(env(safe-area-inset-top) + 100px))}
+.dm-bub{position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:6px;background:#1b2430;color:#fff;border-radius:12px;padding:4px 9px;font-size:12px;white-space:nowrap;animation:dmPop .25s ease-out}
+@keyframes dmPop{from{opacity:0;transform:translateX(-50%) scale(.6)}}
+/* your hand */
+.dm-tray{position:fixed;left:50%;transform:translateX(-50%);bottom:0;z-index:21;width:min(820px,100vw);box-sizing:border-box;padding:8px 10px max(10px,env(safe-area-inset-bottom));background:linear-gradient(rgba(27,20,14,0),rgba(27,20,14,.78) 28%);display:grid;gap:6px}
+.dm-who{display:flex;align-items:center;justify-content:center;gap:8px;color:#fff;font-weight:800;font-size:15px;text-shadow:0 2px 0 rgba(0,0,0,.4);flex-wrap:wrap;text-align:center}
+.dm-who b{font-family:var(--f-d);color:var(--c,#fff)}
+.dm-who .yt{background:var(--sun);color:var(--ink);text-shadow:none;border-radius:12px;padding:3px 10px;font-family:var(--f-d);font-size:13px;animation:dmPulse 1.2s ease-in-out infinite alternate}
+@keyframes dmPulse{to{transform:scale(1.06)}}
+.dm-hand{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;min-height:calc(var(--tw) * 2);padding-top:12px}
+.dm-tile{width:var(--tw);height:calc(var(--tw) * 2);border:0;border-radius:11px;background:linear-gradient(#fffdf6,#eadfc8);box-shadow:0 5px 0 #b8a27c,0 8px 16px rgba(0,0,0,.35);padding:3px;cursor:pointer;transition:transform .12s,box-shadow .12s,opacity .2s;position:relative}
+.dm-tile svg{width:100%;height:100%;display:block;pointer-events:none}
+.dm-tile.sel{transform:translateY(-10px)}
+.dm-tile.ok{box-shadow:0 5px 0 #b8a27c,0 0 0 3px #7dffd8,0 0 18px 4px rgba(125,255,216,.7)}
+.dm-tile.no{opacity:.5}
+.dm-tile.wait{cursor:default}
+.dm-tile.shake{animation:dmShake .35s}
+@keyframes dmShake{25%{transform:translateX(-6px) rotate(-4deg)}75%{transform:translateX(6px) rotate(4deg)}}
+.dm-tile.new{animation:dmNew .5s ease-out}@keyframes dmNew{from{transform:translateY(-30px) scale(.7);opacity:0}}
+.dm-tile:focus-visible{outline:4px solid var(--berry);outline-offset:3px}
+.dm-hid{color:#fff;font-weight:800;opacity:.85;align-self:center;font-size:15px}
+.dm-acts{display:flex;gap:8px;justify-content:center}.dm-acts .ig-btn{min-height:50px;padding:8px 22px}
+.dm-ends{position:fixed;left:50%;transform:translateX(-50%);z-index:23;background:var(--paper);border-radius:20px;padding:8px 10px;box-shadow:0 14px 40px rgba(0,0,0,.4);display:grid;gap:6px;text-align:center;width:min(380px,calc(100vw - 24px));box-sizing:border-box}
+.dm-ends p{font-weight:800;font-size:14px}.dm-ends .r{display:grid;grid-template-columns:1fr 1fr auto;gap:8px}.dm-ends .ig-btn{min-height:50px;padding:8px 12px;font-size:17px}.dm-ends .x{min-width:50px}
+.dm-banner{position:fixed;left:50%;transform:translateX(-50%);bottom:max(64px,calc(env(safe-area-inset-bottom) + 58px));z-index:20;background:rgba(27,36,48,.86);color:#fff;font-weight:800;border-radius:16px;padding:8px 14px;font-size:15px;pointer-events:none;white-space:nowrap}
+/* round card */
+.dm-round{display:grid;gap:6px}
+.dm-row{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;background:#fff;border:2px solid var(--line);border-radius:14px;padding:6px 10px;font-weight:800}
+.dm-row.win{border-color:var(--mint-ink);background:#e9fbf4}
+.dm-row i{width:12px;height:12px;border-radius:50%;display:inline-block;background:var(--c)}
+.dm-row .mini{display:flex;flex-wrap:wrap;gap:3px}.dm-row .mini svg{width:16px;height:32px;background:#fffaf0;border-radius:4px;box-shadow:0 0 0 1px #d9cdb3}
+.dm-row .nm{display:grid;gap:3px;min-width:0}.dm-row .nm span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dm-row b{font-family:var(--f-d)}
+.dm-score{display:grid;gap:6px}.dm-bar{display:grid;grid-template-columns:minmax(70px,auto) 1fr auto;gap:8px;align-items:center;font-weight:800;font-size:14px}
+.dm-bar div{height:12px;border-radius:8px;background:#eadfcc;overflow:hidden}.dm-bar div i{display:block;height:100%;background:var(--c);transition:width .6s}
+.dm-big{font-family:var(--f-d);font-size:20px;text-align:center;color:var(--mint-ink)}
+.ig-hud .dm-sc{gap:8px}.ig-hud .dm-sc span{display:inline-flex;align-items:center;gap:4px}.ig-hud .dm-sc i{width:10px;height:10px;border-radius:50%;display:inline-block;background:var(--c)}
+@media (max-width:640px){.dm-seat{font-size:12px;padding:5px 8px;gap:4px}.dm-seat .n{max-width:70px}.dm-seat .st{display:none}.dm-seat.left,.dm-seat.right{top:34%}.ig-hud .dm-opt{display:none}}
+@media (orientation:landscape) and (max-height:600px){:root{--tw:clamp(34px,5.4vw,50px)}.dm-seat.left,.dm-seat.right{top:30%}.dm-who{font-size:14px}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+</head><body>
+<canvas class="ig-gl" id="gl" aria-label="Dominoes table"></canvas>
+<div id="seats"></div>
+<div class="dm-banner" id="banner" hidden aria-live="polite"></div>
+<div class="dm-tray" id="tray" hidden><div class="dm-who" id="who" aria-live="polite"></div><div class="dm-hand" id="hand" role="group"></div><div class="dm-acts" id="acts"></div></div>
+<div class="dm-ends" id="endPick" hidden role="dialog"></div>
+<script type="module">
+import * as E from '../engine/inoa3d.js';
+import * as CR from '../engine/cardroom.js';
+import * as D from './dominoes-rules.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+const { THREE, clamp, lerp, damp, SFX, $ } = E;
+const L = (en, es) => E.L(en, es);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+/* ======================= settings + save (E.store 'inoa.dominoes', small) ======================= */
+const SKEY = 'inoa.dominoes';
+const S = Object.assign({ mode: 'block', players: 4, teams: true, target: 100, skill: 'normal', locals: 1, names: ['Ana', 'Leo', 'Mia', 'Rafa'], capicua: false, hints: false, color: true, wins: 0, played: 0, best: 0, doms: 0 }, E.store.get(SKEY, {}));
+if (!Array.isArray(S.names)) S.names = ['Ana', 'Leo', 'Mia', 'Rafa'];
+const save = () => E.store.set(SKEY, { mode: S.mode, players: S.players, teams: S.teams, target: S.target, skill: S.skill, locals: S.locals, names: S.names.slice(0, 4).map(n => String(n).slice(0, 12)), capicua: S.capicua, hints: S.hints, color: S.color, wins: S.wins, played: S.played, best: S.best, doms: S.doms });
+const BOTS = [{ n: 'Rosa', e: '🌺' }, { n: 'Tito', e: '🎩' }, { n: 'Mari', e: '☀️' }, { n: 'Beto', e: '🐢' }];
+const SEATC = ['#ff6b6b', '#4fb3ff', '#ffd166', '#2fd18a'];
+const TEAM = [{ e: '☀️', en: 'Team Sun', es: 'Equipo Sol', c: '#f2a93b' }, { e: '🌊', en: 'Team Sea', es: 'Equipo Mar', c: '#2f8fd0' }];
+const SKILL = { chill: { e: '🐢', en: 'Chill', es: 'Tranquilo', sub: ['hints on', 'con pistas'] }, normal: { e: '🙂', en: 'Normal', es: 'Normal', sub: ['steady', 'parejo'] }, sharp: { e: '🔥', en: 'Sharp', es: 'Astuto', sub: ['counts tiles', 'cuenta fichas'] } };
+const PIPC = ['#1b2430', '#d33a2f', '#2a6fc0', '#178a57', '#c97700', '#7d45c4', '#b02a63'];
+const PIP = { 0: [], 1: [[.5, .5]], 2: [[.27, .27], [.73, .73]], 3: [[.27, .27], [.5, .5], [.73, .73]], 4: [[.27, .27], [.73, .27], [.27, .73], [.73, .73]], 5: [[.27, .27], [.73, .27], [.5, .5], [.27, .73], [.73, .73]], 6: [[.27, .25], [.27, .5], [.27, .75], [.73, .25], [.73, .5], [.73, .75]] };
+const hintsOn = () => !!G && (G.opts.skill === 'chill' || S.hints);
+const FAST = () => window.__DM_FAST ? .04 : 1;
+
+/* ======================= renderer + scene (procedural: no external models) ======================= */
+const ld = E.loading(L('Dominoes', 'Dominó'), L('Setting the table…', 'Poniendo la mesa…'));
+const R = E.createRenderer($('gl'), { fov: 38, portraitFov: 56, shadowSize: 16, far: 260 });
+const { scene, camera, sun } = R;
+R.setLook({ background: 0x243440, fog: 0x243440, fogNear: 70, fogFar: 160, sun: 1.45, sunColor: 0xfff0d6, hemi: .6, skyHor: 0xe6f2ff, ground: 0x7a5236, exposure: 1, env: .22, bloom: .12, bloomThreshold: .92 });
+R.setEnv(R.pmrem.fromScene(new RoomEnvironment(), .04).texture);
+sun.position.set(7, 26, 12); sun.target.position.set(0, 0, 0); sun.target.updateMatrixWorld();
+ld.set(.3);
+const TW = 27, TD = 23, FELT_Y = .07, TILE_H = .22, TILE_Y = FELT_Y + TILE_H / 2;
+{
+  const top = new THREE.Mesh(new RoundedBoxGeometry(TW, .7, TD, 4, .32), E.pbr('wood', 0x8a5634, [5, 5])); top.position.y = -.33; top.receiveShadow = true; top.castShadow = true; scene.add(top);
+  const felt = new THREE.Mesh(new RoundedBoxGeometry(TW - 2.4, .12, TD - 2.4, 3, .05), E.pbr('fabric', 0x1f6b5a, [7, 6])); felt.position.y = .01; felt.receiveShadow = true; scene.add(felt);
+  const legM = E.pbr('wood', 0x6e4228, [1, 3]); for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { const lg = new THREE.Mesh(new THREE.BoxGeometry(1.1, 9, 1.1), legM); lg.position.set(x * (TW / 2 - 1.6), -4.9, z * (TD / 2 - 1.6)); lg.castShadow = true; scene.add(lg); }
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(180, 180), E.pbr('tile', 0xc7865a, [26, 26])); floor.rotation.x = -Math.PI / 2; floor.position.y = -9.4; floor.receiveShadow = true; scene.add(floor);
+  // a cup of juice and a little score pad on the table corners (cozy patio, original props)
+  const cup = new THREE.Group(); const glass = new THREE.Mesh(new THREE.CylinderGeometry(.55, .45, 1.3, 20, 1, true), new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: .35, roughness: .1, side: THREE.DoubleSide })); glass.position.y = .72; const juice = new THREE.Mesh(new THREE.CylinderGeometry(.5, .42, .9, 20), E.mat(0xff9d3b, { roughness: .3 })); juice.position.y = .52; cup.add(glass, juice); cup.position.set(TW / 2 - 2.1, FELT_Y, -TD / 2 + 2.1); scene.add(cup);
+  const padM = new THREE.Mesh(new THREE.BoxGeometry(2.2, .08, 2.8), E.mat(0xfff6dc)); padM.position.set(-TW / 2 + 2.3, FELT_Y + .04, TD / 2 - 2.4); padM.rotation.y = .25; padM.receiveShadow = true; scene.add(padM);
+  const pen = new THREE.Mesh(new THREE.CylinderGeometry(.07, .07, 2.2, 8), E.mat(0xe2443a)); pen.rotation.z = Math.PI / 2; pen.rotation.y = -.5; pen.position.set(-TW / 2 + 2.7, FELT_Y + .15, TD / 2 - 2.2); scene.add(pen);
+  // warm string lights around the room
+  const bulbM = new THREE.MeshStandardMaterial({ color: 0xffe2a0, emissive: 0xffc86b, emissiveIntensity: 1.4 });
+  for (let i = 0; i < 26; i++) { const a = i / 26 * Math.PI * 2, b = new THREE.Mesh(new THREE.SphereGeometry(.28, 10, 8), bulbM); b.position.set(Math.cos(a) * 24, 9 + Math.sin(i * 1.7) * .6, Math.sin(a) * 21); scene.add(b); }
+}
+ld.set(.6);
+
+/* ---- tiles: rounded ivory body + a canvas face with pips (cached per tile + colour mode) ---- */
+const TILE_GEO = new RoundedBoxGeometry(1, TILE_H, 2, 3, .07);
+const FACE_GEO = new THREE.PlaneGeometry(.94, 1.94).rotateX(-Math.PI / 2); // canvas top → −z (the tile's first number)
+const BODY = new THREE.MeshStandardMaterial({ color: 0xfff6e4, roughness: .32, metalness: 0 });
+const BACK_GEO = new THREE.CircleGeometry(.16, 18).rotateX(-Math.PI / 2), BACK_M = E.mat(0xc9a86a, { roughness: .4, metalness: .3 });
+const FACES = {};
+function faceMat(a, b) {
+  const k = `${a}-${b}-${S.color ? 1 : 0}`; if (FACES[k]) return FACES[k];
+  const c = document.createElement('canvas'); c.width = 128; c.height = 256; const g = c.getContext('2d');
+  g.fillStyle = '#fff8ea'; g.fillRect(0, 0, 128, 256);
+  g.strokeStyle = '#b9a988'; g.lineWidth = 5; g.lineCap = 'round'; g.beginPath(); g.moveTo(16, 128); g.lineTo(112, 128); g.stroke();
+  const half = (v, y0) => (PIP[v] || []).forEach(([x, y]) => { const px = x * 128, py = y0 + y * 128; const col = S.color ? PIPC[v] : '#1b2430'; const rg = g.createRadialGradient(px - 3, py - 3, 2, px, py, 15); rg.addColorStop(0, col); rg.addColorStop(.75, col); rg.addColorStop(1, 'rgba(0,0,0,.55)'); g.fillStyle = rg; g.beginPath(); g.arc(px, py, 13.5, 0, Math.PI * 2); g.fill(); });
+  half(a, 0); half(b, 128);
+  const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; tx.anisotropy = 4;
+  return FACES[k] = new THREE.MeshStandardMaterial({ map: tx, roughness: .35, transparent: false, polygonOffset: true, polygonOffsetFactor: -2 });
+}
+function makeTile(t) { // face up; t[0] on −z, t[1] on +z
+  const g = new THREE.Group(); const body = new THREE.Mesh(TILE_GEO, BODY); body.castShadow = true; body.receiveShadow = true; g.add(body);
+  const face = new THREE.Mesh(FACE_GEO, faceMat(t[0], t[1])); face.position.y = TILE_H / 2 + .003; g.add(face); return g;
+}
+function makeBack() { const g = new THREE.Group(); const body = new THREE.Mesh(TILE_GEO, BODY); body.castShadow = true; g.add(body); const stud = new THREE.Mesh(BACK_GEO, BACK_M); stud.position.y = TILE_H / 2 + .004; g.add(stud); return g; }
+
+/* ---- the line: a snake that turns at the table edge; doubles lie crosswise ---- */
+const XL = 6.4;
+function stepChain(c, e, commit = true) {
+  const dbl = D.isDouble(e.t); const p = c.p, d = c.d; let nd = d, leg = c.leg, legN = c.legN, hdir = c.hdir, turn = false, pos, np;
+  if (!dbl) {
+    if (leg === 'h' && Math.abs(p.x + d.x * 2) > XL) { turn = true; nd = { x: 0, z: c.turnZ }; leg = 'v'; legN = 0; }
+    else if (leg === 'v' && legN >= 1) { turn = true; hdir = -hdir; nd = { x: hdir, z: 0 }; leg = 'h'; legN = 0; }
+  }
+  if (turn) { const fh = { x: p.x + d.x * .5, z: p.z + d.z * .5 }; pos = { x: fh.x + nd.x * .5, z: fh.z + nd.z * .5 }; np = { x: fh.x + nd.x * 1.5, z: fh.z + nd.z * 1.5 }; }
+  else if (dbl) { pos = { x: p.x + d.x * .5, z: p.z + d.z * .5 }; np = { x: p.x + d.x, z: p.z + d.z }; }
+  else { pos = { x: p.x + d.x, z: p.z + d.z }; np = { x: p.x + d.x * 2, z: p.z + d.z * 2 }; }
+  const rot = dbl ? Math.atan2(nd.x, nd.z) + Math.PI / 2 : (e.t[1] === e.outer ? Math.atan2(nd.x, nd.z) : Math.atan2(-nd.x, -nd.z));
+  if (commit) Object.assign(c, { p: np, d: nd, leg, legN: legN + 1, hdir });
+  return { x: pos.x, z: pos.z, rot };
+}
+function layoutLine(line) {
+  const out = new Array(line.length); if (!line.length) return { out, chains: null };
+  const k = line.filter(e => e.end === 'L').length - 1, open = line[k], od = D.isDouble(open.t), half = od ? .5 : 1;
+  out[k] = { x: 0, z: 0, rot: od ? 0 : Math.PI / 2 };
+  const right = { p: { x: half, z: 0 }, d: { x: 1, z: 0 }, hdir: 1, leg: 'h', legN: 0, turnZ: -1 }, left = { p: { x: -half, z: 0 }, d: { x: -1, z: 0 }, hdir: -1, leg: 'h', legN: 0, turnZ: 1 };
+  for (let i = k + 1; i < line.length; i++) out[i] = stepChain(right, line[i]);
+  for (let i = k - 1; i >= 0; i--) out[i] = stepChain(left, line[i]);
+  return { out, chains: { L: left, R: right } };
+}
+const nextSpot = end => { if (!G || !G.chains) return { x: 0, z: 0, rot: Math.PI / 2 }; const c = G.chains[end]; return stepChain({ ...c, p: { ...c.p }, d: { ...c.d } }, { t: [7, 8], outer: 8 }, false); };
+
+/* ---- seats around the table (seat 0 at the bottom; turn order goes counter-clockwise) ---- */
+const POSN = { 2: ['bottom', 'top'], 3: ['bottom', 'tr', 'tl'], 4: ['bottom', 'right', 'top', 'left'] };
+const DIR = { bottom: [0, 1], top: [0, -1], right: [1, 0], left: [-1, 0], tr: [.8, -.6], tl: [-.8, -.6] };
+const seatWorld = s => { const d = DIR[POSN[G.seats.length][s]]; return { x: d[0] * (TW / 2 - 1.9), z: d[1] * (TD / 2 - 1.7), d }; };
+
+/* ---- glowing ends ---- */
+const markM = [0, 1].map(() => new THREE.MeshBasicMaterial({ color: 0x7dffd8, transparent: true, opacity: .45, depthWrite: false, blending: THREE.AdditiveBlending }));
+const markers = { L: new THREE.Mesh(new THREE.PlaneGeometry(1.25, 2.25).rotateX(-Math.PI / 2), markM[0]), R: new THREE.Mesh(new THREE.PlaneGeometry(1.25, 2.25).rotateX(-Math.PI / 2), markM[1]) };
+for (const k in markers) { markers[k].visible = false; markers[k].userData.end = k; markers[k].renderOrder = 4; scene.add(markers[k]); }
+const P = new E.Particles(scene, { capacity: 600 });
+
+/* ======================= game state ======================= */
+let G = null, hudEl = null, music = null, titleEl = null, resultsCount = 0;
+const tileMeshes = new Map(); const racks = []; let boneMeshes = [];
+const input = E.createInput({ surface: $('gl') });
+
+function clearTable() { for (const m of tileMeshes.values()) scene.remove(m); tileMeshes.clear(); racks.forEach(r => scene.remove(r.g)); racks.length = 0; boneMeshes.forEach(m => scene.remove(m)); boneMeshes = []; markers.L.visible = markers.R.visible = false; }
+const sideName = sd => G.opts.teams ? L(TEAM[sd]) : G.seats[sd].name;
+const sideColor = sd => G.opts.teams ? TEAM[sd].c : SEATC[sd];
+const seatSide = s => CR.sideOf(s, G.opts.teams);
+const locals = () => G ? G.seats.filter(s => s.kind === 'local') : [];
+const mySide = () => { const l = G && G.seats.findIndex(s => s.kind === 'local'); return l >= 0 ? seatSide(l) : null; };
+
+function start(o = {}) {
+  closeCards(); if (titleEl) { titleEl.remove(); titleEl = null; }
+  const players = clamp(o.players ?? S.players, 2, 4), opts = { players, mode: o.mode ?? S.mode, teams: players === 4 && !!(o.teams ?? S.teams), target: o.target ?? S.target, skill: o.skill ?? S.skill, capicua: !!(o.capicua ?? S.capicua) };
+  const phones = o.phones === false || E.net.role !== 'host' ? [] : E.net.pads().slice(0, 4);
+  let nLoc = clamp(o.locals ?? S.locals, 0, players); const nPh = Math.min(phones.length, players - nLoc); if (nLoc + nPh === 0) nLoc = 1;
+  const botNames = CR.shuffle(BOTS.map(b => b.n));
+  const seats = CR.makeSeats({ players, locals: nLoc, phones: phones.slice(0, nPh), names: S.names, botNames, skill: opts.skill });
+  seats.forEach((s, i) => { s.color = SEATC[i]; s.emoji = s.kind === 'bot' ? BOTS.find(b => b.n === s.name).e : s.kind === 'phone' ? '📱' : '🙂'; });
+  const m = CR.createMatch(D.GAME, { seats, opts: { n: players, mode: opts.mode, teams: opts.teams, target: opts.target, capicua: opts.capicua }, seed: o.seed });
+  if (G && G.ph) G.ph.stop();
+  G = { m, seats, opts, sel: -1, pick: null, think: .8, viewSeat: seats.findIndex(s => s.kind === 'local'), revealed: nLoc <= 1, paused: false, stats: { rounds: 0, myPts: 0, myDoms: 0, bestRound: 0 }, bubbles: {}, away: 0, phonePick: null, phoneNote: {}, auto: !!o.auto, lastRound: null, wait: 0 };
+  m.on('move', onMove); m.on('reject', onReject); m.on('round', onRound);
+  G.ph = CR.phoneHands(E.NET, { seats, layout: phoneLayout, onMsg: phoneMsg });
+  if (!hudEl) hudEl = E.shell({ title: 'Dominoes', onPause: pause, buttons: [], party: PARTY() }).hud;
+  document.querySelector('.ig-top').hidden = false;
+  music && music.stop(); music = E.music(E.SONGS.chill);
+  newRound();
+  E.say(L('Match a number on either end of the line. Empty your hand to win the round.', 'Junta un número con cualquier punta de la fila. Vacía tu mano para ganar la ronda.'), { once: true });
+  return G;
+}
+function newRound() {
+  closeCards(); clearTable(); G.m.deal(); G.sel = -1; G.pick = null; G.phonePick = null; G.bubbles = {}; G.wait = .6;
+  if (locals().length > 1) G.revealed = false;
+  buildRacks(); syncTable(); beginTurn(); renderAll();
+  const st = G.m.state; if (st.forced) { const s = st.turn; E.toast(L(`${G.seats[s].name} opens with ${st.forced[0]}|${st.forced[1]}`, `${G.seats[s].name} sale con ${st.forced[0]}|${st.forced[1]}`), 2200); }
+}
+function buildRacks() {
+  G.seats.forEach((s, i) => {
+    const g = new THREE.Group(), w = seatWorld(i); g.position.set(w.x, 0, w.z); g.rotation.y = Math.atan2(w.d[0], w.d[1]); scene.add(g);
+    const plate = E.tag(s.emoji, s.name, { width: 2.6, bg: '#fff8ee' }); plate.position.set(0, 2.9, .4); g.add(plate);
+    racks[i] = { g, tiles: [], plate, n: -1 };
+  });
+}
+function updateRacks() {
+  const st = G.m.state;
+  G.seats.forEach((s, i) => {
+    const r = racks[i]; if (!r) return; const hide = s.kind === 'local' && i === 0; /* the bottom seat's tiles are in the tray */ const n = hide ? 0 : st.hands[i].length;
+    if (r.n !== n) { r.tiles.forEach(t => r.g.remove(t)); r.tiles = []; for (let k = 0; k < n; k++) { const t = makeBack(); t.rotation.x = -Math.PI / 2 + .12; t.position.set((k - (n - 1) / 2) * 1.12, FELT_Y + 1, .4); r.g.add(t); r.tiles.push(t); } r.n = n; }
+    r.plate.visible = !hide;
+  });
+  // boneyard pile (Draw mode)
+  const bn = st.boneyard.length; if (boneMeshes.length !== bn) { boneMeshes.forEach(m => scene.remove(m)); boneMeshes = []; for (let k = 0; k < bn; k++) { const t = makeBack(); t.position.set(-TW / 2 + 2.2 + (k % 2) * 1.15, TILE_Y + Math.floor(k / 2) * (TILE_H + .01), -TD / 2 + 2.6); t.rotation.y = .1; scene.add(t); boneMeshes.push(t); } }
+}
+function syncTable() {
+  const st = G.m.state, lay = layoutLine(st.line); G.chains = lay.chains;
+  st.line.forEach((e, i) => {
+    const k = D.key(e.t), tgt = lay.out[i]; let ms = tileMeshes.get(k);
+    if (!ms) { ms = makeTile(e.t); scene.add(ms); tileMeshes.set(k, ms); const w = G.seats[e.seat] ? seatWorld(e.seat) : { x: 0, z: 8 }; ms.position.set(w.x * .8, 2.2, w.z * .8); ms.rotation.y = tgt.rot + (Math.random() - .5); ms.userData.a = { t: 0, from: ms.position.clone(), r0: ms.rotation.y }; }
+    ms.userData.tgt = tgt; if (!ms.userData.a) ms.position.set(tgt.x, TILE_Y, tgt.z), ms.rotation.y = tgt.rot;
+  });
+  updateRacks(); updateMarkers();
+}
+function updateMarkers() {
+  const st = G.m.state, s = G.m.turn(), seat = s != null ? G.seats[s] : null, mine = seat && seat.kind === 'local' && G.revealed && s === G.viewSeat;
+  for (const end of ['L', 'R']) { const mk = markers[end]; mk.visible = false; if (!mine) continue; if (!st.line.length) { if (end === 'R') continue; }
+    if (st.line.length && st.ends[0] === st.ends[1] && end === 'R') continue;
+    const hand = st.hands[s]; let on;
+    if (G.pick) on = G.pick.ends.includes(end); else if (G.sel >= 0 && hand[G.sel]) on = D.fits(st, hand[G.sel]).includes(end); else on = hintsOn() && hand.some(t => D.fits(st, t).includes(end));
+    if (!st.line.length) on = G.pick || G.sel >= 0 || hintsOn();
+    if (!on) continue; const sp = nextSpot(end); mk.position.set(sp.x, FELT_Y + .03, sp.z); mk.rotation.y = sp.rot; mk.visible = true; }
+}
+
+/* ---- turns ---- */
+function beginTurn() {
+  if (!G || G.m.phase !== 'turns') return; const s = G.m.turn(), seat = G.seats[s];
+  G.sel = -1; G.pick = null; G.phonePick = null; G.away = 0;
+  G.think = seat.kind === 'bot' ? CR.botDelay(seat.skill) * FAST() : G.auto ? .3 * FAST() : 0;
+  if (seat.kind === 'local') {
+    if (locals().length > 1 && (!G.revealed || G.viewSeat !== s)) { G.revealed = false; G.viewSeat = s; handoff(s); }
+    else { G.viewSeat = s; G.revealed = true; promptLocal(s); }
+  }
+  renderAll();
+}
+function promptLocal(s) {
+  const lm = G.m.legal(s); if (!lm.length) return;
+  if (lm[0].type === 'draw') E.say(L('No tile fits. Draw a tile.', 'Ninguna ficha cabe. Roba una ficha.'));
+  else if (lm[0].type === 'pass') { E.say(L('No tile fits. You pass.', 'Ninguna ficha cabe. Pasas.')); G.think = 1.5 * FAST(); }
+  else E.say(L('Your turn', 'Te toca'), { once: true });
+  if (G.m.state.forced) E.say(L(`Open with the double ${G.m.state.forced[0]}.`, `Sal con el doble ${G.m.state.forced[0]}.`));
+}
+function onMove(seat, mv, before, after) {
+  const s = G.seats[seat];
+  if (mv.type === 'play') { syncTable(); G.lastPlayer = seat; }
+  else if (mv.type === 'draw') { updateRacks(); SFX.pop(); bubble(seat, L('draws', 'roba')); if (s.kind === 'local' && seat === G.viewSeat && G.revealed) { const t = after.hands[seat][after.hands[seat].length - 1]; E.toast(L(`You drew ${t[0]}|${t[1]}`, `Robaste ${t[0]}|${t[1]}`), 1400); G.newTile = D.key(t); } }
+  else { SFX.tick(); bubble(seat, L('passes', 'pasa')); E.toast(L(`${s.name} passes`, `${s.name} pasa`), 1200); }
+  if (G.m.phase === 'turns') { const nx = G.m.turn(); if (mv.type !== 'draw' || nx !== seat) { if (locals().length > 1 && s.kind === 'local' && G.seats[nx].kind !== 'local') G.revealed = false; } beginTurn(); }
+  else renderAll();
+}
+function onReject(seat, mv, reason, from) {
+  if (from === 'bot') { console.warn('bot illegal move', mv, reason); return; }
+  const msg = reason === 'not-your-turn' ? L('Wait for your turn', 'Espera tu turno') : G.m.state.forced && mv && mv.type === 'play' ? L(`Open with the double ${G.m.state.forced[0]}`, `Sal con el doble ${G.m.state.forced[0]}`) : mv && mv.type === 'play' ? L("That tile doesn't fit there", 'Esa ficha no cabe ahí') : L('You can still play a tile', 'Todavía puedes jugar una ficha');
+  if (from === 'phone') { const sl = G.seats[seat].slot; G.phoneNote[seat] = msg; E.NET.rumble(sl, 120); G.ph.sync(); return; }
+  SFX.bad(); E.toast(msg, 1500); const el = document.querySelector(`.dm-tile[data-k="${mv && mv.tile ? D.key(mv.tile) : ''}"]`); if (el) { el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); }
+}
+function onRound(over, phase) {
+  G.lastRound = over; G.stats.rounds++;
+  const ms = mySide(); if (ms != null && over.side === ms) { G.stats.myPts += over.points; G.stats.bestRound = Math.max(G.stats.bestRound, over.points); if (over.type === 'domino') G.stats.myDoms++; }
+  const w = over.winner != null ? G.seats[over.winner] : null;
+  if (over.type === 'domino') { SFX.win(); E.say(L(`Domino! ${w.name} wins the round.`, `¡Dominó! ${w.name} gana la ronda.`)); burst(w); }
+  else { SFX.crash && SFX.crash(); E.say(over.tie ? L('Blocked! It is a tie, nobody scores.', '¡Tranque! Empate, nadie anota.') : L(`Blocked! ${sideName(over.side)} has the fewest pips.`, `¡Tranque! ${sideName(over.side)} tiene menos puntos.`)); }
+  if (over.capicua && over.bonus) setTimeout(() => E.say(L('Capicúa! Plus twenty-five.', '¡Capicúa! Veinticinco más.'), { interrupt: false }), 1400);
+  G.cardT = 1.6 * FAST(); renderAll();
+}
+function burst(seat) { const i = G.seats.indexOf(seat); const w = seatWorld(i); for (let k = 0; k < 3; k++) P.burst(new THREE.Vector3(w.x * .4, 1, w.z * .4), { color: [0xffd166, 0x7dffd8, 0xff8fb0][k], n: 26, speed: 6, up: 6, size: .35, life: 1.2, gravity: 9 }); }
+function bubble(seat, text) { G.bubbles[seat] = { text, t: 1.6 }; renderSeats(); }
+
+/* ---- local human actions (mouse / touch / keys / gamepad) ---- */
+const myTurnLocal = () => G && G.m.phase === 'turns' && G.revealed && G.m.turn() === G.viewSeat && G.seats[G.viewSeat]?.kind === 'local' && !G.paused;
+function tapTile(i) {
+  if (!G || G.paused) return; const s = G.viewSeat, st = G.m.state, t = st.hands[s] && st.hands[s][i]; if (!t) return;
+  if (!myTurnLocal()) { if (G.m.phase === 'turns') { E.toast(L('Wait for your turn', 'Espera tu turno'), 1200); SFX.tick(); } return; }
+  SFX.click(); G.sel = i;
+  const f = D.fits(st, t);
+  if (st.forced && D.key(t) !== D.key(st.forced)) return G.m.act(s, { type: 'play', tile: t, end: 'L' }, 'local'); // rejected with a reason
+  if (!f.length) { G.m.act(s, { type: 'play', tile: t, end: 'L' }, 'local'); G.sel = -1; renderAll(); return; }
+  if (f.length === 1) return playLocal(s, t, f[0]);
+  G.pick = { i, t, ends: f }; showEndPick(); renderAll();
+}
+function playLocal(s, t, end) { G.pick = null; hideEndPick(); const r = G.m.act(s, { type: 'play', tile: t, end }, 'local'); if (r.ok) { G.sel = -1; } renderAll(); return r; }
+function localAction() { if (!myTurnLocal()) return; const lm = G.m.legal(G.viewSeat); if (lm[0] && lm[0].type !== 'play') { G.m.act(G.viewSeat, lm[0], 'local'); } }
+function showEndPick() {
+  const st = G.m.state, box = $('endPick'), tr = $('tray');
+  box.innerHTML = `<p>${L('It fits both ends. Which one?', 'Cabe en las dos puntas. ¿Cuál?')}</p><div class="r"><button class="ig-btn sun" data-e="L" aria-label="${L('End', 'Punta')} ${st.ends[0]}">◀ ${st.ends[0]}</button><button class="ig-btn sun" data-e="R" aria-label="${L('End', 'Punta')} ${st.ends[1]}">${st.ends[1]} ▶</button><button class="ig-btn ghost x" data-e="x" aria-label="${L('Cancel', 'Cancelar')}">✖</button></div>`;
+  box.style.bottom = (tr.hidden ? 80 : tr.offsetHeight + 10) + 'px'; box.hidden = false;
+  box.querySelectorAll('button').forEach(b => b.onclick = () => { const e = b.dataset.e; if (e === 'x') { G.pick = null; G.sel = -1; hideEndPick(); renderAll(); return; } playLocal(G.viewSeat, G.pick.t, e); });
+  E.say(L('It fits both ends. Pick one.', 'Cabe en las dos puntas. Elige una.'), { once: true });
+  setTimeout(() => box.querySelector('[data-e=L]')?.focus({ preventScroll: true }), 30);
+}
+function hideEndPick() { $('endPick').hidden = true; }
+// tap a glowing end on the table
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+$('gl').addEventListener('pointerdown', e => {
+  if (!myTurnLocal()) return; ndc.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); camera.updateMatrixWorld(); ray.setFromCamera(ndc, camera);
+  const hit = ray.intersectObjects([markers.L, markers.R].filter(m => m.visible))[0]; if (!hit) return; const end = hit.object.userData.end, st = G.m.state, hand = st.hands[G.viewSeat];
+  let t = G.pick ? G.pick.t : G.sel >= 0 ? hand[G.sel] : null;
+  if (!t) { const c = hand.filter(x => D.fits(st, x).includes(end)); if (c.length === 1) t = c[0]; else { E.toast(L('Pick a tile from your hand first', 'Primero elige una ficha de tu mano'), 1400); return; } }
+  if (!st.line.length) playLocal(G.viewSeat, t, 'L'); else if (D.fits(st, t).includes(end)) playLocal(G.viewSeat, t, end); else onReject(G.viewSeat, { type: 'play', tile: t }, 'illegal', 'local');
+});
+let navPrev = 0;
+function pollKeys() {
+  const st = input.poll(); if (!G || document.querySelector('.ig-screen')) return;
+  const fe = document.activeElement, onTile = fe && fe.classList && fe.classList.contains('dm-tile'), onBtn = fe && fe.tagName === 'BUTTON' && !onTile && !!fe.closest('#tray, #endPick');
+  if (st.pausePressed) pause();
+  if (!myTurnLocal()) { navPrev = 0; return; }
+  const hand = G.m.state.hands[G.viewSeat], x = Math.abs(st.x) > .5 ? Math.sign(st.x) : 0;
+  if (G.pick) {
+    if (x && x !== navPrev) { playLocal(G.viewSeat, G.pick.t, x < 0 ? 'L' : 'R'); }
+    if (st.bPressed) { G.pick = null; hideEndPick(); renderAll(); }
+  } else {
+    if (x && x !== navPrev) { G.sel = G.sel < 0 ? (x > 0 ? 0 : hand.length - 1) : (G.sel + x + hand.length) % hand.length; SFX.tick(); renderAll(); const el = document.querySelectorAll('.dm-tile')[G.sel]; el && el.focus({ preventScroll: true }); }
+    if (st.aPressed && onBtn) fe.click(); // Space/A on a focused Draw/Pass button (the engine stops Space's default click)
+    else if (st.aPressed) { if (onTile) G.sel = +fe.dataset.i; if (G.sel >= 0) tapTile(G.sel); else { const lm = G.m.legal(G.viewSeat); if (lm[0] && lm[0].type !== 'play') localAction(); else { G.sel = 0; renderAll(); } } }
+    if (st.bPressed) localAction();
+  }
+  navPrev = x;
+}
+
+/* ---- pass-and-play privacy screen ---- */
+function handoff(s) {
+  closeCards(); const seat = G.seats[s];
+  const d = document.createElement('div'); d.className = 'ig-screen dm-card'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true');
+  d.innerHTML = `<div class="ig-card" style="text-align:center;border-top:10px solid ${seat.color}"><div style="font-size:54px">🙈</div><h2>${L(`Hand the device to ${esc(seat.name)}`, `Pásale el aparato a ${esc(seat.name)}`)}</h2><p class="ig-sub">${L('Everyone else, look away! Your tiles stay secret.', '¡Los demás, no miren! Tus fichas son secretas.')}</p><button class="ig-btn" data-a="show">${L(`I'm ${esc(seat.name)}: show my tiles`, `Soy ${esc(seat.name)}: ver mis fichas`)}</button></div>`;
+  document.body.appendChild(d); E.say(L(`Hand the device to ${seat.name}.`, `Pásale el aparato a ${seat.name}.`));
+  d.querySelector('[data-a=show]').onclick = () => { d.remove(); G.revealed = true; G.viewSeat = s; SFX.click(); promptLocal(s); renderAll(); };
+  setTimeout(() => d.querySelector('[data-a=show]')?.focus({ preventScroll: true }), 30);
+}
+function closeCards() { document.querySelectorAll('.dm-card').forEach(e => e.remove()); hideEndPick(); }
+
+/* ---- phones as private hands (engine/net.js via cardroom.phoneHands) ---- */
+function phoneLayout(i) {
+  const m = G.m, st = m.state, seat = G.seats[i];
+  if (m.phase !== 'turns') { const o = G.lastRound; return { type: 'text', text: o ? `${roundTitle(o)}\n\n${scoreLine()}` : '🁫' }; }
+  const me = m.turn() === i, hand = st.hands[i];
+  let actions = [], note = me ? L('Your turn! Tap a tile.', '¡Te toca! Toca una ficha.') : L(`${G.seats[m.turn()].name} is playing…`, `${G.seats[m.turn()].name} está jugando…`), warn = false;
+  if (me) { const lm = m.legal(i); if (lm[0] && lm[0].type === 'draw') { actions = [L('Draw a tile', 'Robar ficha')]; note = L('No tile fits: draw one.', 'Ninguna cabe: roba una.'); } else if (lm[0] && lm[0].type === 'pass') { actions = [L('Pass', 'Paso')]; note = L('No tile fits: pass.', 'Ninguna cabe: pasa.'); } }
+  let picked = null; if (G.phonePick && G.phonePick.seat === i) { picked = G.phonePick.k; actions = [`◀ ${st.ends[0]}`, `${st.ends[1]} ▶`, '✖']; note = L('It fits both ends: pick one.', 'Cabe en las dos puntas: elige una.'); }
+  if (G.phoneNote[i]) { note = G.phoneNote[i]; warn = true; }
+  const ends = st.ends ? `  ·  ${L('Ends', 'Puntas')}: ${st.ends[0]} … ${st.ends[1]}` : '';
+  return { type: 'hand', orient: 'upright', title: `${seat.name}${ends}`, note, warn, tiles: hand.map(t => t.slice()), ok: hintsOn() && me ? hand.map(t => D.fits(st, t).length > 0 && (!st.forced || D.key(t) === D.key(st.forced))) : null, picked, actions, color: S.color };
+}
+function phoneMsg(i, msg) {
+  if (!G || G.paused) return; const m = G.m, st = m.state; G.phoneNote[i] = null;
+  if (m.phase !== 'turns') return;
+  if (m.turn() !== i) { G.phoneNote[i] = L('Wait for your turn', 'Espera tu turno'); m.act(i, { type: 'pass' }, 'phone'); return; }
+  if (msg.t === 'choice') {
+    const t = st.hands[i][+msg.i]; if (!t) return; G.phonePick = null; const f = D.fits(st, t);
+    if (f.length === 2 && !st.forced) { G.phonePick = { seat: i, k: +msg.i }; G.ph.sync(); return; }
+    m.act(i, { type: 'play', tile: t, end: f[0] || 'L' }, 'phone');
+  } else if (msg.t === 'act') {
+    if (G.phonePick && G.phonePick.seat === i) { const k = +msg.i, t = st.hands[i][G.phonePick.k]; G.phonePick = null; if (k === 0 || k === 1) m.act(i, { type: 'play', tile: t, end: k === 0 ? 'L' : 'R' }, 'phone'); else G.ph.sync(); return; }
+    const lm = m.legal(i); m.act(i, lm[0] && lm[0].type !== 'play' ? lm[0] : { type: 'pass' }, 'phone');
+  }
+}
+
+/* ======================= HUD, seats, tray ======================= */
+function scoreLine() { return G.m.scores.map((v, sd) => `${G.opts.teams ? TEAM[sd].e : G.seats[sd].emoji} ${sideName(sd)}: ${v}`).join(' · ') + ` / ${G.opts.target}`; }
+function renderHud() {
+  if (!hudEl || !G) return; const st = G.m.state;
+  hudEl.innerHTML = `<div class="ig-chip dm-sc" aria-label="${L('Score', 'Marcador')}">${G.m.scores.map((v, sd) => `<span style="--c:${sideColor(sd)}"><i></i><b>${v}</b></span>`).join('')}<small>/ ${G.opts.target}</small></div>${st && st.mode === 'draw' ? `<div class="ig-chip" title="${L('Boneyard', 'Pozo')}">🂠 <b>${st.boneyard.length}</b></div>` : ''}<div class="ig-chip dm-opt">${L('Round', 'Ronda')} <b>${G.m.round}</b></div>`;
+}
+function renderSeats() {
+  const box = $('seats'); if (!G) { box.innerHTML = ''; return; } const st = G.m.state, turn = G.m.turn(), pos = POSN[G.seats.length];
+  box.innerHTML = G.seats.map((s, i) => {
+    if (s.kind === 'local' && i === G.viewSeat && !$('tray').hidden) return '';
+    const b = G.bubbles[i], status = turn === i ? (s.kind === 'bot' ? L('thinking…', 'pensando…') : s.kind === 'phone' ? L('on the phone…', 'en el teléfono…') : L('playing…', 'jugando…')) : '';
+    const team = G.opts.teams ? ` ${TEAM[seatSide(i)].e}` : '';
+    return `<div class="dm-seat ${pos[i]} ${turn === i ? 'turn' : ''}" style="--c:${s.color}"><span class="e">${s.emoji}</span><span class="n">${esc(s.name)}${team}</span><span class="k" aria-label="${L('tiles', 'fichas')}">▮ ${st.hands[i].length}</span>${status ? `<span class="st">${status}</span>` : ''}${b ? `<span class="dm-bub">${esc(b.text)}</span>` : ''}</div>`;
+  }).join('');
+}
+function svgTile(a, b) { const half = (v, y0) => (PIP[v] || []).map(([x, y]) => `<circle cx="${x * 50}" cy="${y0 + y * 50}" r="5.6" fill="${S.color ? PIPC[v] : '#1b2430'}"/>`).join(''); return `<svg viewBox="0 0 50 100" aria-hidden="true"><line x1="6" y1="50" x2="44" y2="50" stroke="#b9a988" stroke-width="2.4" stroke-linecap="round"/>${half(a, 0)}${half(b, 50)}</svg>`; }
+function renderTray() {
+  const tray = $('tray'); if (!G || G.m.phase === 'lobby') { tray.hidden = true; return; }
+  const vs = G.viewSeat, seat = G.seats[vs];
+  if (!seat || seat.kind !== 'local') { tray.hidden = true; renderBanner(); return; }
+  tray.hidden = false; tray.style.setProperty('--c', seat.color); $('banner').hidden = true; requestAnimationFrame(() => document.documentElement.style.setProperty('--trayH', tray.offsetHeight + 'px'));
+  const st = G.m.state, turn = G.m.turn(), mine = myTurnLocal(), hand = st.hands[vs];
+  const who = $('who'), acts = $('acts'), hd = $('hand');
+  if (!G.revealed) { who.innerHTML = `<span>🙈 ${L('Tiles hidden', 'Fichas ocultas')}</span>`; hd.innerHTML = `<div class="dm-hid">${turn != null ? L(`${esc(G.seats[turn].name)} is playing…`, `${esc(G.seats[turn].name)} está jugando…`) : ''}</div>`; acts.innerHTML = ''; return; }
+  const turnTxt = G.m.phase !== 'turns' ? '' : mine ? `<span class="yt">${L('Your turn!', '¡Te toca!')}</span>` : `<span>${L(`${esc(G.seats[turn].name)} is ${G.seats[turn].kind === 'bot' ? 'thinking' : 'playing'}…`, `${esc(G.seats[turn].name)} está ${G.seats[turn].kind === 'bot' ? 'pensando' : 'jugando'}…`)}</span>`;
+  who.innerHTML = `<b>${esc(seat.name)}</b>${G.opts.teams ? ` <span>${TEAM[seatSide(vs)].e}</span>` : ''}${turnTxt}${st.ends ? `<span>· ${L('Ends', 'Puntas')} ${st.ends[0]} … ${st.ends[1]}</span>` : ''}`;
+  const hint = mine && hintsOn();
+  hd.setAttribute('aria-label', L('Your tiles', 'Tus fichas'));
+  hd.innerHTML = hand.map((t, i) => { const f = mine ? D.fits(st, t) : [], okT = f.length > 0 && (!st.forced || D.key(t) === D.key(st.forced)); const cls = ['dm-tile', i === G.sel ? 'sel' : '', hint ? (okT ? 'ok' : 'no') : '', mine ? '' : 'wait', G.newTile === D.key(t) ? 'new' : ''].join(' ');
+    return `<button class="${cls}" data-i="${i}" data-k="${D.key(t)}" aria-label="${t[0]} | ${t[1]}${hint && okT ? ' · ' + L('fits', 'cabe') : ''}">${svgTile(t[0], t[1])}</button>`; }).join('');
+  G.newTile = null;
+  hd.querySelectorAll('.dm-tile').forEach(b => b.onclick = () => tapTile(+b.dataset.i));
+  const lm = mine ? G.m.legal(vs) : [];
+  acts.innerHTML = lm[0] && lm[0].type === 'draw' ? `<button class="ig-btn sun" data-a="draw">🂠 ${L('Draw a tile', 'Robar ficha')}</button>` : lm[0] && lm[0].type === 'pass' ? `<button class="ig-btn coral" data-a="pass">✋ ${L('Pass', 'Paso')}</button>` : '';
+  acts.querySelectorAll('button').forEach(b => b.onclick = () => { SFX.click(); localAction(); });
+}
+function renderBanner() {
+  const bn = $('banner'); if (!G || G.m.phase !== 'turns' || !$('tray').hidden) { bn.hidden = true; return; }
+  const t = G.m.turn(), s = G.seats[t]; bn.hidden = false;
+  bn.textContent = s.kind === 'phone' ? L(`📱 ${s.name}: play on your phone`, `📱 ${s.name}: juega en tu teléfono`) : s.kind === 'bot' ? L(`${s.emoji} ${s.name} is thinking…`, `${s.emoji} ${s.name} está pensando…`) : L(`${s.name}'s turn`, `Turno de ${s.name}`);
+}
+function renderAll() { if (!G) return; renderHud(); renderTray(); renderSeats(); renderBanner(); updateMarkers(); G.ph && G.ph.sync(); }
+
+/* ---- round + match end ---- */
+function roundTitle(o) {
+  if (o.type === 'domino') return L(`🎉 Domino! ${G.seats[o.winner].name} played the last tile`, `🎉 ¡Dominó! ${G.seats[o.winner].name} jugó la última ficha`);
+  return o.tie ? L('🔒 Blocked: a tie, nobody scores', '🔒 Tranque: empate, nadie anota') : L(`🔒 Blocked! Fewest pips: ${sideName(o.side)}`, `🔒 ¡Tranque! Menos puntos: ${sideName(o.side)}`);
+}
+function roundCard() {
+  const o = G.lastRound, st = G.m.state, end = G.m.phase === 'matchEnd'; closeCards();
+  const rows = G.seats.map((s, i) => `<div class="dm-row ${o.side != null && seatSide(i) === o.side ? 'win' : ''}" style="--c:${s.color}"><i></i><div class="nm"><span>${s.emoji} ${esc(s.name)}${G.opts.teams ? ' ' + TEAM[seatSide(i)].e : ''}</span><div class="mini">${st.hands[i].map(t => svgTile(t[0], t[1])).join('') || `<small>${L('no tiles left', 'sin fichas')}</small>`}</div></div><b>${o.pips[i]}</b></div>`).join('');
+  const bars = G.m.scores.map((v, sd) => `<div class="dm-bar" style="--c:${sideColor(sd)}"><span>${G.opts.teams ? TEAM[sd].e + ' ' : G.seats[sd].emoji + ' '}${esc(sideName(sd))}</span><div><i style="width:${Math.min(100, v / G.opts.target * 100)}%"></i></div><b>${v}</b></div>`).join('');
+  const pts = o.points ? `<div class="dm-big">+${o.points} ${L('for', 'para')} ${esc(sideName(o.side))}${o.bonus ? ` <small>(${L('capicúa', 'capicúa')} +${o.bonus})</small>` : ''}</div>` : '';
+  const d = document.createElement('div'); d.className = 'ig-screen dm-card'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true');
+  d.innerHTML = `<div class="ig-card"><div class="ig-kicker">${L('Round', 'Ronda')} ${G.m.round} · ${L('pips left in each hand', 'puntos en cada mano')}</div><h2>${roundTitle(o)}</h2>${pts}<div class="dm-round">${rows}</div><div class="dm-score">${bars}</div><div class="ig-row"><button class="ig-btn" data-a="next">${end ? L('See results', 'Ver resultados') : L('Next round', 'Siguiente ronda')}</button></div></div>`;
+  document.body.appendChild(d); d.querySelector('[data-a=next]').onclick = () => { SFX.click(); d.remove(); if (end) finishMatch(); else newRound(); };
+  setTimeout(() => d.querySelector('[data-a=next]')?.focus({ preventScroll: true }), 30);
+  E.say(`${roundTitle(o).replace(/^\S+\s/, '')}. ${o.points ? (L(`${o.points} points for ${sideName(o.side)}.`, `${o.points} puntos para ${sideName(o.side)}.`)) : ''}`, { interrupt: false });
+  G.ph.sync();
+}
+function finishMatch() {
+  if (!G || G.done) return; G.done = true; music && music.stop(); closeCards();
+  const ws = G.m.winnerSide, ms = mySide(), won = ms != null ? ws === ms : false;
+  S.played++; if (won) S.wins++; S.best = Math.max(S.best, G.stats.bestRound); S.doms += G.stats.myDoms; save();
+  if (G.ph) G.ph.stop({ type: 'text', text: L(`🏆 ${sideName(ws)} wins!\n\n${scoreLine()}`, `🏆 ¡Gana ${sideName(ws)}!\n\n${scoreLine()}`) });
+  const xp = 30 + G.stats.rounds * 6 + (won ? 50 : 0) + Math.min(60, Math.round(G.stats.myPts / 3)), coins = won ? 25 : 10;
+  const title = ms == null ? L(`🏆 ${sideName(ws)} wins the match!`, `🏆 ¡${sideName(ws)} gana la partida!`) : won ? (G.opts.teams ? L('🏆 Your team wins the match!', '🏆 ¡Tu equipo gana la partida!') : L('🏆 You win the match!', '🏆 ¡Ganaste la partida!')) : L(`${sideName(ws)} wins this time`, `Esta vez gana ${sideName(ws)}`);
+  E.say(title.replace(/^\S+\s/, ''));
+  resultsCount++;
+  E.results({ gameId: 'dominoes', title, won, xp, coins, best: S.wins, bestLabel: L('Matches won', 'Partidas ganadas'),
+    stats: [[L('Score', 'Marcador'), G.m.scores.join('–')], [L('Rounds', 'Rondas'), G.stats.rounds], [L('Your points', 'Tus puntos'), G.stats.myPts], [L('Dominoes', 'Dominós'), G.stats.myDoms]],
+    share: L(`I played Dominoes on Inoa Games: ${G.m.scores.join('–')} to ${G.opts.target}!`, `Jugué Dominó en Inoa Games: ${G.m.scores.join('–')} a ${G.opts.target}.`), onAgain: () => title_() });
+}
+
+/* ======================= main loop ======================= */
+function update(dt) {
+  pollKeys();
+  const t = performance.now() / 1000;
+  for (const ms of tileMeshes.values()) { const a = ms.userData.a, tg = ms.userData.tgt; if (!a || !tg) continue; a.t = Math.min(1, a.t + dt * 2.6 / Math.max(.25, FAST())); const k = 1 - Math.pow(1 - a.t, 3); ms.position.set(lerp(a.from.x, tg.x, k), lerp(a.from.y, TILE_Y, k) + Math.sin(Math.PI * k) * 1.4, lerp(a.from.z, tg.z, k)); let dr = tg.rot - a.r0; dr = Math.atan2(Math.sin(dr), Math.cos(dr)); ms.rotation.y = a.r0 + dr * k; if (a.t >= 1) { ms.userData.a = null; ms.position.set(tg.x, TILE_Y, tg.z); ms.rotation.y = tg.rot; E.tone(1400, .04, 'square', .05); E.noise(.06, .14, 2400, 2); P.burst(new THREE.Vector3(tg.x, .2, tg.z), { color: 0xfff1d0, n: 8, speed: 2, up: 1.5, size: .18, life: .4, gravity: 6 }); } }
+  for (const mk of [markers.L, markers.R]) mk.material.opacity = .28 + Math.sin(t * 5) * .16;
+  if (G && !G.paused) {
+    for (const k in G.bubbles) { G.bubbles[k].t -= dt; if (G.bubbles[k].t <= 0) { delete G.bubbles[k]; renderSeats(); } }
+    if (G.m.phase === 'turns' && !document.querySelector('.dm-card')) {
+      G.wait -= dt;
+      const s = G.m.turn(), seat = G.seats[s];
+      if (G.wait <= 0) {
+        if (seat.kind === 'bot' || (G.auto && seat.kind === 'local' && (G.revealed || locals().length < 2))) { G.think -= dt; if (G.think <= 0) { G.m.botAct(s, seat.kind === 'bot' ? seat.skill : 'sharp'); } }
+        else if (seat.kind === 'local' && G.revealed) { const lm = G.m.legal(s); if (lm.length === 1 && lm[0].type === 'pass') { G.think -= dt; if (G.think <= 0) G.m.act(s, lm[0], 'local'); } }
+        else if (seat.kind === 'phone') { const p = E.net.players.find(x => x.slot === seat.slot); if (!p || !p.connected) { G.away += dt; if (G.away > 12) { E.toast(L(`${seat.name}'s phone is away: a bot plays for now`, `El teléfono de ${seat.name} no está: juega un bot por ahora`), 2200); G.away = 0; G.m.botAct(s, 'normal'); } } else G.away = 0; }
+      }
+    }
+    if (G.cardT != null) { G.cardT -= dt; if (G.cardT <= 0) { G.cardT = null; roundCard(); } }
+  }
+  P.update(dt); updateCamera(dt);
+}
+/* camera: frames the line between the HUD and your hand, on landscape and portrait */
+let camT = { x: 0, z: 0, d: 30 }, lastOff = '';
+function updateCamera(dt) {
+  let minx = -5.5, maxx = 5.5, minz = -3.2, maxz = 3.2;
+  for (const ms of tileMeshes.values()) { const tg = ms.userData.tgt; if (!tg) continue; minx = Math.min(minx, tg.x - 1.4); maxx = Math.max(maxx, tg.x + 1.4); minz = Math.min(minz, tg.z - 1.4); maxz = Math.max(maxz, tg.z + 1.4); }
+  const trayH = $('tray').hidden ? 70 : $('tray').offsetHeight, topH = innerWidth < innerHeight ? 110 : 64, H = innerHeight, Wd = innerWidth;
+  const vis = clamp((H - trayH - topH) / H, .35, 1), tanV = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2), tilt = 1.12;
+  const ex = (maxx - minx) / 2 + 1.2, ez = (maxz - minz) / 2 + .6, cx = (minx + maxx) / 2, cz = (minz + maxz) / 2;
+  const dv = (ez * Math.sin(tilt) + .6) / (tanV * vis), dh = ex / (tanV * camera.aspect), d = Math.max(dv, dh, 14) * 1.06;
+  const k = E.reducedMotion() ? 1 : 1 - Math.pow(.02, dt); camT.x = lerp(camT.x, cx, k); camT.z = lerp(camT.z, cz, k); camT.d = lerp(camT.d, d, k);
+  camera.position.set(camT.x, Math.sin(tilt) * camT.d, camT.z + Math.cos(tilt) * camT.d); camera.lookAt(camT.x, 0, camT.z);
+  const off = Math.round((trayH - topH) / 2), key = `${Wd}x${H}:${off}`; if (key !== lastOff) { lastOff = key; if (off) camera.setViewOffset(Wd, H, 0, off, Wd, H); else camera.clearViewOffset(); }
+}
+function pause() { if (!G || G.paused || G.done || document.querySelector('.ig-screen:not(.dm-card)')) return; G.paused = true; music && music.stop(); E.pauseMenu({ onResume: () => { G.paused = false; music = E.music(E.SONGS.chill); }, onRestart: () => { G.paused = false; start({ ...G.opts, locals: undefined }); } }); }
+document.addEventListener('visibilitychange', () => { if (document.hidden && G && !G.done && !E.net.pads().length) pause(); });
+
+/* ======================= title ======================= */
+const PARTY = () => ({ label: L('Phones as private hands', 'Teléfonos como mano secreta'), hint: L('Each phone becomes a player and shows only its own tiles (up to 4).', 'Cada teléfono es un jugador y solo ve sus propias fichas (hasta 4).') });
+function title_() {
+  closeCards(); if (G && G.ph) G.ph.stop(); G = null; clearTable(); $('tray').hidden = true; $('banner').hidden = true; $('seats').innerHTML = ''; if (hudEl) document.querySelector('.ig-top').hidden = true;
+  music && music.stop(); music = E.music(E.SONGS.chill); demoTable(); renderTitle();
+  E.say(L('Dominoes! Pick a mode and press Play.', '¡Dominó! Elige un modo y pulsa Jugar.'), { once: true });
+}
+function renderTitle() {
+  if (titleEl) titleEl.remove();
+  const es = E.lang() === 'es', nPh = E.net.role === 'host' ? E.net.pads().length : 0;
+  if (S.locals === 0 && !nPh) S.locals = 1;
+  const b = (on, attrs, html) => `<button ${attrs} class="${on ? 'on' : ''}" aria-pressed="${!!on}">${html}</button>`;
+  const extra = `<div class="dm-setup">
+    <div class="dm-lbl">${L('Language', 'Idioma')}</div><div class="pick" id="pL">${b(!es, 'data-l="en"', '🇬🇧 English')}${b(es, 'data-l="es"', '🇪🇸 Español')}</div>
+    <div class="dm-lbl">${L('Game', 'Juego')}</div><div class="pick" id="pM">${b(S.mode === 'block', 'data-m="block"', `🧱 ${L('Block', 'Bloqueo')}<small>${L("can't play? pass", '¿no puedes? pasas')}</small>`)}${b(S.mode === 'draw', 'data-m="draw"', `🂠 ${L('Draw', 'Robar')}<small>${L("can't play? draw a tile", '¿no puedes? robas')}</small>`)}</div>
+    <div class="dm-lbl">${L('Players at the table', 'Jugadores en la mesa')}</div><div class="pick three" id="pN">${[2, 3, 4].map(n => b(S.players === n, `data-n="${n}"`, `${n}`)).join('')}</div>
+    <div class="pick" id="pT">${b(S.teams && S.players === 4, `data-t="1" ${S.players !== 4 ? 'disabled' : ''}`, `🤝 ${L('Teams of 2', 'Parejas')}<small>${L('partners sit across', 'compañeros de frente')}</small>`)}${b(!(S.teams && S.players === 4), 'data-t="0"', `🙂 ${L('Everyone for themselves', 'Cada uno por su cuenta')}`)}</div>
+    <div class="dm-lbl">${L('First to', 'Gana quien llegue a')}</div><div class="pick four" id="pG">${D.TARGETS.map(t => b(S.target === t, `data-g="${t}"`, `${t}`)).join('')}</div>
+    <div class="dm-lbl">${L('Bots', 'Bots')}</div><div class="pick three" id="pS">${Object.keys(SKILL).map(k => b(S.skill === k, `data-s="${k}"`, `${SKILL[k].e} ${L(SKILL[k])}<small>${L(...SKILL[k].sub)}</small>`)).join('')}</div>
+    <div class="dm-lbl">${L('People on this screen', 'Personas en esta pantalla')}</div><div class="pick four" id="pH">${[0, 1, 2, 3, 4].filter(n => n <= S.players && (n > 0 || nPh)).map(n => b(S.locals === n, `data-h="${n}"`, n === 0 ? `📺 0<small>${L('phones only', 'solo teléfonos')}</small>` : n === 1 ? `🙂 1<small>${L('vs bots', 'contra bots')}</small>` : `👥 ${n}<small>${L('pass the device', 'pasan el aparato')}</small>`)).join('')}</div>
+    <div class="dm-names" id="pNames" ${S.locals > 1 ? '' : 'hidden'}>${[0, 1, 2, 3].map(i => `<input data-i="${i}" maxlength="12" value="${esc(S.names[i])}" aria-label="${L('Player', 'Jugador')} ${i + 1}" style="border-left:6px solid ${SEATC[i]}" ${i < S.locals ? '' : 'hidden'}>`).join('')}</div>
+    <div class="pick three" id="pX">${b(S.hints, 'data-x="hints"', `💡 ${L('Hints', 'Pistas')}<small>${L('glow playable tiles', 'fichas que caben')}</small>`)}${b(S.color, 'data-x="color"', `🎨 ${L('Colour pips', 'Puntos de color')}`)}${b(S.capicua, 'data-x="capicua"', `⭐ ${L('Capicúa', 'Capicúa')} +25<small>${L('last tile fits both ends', 'la última cabe en las dos')}</small>`)}</div>
+    <p class="dm-rec" id="pPh">${nPh ? L(`📱 ${nPh} phone${nPh > 1 ? 's' : ''} connected: each one is a player with a secret hand`, `📱 ${nPh} teléfono${nPh > 1 ? 's' : ''}: cada uno es un jugador con mano secreta`) : ''}</p>
+    ${S.played ? `<p class="dm-rec">🏆 ${L(`Matches won: ${S.wins} of ${S.played}`, `Partidas ganadas: ${S.wins} de ${S.played}`)}${S.best ? ` · ${L('best round', 'mejor ronda')} +${S.best}` : ''}</p>` : ''}</div>`;
+  const d = E.titleScreen({ party: PARTY(), title: L('Dominoes', 'Dominó'), kicker: L('Inoa Games · Card Room', 'Inoa Games · Sala de juegos'), lead: L('The classic double-six game for 2–4 players: match the ends, play your last tile, or have the fewest pips when nobody can move.', 'El clásico doble seis para 2–4 jugadores: junta las puntas, juega tu última ficha o ten menos puntos cuando nadie pueda jugar.'),
+    how: [['🔢', L('Match a number on either end of the line', 'Junta un número con una de las dos puntas')], ['👆', L('Tap a tile. If it fits both ends, pick one. Keys: ◀ ▶ and Space', 'Toca una ficha. Si cabe en las dos puntas, elige una. Teclas: ◀ ▶ y Espacio')], ['🏆', L('Empty your hand, then score the pips left in the other hands', 'Vacía tu mano y anota los puntos de las otras manos')]], extra, onPlay: () => { titleEl = null; save(); start(); } });
+  titleEl = d;
+  const sel = (q, el) => d.querySelectorAll(q).forEach(x => { const on = x === el; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on); });
+  d.querySelectorAll('#pL button').forEach(x => x.onclick = () => { SFX.click(); E.setSetting('lang', x.dataset.l); });
+  d.querySelectorAll('#pM button').forEach(x => x.onclick = () => { S.mode = x.dataset.m; sel('#pM button', x); SFX.click(); save(); });
+  d.querySelectorAll('#pN button').forEach(x => x.onclick = () => { S.players = +x.dataset.n; if (S.locals > S.players) S.locals = S.players; SFX.click(); save(); renderTitle(); });
+  d.querySelectorAll('#pT button').forEach(x => x.onclick = () => { S.teams = x.dataset.t === '1'; sel('#pT button', x); SFX.click(); save(); });
+  d.querySelectorAll('#pG button').forEach(x => x.onclick = () => { S.target = +x.dataset.g; sel('#pG button', x); SFX.click(); save(); });
+  d.querySelectorAll('#pS button').forEach(x => x.onclick = () => { S.skill = x.dataset.s; sel('#pS button', x); SFX.click(); save(); });
+  d.querySelectorAll('#pH button').forEach(x => x.onclick = () => { S.locals = +x.dataset.h; sel('#pH button', x); $('pNames').hidden = S.locals < 2; d.querySelectorAll('#pNames input').forEach(inp => inp.hidden = +inp.dataset.i >= S.locals); SFX.click(); save(); });
+  d.querySelectorAll('#pNames input').forEach(inp => { inp.addEventListener('input', () => { S.names[+inp.dataset.i] = inp.value.replace(/[<>]/g, '').trim() || `P${+inp.dataset.i + 1}`; save(); }); inp.addEventListener('keydown', e => e.stopPropagation()); });
+  d.querySelectorAll('#pX button').forEach(x => x.onclick = () => { const k = x.dataset.x; S[k] = !S[k]; x.classList.toggle('on', S[k]); x.setAttribute('aria-pressed', S[k]); SFX.click(); save(); if (k === 'color') demoTable(); });
+}
+E.net.on('change', () => { if (titleEl && titleEl.isConnected && !document.querySelector('.inoa-pp')) renderTitle(); else if (titleEl && titleEl.isConnected) { const el = document.getElementById('pPh'); const n = E.net.role === 'host' ? E.net.pads().length : 0; if (el) el.textContent = n ? L(`📱 ${n} phone${n > 1 ? 's' : ''} connected: each one is a player with a secret hand`, `📱 ${n} teléfono${n > 1 ? 's' : ''}: cada uno es un jugador con mano secreta`) : ''; } });
+addEventListener('inoa:settings', e => { if (!e.detail || e.detail.key !== 'lang') return; document.title = L('Dominoes', 'Dominó'); if (titleEl && titleEl.isConnected) renderTitle(); else if (G) { renderAll(); const rc = document.querySelector('.dm-card .dm-round'); if (rc) roundCard(); } });
+// the title table: a few tiles laid out as a little line
+function demoTable() {
+  for (const m of tileMeshes.values()) scene.remove(m); tileMeshes.clear(); for (const k in FACES) { FACES[k].map.dispose(); FACES[k].dispose(); delete FACES[k]; }
+  const line = [[3, 6], [6, 6], [6, 1], [1, 4], [4, 4], [4, 2]].map(t => ({ t, inner: t[0], outer: t[1], end: 'R' })); line[0].end = 'L'; line[0].inner = 3; line[0].outer = 6;
+  const lay = layoutLine(line); line.forEach((e, i) => { const ms = makeTile(e.t); ms.position.set(lay.out[i].x - 4, TILE_Y, lay.out[i].z); ms.rotation.y = lay.out[i].rot; ms.userData.tgt = { ...lay.out[i], x: lay.out[i].x - 4 }; scene.add(ms); tileMeshes.set(D.key(e.t), ms); });
+}
+
+/* ======================= boot ======================= */
+document.title = L('Dominoes', 'Dominó');
+ld.set(1); title_();
+if (new URLSearchParams(location.search).get('online')) setTimeout(() => E.NET.partyPanel(PARTY()), 300);
+ld.done(); window.__READY = true;
+E.loop(dt => { update(dt); R.render(dt); });
+window.__GAME = {
+  get G() { return G; }, get m() { return G && G.m; }, get state() { return G && G.m.state; }, get phase() { return G ? G.m.phase : 'title'; }, get resultsCount() { return resultsCount; }, S, D, CR, R, THREE,
+  start, update, title: title_, tapTile, localAction, roundCard, finishMatch, next: () => { const b = document.querySelector('.dm-card [data-a=next]'); if (b) b.click(); },
+  legal: s => G.m.legal(s), act: (s, mv, from = 'local') => G.m.act(s, mv, from), auto(v) { if (G) G.auto = !!v; },
+  fast(v = true) { window.__DM_FAST = !!v; },
+  // run the simulation n steps of dt (tests): bots + auto-locals keep playing; round cards are clicked through when skipCards is set
+  run(n = 600, dt = 1 / 30, { skipCards = false } = {}) { for (let i = 0; i < n; i++) { update(dt); if (skipCards && document.querySelector('.dm-card [data-a=next]') && G && G.m.phase === 'roundEnd') window.__GAME.next(); if (!G || G.done || (G.m.phase === 'matchEnd' && document.querySelector('.dm-card'))) break; } return G && G.m.phase; }
+};
+</script>
+</body></html>

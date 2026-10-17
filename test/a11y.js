@@ -3,7 +3,7 @@
 // usage: node test/run.js index test/a11y.js   (A11Y_PAGES=index.html,games/fit.html to limit)
 const fs = require('fs'), path = require('path');
 const AXE = fs.readFileSync(path.join(__dirname, '..', 'node_modules', 'axe-core', 'axe.min.js'), 'utf8');
-const PAGES = (process.env.A11Y_PAGES || 'index.html,account.html,privacy.html,terms.html,pricing.html,pad.html,' + 'pixelpact,depths,drift,safari,runner,tidelines,fit,junk,brew,builders,tray,trivia,draw'.split(',').map(g => `games/${g}.html`).join(',')).split(',');
+const PAGES = (process.env.A11Y_PAGES || 'index.html,account.html,privacy.html,terms.html,pricing.html,pad.html,' + 'pixelpact,depths,drift,safari,runner,tidelines,fit,junk,brew,builders,tray,trivia,draw,dominoes'.split(',').map(g => `games/${g}.html`).join(',')).split(',');
 module.exports = async (p, shot) => {
   const base = p.url().replace(/[^/]*$/, '').replace(/games\/$/, ''); let total = 0; const all = {};
   for (const pg of PAGES) {
