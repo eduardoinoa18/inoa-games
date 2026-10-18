@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Six-Card Golf</title>
+<!--meta--><meta name="description" content="Six cards face down, two turned up: draw, swap and flip your way to the lowest score, where a pair in a column counts zero. 2–4 players, 3 or 9 holes, bots from Chill to Sharp with friendly hints,… Free in your browser.">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Inoa Games"><meta property="og:title" content="Six-Card Golf · Inoa Games"><meta property="og:description" content="Six cards face down, two turned up: draw, swap and flip your way to the lowest score, where a pair in a column counts zero. 2–4 players, 3 or 9 holes, bots from Chill to Sharp with friendly hints,… Free in your browser."><meta property="og:url" content="https://inoa-games.vercel.app/games/golf.html"><meta property="og:image" content="https://inoa-games.vercel.app/thumbs/golf.jpg"><meta property="og:image:width" content="640"><meta property="og:image:height" content="360"><meta name="twitter:card" content="summary_large_image"><!--/meta-->
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;800&family=Unbounded:wght@700;900&display=swap">
+<link rel="stylesheet" href="../engine/ui.css">
+<style>
+:root{--cw:clamp(56px,22vw,96px);--pw:clamp(44px,13vw,66px)}
+/* title setup */
+.gf-setup{display:grid;gap:6px;min-width:0}
+.gf-lbl{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#4c5868;margin-top:4px}
+.pick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.pick.three{grid-template-columns:repeat(3,minmax(0,1fr))}.pick.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+.pick button{min-height:44px;border-radius:14px;border:2px solid var(--line);background:#fff;font-weight:800;cursor:pointer;padding:6px 8px;font-size:14px;color:var(--ink);line-height:1.15;text-align:center}
+.pick button.on{border-color:var(--mint-ink);background:var(--mint)}
+.pick small{display:block;font-weight:600;color:#4c5868;font-size:11px;margin-top:2px}
+.gf-names{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:6px}
+.gf-names input{min-height:42px;border-radius:12px;border:2px solid var(--line);padding:0 10px;font:inherit;font-weight:800;box-sizing:border-box;width:100%;user-select:text;-webkit-user-select:text;color:var(--ink);background:#fff}
+.gf-rec{font-weight:800;color:var(--mint-ink);font-size:14px;margin:0}
+.ig-title .ig-card{max-height:calc(100dvh - 32px);overflow:auto}
+.ig-title .ig-card>.ig-row{position:sticky;bottom:-26px;background:var(--paper);padding:8px 0 4px;z-index:2}
+@media (orientation:landscape) and (min-width:700px){
+  .ig-title .ig-card{width:min(980px,100%);grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);column-gap:22px;row-gap:10px;align-items:start;padding:18px 22px}
+  .ig-title .ig-card>*{grid-column:1}
+  .ig-title .ig-card>.gf-setup{grid-column:2;grid-row:1/span 9}
+  .ig-title .ig-card h1{font-size:38px}
+  .ig-title .ig-card>.ig-row{position:static;padding:0}
+  .ig-title .ig-how div{font-size:13px;padding:6px 8px}
+}
+/* seat chips over the 3D grids */
+.gf-seat{position:fixed;left:0;top:0;z-index:19;display:flex;align-items:center;gap:5px;background:rgba(255,248,238,.94);color:var(--ink);border-radius:14px;padding:4px 9px;font-weight:800;font-size:13px;box-shadow:0 4px 14px rgba(0,0,0,.25);border-left:6px solid var(--c);pointer-events:none;white-space:nowrap;transition:box-shadow .2s}
+.gf-seat .n{max-width:96px;overflow:hidden;text-overflow:ellipsis}
+.gf-seat .k{font-family:var(--f-d);font-size:11px;background:var(--ink);color:#fff;border-radius:9px;padding:2px 6px}
+.gf-seat.turn{box-shadow:0 0 0 3px #fff,0 0 20px 4px var(--c)}
+.gf-seat .bub{position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:4px;background:#1b2430;color:#fff;border-radius:10px;padding:3px 8px;font-size:12px;animation:gfPop .25s ease-out}
+@keyframes gfPop{from{opacity:0;transform:translateX(-50%) scale(.6)}}
+/* your cards (tray: bottom on portrait, right panel on landscape) */
+.gf-tray{position:fixed;z-index:21;box-sizing:border-box;display:grid;gap:6px;align-content:end;justify-items:center;color:#fff;--c:#ffd166}
+.gf-tray{left:0;right:0;bottom:0;padding:10px 10px max(10px,env(safe-area-inset-bottom));background:linear-gradient(rgba(16,24,30,0),rgba(16,24,30,.82) 22%)}
+.gf-who{display:flex;align-items:center;justify-content:center;gap:8px;font-weight:800;font-size:15px;text-shadow:0 2px 0 rgba(0,0,0,.4);flex-wrap:wrap;text-align:center}
+.gf-who b{font-family:var(--f-d);color:var(--c)}
+.gf-who .yt{background:var(--sun);color:var(--ink);text-shadow:none;border-radius:12px;padding:3px 10px;font-family:var(--f-d);font-size:13px;animation:gfPulse 1.2s ease-in-out infinite alternate}
+@keyframes gfPulse{to{transform:scale(1.06)}}
+.gf-msg{font-weight:800;font-size:14px;text-align:center;min-height:1.3em;max-width:min(560px,96vw,100%);text-shadow:0 1px 0 rgba(0,0,0,.5)}
+.gf-msg .hint{display:block;color:#7dffd8;font-size:13px}
+.gf-play{display:grid;gap:8px;justify-items:center}
+.gf-piles{display:flex;gap:10px;align-items:flex-end;justify-content:center;min-height:calc(var(--pw) * 1.4 + 18px)}
+.gf-grid{display:grid;grid-template-columns:repeat(3,var(--cw));gap:8px}
+.gf-c{border:0;background:none;padding:0;cursor:pointer;display:grid;gap:2px;justify-items:center;color:#fff;font:inherit;font-weight:800;font-size:12px;border-radius:12px;position:relative;transition:transform .12s}
+.gf-c svg{display:block;width:100%;filter:drop-shadow(0 4px 0 rgba(0,0,0,.35));border-radius:11px}
+.gf-grid .gf-c{width:var(--cw)}.gf-piles .gf-c{width:var(--pw)}
+.gf-c.ok svg{box-shadow:0 0 0 3px #7dffd8,0 0 16px 4px rgba(125,255,216,.65)}
+.gf-c.best svg{box-shadow:0 0 0 4px #ffd166,0 0 18px 5px rgba(255,209,102,.8)}
+.gf-c.no{opacity:.6}
+.gf-c.wait{cursor:default}
+.gf-c:focus-visible{outline:4px solid var(--berry);outline-offset:3px}
+.gf-c.shake{animation:gfShake .35s}
+@keyframes gfShake{25%{transform:translateX(-6px) rotate(-4deg)}75%{transform:translateX(6px) rotate(4deg)}}
+.gf-c .d{position:absolute;top:-8px;right:-6px;background:#1b2430;color:#fff;border-radius:10px;padding:1px 6px;font-size:12px;box-shadow:0 0 0 2px #fff}
+.gf-c .d.good{background:#178a57}.gf-c .d.bad{background:#b0302a}
+.gf-held{width:var(--pw);display:grid;gap:2px;justify-items:center;font-size:12px;font-weight:800}
+.gf-held svg{width:100%;transform:rotate(-5deg) translateY(-6px);filter:drop-shadow(0 8px 6px rgba(0,0,0,.45))}
+.gf-held.empty{opacity:0}
+.gf-act{min-height:50px;max-width:130px;padding:6px 12px;font-size:14px;line-height:1.15;align-self:center}
+.gf-hid{font-weight:800;opacity:.85;font-size:15px;min-height:60px;display:grid;place-items:center}
+@media (min-aspect-ratio:11/10){
+  :root{--cw:min(92px,19vh,9vw);--pw:min(62px,13vh,6vw)}
+  .gf-tray{left:auto;top:max(58px,calc(env(safe-area-inset-top) + 52px));width:min(400px,42vw);padding:10px 12px 12px;align-content:center;background:linear-gradient(90deg,rgba(16,24,30,0),rgba(16,24,30,.8) 14%)}
+}
+.gf-banner{position:fixed;left:50%;transform:translateX(-50%);bottom:max(18px,calc(env(safe-area-inset-bottom) + 12px));z-index:20;background:rgba(27,36,48,.88);color:#fff;font-weight:800;border-radius:16px;padding:8px 14px;font-size:15px;pointer-events:none;white-space:nowrap}
+/* hole card */
+.gf-rows{display:grid;gap:6px}
+.gf-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;background:#fff;border:2px solid var(--line);border-radius:14px;padding:6px 10px;font-weight:800}
+.gf-row.win{border-color:var(--mint-ink);background:#e9fbf4}
+.gf-row i{width:12px;height:12px;border-radius:50%;display:inline-block;background:var(--c)}
+.gf-row .nm{display:grid;gap:3px;min-width:0}.gf-row .nm span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gf-row .mini{display:grid;grid-template-columns:repeat(3,22px);gap:2px}.gf-row .mini svg{width:22px;display:block}
+.gf-row .mini .pr svg{box-shadow:0 0 0 2px #2fd18a;border-radius:4px}
+.gf-row b{font-family:var(--f-d);font-size:18px}
+.gf-row .tot{display:grid;justify-items:end;line-height:1.1}.gf-row .tot small{font-size:11px;color:#4c5868}
+.gf-card .ig-card{max-height:calc(100dvh - 24px);overflow:auto}
+@media (orientation:landscape) and (min-width:700px){.gf-card .ig-card{width:min(820px,100%)}.gf-rows{grid-template-columns:1fr 1fr}}
+.gf-big{font-family:var(--f-d);font-size:18px;text-align:center;color:var(--mint-ink)}
+.ig-hud .gf-sc{gap:8px}.ig-hud .gf-sc span{display:inline-flex;align-items:center;gap:4px}.ig-hud .gf-sc i{width:10px;height:10px;border-radius:50%;display:inline-block;background:var(--c)}
+@media (max-width:640px){.gf-seat{font-size:12px;padding:3px 7px;gap:4px}.gf-seat .n{max-width:64px}.ig-hud .gf-opt{display:none}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+</head><body>
+<canvas class="ig-gl" id="gl" aria-label="Six-Card Golf table"></canvas>
+<div id="seats"></div>
+<div class="gf-banner" id="banner" hidden aria-live="polite"></div>
+<div class="gf-tray" id="tray" hidden><div class="gf-who" id="who" aria-live="polite"></div><div class="gf-msg" id="msg"></div><div class="gf-play"><div class="gf-piles" id="piles" role="group"></div><div class="gf-grid" id="grid" role="group"></div></div></div>
+<script type="module">
+import * as E from '../engine/inoa3d.js';
+import * as CR from '../engine/cardroom.js';
+import * as CARDS from '../engine/cards.js';
+import * as GR from './golf-rules.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+const { THREE, clamp, lerp, SFX, $ } = E;
+const L = (en, es) => E.L(en, es);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+/* ======================= settings + save (E.store 'inoa.golf', small) ======================= */
+const SKEY = 'inoa.golf';
+const DEF_NAMES = ['Ana', 'Leo', 'Mia', 'Rafa'];
+const S = Object.assign({ players: 4, holes: 9, skill: 'normal', locals: 1, names: DEF_NAMES.slice(), jokers: false, hints: false, badges: true, wins: 0, played: 0, bestHole: null, pairs: 0 }, E.store.get(SKEY, {}));
+if (!Array.isArray(S.names)) S.names = DEF_NAMES.slice();
+const save = () => E.store.set(SKEY, { players: S.players, holes: S.holes, skill: S.skill, locals: S.locals, names: S.names.slice(0, 4).map(n => String(n).slice(0, 12)), jokers: S.jokers, hints: S.hints, badges: S.badges, wins: S.wins, played: S.played, bestHole: S.bestHole, pairs: S.pairs });
+const BOTS = [{ n: 'Coral', e: '🐚' }, { n: 'Pip', e: '🐧' }, { n: 'Nico', e: '🌴' }, { n: 'Lupe', e: '🦜' }];
+const SEATC = ['#ff6b6b', '#4fb3ff', '#ffd166', '#2fd18a'];
+const SKILL = { chill: { e: '🐢', en: 'Chill', es: 'Tranquilo', sub: ['hints on', 'con pistas'] }, normal: { e: '🙂', en: 'Normal', es: 'Normal', sub: ['steady', 'parejo'] }, sharp: { e: '🔥', en: 'Sharp', es: 'Astuto', sub: ['counts cards', 'cuenta cartas'] } };
+const hintsOn = () => !!G && (G.opts.skill === 'chill' || S.hints);
+const FAST = () => window.__GF_FAST ? .04 : 1;
+const fmt = v => v < 0 ? '−' + (-v) : String(v);
+const sgn = v => v > 0 ? '+' + v : v < 0 ? '−' + (-v) : '0';
+const cname = c => CARDS.cardName(c, E.lang());
+
+/* ======================= renderer + scene (procedural: no external models) ======================= */
+const ld = E.loading(L('Six-Card Golf', 'Golf de seis cartas'), L('Shuffling the cards…', 'Barajando las cartas…'));
+const R = E.createRenderer($('gl'), { fov: 38, portraitFov: 52, shadowSize: 16, far: 260 });
+const { scene, camera, sun } = R;
+R.setLook({ background: 0x22313f, fog: 0x22313f, fogNear: 70, fogFar: 160, sun: 1.4, sunColor: 0xfff0d6, hemi: .62, skyHor: 0xe6f2ff, ground: 0x6b4a30, exposure: 1, env: .22, bloom: .1, bloomThreshold: .93 });
+R.setEnv(R.pmrem.fromScene(new RoomEnvironment(), .04).texture);
+sun.position.set(6, 26, 12); sun.target.position.set(0, 0, 0); sun.target.updateMatrixWorld();
+ld.set(.3);
+const TW = 27, TD = 22, FELT_Y = .07, CW = 1.5, CH = 2.1, CT = .035, CARD_Y = FELT_Y + CT / 2 + .005;
+{
+  const top = new THREE.Mesh(new RoundedBoxGeometry(TW, .7, TD, 4, .32), E.pbr('wood', 0x7d4e30, [5, 5])); top.position.y = -.33; top.receiveShadow = true; top.castShadow = true; scene.add(top);
+  const felt = new THREE.Mesh(new RoundedBoxGeometry(TW - 2.4, .12, TD - 2.4, 3, .05), E.pbr('fabric', 0x23606e, [7, 6])); felt.position.y = .01; felt.receiveShadow = true; scene.add(felt);
+  const legM = E.pbr('wood', 0x5e3a24, [1, 3]); for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { const lg = new THREE.Mesh(new THREE.BoxGeometry(1.1, 9, 1.1), legM); lg.position.set(x * (TW / 2 - 1.6), -4.9, z * (TD / 2 - 1.6)); lg.castShadow = true; scene.add(lg); }
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(180, 180), E.pbr('wood', 0x9a6a46, [20, 20])); floor.rotation.x = -Math.PI / 2; floor.position.y = -9.4; floor.receiveShadow = true; scene.add(floor);
+  // a little golf flag in a cup of pencils and a score pad (original props)
+  const pad = new THREE.Mesh(new THREE.BoxGeometry(2.2, .08, 2.8), E.mat(0xfff6dc)); pad.position.set(TW / 2 - 2.4, FELT_Y + .04, TD / 2 - 2.6); pad.rotation.y = -.2; pad.receiveShadow = true; scene.add(pad);
+  const cup = new THREE.Mesh(new THREE.CylinderGeometry(.5, .45, 1.1, 18), E.mat(0xe2443a, { roughness: .5 })); cup.position.set(-TW / 2 + 2.2, FELT_Y + .55, TD / 2 - 2.2); cup.castShadow = true; scene.add(cup);
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, 2.6, 8), E.mat(0xf2f2f2)); pole.position.set(-TW / 2 + 2.2, FELT_Y + 1.6, TD / 2 - 2.2); scene.add(pole);
+  const flag = new THREE.Mesh(new THREE.PlaneGeometry(.9, .55), new THREE.MeshStandardMaterial({ color: 0xffd166, side: THREE.DoubleSide })); flag.position.set(-TW / 2 + 2.65, FELT_Y + 2.6, TD / 2 - 2.2); scene.add(flag);
+  const bulbM = new THREE.MeshStandardMaterial({ color: 0xffe2a0, emissive: 0xffc86b, emissiveIntensity: 1.3 });
+  for (let i = 0; i < 26; i++) { const a = i / 26 * Math.PI * 2, b = new THREE.Mesh(new THREE.SphereGeometry(.28, 10, 8), bulbM); b.position.set(Math.cos(a) * 24, 9 + Math.sin(i * 1.7) * .6, Math.sin(a) * 21); scene.add(b); }
+}
+ld.set(.6);
+
+/* ---- cards: a thin rounded body + a canvas face on top + the back underneath (face down = turned over on z) ---- */
+const BODY_GEO = new RoundedBoxGeometry(CW, CT, CH, 2, .012);
+const FACE_GEO = new THREE.PlaneGeometry(CW * .995, CH * .995).rotateX(-Math.PI / 2); // canvas top → −z
+const BACKF_GEO = new THREE.PlaneGeometry(CW * .995, CH * .995).rotateX(Math.PI / 2).rotateY(Math.PI);
+const BODY = new THREE.MeshStandardMaterial({ color: 0xfffaf0, roughness: .5 });
+const TEX = {};
+function cardTex(c) {
+  const k = c ? `${c.s}${c.r}:${S.badges ? 1 : 0}` : 'back'; if (TEX[k]) return TEX[k];
+  const cv = document.createElement('canvas'); cv.width = 200; cv.height = 280; const g = cv.getContext('2d');
+  if (c) CARDS.drawCard(g, c, 200, 280, { badge: S.badges ? fmt(GR.value(c)) : null }); else CARDS.drawBack(g, 200, 280);
+  const tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace; tx.anisotropy = 4;
+  return TEX[k] = new THREE.MeshStandardMaterial({ map: tx, roughness: .45, transparent: true, alphaTest: .5, polygonOffset: true, polygonOffsetFactor: -2 });
+}
+function makeCard(c) {
+  const g = new THREE.Group(); const body = new THREE.Mesh(BODY_GEO, BODY); body.castShadow = true; body.receiveShadow = true; g.add(body);
+  const face = new THREE.Mesh(FACE_GEO, cardTex(c)); face.position.y = CT / 2 + .002; g.add(face);
+  const back = new THREE.Mesh(BACKF_GEO, cardTex(null)); back.position.y = -CT / 2 - .002; g.add(back);
+  g.userData.face = face; g.userData.cid = c && c.id; return g;
+}
+// the stock: a block of card backs whose height follows the count
+const stockG = new THREE.Group(); scene.add(stockG);
+const stockBody = new THREE.Mesh(new THREE.BoxGeometry(CW, 1, CH), BODY); stockBody.castShadow = true; stockBody.receiveShadow = true; stockG.add(stockBody);
+const stockTop = new THREE.Mesh(FACE_GEO, cardTex(null)); stockG.add(stockTop);
+const P = new E.Particles(scene, { capacity: 500 });
+// glow under the piles when it is your turn to draw
+const glowM = new THREE.MeshBasicMaterial({ color: 0x7dffd8, transparent: true, opacity: .4, depthWrite: false, blending: THREE.AdditiveBlending });
+const pileGlow = [0, 1].map(() => { const m = new THREE.Mesh(new THREE.PlaneGeometry(CW + .5, CH + .5).rotateX(-Math.PI / 2), glowM); m.visible = false; m.renderOrder = 3; scene.add(m); return m; });
+
+/* ======================= game state ======================= */
+let G = null, hudEl = null, music = null, titleEl = null, resultsCount = 0;
+const meshes = new Map(); // card id → group
+const input = E.createInput({ surface: $('gl') });
+const locals = () => G ? G.seats.filter(s => s.kind === 'local') : [];
+const mySeat = () => { if (!G) return null; const l = G.seats.findIndex(s => s.kind === 'local'); return l >= 0 ? l : null; };
+const trayOn = () => !!G && G.seats[G.viewSeat]?.kind === 'local' && G.m.phase !== 'lobby';
+const isPortrait = () => innerWidth / innerHeight < 1.1;
+
+function clearTable() { for (const m of meshes.values()) scene.remove(m); meshes.clear(); stockG.visible = false; pileGlow.forEach(m => m.visible = false); }
+
+function start(o = {}) {
+  closeCards(); if (titleEl) { titleEl.remove(); titleEl = null; }
+  const players = clamp(o.players ?? S.players, 2, 4), opts = { players, holes: o.holes ?? S.holes, skill: o.skill ?? S.skill, jokers: !!(o.jokers ?? S.jokers) };
+  const phones = o.phones === false || E.net.role !== 'host' ? [] : E.net.pads().slice(0, 4);
+  let nLoc = clamp(o.locals ?? S.locals, 0, players); const nPh = Math.min(phones.length, players - nLoc); if (nLoc + nPh === 0) nLoc = 1;
+  const taken = [...S.names.slice(0, nLoc), ...phones.slice(0, nPh).map(p => String(p.name || ''))].map(n => n.toLowerCase());
+  const botNames = CR.shuffle(BOTS.filter(b => !taken.includes(b.n.toLowerCase())).map(b => b.n)).concat(BOTS.map(b => b.n + ' 2'));
+  const seats = CR.makeSeats({ players, locals: nLoc, phones: phones.slice(0, nPh), names: S.names, botNames, skill: opts.skill });
+  seats.forEach((s, i) => { s.color = SEATC[i]; s.emoji = s.kind === 'bot' ? (BOTS.find(b => s.name.startsWith(b.n)) || BOTS[0]).e : s.kind === 'phone' ? '📱' : '🙂'; });
+  const m = CR.createMatch(GR.GAME, { seats, opts: { n: players, holes: opts.holes, jokers: opts.jokers }, seed: o.seed });
+  if (G && G.ph) G.ph.stop();
+  G = { m, seats, opts, think: .8, viewSeat: Math.max(0, seats.findIndex(s => s.kind === 'local')), revealed: nLoc <= 1, paused: false, flip: false, phoneFlip: {}, phoneNote: {}, bubbles: {}, away: 0, auto: !!o.auto, lastRound: null, wait: 0, stats: { holes: 0, myPairs: 0, holeWins: 0, bestHole: null } };
+  m.on('move', onMove); m.on('reject', onReject); m.on('round', onRound);
+  G.ph = CR.phoneHands(E.NET, { seats, layout: phoneLayout, onMsg: phoneMsg });
+  if (!hudEl) hudEl = E.shell({ title: 'Six-Card Golf', onPause: pause, buttons: [], party: PARTY() }).hud;
+  document.querySelector('.ig-top').hidden = false;
+  music && music.stop(); music = E.music(E.SONGS.chill);
+  newHole();
+  E.say(L('Draw a card, then swap it with one of yours, or discard it and turn a card over. Lowest score wins.', 'Roba una carta y cámbiala por una de las tuyas, o descártala y voltea una carta. Gana el puntaje más bajo.'), { once: true });
+  return G;
+}
+function newHole() {
+  camT = null; closeCards(); clearTable(); G.m.deal(); G.flip = false; G.phoneFlip = {}; G.bubbles = {}; G.wait = .5; G.cardT = null;
+  if (locals().length > 1) G.revealed = false;
+  syncTable(true); beginTurn(); renderAll();
+  const st = G.m.state; E.toast(L(`Hole ${G.m.round} of ${G.opts.holes} · ${G.seats[st.start].name} starts`, `Hoyo ${G.m.round} de ${G.opts.holes} · empieza ${G.seats[st.start].name}`), 2200);
+}
+
+/* ---- where each card sits: the grids you are not holding in your tray line up on the far side, the piles in the middle ---- */
+function shownSeats() { const tv = trayOn(); return G.seats.map((s, i) => i).filter(i => !(tv && i === G.viewSeat)); }
+function layout() {
+  const shown = shownSeats(), K = shown.length, tv = trayOn(), sp = K >= 4 ? 5.75 : 6.1, cz = tv ? -3.6 : -3.2;
+  const centers = {}; shown.forEach((s, k) => { centers[s] = { x: (k - (K - 1) / 2) * sp, z: cz }; });
+  G.seats.forEach((s, i) => { if (!centers[i]) centers[i] = { x: 0, z: 9.5, hidden: true }; });
+  const pileZ = tv ? 3.1 : 3.4; return { centers, stock: { x: -1.05, z: pileZ }, discard: { x: 1.05, z: pileZ }, shown };
+}
+const slotPos = (ctr, i) => ({ x: ctr.x + (i % 3 - 1) * (CW + .2), z: ctr.z + (i < 3 ? -1 : 1) * (CH / 2 + .14) });
+function heldSpot(lay) { const h = G.m.state.held; if (!h) return null; const c = lay.centers[G.m.state.turn]; if (!c || c.hidden) return { x: 3.4, y: 1.5, z: lay.discard.z + .3 }; return { x: c.x, y: 1.6, z: c.z + 3.5 }; }
+function target(ms, x, y, z, up, ry = 0) {
+  const tg = ms.userData.tgt;
+  if (tg && Math.abs(tg.x - x) < .001 && Math.abs(tg.z - z) < .001 && Math.abs(tg.y - y) < .001 && tg.up === up) return;
+  ms.userData.tgt = { x, y, z, up, ry }; ms.userData.a = { t: 0, from: ms.position.clone(), rz: ms.rotation.z, ry0: ms.rotation.y };
+}
+function syncTable(snap = false) {
+  if (!G) return; const st = G.m.state, lay = layout(), seen = new Set();
+  const place = (c, x, y, z, up, ry = 0, spawn, hide = false) => { let ms = meshes.get(c.id); if (!ms) { ms = makeCard(c); scene.add(ms); meshes.set(c.id, ms); const sp = spawn || lay.stock; ms.position.set(sp.x, CARD_Y + .4, sp.z); ms.rotation.z = Math.PI; } seen.add(c.id); target(ms, x, y, z, up, ry); ms.userData.hide = hide; ms.visible = !(hide && !ms.userData.a); };
+  st.grids.forEach((g, s) => { const ctr = lay.centers[s]; g.forEach((cell, i) => { const p = slotPos(ctr, i); place(cell.card, p.x, CARD_Y, p.z, cell.up, 0, null, !!ctr.hidden); }); });
+  const n = st.discard.length; st.discard.slice(-3).forEach((c, k) => { const j = n - Math.min(3, n) + k; place(c, lay.discard.x + Math.sin(j * 2.3) * .08, CARD_Y + k * (CT + .004), lay.discard.z + Math.cos(j * 1.7) * .06, true, Math.sin(j * 1.9) * .1, lay.discard); });
+  if (st.held) { const h = heldSpot(lay); place(st.held.card, h.x, h.y, h.z, true, 0, st.held.from === 'discard' ? lay.discard : lay.stock); }
+  for (const [id, ms] of meshes) if (!seen.has(id)) { scene.remove(ms); meshes.delete(id); }
+  if (snap) for (const ms of meshes.values()) { const t = ms.userData.tgt; if (t) { ms.userData.a = null; if (ms.userData.hide) ms.visible = false; ms.position.set(t.x, t.y, t.z); ms.rotation.set(0, t.ry, t.up ? 0 : Math.PI); } }
+  // stock block
+  const k = st.stock.length; stockG.visible = k > 0; const h = Math.max(.04, k * .012); stockBody.scale.y = h; stockBody.position.y = FELT_Y + h / 2; stockTop.position.y = FELT_Y + h + .003; stockG.position.set(lay.stock.x, 0, lay.stock.z);
+  G.lay = lay; updateGlow();
+}
+function updateGlow() {
+  const mine = myTurnLocal() && G.m.state.phase === 'play' && !G.m.state.held, lay = G.lay; pileGlow[0].visible = mine && G.m.legal(G.viewSeat).some(m => m.from === 'stock'); pileGlow[1].visible = mine && G.m.state.discard.length > 0;
+  if (lay) { pileGlow[0].position.set(lay.stock.x, FELT_Y + .02, lay.stock.z); pileGlow[1].position.set(lay.discard.x, FELT_Y + .02, lay.discard.z); }
+}
+
+/* ---- turns ---- */
+function beginTurn() {
+  if (!G || G.m.phase !== 'turns') return; const s = G.m.turn(), seat = G.seats[s];
+  G.flip = false; G.away = 0;
+  G.think = seat.kind === 'bot' ? CR.botDelay(seat.skill) * FAST() * (G.m.state.phase === 'setup' ? .6 : 1) : G.auto ? .3 * FAST() : 0;
+  if (seat.kind === 'local') {
+    if (locals().length > 1 && (!G.revealed || G.viewSeat !== s)) { G.revealed = false; G.viewSeat = s; handoff(s); }
+    else { G.viewSeat = s; G.revealed = true; promptLocal(s); }
+  }
+  syncTable(); renderAll();
+}
+function promptLocal(s) {
+  const st = G.m.state;
+  if (st.phase === 'setup') { if (st.flips[s] === 0) E.say(L('Turn two of your cards face up.', 'Voltea dos de tus cartas.')); return; }
+  if (st.finisher != null) E.say(L('Last turn! Make it count.', '¡Último turno! Aprovéchalo.')); else E.say(L('Your turn', 'Te toca'), { once: true });
+}
+function onMove(seat, mv, before, after) {
+  const s = G.seats[seat];
+  if (mv.type === 'flip' || mv.type === 'discardFlip') { SFX.snap ? SFX.snap() : SFX.pop(); }
+  if (mv.type === 'draw') { SFX.whoosh(); bubble(seat, mv.from === 'stock' ? L('draws', 'roba') : L('takes the discard', 'toma el descarte')); }
+  if (mv.type === 'swap') { SFX.pop(); const c = after.grids[seat][mv.i].card; bubble(seat, L(`keeps ${GR.label(c)}`, `se queda ${GR.label(c)}`)); const top = after.grids[seat]; const pr = GR.COLS.some(([a, b]) => (a === mv.i || b === mv.i) && top[a].up && top[b].up && GR.sameRank(top[a].card, top[b].card)); if (pr) pairFx(seat); }
+  if (mv.type === 'discardFlip') { const c = after.grids[seat][mv.i].card; bubble(seat, L(`flips ${GR.label(c)}`, `voltea ${GR.label(c)}`)); }
+  if (after.finisher != null && before.finisher == null) { SFX.good(); E.toast(L(`${s.name} turned every card up: everyone else gets one more turn!`, `${s.name} volteó todas sus cartas: ¡los demás tienen un turno más!`), 2600); E.say(L(`${s.name} is out. One more turn each.`, `${s.name} terminó. Un turno más para cada uno.`), { interrupt: false }); }
+  G.flip = false; G.phoneFlip[seat] = false;
+  if (G.m.phase === 'turns') {
+    const nx = G.m.turn();
+    if (nx !== seat && locals().length > 1 && s.kind === 'local' && G.seats[nx].kind !== 'local') G.revealed = false;
+    if (nx !== seat) beginTurn(); else { if (s.kind === 'bot' || G.auto) G.think = (s.kind === 'bot' ? CR.botDelay(s.skill) * .7 : .3) * FAST() * (after.phase === 'setup' ? .5 : 1); syncTable(); renderAll(); }
+  } else { syncTable(); renderAll(); }
+}
+function pairFx(seat) { const ctr = G.lay && G.lay.centers[seat]; if (!ctr || ctr.hidden) { SFX.good(); return; } SFX.good(); for (let k = 0; k < 2; k++) P.burst(new THREE.Vector3(ctr.x, .8, ctr.z), { color: [0x7dffd8, 0xffd166][k], n: 18, speed: 4, up: 4, size: .3, life: .9, gravity: 8 }); }
+function onReject(seat, mv, reason, from) {
+  if (from === 'bot') { console.warn('bot illegal move', mv, reason); return; }
+  const st = G.m.state;
+  const msg = reason === 'not-your-turn' ? L('Wait for your turn', 'Espera tu turno')
+    : st.phase === 'setup' ? L('Pick a face-down card to turn up', 'Elige una carta boca abajo para voltearla')
+    : !st.held && mv && (mv.type === 'swap' || mv.type === 'discardFlip') ? L('First draw a card: the stock or the discard', 'Primero roba una carta: del mazo o del descarte')
+    : st.held && mv && mv.type === 'discardFlip' && st.held.from === 'discard' ? L('A card from the discard pile must be swapped in', 'Una carta del descarte hay que cambiarla')
+    : mv && mv.type === 'discardFlip' ? L('Pick a face-down card to turn up', 'Elige una carta boca abajo para voltearla')
+    : mv && mv.type === 'draw' ? L('You already have a card: swap it or discard it', 'Ya tienes una carta: cámbiala o descártala') : L("You can't do that now", 'Ahora no puedes hacer eso');
+  if (from === 'phone') { const sl = G.seats[seat].slot; G.phoneNote[seat] = msg; E.NET.rumble(sl, 120); G.ph.sync(); return; }
+  SFX.bad(); E.toast(msg, 1600); const el = mv && mv.i != null ? document.querySelector(`#grid .gf-c[data-i="${mv.i}"]`) : null; if (el) { el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); }
+}
+function onRound(over, phase) {
+  G.lastRound = over; G.stats.holes++;
+  const me = mySeat();
+  if (me != null) { const v = over.scores[me]; G.stats.myPairs += over.pairs[me]; if (over.winners.includes(me)) G.stats.holeWins++; G.stats.bestHole = G.stats.bestHole == null ? v : Math.min(G.stats.bestHole, v); }
+  const w = G.seats[over.winner], names = over.winners.map(i => G.seats[i].name).join(' + ');
+  SFX.win(); E.say(over.tie ? L(`Tie! ${names} share the hole with ${over.scores[over.winner]}.`, `¡Empate! ${names} comparten el hoyo con ${over.scores[over.winner]}.`) : L(`${w.name} wins the hole with ${over.scores[over.winner]}.`, `${w.name} gana el hoyo con ${over.scores[over.winner]}.`));
+  burst(over.winner); G.cardT = 2.2 * FAST(); syncTable(); renderAll();
+}
+function burst(seat) { const c = G.lay && G.lay.centers[seat]; const p = c && !c.hidden ? c : { x: 0, z: 3 }; for (let k = 0; k < 3; k++) P.burst(new THREE.Vector3(p.x, 1, p.z), { color: [0xffd166, 0x7dffd8, 0xff8fb0][k], n: 24, speed: 6, up: 6, size: .35, life: 1.2, gravity: 9 }); }
+function bubble(seat, text) { G.bubbles[seat] = { text, t: 1.6 }; }
+
+/* ---- local human actions (mouse / touch / keys / gamepad) ---- */
+const myTurnLocal = () => !!G && G.m.phase === 'turns' && G.revealed && G.m.turn() === G.viewSeat && G.seats[G.viewSeat]?.kind === 'local' && !G.paused;
+function tapCard(i) {
+  if (!G || G.paused) return; const s = G.viewSeat, st = G.m.state;
+  if (!myTurnLocal()) { if (G.m.phase === 'turns') { E.toast(L('Wait for your turn', 'Espera tu turno'), 1200); SFX.tick(); } return; }
+  SFX.click();
+  let mv;
+  if (st.phase === 'setup') mv = { type: 'flip', i };
+  else if (!st.held) mv = { type: 'swap', i }; // rejected with a reason: draw first
+  else if (G.flip) mv = { type: 'discardFlip', i };
+  else mv = { type: 'swap', i };
+  return G.m.act(s, mv, 'local');
+}
+function tapPile(which) {
+  if (!G || G.paused) return; const s = G.viewSeat, st = G.m.state;
+  if (!myTurnLocal()) { if (G.m.phase === 'turns') { E.toast(L('Wait for your turn', 'Espera tu turno'), 1200); SFX.tick(); } return; }
+  SFX.click();
+  if (st.phase === 'setup') { E.toast(L('First turn two of your cards face up', 'Primero voltea dos de tus cartas'), 1500); return; }
+  if (st.held) { if (which === 'discard' && st.held.from === 'stock') return discardIt(); return G.m.act(s, { type: 'draw', from: which }, 'local'); }
+  return G.m.act(s, { type: 'draw', from: which }, 'local');
+}
+function discardIt() { if (!myTurnLocal()) return; const st = G.m.state; if (!st.held || st.held.from !== 'stock') return; G.flip = true; SFX.click(); E.say(L('Now turn one of your face-down cards up.', 'Ahora voltea una de tus cartas boca abajo.'), { once: true }); renderAll(); }
+function cancelFlip() { if (G && G.flip) { G.flip = false; SFX.tick(); renderAll(); } }
+// keyboard + gamepad: arrows/stick move a focus ring over the tray, A/Space presses, B/Shift goes back
+let navPrev = { x: 0, y: 0 };
+function navMove(dir) {
+  const items = [...document.querySelectorAll('#tray .gf-c:not([disabled]), #tray .gf-act')].filter(el => el.offsetParent !== null); if (!items.length) return;
+  const a = document.activeElement; if (!items.includes(a)) { (items.find(el => el.classList.contains('best')) || items.find(el => el.closest('#grid') && el.classList.contains('ok')) || items.find(el => el.classList.contains('ok')) || items[0]).focus({ preventScroll: true }); return; }
+  const ra = a.getBoundingClientRect(), cx = ra.left + ra.width / 2, cy = ra.top + ra.height / 2; let best = null, bd = 1e9;
+  for (const el of items) { if (el === a) continue; const rb = el.getBoundingClientRect(), dx = rb.left + rb.width / 2 - cx, dy = rb.top + rb.height / 2 - cy;
+    const ok = dir === 'l' ? dx < -4 : dir === 'r' ? dx > 4 : dir === 'u' ? dy < -4 : dy > 4; if (!ok) continue; const d = (dir === 'l' || dir === 'r') ? Math.abs(dx) + Math.abs(dy) * 2.5 : Math.abs(dy) + Math.abs(dx) * 2.5; if (d < bd) { bd = d; best = el; } }
+  const i = items.indexOf(a); (best || items[(i + ((dir === 'r' || dir === 'd') ? 1 : -1) + items.length) % items.length]).focus({ preventScroll: true }); SFX.tick();
+}
+function pollKeys() {
+  const st = input.poll(); if (!G || document.querySelector('.ig-screen')) { navPrev = { x: 0, y: 0 }; return; }
+  if (st.pausePressed) pause();
+  if (!myTurnLocal()) { navPrev = { x: 0, y: 0 }; return; }
+  const x = Math.abs(st.x) > .5 ? Math.sign(st.x) : 0, y = Math.abs(st.y) > .5 ? Math.sign(st.y) : 0;
+  if (x && x !== navPrev.x) navMove(x < 0 ? 'l' : 'r');
+  if (y && y !== navPrev.y) navMove(y < 0 ? 'u' : 'd');
+  navPrev = { x, y };
+  if (st.aPressed) { const fe = document.activeElement; if (fe && fe.closest && fe.closest('#tray') && fe.tagName === 'BUTTON') fe.click(); else navMove('r'); }
+  if (st.bPressed) cancelFlip();
+}
+
+/* ---- pass-and-play hand-off (face-down cards are never shown; this just tells whose turn it is) ---- */
+function handoff(s) {
+  closeCards(); const seat = G.seats[s];
+  const d = document.createElement('div'); d.className = 'ig-screen gf-card'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true');
+  d.innerHTML = `<div class="ig-card" style="text-align:center;border-top:10px solid ${seat.color}"><div style="font-size:54px">🃏</div><h2>${L(`Pass the device to ${esc(seat.name)}`, `Pásale el aparato a ${esc(seat.name)}`)}</h2><p class="ig-sub">${L('Your face-down cards stay a mystery, even to you.', 'Tus cartas boca abajo siguen siendo un misterio, incluso para ti.')}</p><button class="ig-btn" data-a="show">${L(`I'm ${esc(seat.name)}: my turn`, `Soy ${esc(seat.name)}: mi turno`)}</button></div>`;
+  document.body.appendChild(d); E.say(L(`Pass the device to ${seat.name}.`, `Pásale el aparato a ${seat.name}.`));
+  d.querySelector('[data-a=show]').onclick = () => { d.remove(); G.revealed = true; G.viewSeat = s; SFX.click(); promptLocal(s); syncTable(); renderAll(); };
+  setTimeout(() => d.querySelector('[data-a=show]')?.focus({ preventScroll: true }), 30);
+}
+function closeCards() { document.querySelectorAll('.gf-card').forEach(e => e.remove()); }
+
+/* ---- phones as private hands (pad `cards` layout via cardroom.phoneHands); each phone sees only what its player may see ---- */
+function phoneLayout(i) {
+  const m = G.m, seat = G.seats[i];
+  if (m.phase !== 'turns') { const o = G.lastRound; return { type: 'text', text: o ? `${holeTitle(o)}\n\n${scoreLine()}` : '🃏' }; }
+  const v = m.view(i), me = m.turn() === i, flip = !!G.phoneFlip[i];
+  let note = me ? L('Your turn!', '¡Te toca!') : L(`${G.seats[m.turn()].name} is playing…`, `${G.seats[m.turn()].name} está jugando…`), warn = false, actions = [];
+  if (me) {
+    if (v.phase === 'setup') note = L(`Turn ${2 - v.flips[i]} card${2 - v.flips[i] > 1 ? 's' : ''} face up`, `Voltea ${2 - v.flips[i]} carta${2 - v.flips[i] > 1 ? 's' : ''}`);
+    else if (!v.held) note = L('Draw: tap the stock or the discard', 'Roba: toca el mazo o el descarte');
+    else if (flip) { note = L('Tap a face-down card to turn it up', 'Toca una carta boca abajo para voltearla'); actions = [L('↩ Back', '↩ Atrás')]; }
+    else if (v.held.from === 'stock') { note = L('Tap a card to swap, or discard it', 'Toca una carta para cambiarla, o descártala'); actions = [L('🗑 Discard it', '🗑 Descartarla')]; }
+    else note = L('Tap one of your cards to swap', 'Toca una de tus cartas para cambiarla');
+  }
+  if (G.phoneNote[i]) { note = G.phoneNote[i]; warn = true; }
+  const my = v.grids[i], hint = me && hintsOn() && v.held && !flip ? GR.swapDeltas(my, v.held.card) : null;
+  const ok = me ? (v.phase === 'setup' || flip ? my.map(c => !c.up) : v.held ? my.map((c, k) => !hint || hint[k] == null || hint[k] < 0) : null) : null;
+  const top = v.discard[v.discard.length - 1] || null;
+  return { type: 'cards', orient: 'upright', lang: E.lang(), title: `${seat.name} · ${L('showing', 'visible')} ${fmt(GR.visibleScore(my))} · ${L('total', 'total')} ${m.scores[i]}`, note, warn,
+    cards: my.map(c => c.up ? c.card : { back: true }), badges: hint ? hint.map(d => d == null ? '?' : sgn(d)) : (S.badges ? my.map(c => c.up ? fmt(GR.value(c.card)) : null) : null), ok,
+    piles: [{ label: `${L('Stock', 'Mazo')} ${v.stock}`, card: { back: true }, ok: me && v.phase === 'play' && !v.held }, { label: L('Discard', 'Descarte'), card: top, empty: !top, ok: me && v.phase === 'play' && (!v.held || (v.held.from === 'stock' && !flip)) }],
+    held: me && v.held ? { label: L('Your card', 'Tu carta'), card: v.held.card } : null, actions };
+}
+function phoneMsg(i, msg) {
+  if (!G || G.paused) return; const m = G.m, st = m.state; G.phoneNote[i] = null;
+  if (m.phase !== 'turns') return;
+  if (m.turn() !== i) { m.act(i, { type: 'draw', from: 'stock' }, 'phone'); return; } // rejected: not your turn
+  if (msg.t === 'choice') {
+    const k = +msg.i; if (!(k >= 0 && k < 6)) return;
+    const mv = st.phase === 'setup' ? { type: 'flip', i: k } : !st.held ? { type: 'swap', i: k } : G.phoneFlip[i] ? { type: 'discardFlip', i: k } : { type: 'swap', i: k };
+    m.act(i, mv, 'phone');
+  } else if (msg.t === 'pile') {
+    if (st.phase === 'setup') { G.phoneNote[i] = L('First turn two cards face up', 'Primero voltea dos cartas'); G.ph.sync(); return; }
+    if (st.held && st.held.from === 'stock' && +msg.i === 1) { G.phoneFlip[i] = true; G.ph.sync(); return; }
+    m.act(i, { type: 'draw', from: +msg.i === 1 ? 'discard' : 'stock' }, 'phone');
+  } else if (msg.t === 'act') {
+    if (G.phoneFlip[i]) G.phoneFlip[i] = false; else if (st.held && st.held.from === 'stock') G.phoneFlip[i] = true;
+    G.ph.sync();
+  }
+}
+
+/* ======================= HUD, seats, tray ======================= */
+function scoreLine() { return G.m.scores.map((v, i) => `${G.seats[i].emoji} ${G.seats[i].name}: ${fmt(v)}`).join(' · '); }
+function renderHud() {
+  if (!hudEl || !G) return; const st = G.m.state;
+  hudEl.innerHTML = `<div class="ig-chip">⛳ <b>${G.m.round}</b>/${G.opts.holes}</div><div class="ig-chip gf-sc" aria-label="${L('Totals', 'Totales')}">${G.m.scores.map((v, i) => `<span style="--c:${G.seats[i].color}"><i></i><b>${fmt(v)}</b></span>`).join('')}</div>${st ? `<div class="ig-chip gf-opt" title="${L('Stock', 'Mazo')}">🂠 <b>${st.stock.length}</b></div>` : ''}`;
+}
+let seatEls = [];
+function renderSeats() {
+  const box = $('seats'); if (!G) { box.innerHTML = ''; seatEls = []; return; } const st = G.m.state, turn = G.m.turn(), shown = G.lay ? G.lay.shown : [];
+  box.innerHTML = shown.map(i => { const s = G.seats[i], b = G.bubbles[i];
+    return `<div class="gf-seat ${turn === i ? 'turn' : ''}" data-s="${i}" style="--c:${s.color}"><span>${s.emoji}</span><span class="n">${esc(s.name)}</span><span class="k" title="${L('showing', 'visible')}">👁 ${fmt(GR.visibleScore(st.grids[i]))}</span>${b ? `<span class="bub">${esc(b.text)}</span>` : ''}</div>`; }).join('');
+  seatEls = [...box.querySelectorAll('.gf-seat')]; placeSeats();
+}
+const _v = new THREE.Vector3();
+function placeSeats() {
+  if (!G || !G.lay) return;
+  for (const el of seatEls) { const c = G.lay.centers[+el.dataset.s]; if (!c) continue; _v.set(c.x, CARD_Y, c.z - CH - .55); const p = E.toScreen(_v, camera); el.style.transform = `translate(${Math.round(p.x - el.offsetWidth / 2)}px, ${Math.round(p.y - el.offsetHeight)}px)`; }
+}
+const cardBtn = (c, { i = null, pile = null, cls = '', badge = null, delta = null, label = '', aria = '', disabled = false } = {}) =>
+  `<button class="gf-c ${cls}" ${i != null ? `data-i="${i}"` : ''} ${pile ? `data-p="${pile}"` : ''} aria-label="${esc(aria || cname(c))}" ${disabled ? 'disabled' : ''}>${CARDS.cardSvg(c, { badge })}${delta != null ? `<span class="d ${delta < 0 ? 'good' : delta > 0 ? 'bad' : ''}">${delta === '?' ? '?' : sgn(delta)}</span>` : ''}${label ? `<span>${esc(label)}</span>` : ''}</button>`;
+function trayMessage(s) {
+  const st = G.m.state, mine = myTurnLocal();
+  if (!mine) { const t = G.m.turn(); return t == null ? '' : G.seats[t].kind === 'bot' ? L(`${G.seats[t].name} is thinking…`, `${G.seats[t].name} está pensando…`) : L(`${G.seats[t].name} is playing…`, `${G.seats[t].name} está jugando…`); }
+  if (st.phase === 'setup') { const left = 2 - st.flips[s]; return L(`Turn ${left} card${left > 1 ? 's' : ''} face up`, `Voltea ${left} carta${left > 1 ? 's' : ''}`); }
+  if (!st.held) return L('Draw: tap the stock or the discard', 'Roba: toca el mazo o el descarte');
+  if (G.flip) return L('Tap a face-down card to turn it up', 'Toca una carta boca abajo para voltearla');
+  return st.held.from === 'stock' ? L('Tap one of your cards to swap, or discard it', 'Toca una de tus cartas para cambiarla, o descártala') : L('Tap one of your cards to swap', 'Toca una de tus cartas para cambiarla');
+}
+// friendly hint: what the held card does to your visible score, or whether the discard is worth taking
+function hintText(s) {
+  if (!hintsOn() || !myTurnLocal()) return '';
+  const st = G.m.state, my = st.grids[s];
+  if (st.phase === 'setup') return '';
+  if (!st.held) {
+    const top = st.discard[st.discard.length - 1]; if (!top) return '';
+    const d = GR.swapDeltas(my, top), best = Math.min(...d.filter(x => x != null)), v = GR.value(top);
+    if (best <= -3) return L(`Hint: the ${GR.label(top)} on the discard pile lowers your score by ${-best}`, `Pista: el ${GR.label(top)} del descarte baja tu puntaje ${-best}`);
+    if (v <= 2) return L(`Hint: the discard (${GR.label(top)}, worth ${fmt(v)}) is good on a hidden card`, `Pista: el descarte (${GR.label(top)}, vale ${fmt(v)}) es bueno sobre una carta oculta`);
+    return L('Hint: try the stock', 'Pista: prueba el mazo');
+  }
+  if (G.flip) return '';
+  const card = st.held.card, d = GR.swapDeltas(my, card), best = Math.min(...d.filter(x => x != null)), v = GR.value(card);
+  if (best < 0) { const i = d.indexOf(best); return L(`Hint: swap it for your ${GR.label(my[i].card)}: your score goes down ${-best}`, `Pista: cámbiala por tu ${GR.label(my[i].card)}: tu puntaje baja ${-best}`); }
+  if (v <= 4 && my.some(c => !c.up)) return L(`Hint: this card is worth ${fmt(v)}: a good swap for a hidden card`, `Pista: esta carta vale ${fmt(v)}: buen cambio por una carta oculta`);
+  if (st.held.from === 'stock') return L('Hint: high card. Discard it and turn a card up', 'Pista: carta alta. Descártala y voltea una carta');
+  return '';
+}
+function renderTray() {
+  const tray = $('tray'); if (!G || !trayOn()) { tray.hidden = true; renderBanner(); return; }
+  const vs = G.viewSeat, seat = G.seats[vs], st = G.m.state, mine = myTurnLocal();
+  tray.hidden = false; tray.style.setProperty('--c', seat.color); $('banner').hidden = true;
+  const who = $('who'), msg = $('msg'), piles = $('piles'), grid = $('grid');
+  const fe = document.activeElement, fk = fe && tray.contains(fe) ? (fe.dataset.i != null ? `[data-i="${fe.dataset.i}"]` : fe.dataset.p ? `[data-p="${fe.dataset.p}"]` : fe.dataset.a ? `[data-a="${fe.dataset.a}"]` : null) : null;
+  if (!G.revealed) { who.innerHTML = `<span>🃏 ${L('Waiting for the next player', 'Esperando al siguiente jugador')}</span>`; msg.textContent = ''; piles.innerHTML = ''; grid.innerHTML = `<div class="gf-hid" style="grid-column:1/-1">${G.m.turn() != null ? esc(L(`${G.seats[G.m.turn()].name} is playing…`, `${G.seats[G.m.turn()].name} está jugando…`)) : ''}</div>`; return; }
+  const turnTxt = G.m.phase !== 'turns' ? '' : mine ? `<span class="yt">${st.finisher != null ? L('Last turn!', '¡Último turno!') : L('Your turn!', '¡Te toca!')}</span>` : '';
+  who.innerHTML = `<b>${esc(seat.name)}</b>${turnTxt}<span>👁 ${fmt(GR.visibleScore(st.grids[vs]))} · ${L('total', 'total')} ${fmt(G.m.scores[vs])}</span>`;
+  const h = hintText(vs); msg.innerHTML = `${esc(trayMessage(vs))}${h ? `<span class="hint">💡 ${esc(h)}</span>` : ''}`;
+  const held = st.held && st.turn === vs ? st.held : null, top = st.discard[st.discard.length - 1] || null, playing = mine && st.phase === 'play';
+  const canStock = playing && !held && G.m.legal(vs).some(m => m.from === 'stock'), canDisc = playing && (!held ? !!top : held.from === 'stock' && !G.flip);
+  let ph = cardBtn({ back: true }, { pile: 'stock', cls: canStock ? 'ok' : mine ? '' : 'wait', label: `${L('Stock', 'Mazo')} ${st.stock.length}`, aria: `${L('Stock', 'Mazo')}: ${st.stock.length} ${L('cards', 'cartas')}` });
+  ph += !top ? `<button class="gf-c wait" data-p="discard" aria-label="${esc(L('Discard pile: empty', 'Descarte: vacío'))}">${CARDS.emptySvg()}<span>${L('Discard', 'Descarte')}</span></button>` : cardBtn(top, { pile: 'discard', cls: canDisc ? 'ok' : mine ? '' : 'wait', badge: S.badges && top ? fmt(GR.value(top)) : null, label: held && held.from === 'stock' && !G.flip ? L('Discard it', 'Descartar') : L('Discard', 'Descarte'), aria: `${L('Discard pile', 'Descarte')}: ${top ? cname(top) : L('empty', 'vacío')}` });
+  ph += held ? `<div class="gf-held" aria-label="${esc(L('Your card', 'Tu carta'))}: ${esc(cname(held.card))}">${CARDS.cardSvg(held.card, { badge: S.badges ? fmt(GR.value(held.card)) : null })}<span>${L('Your card', 'Tu carta')}</span></div>` : `<div class="gf-held empty">${CARDS.backSvg()}<span>·</span></div>`;
+  if (held && held.from === 'stock') ph += G.flip ? `<button class="ig-btn ghost gf-act" data-a="back">↩ ${L('Back', 'Atrás')}</button>` : `<button class="ig-btn coral gf-act" data-a="discard">🗑 ${L('Discard it', 'Descartar')}</button>`;
+  else ph += `<button class="ig-btn ghost gf-act" style="visibility:hidden" tabindex="-1" aria-hidden="true">·</button>`;
+  piles.innerHTML = ph;
+  const my = st.grids[vs], deltas = held && !G.flip && hintsOn() ? GR.swapDeltas(my, held.card) : null, bestD = deltas ? Math.min(...deltas.filter(x => x != null)) : null;
+  grid.setAttribute('aria-label', L('Your cards', 'Tus cartas'));
+  grid.innerHTML = my.map((c, i) => {
+    const target = mine && (st.phase === 'setup' || G.flip ? !c.up : !!held);
+    const cls = [target && (hintsOn() || st.phase === 'setup' || G.flip) ? 'ok' : '', deltas && bestD < 0 && deltas[i] === bestD ? 'best' : '', mine ? '' : 'wait', mine && (st.phase === 'setup' || G.flip) && c.up ? 'no' : ''].join(' ');
+    return cardBtn(c.up ? c.card : { back: true }, { i, cls, badge: c.up && S.badges ? fmt(GR.value(c.card)) : null, delta: deltas ? (deltas[i] == null ? '?' : deltas[i]) : null, aria: `${L('Card', 'Carta')} ${i + 1}: ${c.up ? cname(c.card) : L('face down', 'boca abajo')}` });
+  }).join('');
+  grid.querySelectorAll('.gf-c').forEach(b => b.onclick = () => tapCard(+b.dataset.i));
+  piles.querySelectorAll('.gf-c[data-p]').forEach(b => b.onclick = () => tapPile(b.dataset.p));
+  const da = piles.querySelector('[data-a=discard]'); if (da) da.onclick = discardIt; const bk = piles.querySelector('[data-a=back]'); if (bk) bk.onclick = cancelFlip;
+  if (fk) { const el = tray.querySelector(fk) || (fk.includes('data-a') ? tray.querySelector('.gf-act:not([aria-hidden])') : null); if (el) el.focus({ preventScroll: true }); } // keyboard/gamepad focus survives a re-render
+}
+function renderBanner() {
+  const bn = $('banner'); if (!G || G.m.phase !== 'turns' || trayOn()) { bn.hidden = true; return; }
+  const t = G.m.turn(), s = G.seats[t]; bn.hidden = false;
+  bn.textContent = s.kind === 'phone' ? L(`📱 ${s.name}: play on your phone`, `📱 ${s.name}: juega en tu teléfono`) : s.kind === 'bot' ? L(`${s.emoji} ${s.name} is thinking…`, `${s.emoji} ${s.name} está pensando…`) : L(`${s.name}'s turn`, `Turno de ${s.name}`);
+}
+function renderAll() { if (!G) return; renderHud(); renderTray(); renderSeats(); renderBanner(); updateGlow(); G.ph && G.ph.sync(); }
+
+/* ---- hole + match end ---- */
+function holeTitle(o) {
+  const names = o.winners.map(i => G.seats[i].name).join(' + ');
+  return o.tie ? L(`⛳ Tie! ${names} share the hole (${fmt(o.scores[o.winner])})`, `⛳ ¡Empate! ${names} comparten el hoyo (${fmt(o.scores[o.winner])})`) : L(`⛳ ${names} wins the hole with ${fmt(o.scores[o.winner])}`, `⛳ ${names} gana el hoyo con ${fmt(o.scores[o.winner])}`);
+}
+function holeCard() {
+  const o = G.lastRound, st = G.m.state, end = G.m.phase === 'matchEnd'; closeCards();
+  const lead = Math.min(...G.m.scores);
+  const rows = G.seats.map((s, i) => { const g = st.grids[i], pr = new Set(); GR.COLS.forEach(([a, b]) => { if (GR.sameRank(g[a].card, g[b].card)) { pr.add(a); pr.add(b); } });
+    return `<div class="gf-row ${o.winners.includes(i) ? 'win' : ''}" style="--c:${s.color}"><i></i><div class="nm"><span>${s.emoji} ${esc(s.name)}${o.finisher === i ? ' · ' + L('went out', 'terminó') : ''}</span><div class="mini">${g.map((c, k) => `<span class="${pr.has(k) ? 'pr' : ''}">${CARDS.cardSvg(c.card)}</span>`).join('')}</div></div><div class="tot"><b>${fmt(o.scores[i])}</b><small>${L('total', 'total')} ${fmt(G.m.scores[i])}${G.m.scores[i] === lead ? ' 🏅' : ''}</small></div></div>`; }).join('');
+  const pairs = o.pairs.reduce((a, b) => a + b, 0);
+  const d = document.createElement('div'); d.className = 'ig-screen gf-card'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true');
+  d.innerHTML = `<div class="ig-card"><div class="ig-kicker">${L('Hole', 'Hoyo')} ${G.m.round} ${L('of', 'de')} ${G.opts.holes} · ${L('lowest score wins', 'gana el puntaje más bajo')}</div><h2>${holeTitle(o)}</h2>${pairs ? `<div class="gf-big">✨ ${L(`${pairs} column pair${pairs > 1 ? 's' : ''} scored 0`, `${pairs} pareja${pairs > 1 ? 's' : ''} de columna valieron 0`)}</div>` : ''}<div class="gf-rows">${rows}</div><div class="ig-row"><button class="ig-btn" data-a="next">${end ? L('See results', 'Ver resultados') : L('Next hole', 'Siguiente hoyo')}</button></div></div>`;
+  document.body.appendChild(d); d.querySelector('[data-a=next]').onclick = () => { SFX.click(); d.remove(); if (end) finishMatch(); else newHole(); };
+  setTimeout(() => d.querySelector('[data-a=next]')?.focus({ preventScroll: true }), 30);
+  E.say(holeTitle(o).replace(/^\S+\s/, ''), { interrupt: false });
+  G.ph.sync();
+}
+function finishMatch() {
+  if (!G || G.done) return; G.done = true; music && music.stop(); closeCards();
+  const res = G.m.result || { winners: [G.m.winnerSide] }, me = mySeat(), won = me != null && res.winners.includes(me), names = res.winners.map(i => G.seats[i].name).join(' + ');
+  S.played++; if (won) S.wins++; if (G.stats.bestHole != null) S.bestHole = S.bestHole == null ? G.stats.bestHole : Math.min(S.bestHole, G.stats.bestHole); S.pairs += G.stats.myPairs; save();
+  if (G.ph) G.ph.stop({ type: 'text', text: L(`🏆 ${names} wins!\n\n${scoreLine()}`, `🏆 ¡Gana ${names}!\n\n${scoreLine()}`) });
+  const xp = 30 + G.stats.holes * 5 + (won ? 50 : 0) + Math.min(40, G.stats.myPairs * 4 + G.stats.holeWins * 4), coins = won ? 25 : 10;
+  const title = me == null ? L(`🏆 ${names} wins the match!`, `🏆 ¡${names} gana la partida!`) : won ? (res.tie ? L('🏆 You share the win!', '🏆 ¡Compartes la victoria!') : L('🏆 You win the match!', '🏆 ¡Ganaste la partida!')) : L(`${names} wins this time`, `Esta vez gana ${names}`);
+  E.say(title.replace(/^\S+\s/, ''));
+  resultsCount++;
+  const myTot = me != null ? G.m.scores[me] : null;
+  E.results({ gameId: 'golf', title, won, xp, coins, best: S.wins, bestLabel: L('Matches won', 'Partidas ganadas'),
+    stats: [[L('Holes', 'Hoyos'), G.stats.holes], [L('Your total', 'Tu total'), myTot == null ? '–' : fmt(myTot)], [L('Best hole', 'Mejor hoyo'), G.stats.bestHole == null ? '–' : fmt(G.stats.bestHole)], [L('Column pairs', 'Parejas'), G.stats.myPairs]],
+    share: L(`I played Six-Card Golf on Inoa Games: ${myTot == null ? '' : fmt(myTot) + ' over '}${G.stats.holes} holes!`, `Jugué Golf de seis cartas en Inoa Games: ${myTot == null ? '' : fmt(myTot) + ' en '}${G.stats.holes} hoyos.`), onAgain: () => title_() });
+}
+
+/* ======================= main loop ======================= */
+function update(dt) {
+  pollKeys();
+  const t = performance.now() / 1000, sp = 3 / Math.max(.25, FAST());
+  for (const ms of meshes.values()) { const a = ms.userData.a, tg = ms.userData.tgt; if (!a || !tg) continue;
+    a.t = Math.min(1, a.t + dt * sp); const k = 1 - Math.pow(1 - a.t, 3), dist = Math.hypot(tg.x - a.from.x, tg.z - a.from.z), flipNeed = Math.abs((tg.up ? 0 : Math.PI) - a.rz) > .1;
+    ms.position.set(lerp(a.from.x, tg.x, k), lerp(a.from.y, tg.y, k) + Math.sin(Math.PI * k) * Math.min(1.4, .25 + dist * .12 + (flipNeed ? .8 : 0)), lerp(a.from.z, tg.z, k));
+    ms.rotation.z = lerp(a.rz, tg.up ? 0 : Math.PI, k); ms.rotation.y = lerp(a.ry0, tg.ry, k);
+    if (a.t >= 1) { ms.userData.a = null; if (ms.userData.hide) ms.visible = false; ms.position.set(tg.x, tg.y, tg.z); ms.rotation.set(0, tg.ry, tg.up ? 0 : Math.PI); if (tg.y < .5) { E.tone(1500, .03, 'square', .04); E.noise(.05, .1, 2600, 2); } } }
+  // the held card hovers gently
+  if (G && G.m.state && G.m.state.held) { const ms = meshes.get(G.m.state.held.card.id); if (ms && !ms.userData.a) ms.position.y = ms.userData.tgt.y + Math.sin(t * 2.4) * .08; }
+  glowM.opacity = .26 + Math.sin(t * 5) * .14;
+  if (G && !G.paused) {
+    let bub = false; for (const k in G.bubbles) { G.bubbles[k].t -= dt; if (G.bubbles[k].t <= 0) { delete G.bubbles[k]; bub = true; } } if (bub) renderSeats();
+    if (G.m.phase === 'turns' && !document.querySelector('.gf-card')) {
+      G.wait -= dt;
+      const s = G.m.turn(), seat = G.seats[s];
+      if (G.wait <= 0) {
+        if (seat.kind === 'bot' || (G.auto && seat.kind === 'local' && (G.revealed || locals().length < 2))) { G.think -= dt; if (G.think <= 0) { G.m.botAct(s, seat.kind === 'bot' ? seat.skill : 'sharp'); } }
+        else if (seat.kind === 'phone') { const p = E.net.players.find(x => x.slot === seat.slot); if (!p || !p.connected) { G.away += dt; if (G.away > 12) { E.toast(L(`${seat.name}'s phone is away: a bot plays for now`, `El teléfono de ${seat.name} no está: juega un bot por ahora`), 2200); G.away = 11; G.m.botAct(s, 'normal'); } } else G.away = 0; }
+      }
+    }
+    if (G.cardT != null) { G.cardT -= dt; if (G.cardT <= 0) { G.cardT = null; holeCard(); } }
+  }
+  P.update(dt); updateCamera(dt); placeSeats();
+}
+/* camera: frames the opponents' grids and the piles inside the space the HUD and your tray leave free */
+let camT = null, lastOff = '';
+function updateCamera(dt) {
+  let minx = -6, maxx = 6, minz = -6, maxz = 4.6;
+  if (G && G.lay) { for (const s of G.lay.shown) { const c = G.lay.centers[s]; minx = Math.min(minx, c.x - 2.9); maxx = Math.max(maxx, c.x + 2.9); minz = Math.min(minz, c.z - 2.9); maxz = Math.max(maxz, c.z + 2.4); } maxz = Math.max(maxz, G.lay.stock.z + 1.5 + (G.m.state && G.m.state.held && trayOn() ? 1 : 0)); }
+  const tray = $('tray'), W = innerWidth, H = innerHeight, port = isPortrait(), tv = !tray.hidden;
+  const top = port ? 62 : 58, bot = tv && port ? tray.offsetHeight : (tv ? 10 : 56), right = tv && !port ? tray.offsetWidth : 0;
+  const visH = clamp((H - top - bot) / H, .3, 1), visW = clamp((W - right) / W, .4, 1), tanV = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2), tilt = 1.02;
+  const ex = (maxx - minx) / 2 + .6, ez = (maxz - minz) / 2 + .3, cx = (minx + maxx) / 2, cz = (minz + maxz) / 2;
+  const dv = (ez * Math.sin(tilt) + .8) / (tanV * visH), dh = ex / (tanV * camera.aspect * visW), d = Math.max(dv, dh, 12) * 1.03;
+  if (!camT) camT = { x: cx, z: cz, d };
+  const k = E.reducedMotion() ? 1 : 1 - Math.pow(.02, dt); camT.x = lerp(camT.x, cx, k); camT.z = lerp(camT.z, cz, k); camT.d = lerp(camT.d, d, k);
+  camera.position.set(camT.x, Math.sin(tilt) * camT.d, camT.z + Math.cos(tilt) * camT.d); camera.lookAt(camT.x, 0, camT.z);
+  const offX = Math.round(right / 2), offY = Math.round((bot - top) / 2), key = `${W}x${H}:${offX}:${offY}`;
+  if (key !== lastOff) { lastOff = key; if (offX || offY) camera.setViewOffset(W, H, offX, offY, W, H); else camera.clearViewOffset(); }
+}
+addEventListener('resize', () => { if (G) { syncTable(); renderAll(); } });
+function pause() { if (!G || G.paused || G.done || document.querySelector('.ig-screen:not(.gf-card)')) return; G.paused = true; music && music.stop(); E.pauseMenu({ onResume: () => { G.paused = false; music = E.music(E.SONGS.chill); }, onRestart: () => { G.paused = false; start({ ...G.opts, locals: undefined }); } }); }
+document.addEventListener('visibilitychange', () => { if (document.hidden && G && !G.done && !E.net.pads().length) pause(); });
+
+/* ======================= title ======================= */
+const PARTY = () => ({ label: L('Phones as private hands', 'Teléfonos como mano secreta'), hint: L('Each phone becomes a player and shows its own six cards (up to 4).', 'Cada teléfono es un jugador y muestra sus seis cartas (hasta 4).') });
+function title_() {
+  closeCards(); if (G && G.ph) G.ph.stop(); G = null; clearTable(); $('tray').hidden = true; $('banner').hidden = true; $('seats').innerHTML = ''; seatEls = []; if (hudEl) document.querySelector('.ig-top').hidden = true;
+  music && music.stop(); music = E.music(E.SONGS.chill); demoTable(); renderTitle();
+  E.say(L('Six-Card Golf! Lowest score wins. Press Play.', '¡Golf de seis cartas! Gana el puntaje más bajo. Pulsa Jugar.'), { once: true });
+}
+function renderTitle() {
+  if (titleEl) titleEl.remove();
+  const es = E.lang() === 'es', nPh = E.net.role === 'host' ? E.net.pads().length : 0;
+  if (S.locals === 0 && !nPh) S.locals = 1;
+  const b = (on, attrs, html) => `<button ${attrs} class="${on ? 'on' : ''}" aria-pressed="${!!on}">${html}</button>`;
+  const extra = `<div class="gf-setup">
+    <div class="gf-lbl">${L('Language', 'Idioma')}</div><div class="pick" id="pL">${b(!es, 'data-l="en"', '🇬🇧 English')}${b(es, 'data-l="es"', '🇪🇸 Español')}</div>
+    <div class="gf-lbl">${L('Players at the table', 'Jugadores en la mesa')}</div><div class="pick three" id="pN">${[2, 3, 4].map(n => b(S.players === n, `data-n="${n}"`, `${n}`)).join('')}</div>
+    <div class="gf-lbl">${L('Holes', 'Hoyos')}</div><div class="pick three" id="pG">${GR.HOLES.map(h => b(S.holes === h, `data-g="${h}"`, `${h}<small>${h === 3 ? L('quick', 'rápido') : h === 9 ? L('full round', 'ronda completa') : L('medium', 'mediano')}</small>`)).join('')}</div>
+    <div class="gf-lbl">${L('Bots', 'Bots')}</div><div class="pick three" id="pS">${Object.keys(SKILL).map(k => b(S.skill === k, `data-s="${k}"`, `${SKILL[k].e} ${L(SKILL[k])}<small>${L(...SKILL[k].sub)}</small>`)).join('')}</div>
+    <div class="gf-lbl">${L('People on this screen', 'Personas en esta pantalla')}</div><div class="pick four" id="pH">${[0, 1, 2, 3, 4].filter(n => n <= S.players && (n > 0 || nPh)).map(n => b(S.locals === n, `data-h="${n}"`, n === 0 ? `📺 0<small>${L('phones only', 'solo teléfonos')}</small>` : n === 1 ? `🙂 1<small>${L('vs bots', 'contra bots')}</small>` : `👥 ${n}<small>${L('pass the device', 'pasan el aparato')}</small>`)).join('')}</div>
+    <div class="gf-names" id="pNames" ${S.locals > 1 ? '' : 'hidden'}>${[0, 1, 2, 3].map(i => `<input data-i="${i}" maxlength="12" value="${esc(S.names[i])}" aria-label="${L('Player', 'Jugador')} ${i + 1}" style="border-left:6px solid ${SEATC[i]}" ${i < S.locals ? '' : 'hidden'}>`).join('')}</div>
+    <div class="pick three" id="pX">${b(S.hints, 'data-x="hints"', `💡 ${L('Hints', 'Pistas')}<small>${L('what a swap does', 'qué hace un cambio')}</small>`)}${b(S.badges, 'data-x="badges"', `🔢 ${L('Card points', 'Puntos en cartas')}<small>${L('A=1 · 2=−2 · K=0', 'A=1 · 2=−2 · K=0')}</small>`)}${b(S.jokers, 'data-x="jokers"', `★ ${L('Jokers', 'Comodines')}<small>${L('2 jokers, −2 each', '2 comodines, −2 cada uno')}</small>`)}</div>
+    <p class="gf-rec" id="pPh">${nPh ? L(`📱 ${nPh} phone${nPh > 1 ? 's' : ''} connected: each one is a player`, `📱 ${nPh} teléfono${nPh > 1 ? 's' : ''}: cada uno es un jugador`) : ''}</p>
+    ${S.played ? `<p class="gf-rec">🏆 ${L(`Matches won: ${S.wins} of ${S.played}`, `Partidas ganadas: ${S.wins} de ${S.played}`)}${S.bestHole != null ? ` · ${L('best hole', 'mejor hoyo')} ${fmt(S.bestHole)}` : ''}</p>` : ''}</div>`;
+  const d = E.titleScreen({ party: PARTY(), title: L('Six-Card Golf', 'Golf de seis cartas'), kicker: L('Inoa Games · Card Room', 'Inoa Games · Sala de juegos'), lead: L('Six cards face down, two turned up. Swap your way to the lowest score: pairs in a column count zero.', 'Seis cartas boca abajo, dos volteadas. Cambia cartas hasta el puntaje más bajo: las parejas en columna valen cero.'),
+    how: [['🂠', L('Draw from the stock or take the top discard', 'Roba del mazo o toma el descarte de arriba')], ['🔁', L('Swap it for one of your cards, or discard it and turn a card up', 'Cámbiala por una de tus cartas, o descártala y voltea una')], ['⛳', L('A=1, 2=−2, K=0, J/Q=10. A pair in a column = 0. Lowest wins', 'A=1, 2=−2, K=0, J/Q=10. Pareja en columna = 0. Gana el más bajo')]], extra, onPlay: () => { titleEl = null; save(); start(); } });
+  titleEl = d;
+  const sel = (q, el) => d.querySelectorAll(q).forEach(x => { const on = x === el; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on); });
+  d.querySelectorAll('#pL button').forEach(x => x.onclick = () => { SFX.click(); E.setSetting('lang', x.dataset.l); });
+  d.querySelectorAll('#pN button').forEach(x => x.onclick = () => { S.players = +x.dataset.n; if (S.locals > S.players) S.locals = S.players; SFX.click(); save(); renderTitle(); });
+  d.querySelectorAll('#pG button').forEach(x => x.onclick = () => { S.holes = +x.dataset.g; sel('#pG button', x); SFX.click(); save(); });
+  d.querySelectorAll('#pS button').forEach(x => x.onclick = () => { S.skill = x.dataset.s; sel('#pS button', x); SFX.click(); save(); });
+  d.querySelectorAll('#pH button').forEach(x => x.onclick = () => { S.locals = +x.dataset.h; sel('#pH button', x); $('pNames').hidden = S.locals < 2; d.querySelectorAll('#pNames input').forEach(inp => inp.hidden = +inp.dataset.i >= S.locals); SFX.click(); save(); });
+  d.querySelectorAll('#pNames input').forEach(inp => { inp.addEventListener('input', () => { S.names[+inp.dataset.i] = inp.value.replace(/[<>]/g, '').trim() || `P${+inp.dataset.i + 1}`; save(); }); inp.addEventListener('keydown', e => e.stopPropagation()); });
+  d.querySelectorAll('#pX button').forEach(x => x.onclick = () => { const k = x.dataset.x; S[k] = !S[k]; x.classList.toggle('on', S[k]); x.setAttribute('aria-pressed', S[k]); SFX.click(); save(); if (k === 'badges') demoTable(); });
+}
+E.net.on('change', () => { if (titleEl && titleEl.isConnected && !document.querySelector('.inoa-pp')) renderTitle(); else if (titleEl && titleEl.isConnected) { const el = document.getElementById('pPh'); const n = E.net.role === 'host' ? E.net.pads().length : 0; if (el) el.textContent = n ? L(`📱 ${n} phone${n > 1 ? 's' : ''} connected: each one is a player`, `📱 ${n} teléfono${n > 1 ? 's' : ''}: cada uno es un jugador`) : ''; } });
+addEventListener('inoa:settings', e => { if (!e.detail || e.detail.key !== 'lang') return; document.title = L('Six-Card Golf', 'Golf de seis cartas'); if (titleEl && titleEl.isConnected) renderTitle(); else if (G) { renderAll(); if (document.querySelector('.gf-card .gf-rows')) holeCard(); } });
+// the title table: a grid of six cards with a pair of kings and a 2 turned up
+function demoTable() {
+  for (const m of meshes.values()) scene.remove(m); meshes.clear(); for (const k in TEX) { if (k !== 'back') { TEX[k].map.dispose(); TEX[k].dispose(); delete TEX[k]; } }
+  const demo = [{ r: 13, s: 'H', id: 'd1' }, null, { r: 2, s: 'C', id: 'd3' }, { r: 13, s: 'S', id: 'd4' }, { r: 7, s: 'D', id: 'd5' }, null];
+  demo.forEach((c, i) => { const ms = makeCard(c || { r: 5, s: 'S', id: 'dx' + i }); const p = slotPos({ x: 0, z: -1.2 }, i); ms.position.set(p.x, CARD_Y, p.z); ms.rotation.z = c ? 0 : Math.PI; scene.add(ms); meshes.set('demo' + i, ms); });
+  const top = makeCard({ r: 1, s: 'H', id: 'dt' }); top.position.set(1.05, CARD_Y, 3.6); top.rotation.y = .12; scene.add(top); meshes.set('demoTop', top);
+  stockG.visible = true; stockBody.scale.y = .4; stockBody.position.y = FELT_Y + .2; stockTop.position.y = FELT_Y + .403; stockG.position.set(-1.05, 0, 3.6);
+}
+
+/* ======================= boot ======================= */
+document.title = L('Six-Card Golf', 'Golf de seis cartas');
+ld.set(1); title_();
+if (new URLSearchParams(location.search).get('online')) setTimeout(() => E.NET.partyPanel(PARTY()), 300);
+ld.done(); window.__READY = true;
+E.loop(dt => { update(dt); R.render(dt); });
+window.__GAME = {
+  get G() { return G; }, get m() { return G && G.m; }, get state() { return G && G.m.state; }, get phase() { return G ? G.m.phase : 'title'; }, get resultsCount() { return resultsCount; }, S, GR, CR, CARDS, R, THREE,
+  start, update, title: title_, tapCard, tapPile, discardIt, cancelFlip, holeCard, finishMatch, next: () => { const b = document.querySelector('.gf-card [data-a=next]'); if (b) b.click(); },
+  cardMesh: id => meshes.get(id), legal: s => G.m.legal(s), act: (s, mv, from = 'local') => G.m.act(s, mv, from), view: s => G.m.view(s), auto(v) { if (G) G.auto = !!v; },
+  fast(v = true) { window.__GF_FAST = !!v; },
+  // run the simulation n steps of dt (tests): bots + auto-locals keep playing; hole cards are clicked through when skipCards is set
+  run(n = 600, dt = 1 / 30, { skipCards = false } = {}) { for (let i = 0; i < n; i++) { update(dt); if (skipCards && document.querySelector('.gf-card [data-a=next]') && G && G.m.phase === 'roundEnd') window.__GAME.next(); if (!G || G.done || (G.m.phase === 'matchEnd' && document.querySelector('.gf-card'))) break; } return G && G.m.phase; }
+};
+</script>
+</body></html>

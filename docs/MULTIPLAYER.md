@@ -23,6 +23,7 @@ at ~16 Hz to stay inside the free plan's message rate). Config comes from `platf
 | Pixel Pact: Depths | Phone 1 = P1, phones 2–4 take over AI allies as P2–P4 (custom button icons pushed to the phone). |
 | Tide Lines | Phone 1 = you, phones 2–4 join your team, phones 5–8 the other team (4v4). |
 | Dominoes | Each phone is a seat with a **private hand** (`hand` layout): only its own tiles, tap a tile to play it (◀/▶ when it fits both ends), Draw/Pass buttons. The host checks every move and rejects tiles that don't fit or moves out of turn (the phone vibrates and shows why). A phone that drops for 12 s on its turn gets a bot stand-in. Covered by `test/party_dominoes.js` |
+| Six-Card Golf | Each phone is a seat with its **own six cards** (`cards` layout): face-down cards as backs, the stock + top discard, the card you drew (only on your phone), Discard it / Back buttons, hint deltas when hints are on. The host checks every move (out of turn, flipping a face-up card, swapping before drawing are rejected with the reason on the phone). Away 12 s on your turn → a bot stand-in. Covered by `test/party_golf.js` |
 | Draw the Pact (Party mode) | Each phone is a player: the drawer gets the secret word on their phone, everyone else guesses from 4 options on theirs (first right answer scores). |
 | Pixel Pact (2D) | Each phone is its own input source (`net1`…`net8`): press A in the lobby to join. A jump · B attack · C special · D dodge · C+D ultimate. |
 | Fail Tray, Tide Runner, Perfect Fit, Junkyard, Brew, Builders | Phone acts as player 1's controller (hot-seat friendly in Fail Tray). |
@@ -35,7 +36,7 @@ at ~16 Hz to stay inside the free plan's message rate). Config comes from `platf
   - State: `net.role`, `net.code`, `net.status`, `net.players[{slot,id,kind,name,color,connected,input}]`, `net.pads(kind?)`, `net.pad(slot)` (input zeroed if the phone goes quiet > 1.5 s), `net.joinUrl`, `net.onlineUrl(page)`.
   - Events (`net.on`): `status, change, join, leave, input, msg, welcome, layout, online, error`.
   - UI: `partyWidget({hint, online})` (floating 📱 chip; `E.shell()` adds it automatically, pass `party:false` to hide), `partyPanel({hint, online})`, `qrSvg(text)`.
-- Phone layouts (`setLayout`): `{type:'gamepad', labels:{A..D}, buttons:['A','B','C','D']}`, `{type:'buzzer', label, question, choices}`, `{type:'choices', question, choices, out, locked}`, `{type:'text', text}`, `{type:'hand', title, note, warn, tiles:[[a,b]…] | labels:[…], ok:[bool]|null, picked, actions:[label…]}` (Card Room private hand; dominoes draw pips). Phones send `{t:'in', s:{x,y,a,b,c,d,pause}}` (on change + 200 ms heartbeat), `{t:'buzz'}`, `{t:'choice', i}` (also a tile/card in a `hand` layout), `{t:'act', i}` (a `hand` action button).
+- Phone layouts (`setLayout`): `{type:'gamepad', labels:{A..D}, buttons:['A','B','C','D']}`, `{type:'buzzer', label, question, choices}`, `{type:'choices', question, choices, out, locked}`, `{type:'text', text}`, `{type:'hand', title, note, warn, tiles:[[a,b]…] | labels:[…], ok:[bool]|null, picked, actions:[label…]}` (Card Room private hand; dominoes draw pips), `{type:'cards', title, note, warn, cards:[{r,s}|{back:true}], badges, ok, picked, piles:[{label, card, ok, empty}], held:{label, card}, actions, lang}` (Card Room card grid; faces from `engine/cards.js`). Phones send `{t:'in', s:{x,y,a,b,c,d,pause}}` (on change + 200 ms heartbeat), `{t:'buzz'}`, `{t:'choice', i}` (also a tile/card in a `hand` layout), `{t:'act', i}` (a `hand`/`cards` action button), `{t:'pile', i}` (a `cards` pile).
 - Engine input: `E.createInput({pads:'any'|'first'|'separate'})`; `input.pad(slot)` returns `{x,y,a,b,c,d,pause,aPressed…}` once per frame per slot.
 - Override (tests / another project): `window.INOA_NET = {realtimeUrl, apikey, config:{iceServers:[…]}}` before the engine loads, or `localStorage['inoa.net']` (same JSON).
 
@@ -43,7 +44,7 @@ at ~16 Hz to stay inside the free plan's message rate). Config comes from `platf
 `npm run test:party` runs `test/party.js` with a local Realtime look-alike (`test/party/mock-realtime.js`) and several browser
 pages (host + phones + online guest): `party_pad` (QR join, menu nav, P1 input, pause, room survives
 navigation), `party_drift` (online race to the finish), `party_trivia`, `party_games` (Depths, Tide
-Lines, Draw), `party_pact`, `party_dominoes` (private hands, illegal/out-of-turn moves rejected).
+Lines, Draw), `party_pact`, `party_dominoes` (private hands, illegal/out-of-turn moves rejected), `party_golf` (card grids per phone, drawn card private, illegal/out-of-turn moves rejected).
 
 ## Limits and upgrade path
 - TURN: PeerJS's free relay (`turn:eu-0/us-0.turn.peerjs.com`) is configured (2026-10-15; before that only STUN was set, so phones on mobile data or isolating Wi-Fi could not join). It is shared and best-effort; for launch use a dedicated TURN service. Previously: no TURN relay was configured: on a few strict networks (some schools/offices, symmetric NAT) devices
