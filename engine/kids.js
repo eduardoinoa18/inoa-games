@@ -121,15 +121,17 @@ export function parentGate({ onPass, onCancel, holdMs = 1500 } = {}) {
 // marked [data-kids-unlocked] (a grown-ups panel that was itself opened through the gate) are not gated twice.
 export const GATED = '.ig-home, a[href], [data-a=hub], [data-a=settings], [data-a=phones], [data-a=feedback], [data-a=install], [data-a=share], .ig-setbtn, .ig-phones, .ig-fbchip, [data-kids-gate]';
 let _guard = null, _passing = false;
-export function guardLinks({ selector = GATED } = {}) {
-  if (_guard) { _guard.selector = selector; return _guard; }
-  _guard = { selector, passes: 0, blocks: 0 };
+// enabled:false (or setGuard(false)) pauses the gate in a game that only gates part of itself (Memory Match: the Little ones mode).
+export function guardLinks({ selector = GATED, enabled = true } = {}) {
+  if (_guard) { _guard.selector = selector; _guard.enabled = enabled; return _guard; }
+  _guard = { selector, enabled, passes: 0, blocks: 0 };
   document.addEventListener('click', e => {
-    if (_passing || !e.target || !e.target.closest) return;
+    if (_passing || !_guard.enabled || !e.target || !e.target.closest) return;
     const el = e.target.closest(_guard.selector); if (!el || el.closest('.kd-gate') || el.closest('[data-kids-unlocked]')) return;
     e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); _guard.blocks++;
     parentGate({ onPass: () => { _guard.passes++; _passing = true; try { el.click(); } finally { _passing = false; } } });
   }, true);
   return _guard;
 }
-export const guardStats = () => _guard ? { passes: _guard.passes, blocks: _guard.blocks } : null;
+export const guardStats = () => _guard ? { passes: _guard.passes, blocks: _guard.blocks, enabled: _guard.enabled } : null;
+export function setGuard(on) { if (_guard) _guard.enabled = !!on; return !!(_guard && _guard.enabled); }

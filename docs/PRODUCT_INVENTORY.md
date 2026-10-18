@@ -1,16 +1,16 @@
 # Inoa Games — product inventory (canonical)
 
-Verified against the repository on 2026-10-17, at commit 3f1737d on `main`, which is what is live at https://inoa-games.vercel.app. **Update 2026-10-17:** game #15 Bubble Pop Counting added on its branch (#14, Dominoes, is being built in parallel; the hub copy already says 15). Edit this file whenever a game, mode, URL or category changes. Quality findings are in `docs/AUDIT.md`. Open decisions are in `docs/DECISIONS/`.
+Verified against the repository on 2026-10-17, at commit 3f1737d on `main`, which is what is live at https://inoa-games.vercel.app. **Update 2026-10-17:** game #15 Bubble Pop Counting added on its branch (#14, Dominoes, is being built in parallel; the hub copy already says 15). **Update 2026-10-17 (later):** game #17 Memory Match added on its branch; #16 is being built in parallel, so the hub copy says 17. Edit this file whenever a game, mode, URL or category changes. Quality findings are in `docs/AUDIT.md`. Open decisions are in `docs/DECISIONS/`.
 
 ## 1. How we count
 | Count | Number | What it means |
 | --- | --- | --- |
-| **Game products** | **15** | Each one is a separate game with its own page in `games/`. The hub says "15 games" / "Fifteen games", which matches (Dominoes and Bubble Pop Counting added 2026-10-17) |
-| Hub tiles | 16 | Pixel Pact has two tiles: Adventure, and Match. Both open `games/pixelpact.html` |
-| Game pages (URLs) | 15 | `games/<file>.html` |
+| **Game products** | **16** | Each one is a separate game with its own page in `games/`. The hub says "16 games" / "Sixteen games", which matches (Dominoes, Bubble Pop Counting and Memory Match added 2026-10-17/18) |
+| Hub tiles | 17 | Pixel Pact has two tiles: Adventure, and Match. Both open `games/pixelpact.html` |
+| Game pages (URLs) | 16 | `games/<file>.html` |
 | Support pages | 8 | `index.html` (hub), `pad.html` (phone controller), `account.html`, `admin.html`, `pricing.html`, `privacy.html`, `terms.html`, `404.html` |
 | Retired games | 0 | — |
-| Proposed new games (not built) | 13 | Card Room 5 (Dominoes is built), quick-play 3, young-kids pack 5 (Bubble Pop is built). See `docs/ROADMAP.md` |
+| Proposed new games (not built) | 12 | Card Room 5 (Dominoes is built), quick-play 2 (Memory Match is built), young-kids pack 5 (Bubble Pop is built). See `docs/ROADMAP.md` |
 | Flagship (not built) | — | "Hometown & the Depths" is a plan to grow Pixel Pact: Depths. It is not a separate product yet |
 
 Earlier planning text that mixed "13 entries", "10 standalone games + flagship", two merges and a racing retirement described *proposals*. None of those merges or the retirement has happened.
@@ -35,6 +35,7 @@ Primary category uses the proposed hub categories (`docs/DECISIONS/0007-hub-cate
 | 13 | **Draw the Pact** (`draw.html`) | 6+ / party | Party, Teams, Telephone, Speed Sketch, Daily doodle, Guess the doodle; 704 words | 2–8 pass-and-play or phones | Yes | Cards & Party (tag: Learn) | `inoa3d.js` | Stylus hardware. Native ES words |
 | 14 | **Dominoes** (`dominoes.html`) | 6+ / family | First Card Room game (0004): double-six, **Block** and **Draw**, 2–4 players, optional teams of 2 (partners across), first to 50/100/150/200, optional capicúa +25, colour pips, hints; bots Chill/Normal/Sharp | 1–4 on one screen (vs bots or pass-and-play with a privacy screen) + phones as private hands | Yes + read-aloud | Cards & Party | `inoa3d.js` + `engine/cardroom.js` (rules: `games/dominoes-rules.js`) | Real-phone feel. Online on separate screens waits for R7. Native ES read-through |
 | 15 | **Bubble Pop Counting** (`bubbles.html`) | 3–6 (pre-readers) | Counting: count to 3, count to 5, number ↔ group, "one more" up to 10, plus a free Pop party; stars + 12 stickers; adaptive ease | 1 (keyboard / gamepad / phones drive one soft cursor) | Yes, voice-first | Kids | `inoa3d.js` + Kids World shell (`engine/kids.js`) | Play test with real 3–6-year-olds. Native ES voice check |
+| 16 | **Memory Match** (`memory.html`) | All ages (3+ in Little ones) | Pairs: Little ones (4–8 big spoken pictures, stickers, parent gate), Words (picture ↔ word, English ↔ Spanish; animals, food, home, school, nature, colors), Classic (12/20/30 cards, moves + timer, bests), Daily board (date-seeded, one counted attempt, streak), Two players | 1–2 hot-seat; phones drive the cursor (phone 1/2 per player in Two players) | Yes, every word read aloud in its own language | Learn & Teach | `inoa3d.js` (on-demand 3D table) + DOM cards + Kids World shell for Little ones | Real-phone feel. Native ES read-through of the word lists |
 
 \* The proposed category list has no home for racing. Recommendation: rename "Action & Fighting" to **"Action & Racing"** (`docs/DECISIONS/0007-hub-categories.md`).
 
@@ -62,5 +63,5 @@ Rules live in `engine/savekeys.js`; details are in `docs/PLATFORM_ARCHITECTURE.m
 | --- | --- | --- | --- |
 | `inoa.profile` / `inoa.profile.u.<id>` | Shared hero profile | Yes | XP, coins, achievements and per-game best/plays: yes (`ig_finish_round`) |
 | `inoa.drift`, `inoa.runner`, `inoa.tidelines`, `inoa.fit`, `inoa.junk`, `inoa.brew`, `inoa.builders`, `inoa.tray`, `inoa.depths`, `inoa.bubbles` (stars + sticker indexes only), `inoa.trivia.daily`, `inoa.trivia.stats`, `pixelpact3.progress` | Each game's own progress | Yes | **Yes** (`ig_saves`, ≤ 64 KB each) |
-| `inoa.drift`, `inoa.runner`, `inoa.tidelines`, `inoa.fit`, `inoa.junk`, `inoa.brew`, `inoa.builders`, `inoa.tray`, `inoa.depths`, `inoa.dominoes`, `inoa.trivia.daily`, `inoa.trivia.stats`, `pixelpact3.progress` | Each game's own progress | Yes | **Yes** (`ig_saves`, ≤ 64 KB each) |
+| `inoa.drift`, `inoa.runner`, `inoa.tidelines`, `inoa.fit`, `inoa.junk`, `inoa.brew`, `inoa.builders`, `inoa.tray`, `inoa.depths`, `inoa.dominoes`, `inoa.memory` (best scores, sticker indexes, word choices, daily streak; no names), `inoa.trivia.daily`, `inoa.trivia.stats`, `pixelpact3.progress` | Each game's own progress | Yes | **Yes** (`ig_saves`, ≤ 64 KB each) |
 | `snacksquad` (Safari child profiles + allergens), `inoa.draw` / `inoa.trivia` (settings with typed names), `inoa.draw.gallery`/`.daily` (drawings), `inoa.drift.ghost.*`, `inoa.trivia.seen2` | Device-only data | Yes | **No**, on purpose (children's health data, names, size) |
