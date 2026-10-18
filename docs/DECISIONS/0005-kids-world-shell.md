@@ -25,3 +25,6 @@ Safari's existing profile picker and big-text mode are the reference.
 | High contrast | `html.kd-hc` | The game toggles it from its grown-ups panel |
 
 **Not in v1:** the per-child profile picker (Bubble Pop saves no names, so nothing needed it yet; generalize Safari's when Animal Sounds Match needs per-child progress) and a recorded-voice override for `instruct()` (the line objects are the hook: add an `audio` field later).
+
+## Status 2026-10-17 (later): second user, Memory Match
+`games/memory.html` uses the shell for its **Little ones** mode only (big picture cards ≥ 96 px, pictures named aloud, `success()`/`tryAgain()`, `rewardOverlay()`, `repeatButton()`, parent gate). One additive change: `guardLinks({enabled})` + `setGuard(on)` so a game can gate part of itself (the grown-up modes of the same page link to the hub without a gate). Bubble Pop is unchanged (`guardLinks()` still defaults to on).

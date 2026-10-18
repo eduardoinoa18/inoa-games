@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Memory Match</title>
+<!--meta--><meta name="description" content="Flip two cards, find the pairs. Little ones play with big spoken pictures, Words matches pictures and English with Spanish, Classic has three grids with moves and a timer, plus a daily board and… Free in your browser.">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Inoa Games"><meta property="og:title" content="Memory Match · Inoa Games"><meta property="og:description" content="Flip two cards, find the pairs. Little ones play with big spoken pictures, Words matches pictures and English with Spanish, Classic has three grids with moves and a timer, plus a daily board and… Free in your browser."><meta property="og:url" content="https://inoa-games.vercel.app/games/memory.html"><meta property="og:image" content="https://inoa-games.vercel.app/thumbs/memory.jpg"><meta property="og:image:width" content="640"><meta property="og:image:height" content="360"><meta name="twitter:card" content="summary_large_image"><!--/meta-->
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;800&family=Unbounded:wght@700;900&display=swap">
+<link rel="stylesheet" href="../engine/ui.css">
+<link rel="stylesheet" href="../engine/kids.css">
+<style>
+html,body{background:#efe4d4;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none}
+.ig-screen.ig-title{align-items:safe center}
+.ig-title .ig-card{gap:12px}
+.ig-hud{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center}
+.ig-hud .ig-chip{min-height:40px;box-sizing:border-box}
+.mm-chip-on{box-shadow:0 0 0 3px var(--pc,#0f5c48),0 4px 14px rgba(0,0,0,.15)!important}
+.mm-chip-off{opacity:.72}
+/* ---- board ---- */
+.mm-board{position:fixed;left:0;top:0;z-index:10;--back1:#2f7f74;--back2:#286c63;--rim:#fff3dc}
+.mm-board[hidden]{display:none}
+.mm-card{position:absolute;padding:0;margin:0;border:0;background:none;cursor:pointer;perspective:800px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;border-radius:var(--rad,14px);font:inherit;color:var(--ink)}
+.mm-card:focus{outline:none}
+.mm-in{position:absolute;inset:0;border-radius:inherit;transform-style:preserve-3d;transition:transform .36s cubic-bezier(.3,1.35,.5,1)}
+.mm-card.up .mm-in,.mm-card.done .mm-in{transform:rotateY(180deg)}
+.mm-back,.mm-face{position:absolute;inset:0;border-radius:inherit;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:grid;place-items:center;overflow:hidden;box-sizing:border-box}
+.mm-back{background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.28) 0 17%,transparent 18%),repeating-linear-gradient(45deg,var(--back1) 0 9px,var(--back2) 9px 18px);box-shadow:inset 0 0 0 4px var(--rim),inset 0 0 0 6px rgba(0,0,0,.08),0 4px 0 rgba(27,36,48,.22),0 8px 16px rgba(27,36,48,.18)}
+.mm-back::after{content:'✦';color:rgba(255,255,255,.85);font-size:calc(var(--w) * .26);line-height:1}
+.mm-face{transform:rotateY(180deg);background:linear-gradient(160deg,#fffdf7,#fff3df);box-shadow:inset 0 0 0 3px #f1dfc0,0 4px 0 rgba(27,36,48,.2),0 8px 16px rgba(27,36,48,.16)}
+.mm-pic{font-size:calc(var(--w) * .58);line-height:1;font-family:"Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",sans-serif}
+.mm-sw{width:64%;height:52%;border-radius:46% 54% 50% 50% / 55% 45% 55% 45%;background:radial-gradient(circle at 34% 30%,rgba(255,255,255,.55) 0 12%,transparent 13%),var(--c);box-shadow:inset 0 -6px 0 rgba(0,0,0,.14),0 0 0 3px rgba(27,36,48,.18)}
+.mm-word{display:grid;justify-items:center;padding:0 6%;text-align:center;font-family:var(--f-d);font-weight:900;line-height:1.05;color:#1b2430;overflow-wrap:anywhere}
+.mm-word small{display:block;font-family:var(--f-b);font-weight:800;font-size:.55em;color:#5b4a2a}
+.mm-tag{position:absolute;left:6px;top:5px;font:800 11px var(--f-b);letter-spacing:.06em;color:#fff;background:#0f5c48;border-radius:8px;padding:1px 5px}
+.mm-tag.es{background:#a3264f}
+.mm-card.done .mm-face{box-shadow:inset 0 0 0 3px #ffd166,0 0 0 3px rgba(255,209,102,.55),0 4px 0 rgba(27,36,48,.18)}
+.mm-card.done.p0 .mm-face{box-shadow:inset 0 0 0 4px #e8553f,0 4px 0 rgba(27,36,48,.18)}
+.mm-card.done.p1 .mm-face{box-shadow:inset 0 0 0 4px #1d7fb8,0 4px 0 rgba(27,36,48,.18)}
+.mm-own{position:absolute;right:5px;top:4px;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font:900 12px var(--f-d);color:#fff}
+.mm-card.p0 .mm-own{background:#c63a26}.mm-card.p1 .mm-own{background:#1a6d9e}
+.mm-card.pop{animation:mmpop .5s cubic-bezier(.2,1.7,.4,1)}
+@keyframes mmpop{0%{transform:scale(1)}35%{transform:scale(1.1)}100%{transform:scale(1)}}
+.mm-card.nope{animation:mmnope .42s ease-in-out}
+@keyframes mmnope{0%,100%{transform:translateX(0)}30%{transform:translateX(-3px)}70%{transform:translateX(3px)}}
+.mm-card.sel::after{content:'';position:absolute;inset:-6px;border-radius:calc(var(--rad,14px) + 5px);box-shadow:0 0 0 4px #fff,0 0 0 8px var(--berry);pointer-events:none}
+html.ig-reduced .mm-in{transition:none}
+html.ig-reduced .mm-card.pop,html.ig-reduced .mm-card.nope{animation:none}
+html.ig-reduced .mm-card.up .mm-face{animation:mmfade .18s}
+@keyframes mmfade{from{opacity:.2}to{opacity:1}}
+/* mode skins (card backs) */
+.mm-board.kids{--back1:#ff9fb8;--back2:#ffb8c9;--rim:#fff7d6}
+.mm-board.words{--back1:#3aa58a;--back2:#329178}
+.mm-board.classic{--back1:#2e4f7a;--back2:#27446a}
+.mm-board.daily{--back1:#f29b38;--back2:#e98c25;--rim:#fff8ea}
+.mm-board.duo{--back1:#7a5fd6;--back2:#6c51c6}
+html.kd-hc .mm-back{background:repeating-linear-gradient(45deg,#000 0 9px,#fff 9px 18px);box-shadow:inset 0 0 0 5px #000}
+html.kd-hc .mm-back::after{color:#000;text-shadow:0 0 0 #fff;background:#fff;border-radius:50%;padding:2px 6px}
+html.kd-hc .mm-face{background:#fff;box-shadow:inset 0 0 0 4px #000}
+html.kd-hc .mm-card.done .mm-face{box-shadow:inset 0 0 0 7px #000}
+/* sparkles */
+.mm-spark{position:fixed;left:0;top:0;z-index:25;pointer-events:none;font-size:18px;line-height:1;animation:mmspark .75s ease-out forwards}
+@keyframes mmspark{0%{opacity:1;transform:translate(var(--x0),var(--y0)) scale(.4)}100%{opacity:0;transform:translate(var(--x1),var(--y1)) scale(1.1) rotate(90deg)}}
+html.ig-reduced .mm-spark{animation:mmfade2 .5s forwards}
+@keyframes mmfade2{0%{opacity:1;transform:translate(var(--x0),var(--y0))}100%{opacity:0;transform:translate(var(--x0),var(--y0))}}
+/* caption (Words: the last pair, both words) */
+.mm-cap{position:fixed;left:50%;bottom:max(8px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:12;max-width:calc(100% - 24px);box-sizing:border-box;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:rgba(255,248,238,.95);border-radius:16px;padding:6px 14px;font:800 15px var(--f-b);color:var(--ink);box-shadow:0 4px 14px rgba(0,0,0,.14);min-height:34px}
+.mm-cap[hidden]{display:none}
+.mm-cap b{font-family:var(--f-d)}
+.mm-turn{position:fixed;left:50%;top:42%;white-space:nowrap;transform:translate(-50%,-50%);z-index:22;font:900 clamp(26px,7vw,48px) var(--f-d);color:#fff;padding:10px 22px;border-radius:22px;pointer-events:none;box-shadow:0 10px 30px rgba(0,0,0,.25);animation:mmturn 1.1s ease-out forwards}
+@keyframes mmturn{0%{opacity:0;transform:translate(-50%,-50%) scale(.7)}15%{opacity:1;transform:translate(-50%,-50%) scale(1)}75%{opacity:1}100%{opacity:0}}
+html.ig-reduced .mm-turn{animation:mmfade2b 1.1s forwards}
+@keyframes mmfade2b{0%,80%{opacity:1}100%{opacity:0}}
+/* ---- title: modes + options ---- */
+.mm-extra{display:grid;gap:10px}
+.mm-modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:8px}
+.mm-mode{display:grid;justify-items:center;align-content:center;gap:2px;min-height:76px;padding:8px 6px;border-radius:18px;border:0;background:#fff;color:var(--ink);cursor:pointer;font:inherit;box-shadow:inset 0 0 0 2px var(--line),0 4px 0 rgba(27,36,48,.1);line-height:1.12}
+.mm-mode .e{font-size:26px;line-height:1}
+.mm-mode b{font-family:var(--f-d);font-size:14px}
+.mm-mode small{font-size:12px;font-weight:700;color:#4c5868}
+.mm-mode[aria-pressed=true]{background:#dff4ea;box-shadow:inset 0 0 0 3px var(--mint-ink),0 4px 0 #0a4234}
+.mm-opts{display:grid;gap:8px;background:#fff;border-radius:18px;padding:10px 12px;box-shadow:inset 0 0 0 2px var(--line)}
+.mm-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.mm-row>span{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#4c5868;min-width:64px}
+.mm-row .ig-chipbtn{min-height:44px}
+.mm-note{margin:0;font-size:14px;line-height:1.4;color:#33404f}
+.mm-note b{color:var(--mint-ink)}
+@media (max-height:640px) and (min-width:720px){
+  .ig-title .ig-card{width:min(940px,100%);grid-template-columns:1fr 1.25fr;column-gap:22px;align-items:start}
+  .ig-title .ig-card>*{grid-column:1}
+  .ig-title .ig-card>.mm-extra{grid-column:2;grid-row:1/span 7}
+  .ig-title .ig-how div{padding:6px 10px;font-size:13px}
+}
+@media (max-width:420px){.ig-title .ig-how{display:none}.ig-title .ig-sub{font-size:14px}.mm-modes{grid-template-columns:repeat(3,1fr)}.mm-mode{min-height:70px;padding:6px 4px}.mm-mode small{display:none}.mm-row>span{min-width:0;width:100%}}
+/* ---- Little ones home ---- */
+.mm-kids .ig-card{width:min(620px,100%);text-align:center;justify-items:center}
+.mm-kthemes{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:100%}
+.mm-kthemes .kd-big{min-height:104px;flex-direction:column;gap:4px;font-size:16px}
+.mm-kthemes .kd-ico{font-size:46px}
+.mm-ksize{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.mm-ksize .kd-big{font-size:15px;gap:6px}
+.mm-ksize .kd-big[aria-pressed=true]{background:#dff4ea;box-shadow:inset 0 0 0 4px var(--mint-ink),0 5px 0 #0a4234}
+.mm-stickers{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;font-size:24px;line-height:1.2;background:#fff;border-radius:18px;padding:6px 8px;box-shadow:inset 0 0 0 2px var(--line)}
+.mm-stickers span.off{filter:grayscale(1);opacity:.28}
+.mm-lbl{font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#3f4b5a;margin:0}
+.mm-kdots{display:flex;gap:6px;align-items:center}
+.mm-kdots i{display:inline-block;width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.6);box-shadow:inset 0 0 0 2px rgba(27,36,48,.25)}
+.mm-kdots i.on{background:#ffb8c9;box-shadow:inset 0 0 0 2px #c2456a}
+.mm-opts2{display:grid;gap:8px}
+.mm-opts2 .ig-chipbtn{min-height:56px;text-align:left;font-size:15px}
+.mm-opts2 .ig-chipbtn small{display:block;font-weight:600;color:#4c5868;font-size:12px}
+@media (max-height:640px) and (min-width:720px){.mm-kids .ig-card{width:min(860px,100%);grid-template-columns:1fr 1fr;align-items:center}.mm-kids .ig-card>h2,.mm-kids .ig-card>p{grid-column:1/-1}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+</head><body>
+<canvas class="ig-gl" id="gl"></canvas>
+<div class="mm-board" id="board" role="group" aria-label="Cards" hidden></div>
+<div class="mm-cap" id="cap" aria-live="polite" hidden></div>
+<script type="module">
+import * as E from '../engine/inoa3d.js';
+import * as K from '../engine/kids.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+const { THREE, clamp, rnd, SFX, $ } = E;
+const T = E.L, TAU = Math.PI * 2;
+const cap1 = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+/* ---------------- content: original emoji pictures + procedural colour swatches, EN/ES words ---------------- */
+// [key, picture, English, Spanish, Spanish article] (article only shown on Spanish word cards, never spoken alone)
+const V = {
+  animals: [['dog', '🐶', 'dog', 'perro', 'el'], ['cat', '🐱', 'cat', 'gato', 'el'], ['cow', '🐮', 'cow', 'vaca', 'la'], ['pig', '🐷', 'pig', 'cerdo', 'el'], ['horse', '🐴', 'horse', 'caballo', 'el'], ['duck', '🦆', 'duck', 'pato', 'el'], ['fish', '🐟', 'fish', 'pez', 'el'], ['bird', '🐦', 'bird', 'pájaro', 'el'], ['frog', '🐸', 'frog', 'rana', 'la'], ['rabbit', '🐰', 'rabbit', 'conejo', 'el'], ['bear', '🐻', 'bear', 'oso', 'el'], ['lion', '🦁', 'lion', 'león', 'el'], ['turtle', '🐢', 'turtle', 'tortuga', 'la'], ['bee', '🐝', 'bee', 'abeja', 'la']],
+  food: [['apple', '🍎', 'apple', 'manzana', 'la'], ['banana', '🍌', 'banana', 'plátano', 'el'], ['bread', '🍞', 'bread', 'pan', 'el'], ['cheese', '🧀', 'cheese', 'queso', 'el'], ['egg', '🥚', 'egg', 'huevo', 'el'], ['milk', '🥛', 'milk', 'leche', 'la'], ['carrot', '🥕', 'carrot', 'zanahoria', 'la'], ['strawberry', '🍓', 'strawberry', 'fresa', 'la'], ['orange', '🍊', 'orange', 'naranja', 'la'], ['corn', '🌽', 'corn', 'maíz', 'el'], ['pear', '🍐', 'pear', 'pera', 'la'], ['watermelon', '🍉', 'watermelon', 'sandía', 'la'], ['cake', '🍰', 'cake', 'pastel', 'el'], ['soup', '🍲', 'soup', 'sopa', 'la']],
+  home: [['bed', '🛏️', 'bed', 'cama', 'la'], ['chair', '🪑', 'chair', 'silla', 'la'], ['door', '🚪', 'door', 'puerta', 'la'], ['key', '🔑', 'key', 'llave', 'la'], ['clock', '⏰', 'clock', 'reloj', 'el'], ['house', '🏠', 'house', 'casa', 'la'], ['couch', '🛋️', 'couch', 'sofá', 'el'], ['bathtub', '🛁', 'bathtub', 'bañera', 'la'], ['cup', '☕', 'cup', 'taza', 'la'], ['spoon', '🥄', 'spoon', 'cuchara', 'la'], ['broom', '🧹', 'broom', 'escoba', 'la'], ['soap', '🧼', 'soap', 'jabón', 'el'], ['lamp', '💡', 'light bulb', 'bombilla', 'la'], ['plate', '🍽️', 'plate', 'plato', 'el']],
+  school: [['book', '📕', 'book', 'libro', 'el'], ['pencil', '✏️', 'pencil', 'lápiz', 'el'], ['backpack', '🎒', 'backpack', 'mochila', 'la'], ['ruler', '📏', 'ruler', 'regla', 'la'], ['crayon', '🖍️', 'crayon', 'crayón', 'el'], ['paint', '🎨', 'paint', 'pintura', 'la'], ['bus', '🚌', 'bus', 'autobús', 'el'], ['computer', '💻', 'computer', 'computadora', 'la'], ['bell', '🔔', 'bell', 'campana', 'la'], ['notebook', '📓', 'notebook', 'cuaderno', 'el'], ['abacus', '🧮', 'abacus', 'ábaco', 'el'], ['trophy', '🏆', 'trophy', 'trofeo', 'el'], ['magnet', '🧲', 'magnet', 'imán', 'el'], ['scissors', '✂️', 'scissors', 'tijeras', 'las']],
+  nature: [['sun', '☀️', 'sun', 'sol', 'el'], ['moon', '🌙', 'moon', 'luna', 'la'], ['star', '⭐', 'star', 'estrella', 'la'], ['tree', '🌳', 'tree', 'árbol', 'el'], ['flower', '🌸', 'flower', 'flor', 'la'], ['leaf', '🍁', 'leaf', 'hoja', 'la'], ['cloud', '☁️', 'cloud', 'nube', 'la'], ['rainbow', '🌈', 'rainbow', 'arcoíris', 'el'], ['mountain', '⛰️', 'mountain', 'montaña', 'la'], ['snow', '❄️', 'snowflake', 'copo de nieve', 'el'], ['fire', '🔥', 'fire', 'fuego', 'el'], ['mushroom', '🍄', 'mushroom', 'hongo', 'el'], ['wave', '🌊', 'wave', 'ola', 'la'], ['cactus', '🌵', 'cactus', 'cactus', 'el']],
+  colors: [['red', '#e63946', 'red', 'rojo'], ['blue', '#2f6fdf', 'blue', 'azul'], ['yellow', '#ffd23f', 'yellow', 'amarillo'], ['green', '#3fb35a', 'green', 'verde'], ['orange', '#ff8c2e', 'orange', 'anaranjado'], ['purple', '#8a4fd8', 'purple', 'morado'], ['pink', '#ff8fc0', 'pink', 'rosado'], ['brown', '#8b5a2b', 'brown', 'marrón'], ['black', '#1b1b1f', 'black', 'negro'], ['white', '#ffffff', 'white', 'blanco'], ['gray', '#9aa3ad', 'gray', 'gris'], ['sky', '#7fd3ff', 'light blue', 'celeste']]
+};
+const THEMES = [
+  { id: 'animals', e: '🐶', name: { en: 'Animals', es: 'Animales' } }, { id: 'food', e: '🍎', name: { en: 'Food', es: 'Comida' } }, { id: 'home', e: '🏠', name: { en: 'Home', es: 'Casa' } },
+  { id: 'school', e: '🎒', name: { en: 'School', es: 'Escuela' } }, { id: 'nature', e: '🌳', name: { en: 'Nature', es: 'Naturaleza' } }, { id: 'colors', e: '🎨', name: { en: 'Colors', es: 'Colores' } }
+];
+const ITEM = {}; for (const th of THEMES) for (const r of V[th.id]) ITEM[th.id + ':' + r[0]] = th.id === 'colors' ? { id: th.id + ':' + r[0], th: th.id, c: r[1], en: r[2], es: r[3], art: '' } : { id: th.id + ':' + r[0], th: th.id, e: r[1], en: r[2], es: r[3], art: r[4] };
+const POOL = Object.values(ITEM).filter(it => it.e); // Classic / Daily / Two players: every picture (colours left out: too alike at small sizes)
+const MODES = [
+  { id: 'kids', e: '🐣', name: { en: 'Little ones', es: 'Peques' }, sub: { en: 'Ages 3–6 · pictures', es: 'De 3 a 6 años' } },
+  { id: 'words', e: '🔤', name: { en: 'Words', es: 'Palabras' }, sub: { en: 'English ↔ Spanish', es: 'Inglés ↔ español' } },
+  { id: 'classic', e: '🃏', name: { en: 'Classic', es: 'Clásico' }, sub: { en: 'Moves + timer', es: 'Jugadas + reloj' } },
+  { id: 'daily', e: '📅', name: { en: 'Daily board', es: 'Tablero del día' }, sub: { en: 'Same for everyone', es: 'Igual para todos' } },
+  { id: 'duo', e: '👥', name: { en: 'Two players', es: 'Dos jugadores' }, sub: { en: 'Take turns', es: 'Por turnos' } }
+];
+const GRIDS = { e: { n: 12, name: { en: 'Easy', es: 'Fácil' } }, m: { n: 20, name: { en: 'Medium', es: 'Medio' } }, h: { n: 30, name: { en: 'Hard', es: 'Difícil' } } };
+const DAILY_N = 20, KIDS_N = [4, 6, 8], WORDS_N = [12, 16], DUO_N = [12, 20, 30];
+const STICKERS = ['🦄', '🐙', '🦋', '🐳', '🦊', '🐼', '🌻', '🍦', '🚀', '🎈', '🦖', '🐞', '🌈', '🐬', '🧁', '⛵'];
+const PCOL = ['#e8553f', '#1d7fb8'];
+
+/* ---------------- save 'inoa.memory' (no names, no personal data) ---------------- */
+const today0 = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+let DATE_OVERRIDE = null; const today = () => DATE_OVERRIDE || today0();
+const dayBefore = s => { const [y, m, d] = s.split('-').map(Number); const t = new Date(y, m - 1, d - 1); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`; };
+const S = (() => {
+  let r = E.store.get('inoa.memory', {}); if (!r || typeof r !== 'object' || Array.isArray(r)) r = {};
+  const s = { v: 1, mode: 'classic', hc: !!r.hc, kidsHome: !!r.kidsHome, best: {}, words: { theme: 'animals', dir: 'pic', lang: 'es', n: 12 }, classic: { g: 'e' }, duo: { n: 20 }, kids: { n: 6, stickers: [], boards: 0 }, daily: { last: '', streak: 0, bestStreak: 0, hist: {}, cur: null }, boards: 0 };
+  if (MODES.some(m => m.id === r.mode)) s.mode = r.mode;
+  if (r.best && typeof r.best === 'object') for (const g of Object.keys(GRIDS)) { const b = r.best[g]; if (b && b.moves > 0) s.best[g] = { moves: b.moves | 0, time: Math.max(0, +b.time || 0) }; }
+  const w = r.words || {}; if (THEMES.some(t => t.id === w.theme)) s.words.theme = w.theme; if (w.dir === 'pic' || w.dir === 'lang') s.words.dir = w.dir; if (w.lang === 'en' || w.lang === 'es') s.words.lang = w.lang; if (WORDS_N.includes(w.n)) s.words.n = w.n;
+  if (r.classic && GRIDS[r.classic.g]) s.classic.g = r.classic.g; if (r.duo && DUO_N.includes(r.duo.n)) s.duo.n = r.duo.n;
+  const k = r.kids || {}; if (KIDS_N.includes(k.n)) s.kids.n = k.n; if (Array.isArray(k.stickers)) s.kids.stickers = k.stickers.filter(x => Number.isInteger(x) && x >= 0 && x < STICKERS.length).filter((x, i, a) => a.indexOf(x) === i); s.kids.boards = Math.max(0, k.boards | 0);
+  const d = r.daily || {}; if (/^\d{4}-\d\d-\d\d$/.test(d.last || '')) s.daily.last = d.last; s.daily.streak = Math.max(0, d.streak | 0); s.daily.bestStreak = Math.max(s.daily.streak, d.bestStreak | 0);
+  if (d.hist && typeof d.hist === 'object') for (const [day, v] of Object.entries(d.hist).sort().slice(-21)) if (/^\d{4}-\d\d-\d\d$/.test(day) && v && v.moves > 0) s.daily.hist[day] = { moves: v.moves | 0, time: Math.max(0, +v.time || 0) };
+  if (d.cur && /^\d{4}-\d\d-\d\d$/.test(d.cur.date || '') && Array.isArray(d.cur.matched)) s.daily.cur = { date: d.cur.date, matched: d.cur.matched.filter(x => typeof x === 'string').slice(0, 30), moves: Math.max(0, d.cur.moves | 0), time: Math.max(0, +d.cur.time || 0) };
+  s.boards = Math.max(0, r.boards | 0); return s;
+})();
+const save = () => E.store.set('inoa.memory', S);
+const applyHC = () => document.documentElement.classList.toggle('kd-hc', S.hc);
+applyHC();
+
+/* ---------------- seeded randomness (Daily board: the same layout for everyone on a date) ---------------- */
+const hashStr = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
+const mulberry = a => () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const shuffle = (arr, r = Math.random) => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+function dailyDeck(date) { const r = mulberry(hashStr('inoa-memory:' + date)); const items = shuffle(POOL, r).slice(0, DAILY_N / 2); return shuffle(items.flatMap(it => [{ it, f: 'pic' }, { it, f: 'pic' }]), r); }
+
+/* ---------------- engine + a light 3D table (rendered on demand: the scene is still, cards are DOM) ---------------- */
+const ld = E.loading('Memory Match', T('Shuffling the cards…', 'Barajando las cartas…'));
+const R = E.createRenderer($('gl'), { fov: 34, portraitFov: 48, shadowSize: 22, onDemand: true });
+const { scene, camera, sun } = R;
+R.setLook({ background: 0xeadcc8, fog: 0xeadcc8, fogNear: 60, fogFar: 140, sun: 1.45, sunColor: 0xfff1df, hemi: .7, skyHor: 0xfff6ea, ground: 0xd9c7ae, exposure: .95, env: .22, bloom: .08, bloomThreshold: .98 });
+R.setEnv(R.pmrem.fromScene(new RoomEnvironment(), .04).texture);
+R.vignette.uniforms.uAmt.value = .14;
+camera.position.set(0, 26, 7); camera.lookAt(0, 0, 0);
+sun.position.set(-8, 20, 9); sun.target.position.set(0, 0, 0);
+ld.set(.4);
+const table = new THREE.Mesh(new THREE.PlaneGeometry(160, 160), E.pbr('wood', 0xdcb488, [8, 8])); table.rotation.x = -Math.PI / 2; table.receiveShadow = true; scene.add(table);
+const mat = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), E.pbr('fabric', 0xffffff, [3, 3]).clone()); mat.rotation.x = -Math.PI / 2; mat.position.y = .03; mat.receiveShadow = true; scene.add(mat);
+const matRim = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), E.mat(0xf5e6c8, { roughness: .8 })); matRim.rotation.x = -Math.PI / 2; matRim.position.y = .02; matRim.receiveShadow = true; scene.add(matRim);
+const MATCOL = { kids: 0xf7b9c8, words: 0x58b79a, classic: 0x3d6a9a, daily: 0xf0b25a, duo: 0x8f78dc, title: 0x3f8f7d };
+// props around the edges: a teacup, a little plant, a pencil, the card box and two stray cards (all procedural)
+const props = [];
+const prop = (g) => { g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); E.addOutline(g, 1.03); scene.add(g); props.push(g); return g; };
+{ const g = new THREE.Group(); const cupM = E.mat(0xfffaf2, { roughness: .25 }); const cup = new THREE.Mesh(new THREE.CylinderGeometry(.9, .68, 1.05, 28), cupM); cup.position.y = .62; g.add(cup);
+  const tea = new THREE.Mesh(new THREE.CircleGeometry(.82, 28), E.mat(0x9a5a2c, { roughness: .15 })); tea.rotation.x = -Math.PI / 2; tea.position.y = 1.1; g.add(tea);
+  const h = new THREE.Mesh(new THREE.TorusGeometry(.34, .09, 10, 20), cupM); h.position.set(.98, .66, 0); g.add(h);
+  const sau = new THREE.Mesh(new THREE.CylinderGeometry(1.45, 1.3, .12, 32), E.mat(0xb8e0d2, { roughness: .3 })); sau.position.y = .06; g.add(sau); prop(g); }
+{ const g = new THREE.Group(); const pot = new THREE.Mesh(new THREE.CylinderGeometry(.85, .62, 1.2, 20), E.mat(0xd2774a, { roughness: .8 })); pot.position.y = .6; g.add(pot);
+  const soil = new THREE.Mesh(new THREE.CircleGeometry(.78, 20), E.mat(0x5a3d26)); soil.rotation.x = -Math.PI / 2; soil.position.y = 1.18; g.add(soil);
+  [[0, 1.9, 0, .62], [-.5, 1.6, .25, .48], [.52, 1.65, -.15, .5], [.1, 1.55, .5, .42], [-.15, 2.35, -.1, .4]].forEach(([x, y, z, r]) => { const l = new THREE.Mesh(new THREE.SphereGeometry(r, 16, 12), E.mat(0x6cc070, { roughness: .7 })); l.position.set(x, y, z); g.add(l); }); prop(g); }
+{ const g = new THREE.Group(); const body = new THREE.Mesh(new THREE.CylinderGeometry(.16, .16, 3.4, 6), E.mat(0xffc93d)); body.rotation.z = Math.PI / 2; body.position.y = .17; g.add(body);
+  const tip = new THREE.Mesh(new THREE.ConeGeometry(.16, .5, 6), E.mat(0xf2d2a2)); tip.rotation.z = -Math.PI / 2; tip.position.set(1.95, .17, 0); g.add(tip);
+  const er = new THREE.Mesh(new THREE.CylinderGeometry(.17, .17, .35, 10), E.mat(0xff8fa8)); er.rotation.z = Math.PI / 2; er.position.set(-1.87, .17, 0); g.add(er); g.rotation.y = .5; prop(g); }
+const boxBackM = new THREE.MeshStandardMaterial({ color: 0x2f7f74, roughness: .6 });
+{ const g = new THREE.Group(); const box = new THREE.Mesh(new THREE.BoxGeometry(2.2, .7, 3), E.mat(0xfff3dc, { roughness: .6 })); box.position.y = .35; g.add(box);
+  const lid = new THREE.Mesh(new THREE.BoxGeometry(2.3, .22, 3.1), boxBackM); lid.position.set(-.2, .82, .25); lid.rotation.y = .12; g.add(lid); g.rotation.y = -.3; prop(g); }
+for (let k = 0; k < 2; k++) { const g = new THREE.Group(); const c = new THREE.Mesh(new THREE.BoxGeometry(1.5, .05, 2), [E.mat(0xfff3dc), E.mat(0xfff3dc), boxBackM, E.mat(0xfffaf0), E.mat(0xfff3dc), E.mat(0xfff3dc)]); c.position.y = .03 + k * .06; g.add(c); g.rotation.y = .4 + k * .7; prop(g); }
+const ray = new THREE.Raycaster(), plane0 = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), _v2 = new THREE.Vector2(), _v3 = new THREE.Vector3();
+const onTable = (px, py) => { _v2.set(px / innerWidth * 2 - 1, -(py / innerHeight) * 2 + 1); camera.updateMatrixWorld(); ray.setFromCamera(_v2, camera); return ray.ray.intersectPlane(plane0, _v3) ? _v3.clone() : new THREE.Vector3(); };
+function placeScene(rect) {
+  camera.aspect = innerWidth / innerHeight; camera.fov = innerHeight > innerWidth ? 48 : 34; camera.updateProjectionMatrix();
+  const r = rect || { x: innerWidth * .2, y: innerHeight * .2, w: innerWidth * .6, h: innerHeight * .6 }, pad = 10;
+  const a = onTable(r.x - pad, r.y - pad), b = onTable(r.x + r.w + pad, r.y + r.h + pad), c = onTable(r.x - pad, r.y + r.h + pad), d = onTable(r.x + r.w + pad, r.y - pad);
+  const x0 = Math.min(a.x, c.x), x1 = Math.max(b.x, d.x), z0 = Math.min(a.z, d.z), z1 = Math.max(b.z, c.z);
+  mat.scale.set(Math.max(.1, x1 - x0), Math.max(.1, z1 - z0), 1); mat.position.set((x0 + x1) / 2, .03, (z0 + z1) / 2);
+  matRim.scale.set(mat.scale.x + .7, mat.scale.y + .7, 1); matRim.position.set(mat.position.x, .02, mat.position.z);
+  const vw = onTable(innerWidth, innerHeight / 2).x - onTable(0, innerHeight / 2).x, s = clamp(vw / 16, .7, 2.4);
+  const spots = [[.07, .9], [.93, .88], [.94, .16], [.06, .2], [.5, .97], [.88, .52]];
+  props.forEach((g, i) => { const [sx, sy] = spots[i % spots.length]; const p = onTable(sx * innerWidth, sy * innerHeight); g.position.set(p.x, 0, p.z); g.scale.setScalar(s); });
+  R.invalidate();
+}
+function skin(mode) { mat.material.color.setHex(MATCOL[mode] || MATCOL.title); const bc = { kids: 0xff9fb8, words: 0x3aa58a, classic: 0x2e4f7a, daily: 0xf29b38, duo: 0x7a5fd6 }[mode] || 0x2f7f74; boxBackM.color.setHex(bc); R.invalidate(); }
+
+const input = E.createInput({ surface: $('board'), pads: 'separate' });
+const board = $('board'), capEl = $('cap');
+
+/* ---------------- game state ---------------- */
+let G = null, music = null, hudEl = null, repeatBtn = null;
+const wordOf = (it, lang) => lang === 'es' ? it.es : it.en;
+const nameNow = it => wordOf(it, E.lang());
+// a card face: {it, f: 'pic' | 'en' | 'es'}; pairs share it.id
+function buildDeck(mode, opts) {
+  const r = Math.random;
+  if (mode === 'daily') return dailyDeck(opts.date);
+  if (mode === 'kids') { const items = shuffle(V[opts.theme].map(x => ITEM[opts.theme + ':' + x[0]]), r).slice(0, opts.n / 2); return shuffle(items.flatMap(it => [{ it, f: 'pic' }, { it, f: 'pic' }]), r); }
+  if (mode === 'words') { const items = shuffle(V[opts.theme].map(x => ITEM[opts.theme + ':' + x[0]]), r).slice(0, opts.n / 2); return shuffle(items.flatMap(it => opts.dir === 'lang' ? [{ it, f: 'en' }, { it, f: 'es' }] : [{ it, f: 'pic' }, { it, f: opts.lang }]), r); }
+  const items = shuffle(POOL, r).slice(0, opts.n / 2); return shuffle(items.flatMap(it => [{ it, f: 'pic' }, { it, f: 'pic' }]), r);
+}
+const fresh = (mode, opts) => ({ mode, opts, cards: [], open: [], moves: 0, time: 0, timer: mode === 'classic' || mode === 'daily', started: false, combo: 0, bestCombo: 0, turn: 0, scores: [0, 0], wait: 0, done: false, endT: 0, paused: false, sel: 0, kbd: false, practice: false, misses: 0, lastSec: -1, matchedN: 0 });
+
+/* ---------------- board DOM ---------------- */
+function faceHTML(c) {
+  const it = c.it;
+  if (c.f === 'pic') return it.c ? `<span class="mm-sw" style="--c:${it.c}"></span>` : `<span class="mm-pic" aria-hidden="true">${it.e}</span>`;
+  const w = wordOf(it, c.f), art = c.f === 'es' && it.art ? `<small>${it.art}</small>` : '';
+  return `<span class="mm-word" lang="${c.f}">${art}<span>${w}</span></span><span class="mm-tag ${c.f}" aria-hidden="true">${c.f.toUpperCase()}</span>`;
+}
+const cardName = c => c.f === 'pic' ? nameNow(c.it) : wordOf(c.it, c.f);
+function label(i) { const c = G.cards[i]; const n = T(`Card ${i + 1}`, `Carta ${i + 1}`); if (c.state === 'down') return `${n}, ${T('face down', 'boca abajo')}`; return `${n}: ${cardName(c)}${c.state === 'done' ? ' · ' + T('matched', 'pareja') : ''}`; }
+function buildBoard() {
+  board.innerHTML = ''; board.className = 'mm-board ' + G.mode; board.hidden = false; board.setAttribute('aria-label', T('Cards', 'Cartas'));
+  G.cards.forEach((c, i) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'mm-card'; b.dataset.i = i; b.tabIndex = i === 0 ? 0 : -1;
+    b.innerHTML = `<span class="mm-in"><span class="mm-back"></span><span class="mm-face">${faceHTML(c)}</span></span>`;
+    b.addEventListener('click', e => { if (performance.now() - kbFlipAt < 180) return; G && (G.kbd = false); showSel(); flip(i); });
+    c.el = b; board.appendChild(b); refresh(i);
+  });
+}
+function refresh(i) { const c = G.cards[i], b = c.el; if (!b) return; b.classList.toggle('up', c.state === 'up'); b.classList.toggle('done', c.state === 'done'); b.classList.toggle('p0', c.owner === 0); b.classList.toggle('p1', c.owner === 1); b.setAttribute('aria-label', label(i));
+  let own = b.querySelector('.mm-own'); if (G.mode === 'duo' && c.state === 'done' && c.owner != null) { if (!own) { own = document.createElement('span'); own.className = 'mm-own'; own.setAttribute('aria-hidden', 'true'); b.querySelector('.mm-face').appendChild(own); } own.textContent = c.owner + 1; } }
+const bump = (el, cls) => { if (!el || E.reducedMotion()) return; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
+
+/* ---------------- layout: the whole grid always fits the screen (no scrolling), cards ≥ 64 px (≥ 96 px for Little ones) ---------------- */
+const LAY = { cols: 1, rows: 1, w: 0, h: 0, x: 0, y: 0, rect: null };
+function bestGrid(n, W, H, gap, aspect) { let best = null; for (let c = 1; c <= n; c++) { const r = Math.ceil(n / c), w = Math.min((W - gap * (c - 1)) / c, ((H - gap * (r - 1)) / r) / aspect), empty = c * r - n; const sc = w - empty * 2; if (!best || sc > best.sc + .01) best = { c, r, w, sc }; } return best; }
+function layout() {
+  if (!G) { placeScene(null); return; }
+  const port = innerHeight > innerWidth, n = G.cards.length;
+  const hudB = Math.round(document.querySelector('.ig-top')?.getBoundingClientRect().bottom || 60); LAY.hudB = hudB; const top = Math.max(60, hudB) + 8;
+  const bottom = (capEl.hidden ? 10 : 50) + 4, side = 12;
+  const W = innerWidth - side * 2, H = innerHeight - top - bottom;
+  const gap = n >= 24 ? 6 : n >= 12 ? 8 : 12, aspect = port ? 1.22 : 1.12;
+  const g = bestGrid(n, W, H, gap, aspect);
+  const w = Math.floor(Math.min(g.w, G.mode === 'kids' ? 210 : 170)), h = Math.floor(w * aspect);
+  const bw = g.c * w + (g.c - 1) * gap, bh = g.r * h + (g.r - 1) * gap, x0 = Math.round(side + (W - bw) / 2), y0 = Math.round(top + (H - bh) / 2);
+  Object.assign(LAY, { cols: g.c, rows: g.r, w, h, x: x0, y: y0, gap, rect: { x: x0, y: y0, w: bw, h: bh } });
+  board.style.cssText = `left:${x0}px;top:${y0}px;width:${bw}px;height:${bh}px;--w:${w}px;--rad:${Math.round(clamp(w * .12, 8, 18))}px`;
+  G.cards.forEach((c, i) => { const r = Math.floor(i / g.c), col = i % g.c, inRow = r === g.r - 1 ? n - r * g.c : g.c, off = (g.c - inRow) * (w + gap) / 2; const b = c.el; if (!b) return; b.style.left = Math.round(off + col * (w + gap)) + 'px'; b.style.top = r * (h + gap) + 'px'; b.style.width = w + 'px'; b.style.height = h + 'px';
+    const wd = b.querySelector('.mm-word'); if (wd) { const txt = wordOf(c.it, c.f), longest = Math.max(...txt.split(' ').map(s => s.length)); wd.style.fontSize = Math.round(clamp(Math.min(w * .23, w * 1.5 / Math.max(4, longest)), 11, 30)) + 'px'; } });
+  placeScene(LAY.rect);
+}
+addEventListener('resize', () => setTimeout(() => { layout(); hud(); }, 0));
+
+/* ---------------- feedback: sounds, sparkles ---------------- */
+const flipSnd = () => { E.noise(.05, .05, 2600, 1.4); E.tone(500 + Math.random() * 60, .05, 'sine', .035, 120); };
+const backSnd = () => E.noise(.06, .035, 1700, 1.2);
+function matchSnd(k) { const m = 1 + Math.min(6, k) * .06; [659.25, 783.99, 1046.5].forEach((f, i) => E.tone(f * m, .2, 'triangle', .07, 0, i * .07)); if (k >= 2) E.tone(1318.5 * m, .25, 'sine', .04, 0, .22); }
+function sparkle(el, n = 8, big = false) {
+  if (!el) return; const r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, rm = E.reducedMotion(); n = rm ? Math.min(3, n) : n;
+  for (let k = 0; k < n; k++) { const s = document.createElement('span'); s.className = 'mm-spark'; s.textContent = ['✦', '✧', '⭐', '✨'][k % 4]; const a = k / n * TAU + Math.random() * .5, d0 = r.width * .25, d1 = r.width * (big ? .95 : .7) * (0.8 + Math.random() * .4);
+    s.style.setProperty('--x0', `${cx + Math.cos(a) * d0 - 9}px`); s.style.setProperty('--y0', `${cy + Math.sin(a) * d0 - 9}px`); s.style.setProperty('--x1', `${cx + Math.cos(a) * d1 - 9}px`); s.style.setProperty('--y1', `${cy + Math.sin(a) * d1 - 9}px`); s.style.color = ['#ffc83d', '#ff8fb1', '#7cc8ff', '#9be37f'][k % 4];
+    document.body.appendChild(s); setTimeout(() => s.remove(), 800); }
+}
+
+/* ---------------- core: flip two cards, match pairs ---------------- */
+let kbFlipAt = 0;
+function flip(i) {
+  if (!G || G.paused || G.done || i == null || i < 0 || i >= G.cards.length) return false;
+  const c = G.cards[i]; if (c.state !== 'down') return false;
+  if (G.wait > 0) { if (G.mode === 'kids') return false; resolveMiss(); } // grown-up modes: a third tap turns the last two back right away
+  E.audio(); c.state = 'up'; G.open.push(i); refresh(i); flipSnd(); G.started = true; G.sel = i; showSel();
+  speakCard(c);
+  if (G.open.length === 2) {
+    G.moves++; const [a, b] = G.open, A = G.cards[a], B = G.cards[b];
+    if (A.it.id === B.it.id) {
+      A.state = B.state = 'done'; A.owner = B.owner = G.mode === 'duo' ? G.turn : null; G.open = []; G.combo++; G.bestCombo = Math.max(G.bestCombo, G.combo); G.matchedN++;
+      if (G.mode === 'duo') G.scores[G.turn]++;
+      refresh(a); refresh(b); bump(A.el, 'pop'); bump(B.el, 'pop'); sparkle(A.el, 7 + G.combo * 2, G.combo >= 3); sparkle(B.el, 7 + G.combo * 2, G.combo >= 3);
+      if (G.mode === 'kids') { K.speak(K.success({ el: null }), { interrupt: false }); }
+      else { matchSnd(G.combo); if (G.combo >= 2) { const r = B.el.getBoundingClientRect(); E.floatText(`${T('Combo', 'Combo')} ×${G.combo}`, r.left + r.width / 2, r.top, 'mm-combo'); } }
+      if (G.mode === 'words') { capEl.innerHTML = `<span aria-hidden="true">${A.it.e || '🎨'}</span> <b lang="en">${A.it.en}</b> = <b lang="es">${A.it.art ? A.it.art + ' ' : ''}${A.it.es}</b>`; if (G.opts.dir === 'pic') { E.say(A.it.en, { lang: 'en', interrupt: false }); E.say(A.it.es, { lang: 'es', interrupt: false }); } }
+      if (G.mode === 'daily' && !G.practice) saveDaily();
+      if (G.matchedN * 2 >= G.cards.length) { G.done = true; G.endT = G.mode === 'kids' ? .7 : .9; }
+    } else { G.combo = 0; G.misses++; G.wait = G.mode === 'kids' ? 1.6 : .95; if (G.mode === 'daily' && !G.practice) saveDaily(); }
+  }
+  hud(); return true;
+}
+function resolveMiss() {
+  if (!G) return; const was = G.open.slice(); G.open = []; G.wait = 0;
+  for (const i of was) { G.cards[i].state = 'down'; refresh(i); bump(G.cards[i].el, 'nope'); }
+  if (was.length) backSnd();
+  if (G.mode === 'kids' && G.misses % 2 === 1) K.speak(K.tryAgain(), { interrupt: false });
+  if (G.mode === 'duo') { G.turn = 1 - G.turn; turnBanner(); }
+  hud();
+}
+function speakCard(c) {
+  if (G.mode === 'words') { if (c.f === 'pic') E.say(wordOf(c.it, G.opts.lang), { lang: G.opts.lang }); else E.say(wordOf(c.it, c.f), { lang: c.f }); return; }
+  if (G.mode === 'kids') { E.say((E.lang() === 'es' ? '¡' : '') + cap1(nameNow(c.it)) + '!'); return; }
+}
+function turnBanner() { const n = G.turn + 1, line = { en: `Player ${n}'s turn`, es: `Turno del jugador ${n}` }; const d = document.createElement('div'); d.className = 'mm-turn'; d.style.background = PCOL[G.turn]; d.textContent = T(line); document.body.appendChild(d); setTimeout(() => d.remove(), 1150); E.say(T(line)); }
+function saveDaily() { S.daily.cur = { date: G.opts.date, matched: [...new Set(G.cards.filter(c => c.state === 'done').map(c => c.it.id))], moves: G.moves, time: +G.time.toFixed(1) }; save(); }
+function solveAll() { if (!G) return 0; let n = 0; for (let guard = 0; guard < 80 && G && !G.done; guard++) { if (G.wait > 0) resolveMiss(); const open = G.open[0]; let i = open != null ? open : G.cards.findIndex(c => c.state === 'down'); if (i < 0) break; if (open == null) flip(i); const j = G.cards.findIndex((c, k) => k !== i && c.state === 'down' && c.it.id === G.cards[i].it.id); if (j < 0) break; flip(j); n++; } return n; }
+
+/* ---------------- keyboard (arrows + Space/Enter), gamepad + phones (stick/D-pad + A) ---------------- */
+function showSel() { if (!G) return; G.cards.forEach((c, i) => { if (!c.el) return; c.el.classList.toggle('sel', G.kbd && i === G.sel); c.el.tabIndex = i === G.sel ? 0 : -1; }); }
+function moveSel(dx, dy) {
+  if (!G) return; const n = G.cards.length, c = LAY.cols; let i = G.sel;
+  if (dx) i = clamp(i + dx, 0, n - 1);
+  if (dy) { const j = i + dy * c; if (j >= 0 && j < n) i = j; else if (dy > 0 && Math.floor(i / c) < LAY.rows - 1) i = n - 1; }
+  if (i !== G.sel) { G.sel = i; SFX.click(); }
+  G.kbd = true; showSel(); const el = G.cards[G.sel].el; if (el && document.activeElement !== el) el.focus({ preventScroll: true });
+}
+const blocked = () => !G || G.paused || G.done || !!document.querySelector('.ig-screen, .kd-gate, .inoa-pp');
+addEventListener('keydown', e => {
+  if (blocked()) return; const k = e.code;
+  const d = { ArrowLeft: [-1, 0], KeyA: [-1, 0], ArrowRight: [1, 0], KeyD: [1, 0], ArrowUp: [0, -1], KeyW: [0, -1], ArrowDown: [0, 1], KeyS: [0, 1] }[k];
+  if (d) { e.preventDefault(); if (!G.kbd) { G.kbd = true; showSel(); } else moveSel(d[0], d[1]); return; }
+  if (k === 'Space' || k === 'Enter' || k === 'NumpadEnter') { e.preventDefault(); if (e.repeat) return; kbFlipAt = performance.now(); if (!G.kbd) { G.kbd = true; showSel(); } flip(G.sel); }
+});
+addEventListener('keyup', e => { if ((e.code === 'Space' || e.code === 'Enter') && e.target && e.target.closest && e.target.closest('.mm-card')) e.preventDefault(); });
+board.addEventListener('pointerdown', () => { if (G && G.kbd) { G.kbd = false; showSel(); } });
+const KB = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'Space', 'Enter', 'KeyJ'];
+const nav = { x: 0, y: 0, t: 0 };
+function pollPads(dt) {
+  const s = input.poll(); if (s.pausePressed) { pause(); return; }
+  const kb = KB.some(k => input.keys[k]); let x = kb ? 0 : s.x, y = kb ? 0 : s.y, a = !kb && s.aPressed && !input.keys.KeyJ;
+  const slots = input.pads(); slots.forEach((slot, idx) => { const p = input.pad(slot); if (!p) return; if (p.pausePressed) { pause(); return; } if (G && G.mode === 'duo' && slots.length >= 2 && idx !== G.turn) return; if (Math.abs(p.x) > .3) x = p.x; if (Math.abs(p.y) > .3) y = p.y; a = a || p.aPressed; });
+  if (blocked()) { nav.x = nav.y = 0; return; }
+  const dx = Math.abs(x) > .5 ? Math.sign(x) : 0, dy = Math.abs(y) > .5 && Math.abs(y) >= Math.abs(x) ? Math.sign(y) : 0, ddx = dy ? 0 : dx;
+  if (ddx !== nav.x || dy !== nav.y) { nav.x = ddx; nav.y = dy; nav.t = .38; if (ddx || dy) { if (!G.kbd) { G.kbd = true; showSel(); } else moveSel(ddx, dy); } }
+  else if (ddx || dy) { nav.t -= dt; if (nav.t <= 0) { nav.t = .15; moveSel(ddx, dy); } }
+  if (a) { if (!G.kbd) { G.kbd = true; showSel(); } flip(G.sel); }
+}
+
+/* ---------------- HUD ---------------- */
+const mmss = t => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
+function hud() {
+  if (!hudEl) return; if (!G) { hudEl.innerHTML = ''; return; }
+  const pairs = G.cards.length / 2, m = G.mode;
+  if (m === 'kids') { hudEl.innerHTML = `<div class="ig-chip mm-kdots" role="img" aria-label="${T(`${G.matchedN} of ${pairs} pairs`, `${G.matchedN} de ${pairs} parejas`)}"><span aria-hidden="true">🐣</span>${Array.from({ length: pairs }, (_, i) => `<i class="${i < G.matchedN ? 'on' : ''}"></i>`).join('')}</div>`; if (repeatBtn) hudEl.appendChild(repeatBtn); relayoutIfHudMoved(); return; }
+  if (m === 'duo') { hudEl.innerHTML = [0, 1].map(p => `<div class="ig-chip ${G.turn === p ? 'mm-chip-on' : 'mm-chip-off'}" style="--pc:${PCOL[p]}" aria-current="${G.turn === p}"><span style="color:${PCOL[p]}" aria-hidden="true">●</span> ${T(`P${p + 1}`, `J${p + 1}`)} <b>${G.scores[p]}</b></div>`).join('') + `<div class="ig-chip" aria-label="${T('Pairs left', 'Parejas restantes')}">🃏 ${pairs - G.matchedN}</div>`; relayoutIfHudMoved(); return; }
+  const chips = [`<div class="ig-chip" aria-label="${T('Pairs', 'Parejas')}">${m === 'daily' ? '📅' : m === 'words' ? '🔤' : '🃏'} <b>${G.matchedN}/${pairs}</b></div>`, `<div class="ig-chip" aria-label="${T('Moves', 'Jugadas')}">👣 <b>${G.moves}</b></div>`];
+  if (G.timer) chips.push(`<div class="ig-chip" id="mmTime" aria-label="${T('Time', 'Tiempo')}">⏱ <b>${mmss(G.time)}</b></div>`);
+  hudEl.innerHTML = chips.join('');
+  relayoutIfHudMoved();
+}
+// the board sits under the HUD: if the HUD row changes height (wrapping, kids' repeat button), lay the board out again
+function relayoutIfHudMoved() { if (!G) return; const b = Math.round(document.querySelector('.ig-top')?.getBoundingClientRect().bottom || 0); if (b && Math.abs(b - (LAY.hudB || 0)) > 1) layout(); }
+function ensureShell() { if (hudEl) return; hudEl = E.shell({ title: 'Memory Match', onPause: pause, party: false }).hud; }
+
+/* ---------------- flow ---------------- */
+const INTRO = {
+  kids: { en: 'Find two pictures that match! Tap a card.', es: '¡Busca dos dibujos iguales! Toca una carta.' },
+  pic: { en: 'Match each picture with its word.', es: 'Une cada dibujo con su palabra.' },
+  lang: { en: 'Match each English word with its Spanish word.', es: 'Une cada palabra en inglés con su palabra en español.' },
+  classic: { en: 'Find all the pairs. Tap two cards.', es: 'Encuentra todas las parejas. Toca dos cartas.' },
+  daily: { en: "Today's board. Everyone gets the same cards.", es: 'El tablero de hoy. Todos tienen las mismas cartas.' },
+  duo: { en: 'Player 1 starts. A match keeps your turn.', es: 'Empieza el jugador 1. Si haces pareja, sigues jugando.' }
+};
+function optsFor(mode, o = {}) {
+  if (mode === 'kids') return { n: o.n || S.kids.n, theme: o.theme || 'animals' };
+  if (mode === 'words') return { n: o.n || S.words.n, theme: o.theme || S.words.theme, dir: o.dir || S.words.dir, lang: o.lang || S.words.lang };
+  if (mode === 'classic') { const g = o.g || S.classic.g; return { g, n: GRIDS[g].n }; }
+  if (mode === 'daily') return { n: DAILY_N, date: o.date || today() };
+  return { n: o.n || S.duo.n };
+}
+async function start(mode, o = {}, { skipGate = false } = {}) {
+  if (!skipGate && !(await E.platformStart('memory'))) return;
+  closeScreens(); ensureShell(); const opts = optsFor(mode, o);
+  K.setGuard(mode === 'kids'); if (mode === 'kids') { S.kidsHome = true; } else S.mode = mode; save();
+  G = fresh(mode, opts); G.cards = buildDeck(mode, opts).map(c => ({ ...c, state: 'down', owner: null, el: null }));
+  if (mode === 'daily') { G.practice = !!S.daily.hist[opts.date]; const cur = S.daily.cur; if (!G.practice && cur && cur.date === opts.date && cur.matched.length) { for (const c of G.cards) if (cur.matched.includes(c.it.id)) c.state = 'done'; G.matchedN = cur.matched.length; G.moves = cur.moves; G.time = cur.time; G.resumed = true; } }
+  capEl.hidden = mode !== 'words'; capEl.innerHTML = mode === 'words' ? T('Find the pairs: each word is read aloud.', 'Encuentra las parejas: cada palabra se lee en voz alta.') : '';
+  if (mode === 'kids' && !repeatBtn) { repeatBtn = K.repeatButton(); repeatBtn.addEventListener('pointerup', e => e.currentTarget.blur()); }
+  skin(mode); buildBoard(); hud(); layout(); showSel();
+  if (music) music.stop(); music = E.music(E.SONGS.chill);
+  const line = mode === 'words' ? INTRO[opts.dir] : INTRO[mode];
+  if (mode === 'daily' && G.resumed) K.instruct({ en: "Welcome back! Your board is just as you left it.", es: '¡Hola otra vez! Tu tablero está como lo dejaste.' }); else K.instruct(line);
+  if (mode === 'daily' && G.practice) E.toast(T("Practice: today's result is already saved", 'Práctica: el resultado de hoy ya está guardado'), 2600);
+  return G;
+}
+function finish() {
+  const m = G.mode, pairs = G.cards.length / 2, t = Math.round(G.time); S.boards++;
+  if (music) { music.stop(); music = null; } $('board').querySelectorAll('.mm-card').forEach(b => b.classList.remove('sel'));
+  const again = () => start(m, G.opts, { skipGate: true });
+  let r;
+  if (m === 'kids') {
+    let st = STICKERS.findIndex((_, i) => !S.kids.stickers.includes(i)); if (st < 0) st = S.kids.boards % STICKERS.length; else S.kids.stickers.push(st); S.kids.boards++; save();
+    const ov = K.rewardOverlay({ stars: 3, max: 3, sticker: STICKERS[st], title: T('Hooray!', '¡Bravo!') }); SFX.win();
+    K.speak({ en: 'You found all the pairs! Here is a sticker.', es: '¡Encontraste todas las parejas! Aquí tienes una calcomanía.' });
+    G.overlay = ov; G.kidsSticker = st; G.rewardT = 3.2; return null;
+  }
+  SFX.win(); sparkleAll();
+  if (m === 'classic') {
+    const g = G.opts.g, prev = S.best[g], nb = !prev || G.moves < prev.moves || (G.moves === prev.moves && t < prev.time); if (nb) S.best[g] = { moves: G.moves, time: t }; save();
+    const eff = pairs / G.moves, stars = eff >= .7 ? 3 : eff >= .5 ? 2 : 1;
+    const xp = 18 + pairs * 2 + stars * 5, coins = 4 + Math.round(pairs / 2) + stars * 2;
+    r = E.results({ gameId: 'memory', title: `🃏 ${T(GRIDS[g].name)} · ${G.cards.length} ${T('cards', 'cartas')}`, stats: [[T('Moves', 'Jugadas'), G.moves], [T('Time', 'Tiempo'), mmss(t)], [T('Stars', 'Estrellas'), '⭐'.repeat(stars)], [T('Best combo', 'Mejor combo'), '×' + G.bestCombo], [T('Best', 'Récord'), `${S.best[g].moves} · ${mmss(S.best[g].time)}`]], xp, coins, won: true, onAgain: again });
+    if (nb && prev) E.toast(T('New best for this grid!', '¡Nuevo récord en este tablero!'), 2200, true);
+  } else if (m === 'words') {
+    save(); const xp = 20 + pairs * 3, coins = 4 + pairs;
+    const learned = G.cards.filter((c, i, a) => a.findIndex(x => x.it.id === c.it.id) === i).map(c => `${c.it.en} = ${c.it.es}`).slice(0, 8).join(' · ');
+    r = E.results({ gameId: 'memory', title: `🔤 ${T(THEMES.find(x => x.id === G.opts.theme).name)}`, stats: [[T('Pairs', 'Parejas'), pairs], [T('Moves', 'Jugadas'), G.moves], [T('Best combo', 'Mejor combo'), '×' + G.bestCombo]], xp, coins, won: true, onAgain: again });
+    const p = document.createElement('p'); p.className = 'ig-sub'; p.style.fontSize = '13px'; p.textContent = learned; r.querySelector('.ig-stats').after(p);
+  } else if (m === 'daily') {
+    const date = G.opts.date; let counted = false;
+    if (!G.practice) { counted = true; S.daily.hist[date] = { moves: G.moves, time: t }; const ks = Object.keys(S.daily.hist).sort(); while (ks.length > 21) delete S.daily.hist[ks.shift()]; S.daily.streak = S.daily.last === dayBefore(date) ? S.daily.streak + 1 : S.daily.last === date ? S.daily.streak : 1; S.daily.last = date; S.daily.bestStreak = Math.max(S.daily.bestStreak, S.daily.streak); S.daily.cur = null; }
+    save(); const res = S.daily.hist[date];
+    const share = `Inoa Games · Memory Match ${date}: ${res.moves} ${T('moves', 'jugadas')}, ${mmss(res.time)} 🔥${S.daily.streak}`;
+    r = E.results({ gameId: 'memory', title: `📅 ${T('Daily board', 'Tablero del día')} · ${date}`, stats: [[T('Moves', 'Jugadas'), G.moves], [T('Time', 'Tiempo'), mmss(t)], [T('Streak', 'Racha'), `🔥 ${S.daily.streak}`], [T('Counted', 'Cuenta'), counted ? '✔' : T('practice', 'práctica')]], xp: counted ? 45 : 8, coins: counted ? 12 : 2, best: counted ? S.daily.streak : null, bestLabel: T('Best streak', 'Mejor racha'), won: counted, share, onAgain: again });
+  } else {
+    save(); const [a, b] = G.scores, tie = a === b, w = a > b ? 0 : 1;
+    const title = tie ? T("It's a tie!", '¡Empate!') : T(`Player ${w + 1} wins!`, `¡Gana el jugador ${w + 1}!`);
+    E.say(title);
+    r = E.results({ gameId: 'memory', title: `👥 ${title}`, stats: [[T('Player 1', 'Jugador 1'), a], [T('Player 2', 'Jugador 2'), b], [T('Moves', 'Jugadas'), G.moves]], xp: 25 + pairs * 2, coins: 5 + pairs, won: true, onAgain: again });
+  }
+  addMenuButton(r); return r;
+}
+function kidsResults() {
+  if (G.overlay) { G.overlay.remove(); G.overlay = null; } const pairs = G.cards.length / 2;
+  const r = E.results({ gameId: 'memory', title: `🐣 ${T('All pairs found!', '¡Todas las parejas!')}`, stats: [[T('Pairs', 'Parejas'), pairs], [T('Sticker', 'Calcomanía'), STICKERS[G.kidsSticker]]], xp: 15 + pairs * 3, coins: 3 + pairs, won: true, onAgain: () => start('kids', G.opts, { skipGate: true }) });
+  r.querySelectorAll('.ig-btn').forEach(b => { b.style.minHeight = '64px'; b.style.fontSize = '17px'; });
+  addMenuButton(r); return r;
+}
+function addMenuButton(r) { const kids = G && G.mode === 'kids'; const b = document.createElement('button'); b.className = 'ig-btn ghost'; b.textContent = kids ? T('🐣 Pictures', '🐣 Dibujos') : T('🃏 Modes', '🃏 Modos'); if (kids) { b.style.minHeight = '64px'; } b.onclick = () => { r.remove(); kids ? kidsHome() : title(); }; r.querySelector('.ig-row').prepend(b); }
+function sparkleAll() { if (E.reducedMotion()) return; G.cards.forEach((c, i) => { if (i % 3 === 0) setTimeout(() => sparkle(c.el, 5), i * 25); }); }
+function pause() {
+  if (!G || G.paused || G.done) return; G.paused = true; if (music) { music.stop(); music = null; } try { window.speechSynthesis && speechSynthesis.cancel(); } catch (e) { }
+  E.pauseMenu({ onResume: () => { G.paused = false; music = E.music(E.SONGS.chill); }, onRestart: () => start(G.mode, G.mode === 'daily' ? { date: G.opts.date } : G.opts, { skipGate: true }) });
+}
+document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
+function closeScreens() { document.querySelectorAll('.ig-screen:not(.kd-gate),.kd-reward').forEach(e => e.remove()); }
+function clearBoard() { if (G && G.overlay) G.overlay.remove(); G = null; board.hidden = true; board.innerHTML = ''; capEl.hidden = true; if (music) { music.stop(); music = null; } hud(); skin('title'); placeScene(null); }
+
+/* ---------------- title: five modes + their options ---------------- */
+let selMode = S.mode;
+const chip = (on, attrs, html) => `<button type="button" class="ig-chipbtn ${on ? 'on' : ''}" aria-pressed="${on}" ${attrs}>${html}</button>`;
+function optsHTML() {
+  const m = selMode;
+  if (m === 'kids') return `<p class="mm-note">${T('<b>Ages 3–6.</b> Big picture cards, 4 to 8 of them. A voice names each picture. No clock, no score, a sticker for every board. Settings and links need a grown-up.', '<b>De 3 a 6 años.</b> Cartas grandes con dibujos, de 4 a 8. Una voz dice el nombre de cada dibujo. Sin reloj ni puntos, una calcomanía por tablero. Los ajustes y enlaces piden a un adulto.')}</p>`;
+  if (m === 'words') { const w = S.words; return `<div class="mm-row" role="group" aria-label="${T('Theme', 'Tema')}"><span>${T('Theme', 'Tema')}</span>${THEMES.map(t => chip(w.theme === t.id, `data-o="theme" data-v="${t.id}"`, `${t.e} ${T(t.name)}`)).join('')}</div>
+    <div class="mm-row" role="group" aria-label="${T('Pairs', 'Parejas')}"><span>${T('Pairs', 'Parejas')}</span>${chip(w.dir === 'pic', 'data-o="dir" data-v="pic"', `🖼️ ↔ ${T('word', 'palabra')}`)}${chip(w.dir === 'lang', 'data-o="dir" data-v="lang"', 'EN ↔ ES')}</div>
+    ${w.dir === 'pic' ? `<div class="mm-row" role="group" aria-label="${T('Words in', 'Palabras en')}"><span>${T('Words in', 'Palabras en')}</span>${chip(w.lang === 'en', 'data-o="lang" data-v="en"', 'English')}${chip(w.lang === 'es', 'data-o="lang" data-v="es"', 'Español')}</div>` : ''}
+    <div class="mm-row" role="group" aria-label="${T('Cards', 'Cartas')}"><span>${T('Cards', 'Cartas')}</span>${WORDS_N.map(n => chip(w.n === n, `data-o="wn" data-v="${n}"`, n)).join('')}</div>`; }
+  if (m === 'classic') return `<div class="mm-row" role="group" aria-label="${T('Grid', 'Tablero')}"><span>${T('Grid', 'Tablero')}</span>${Object.entries(GRIDS).map(([g, d]) => chip(S.classic.g === g, `data-o="g" data-v="${g}"`, `${T(d.name)} · ${d.n}${S.best[g] ? ` <small>🏅 ${S.best[g].moves} · ${mmss(S.best[g].time)}</small>` : ''}`)).join('')}</div><p class="mm-note">${T('Fewest moves wins. The clock starts on your first flip.', 'Gana quien usa menos jugadas. El reloj empieza con la primera carta.')}</p>`;
+  if (m === 'daily') { const d = today(), done = S.daily.hist[d], cur = S.daily.cur && S.daily.cur.date === d && !done; return `<p class="mm-note">📅 <b>${d}</b> · ${DAILY_N} ${T('cards', 'cartas')} · 🔥 ${T('Streak', 'Racha')} <b>${S.daily.last === d || S.daily.last === dayBefore(d) ? S.daily.streak : 0}</b> (${T('best', 'mejor')} ${S.daily.bestStreak})</p><p class="mm-note">${done ? T(`Done today: <b>${done.moves}</b> moves in <b>${mmss(done.time)}</b>. You can practice; only the first try counts.`, `Hecho hoy: <b>${done.moves}</b> jugadas en <b>${mmss(done.time)}</b>. Puedes practicar; solo cuenta el primer intento.`) : cur ? T('Your board is waiting where you left it.', 'Tu tablero te espera donde lo dejaste.') : T('Everyone gets the same board today. Only your first try counts.', 'Hoy todos tienen el mismo tablero. Solo cuenta tu primer intento.')}</p>`; }
+  return `<div class="mm-row" role="group" aria-label="${T('Cards', 'Cartas')}"><span>${T('Cards', 'Cartas')}</span>${DUO_N.map(n => chip(S.duo.n === n, `data-o="dn" data-v="${n}"`, n)).join('')}</div><p class="mm-note">${T('Pass the device or use two phones. A match keeps your turn.', 'Pásense el aparato o usen dos teléfonos. Si haces pareja, sigues jugando.')}</p>`;
+}
+function bindOpts(d) {
+  const box = d.querySelector('#mmOpts'); box.innerHTML = optsHTML();
+  box.querySelectorAll('[data-o]').forEach(b => b.onclick = () => { const o = b.dataset.o, v = b.dataset.v; if (o === 'theme') S.words.theme = v; else if (o === 'dir') S.words.dir = v; else if (o === 'lang') S.words.lang = v; else if (o === 'wn') S.words.n = +v; else if (o === 'g') S.classic.g = v; else if (o === 'dn') S.duo.n = +v; save(); SFX.click(); bindOpts(d); box.querySelector(`[data-o="${o}"][data-v="${v}"]`)?.focus({ preventScroll: true }); });
+  d.querySelectorAll('.mm-mode').forEach(b => b.setAttribute('aria-pressed', b.dataset.m === selMode));
+  const hc = d.querySelector('#mmHC'); if (hc) { hc.classList.toggle('on', S.hc); hc.setAttribute('aria-pressed', S.hc); }
+}
+function title() {
+  closeScreens(); clearBoard(); K.setGuard(false); S.kidsHome = false; save();
+  const extra = `<div class="mm-extra"><div class="mm-modes" role="group" aria-label="${T('Modes', 'Modos')}">${MODES.map(m => `<button type="button" class="mm-mode" data-m="${m.id}" aria-pressed="false"><span class="e" aria-hidden="true">${m.e}</span><b>${T(m.name)}</b><small>${T(m.sub)}</small></button>`).join('')}</div><div class="mm-opts" id="mmOpts"></div><div class="mm-row"><button type="button" class="ig-chipbtn" id="mmHC" aria-pressed="false">🔲 ${T('High contrast', 'Alto contraste')}</button></div></div>`;
+  const d = E.titleScreen({ title: 'Memory Match', kicker: T('Inoa Games · All ages · Pairs + words', 'Inoa Games · Todas las edades · Parejas + palabras'), lead: T('Flip two cards. Same picture? They are yours. Learn words in English and Spanish, beat your best, or race a friend.', 'Voltea dos cartas. ¿Mismo dibujo? Son tuyas. Aprende palabras en inglés y español, supera tu récord o juega con alguien.'), how: [['👆', T('Tap a card, then another. Pairs stay face up', 'Toca una carta y luego otra. Las parejas se quedan boca arriba')], ['⌨️', T('Arrows + Space · gamepad or phone: stick + A', 'Flechas + Espacio · mando o teléfono: palanca + A')]], extra, party: { hint: T('Phones join as controllers. In Two players, phone 1 plays for player 1 and phone 2 for player 2.', 'Los teléfonos sirven de controles. En Dos jugadores, el teléfono 1 juega por el jugador 1 y el 2 por el jugador 2.') }, onPlay: () => selMode === 'kids' ? kidsHome() : start(selMode, {}, { skipGate: true }) });
+  d.querySelectorAll('.mm-mode').forEach(b => b.onclick = () => { selMode = b.dataset.m; S.mode = selMode === 'kids' ? S.mode : selMode; save(); SFX.click(); bindOpts(d); const ln = { kids: { en: 'Little ones: big picture cards.', es: 'Peques: cartas grandes con dibujos.' }, words: { en: 'Words: match words in English and Spanish.', es: 'Palabras: une palabras en inglés y español.' }, classic: { en: 'Classic: find every pair in as few moves as you can.', es: 'Clásico: encuentra todas las parejas con pocas jugadas.' }, daily: { en: 'Daily board: the same cards for everyone today.', es: 'Tablero del día: las mismas cartas para todos hoy.' }, duo: { en: 'Two players: take turns.', es: 'Dos jugadores: por turnos.' } }[selMode]; E.say(T(ln)); });
+  d.querySelector('#mmHC').onclick = () => { S.hc = !S.hc; save(); applyHC(); SFX.click(); bindOpts(d); };
+  bindOpts(d); E.say(T('Memory Match. Pick a mode, then press Play.', 'Memory Match. Elige un modo y pulsa Jugar.'), { once: true });
+  setTimeout(() => d.querySelector('[data-a=play]')?.focus({ preventScroll: true }), 60);
+  return d;
+}
+
+/* ---------------- Little ones home (Kids World shell: big targets, voice first, parent gate) ---------------- */
+function kidsHome() {
+  closeScreens(); clearBoard(); ensureShell(); K.setGuard(true); S.kidsHome = true; save(); skin('kids');
+  const d = document.createElement('div'); d.className = 'ig-screen mm-kids'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-label', T('Little ones', 'Peques'));
+  const draw = () => {
+    d.innerHTML = `<div class="ig-card"><h2>🐣 ${T('Little ones', 'Peques')}</h2><p class="ig-sub" style="margin:0">${T('Pick a picture to play!', '¡Elige un dibujo para jugar!')}</p>
+      <div style="display:grid;gap:12px;justify-items:center;width:100%"><div class="mm-kthemes" id="mmKT"></div><div class="mm-ksize" id="mmKS" role="group" aria-label="${T('How many cards', 'Cuántas cartas')}"></div></div>
+      <div style="display:grid;gap:10px;justify-items:center;width:100%"><p class="mm-lbl">${T('Stickers', 'Calcomanías')} · ${S.kids.stickers.length}/${STICKERS.length}</p><div class="mm-stickers" role="img" aria-label="${T(`${S.kids.stickers.length} of ${STICKERS.length} stickers`, `${S.kids.stickers.length} de ${STICKERS.length} calcomanías`)}">${STICKERS.map((s, i) => `<span class="${S.kids.stickers.includes(i) ? '' : 'off'}" aria-hidden="true">${S.kids.stickers.includes(i) ? s : '⭐'}</span>`).join('')}</div>
+      <button type="button" class="ig-chipbtn" data-kids-gate="1" id="mmGrown">👪 ${T('Grown-ups', 'Adultos')}</button></div></div>`;
+    const kt = d.querySelector('#mmKT');
+    ['animals', 'food', 'nature', 'home', 'school', 'colors'].forEach(id => { const th = THEMES.find(t => t.id === id); const b = K.bigButton({ icon: th.e, text: T(th.name), cls: 'mm-kt', onClick: () => { E.audio(); start('kids', { theme: id }); } }); b.dataset.theme = id; kt.appendChild(b); });
+    const ks = d.querySelector('#mmKS');
+    KIDS_N.forEach(n => { const b = K.bigButton({ icon: '🃏', text: String(n), label: T(`${n} cards`, `${n} cartas`), cls: 'mm-kn', onClick: () => { S.kids.n = n; save(); SFX.click(); K.speak({ en: `${cap1(K.numberWord(n, 'en'))} cards`, es: `${cap1(K.numberWord(n, 'es', 'f'))} cartas` }); draw(); d.querySelector(`.mm-kn[data-n="${n}"]`)?.focus({ preventScroll: true }); } }); b.dataset.n = n; b.setAttribute('aria-pressed', S.kids.n === n); ks.appendChild(b); });
+    d.querySelector('#mmGrown').addEventListener('click', grownups);
+  };
+  draw(); document.body.appendChild(d);
+  K.instruct({ en: 'Pick a picture to play!', es: '¡Elige un dibujo para jugar!' });
+  setTimeout(() => d.querySelector('.mm-kt')?.focus({ preventScroll: true }), 60);
+  return d;
+}
+// Grown-ups panel: opened only through the parent gate (data-kids-gate on its button); links inside are not gated twice.
+function grownups() {
+  const d = document.createElement('div'); d.className = 'ig-screen'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true'); d.dataset.kidsUnlocked = '1'; d.id = 'mmGrownPanel';
+  const draw = () => { d.innerHTML = `<div class="ig-card"><h2>👪 ${T('For grown-ups', 'Para adultos')}</h2><p class="ig-sub">${T('Memory Match saves only stickers, best scores and the daily streak on this device. No names, no chat, no ads.', 'Memory Match solo guarda calcomanías, récords y la racha diaria en este dispositivo. Sin nombres, sin chat, sin anuncios.')}</p>
+    <div class="mm-opts2"><button type="button" class="ig-chipbtn ${S.hc ? 'on' : ''}" data-o="hc" aria-pressed="${S.hc}">🔲 ${T('High contrast', 'Alto contraste')}<small>${T('Black and white cards, thick outlines', 'Cartas en blanco y negro, bordes gruesos')}</small></button><button type="button" class="ig-chipbtn" data-o="all">🃏 ${T('All modes', 'Todos los modos')}<small>${T('Words, Classic, Daily board, Two players', 'Palabras, Clásico, Tablero del día, Dos jugadores')}</small></button></div>
+    <div class="ig-row"><button type="button" class="ig-btn ghost" data-a="settings">⚙️ ${T('Settings', 'Ajustes')}</button><button type="button" class="ig-btn ghost" data-a="phones">📱 ${T('Phones', 'Teléfonos')}</button></div>
+    <div class="ig-row"><a class="ig-btn ghost" href="../index.html">⌂ ${T('All games', 'Todos los juegos')}</a><button type="button" class="ig-btn" data-a="close">${T('Done', 'Listo')}</button></div></div>`;
+    d.querySelector('[data-o=hc]').onclick = () => { S.hc = !S.hc; save(); applyHC(); SFX.click(); draw(); };
+    d.querySelector('[data-o=all]').onclick = () => { d.remove(); title(); };
+    d.querySelector('[data-a=settings]').onclick = () => E.settingsPanel(); d.querySelector('[data-a=phones]').onclick = () => E.NET.partyPanel({}); d.querySelector('[data-a=close]').onclick = () => d.remove(); };
+  draw(); document.body.appendChild(d); setTimeout(() => d.querySelector('[data-a=close]')?.focus({ preventScroll: true }), 30); return d;
+}
+K.guardLinks({ enabled: false });
+// language switch from the shared settings panel: rebuild visible text in place
+addEventListener('inoa:settings', e => { if (!e.detail || e.detail.key !== 'lang') return; hud(); if (G) G.cards.forEach((c, i) => refresh(i)); if (repeatBtn) repeatBtn.setAttribute('aria-label', T('Hear it again', 'Escúchalo otra vez'));
+  const keep = [...document.querySelectorAll('.ig-settings, #mmGrownPanel')]; if (document.querySelector('.ig-title')) { keep.forEach(k => k.remove()); title(); keep.forEach(k => document.body.appendChild(k)); } else if (document.querySelector('.mm-kids')) { keep.forEach(k => k.remove()); kidsHome(); keep.forEach(k => document.body.appendChild(k)); } });
+
+/* ---------------- update loop ---------------- */
+function update(dt) {
+  pollPads(dt);
+  if (!G || G.paused) return;
+  if (G.timer && G.started && !G.done && !document.querySelector('.ig-screen')) { G.time += dt; const s = Math.floor(G.time); if (s !== G.lastSec) { G.lastSec = s; const el = document.querySelector('#mmTime b'); if (el) el.textContent = mmss(G.time); if (G.mode === 'daily' && !G.practice && s % 5 === 0) saveDaily(); } }
+  if (G.wait > 0) { G.wait -= dt; if (G.wait <= 0) resolveMiss(); }
+  if (G.done && G.endT > 0) { G.endT -= dt; if (G.endT <= 0) finish(); }
+  if (G.rewardT > 0) { G.rewardT -= dt; if (G.rewardT <= 0) kidsResults(); }
+}
+
+/* ---------------- boot ---------------- */
+ld.set(1); placeScene(null); S.kidsHome ? kidsHome() : title(); ld.done(); window.__READY = true;
+E.loop(dt => { update(dt); R.render(dt); });
+
+// test hooks (headless harness)
+const cardView = (c, i) => { const r = c.el ? c.el.getBoundingClientRect() : { left: 0, top: 0, width: 0, height: 0 }; return { i, id: c.it.id, f: c.f, state: c.state, owner: c.owner, x: r.left + r.width / 2, y: r.top + r.height / 2, w: r.width, h: r.height, label: c.el ? c.el.getAttribute('aria-label') : '' }; };
+window.__GAME = {
+  get state() { return G ? { mode: G.mode, n: G.cards.length, cols: LAY.cols, rows: LAY.rows, cardW: LAY.w, cardH: LAY.h, open: G.open.slice(), matched: G.matchedN, moves: G.moves, time: +G.time.toFixed(2), turn: G.turn, scores: G.scores.slice(), combo: G.combo, bestCombo: G.bestCombo, wait: +G.wait.toFixed(2), done: G.done, paused: G.paused, sel: G.sel, kbd: G.kbd, practice: G.practice, resumed: !!G.resumed, opts: G.opts, rewarding: G.rewardT > 0 } : { mode: document.querySelector('.mm-kids') ? 'kidsHome' : 'title' }; },
+  S, update, title, kidsHome, layout, setDate: d => { DATE_OVERRIDE = d; }, today,
+  start: (mode, o) => start(mode, o || {}, { skipGate: true }),
+  flip: i => flip(i), solve: () => solveAll(), resolve: () => resolveMiss(),
+  cards: () => G ? G.cards.map(cardView) : [],
+  pairOf: i => G ? G.cards.findIndex((c, k) => k !== i && c.it.id === G.cards[i].it.id) : -1,
+  wrongFor: i => G ? G.cards.findIndex((c, k) => k !== i && c.state === 'down' && c.it.id !== G.cards[i].it.id) : -1,
+  dailyIds: d => dailyDeck(d || today()).map(c => c.it.id),
+  board: () => { const r = board.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height, vw: innerWidth, vh: innerHeight, sw: document.documentElement.scrollWidth, sh: document.documentElement.scrollHeight }; },
+  minTargetPx: () => K.minTargetPx(), gate: () => K.guardStats(), gateOpen: () => K.gateOpen(), lastLine: () => K.lastLine()
+};
+</script>
+</body></html>
