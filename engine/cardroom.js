@@ -13,6 +13,10 @@
 //   botMove(view, skill, rng) → move                         bot strategy; sees ONLY the view (never other hands)
 //   roundOver(state) → null | {winner, side, points, ...}    set when the round has ended
 //   sides(opts) → number                                     how many score columns (players, or 2 teams)
+// Optional (Six-Card Golf):
+//   roundOver(...).scores = [n per side]                     every column adds its own round score (instead of side+points)
+//   matchOver(scores, roundsPlayed, opts) → null | {winner}  the game decides when the match ends (default: first to
+//                                                            opts.target points); m.result keeps what it returned
 //
 // Bots: skill is 'chill' | 'normal' | 'sharp'.
 
@@ -66,9 +70,12 @@ export function createMatch(game, { seats, opts = {}, seed } = {}) {
       const before = m.state; m.state = game.applyMove(m.state, seat, move); m.log.push({ round: m.round, seat, move, from });
       const over = game.roundOver(m.state);
       if (over) { // the phase is settled before anyone hears about the move
-        m.last = over; if (over.side != null && over.points) m.scores[over.side] += over.points;
-        const target = opts.target || 100, top = Math.max(...m.scores);
-        if (top >= target) { m.winnerSide = m.scores.indexOf(top); m.phase = 'matchEnd'; } else m.phase = 'roundEnd';
+        m.last = over;
+        if (Array.isArray(over.scores)) over.scores.forEach((v, i) => { m.scores[i] += v; }); // per-seat round scores (Golf)
+        else if (over.side != null && over.points) m.scores[over.side] += over.points;
+        if (game.matchOver) { const done = game.matchOver(m.scores, m.round, opts); m.result = done || null; if (done) { m.winnerSide = done.winner; m.phase = 'matchEnd'; } else m.phase = 'roundEnd'; }
+        else { const target = opts.target || 100, top = Math.max(...m.scores);
+          if (top >= target) { m.winnerSide = m.scores.indexOf(top); m.phase = 'matchEnd'; } else m.phase = 'roundEnd'; }
       }
       m.emit('move', seat, move, before, m.state);
       if (over) m.emit('round', over, m.phase);

@@ -78,6 +78,26 @@ body.rot #bA{right:8%;top:50%}body.rot #bB{right:calc(8% + 128px);top:62%}body.r
 #hacts{display:flex;gap:10px}#hacts button{flex:1;min-height:64px;border:0;border-radius:20px;background:var(--me);color:var(--ink);font-family:var(--f-d);font-weight:900;font-size:clamp(16px,4.6vw,21px);box-shadow:0 7px 0 rgba(0,0,0,.35)}
 #hacts button.on{transform:translateY(5px);box-shadow:0 2px 0 rgba(0,0,0,.35)}
 @media (orientation:landscape){#htiles button{width:clamp(44px,8vw,70px)}}
+/* cards layout (Card Room: a grid of playing cards + piles; Six-Card Golf). Cards come from engine/cards.js */
+#cardsL{position:fixed;inset:60px 12px max(12px,env(safe-area-inset-bottom));display:grid;grid-template-rows:auto auto 1fr auto;gap:10px}
+#cardsL .q{font-family:var(--f-d);font-size:clamp(16px,4.6vw,22px);line-height:1.2;text-align:center}
+#cardsL .q small{display:block;font-family:var(--f-b);font-weight:800;font-size:14px;opacity:.85;margin-top:4px}
+#cardsL .q small.warn{color:#ffb3a8;opacity:1}
+#cpiles{display:flex;gap:12px;justify-content:center;align-items:flex-end}
+#cpiles button,#cgrid button{border:0;background:none;padding:0;border-radius:12px;display:grid;gap:3px;justify-items:center;color:#fff;font-weight:800;font-size:12px}
+#cpiles button svg{width:clamp(54px,16vw,78px);display:block;filter:drop-shadow(0 4px 0 rgba(0,0,0,.35))}
+#cpiles .held svg{transform:rotate(-4deg)}
+#cpiles button.ok svg,#cgrid button.ok svg{outline:4px solid #7dffd8;outline-offset:2px;border-radius:12px}
+#cpiles button:disabled{opacity:.5}
+#cgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-content:center;justify-items:center;max-width:420px;width:100%;margin:0 auto}
+#cgrid button{width:100%;max-width:min(26vw,120px)}
+#cgrid button svg{width:100%;display:block;filter:drop-shadow(0 5px 0 rgba(0,0,0,.35))}
+#cgrid button.picked svg{outline:5px solid var(--me);outline-offset:2px;border-radius:12px;transform:translateY(-6px)}
+#cgrid button.no{opacity:.6}
+#cgrid button.on svg,#cpiles button.on svg{transform:translateY(4px)}
+#cacts{display:flex;gap:10px}#cacts button{flex:1;min-height:60px;border:0;border-radius:20px;background:var(--me);color:var(--ink);font-family:var(--f-d);font-weight:900;font-size:clamp(15px,4.4vw,20px);box-shadow:0 7px 0 rgba(0,0,0,.35)}
+#cacts button.on{transform:translateY(5px);box-shadow:0 2px 0 rgba(0,0,0,.35)}
+@media (orientation:landscape){#cardsL{grid-template-columns:auto 1fr;grid-template-rows:auto 1fr auto}#cardsL .q{grid-column:1/-1}#cpiles{flex-direction:column;align-items:center;justify-content:center}#cpiles button svg{width:clamp(44px,9vh,70px)}#cgrid button{max-width:min(14vh,90px)}#cacts{grid-column:1/-1}}
 #onl{position:fixed;left:50%;bottom:max(12px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:6;border:0;border-radius:16px;padding:12px 18px;background:#fff;color:var(--ink);font-family:var(--f-d);font-weight:900;font-size:14px;box-shadow:0 6px 18px rgba(0,0,0,.4);white-space:nowrap}
 #msg{font-family:var(--f-d);font-size:clamp(22px,6vw,34px);line-height:1.2;padding:0 10px}
 .btn.ghost{background:transparent;color:inherit;border:2px solid rgba(255,255,255,.35);box-shadow:none;margin-top:10px}
@@ -108,11 +128,13 @@ body.rot #bA{right:8%;top:50%}body.rot #bB{right:calc(8% + 128px);top:62%}body.r
   <div id="bq" hidden></div><button id="buzz" hidden>BUZZ</button>
   <div id="choices" hidden><div class="q" id="cq"></div><div class="opts" id="copts"></div></div>
   <div id="handL" hidden><div class="q" id="hq"></div><div id="htiles"></div><div id="hacts"></div></div>
+  <div id="cardsL" hidden><div class="q" id="kq"></div><div id="cpiles"></div><div id="cgrid"></div><div id="cacts"></div></div>
   <div class="screen" id="textL" hidden><div id="msg"></div></div>
   <button id="onl" hidden></button>
 </div>
 <script type="module">
 import { net, join, sendInput, sendMsg } from './engine/net.js';
+import { cardSvg, cardName, emptySvg } from './engine/cards.js';
 const $ = id => document.getElementById(id);
 const params = new URLSearchParams(location.search);
 let saved = {}; try { saved = JSON.parse(localStorage.getItem('inoa.pad') || '{}'); } catch (e) { }
@@ -216,13 +238,30 @@ function renderHand(L) {
   const acts = $('hacts'); acts.innerHTML = ''; acts.hidden = !(L.actions && L.actions.length);
   (L.actions || []).forEach((a, i) => { const b = document.createElement('button'); b.textContent = a; b.addEventListener('pointerdown', e => { e.preventDefault(); buzz(25); b.classList.add('on'); sendMsg({ t: 'act', i }); }); b.addEventListener('pointerup', () => b.classList.remove('on')); acts.appendChild(b); });
 }
+// cards layout: {type:'cards', title, note, warn, cards:[{r,s}|{back:true}], badges:[text]|null, ok:[bool]|null, picked,
+//   piles:[{label, card, ok, off, empty}], held:{label, card}|null, actions:[label…]} → sends {t:'choice', i} (a grid card),
+//   {t:'pile', i} and {t:'act', i}. The host checks every move.
+function renderCards(L) {
+  const esc = t => String(t ?? '').replace(/[<>&]/g, ''), lang = L.lang === 'es' ? 'es' : 'en';
+  $('kq').innerHTML = esc(L.title) + (L.note ? `<small class="${L.warn ? 'warn' : ''}">${esc(L.note)}</small>` : '');
+  const press = (b, msg, ms = 20) => { b.addEventListener('pointerdown', e => { e.preventDefault(); if (b.disabled) return; buzz(ms); b.classList.add('on'); sendMsg(msg); }); b.addEventListener('pointerup', () => b.classList.remove('on')); b.addEventListener('pointercancel', () => b.classList.remove('on')); };
+  const piles = $('cpiles'); piles.innerHTML = '';
+  (L.piles || []).forEach((p, i) => { const b = document.createElement('button'); b.innerHTML = (p.empty ? emptySvg() : cardSvg(p.card || { back: true })) + `<span>${esc(p.label)}</span>`; b.setAttribute('aria-label', `${esc(p.label)}: ${cardName(p.card || { back: true }, lang)}`); if (p.ok) b.classList.add('ok'); b.disabled = !!p.off; press(b, { t: 'pile', i }); piles.appendChild(b); });
+  if (L.held) { const h = document.createElement('button'); h.className = 'held'; h.innerHTML = cardSvg(L.held.card) + `<span>${esc(L.held.label)}</span>`; h.setAttribute('aria-label', `${esc(L.held.label)}: ${cardName(L.held.card, lang)}`); h.disabled = true; h.style.opacity = 1; piles.appendChild(h); }
+  const grid = $('cgrid'); grid.innerHTML = '';
+  (L.cards || []).forEach((c, i) => { const b = document.createElement('button'); b.innerHTML = cardSvg(c, { badge: L.badges ? L.badges[i] : null }); b.setAttribute('aria-label', cardName(c, lang));
+    if (L.ok) b.classList.add(L.ok[i] ? 'ok' : 'no'); if (L.picked === i) b.classList.add('picked'); press(b, { t: 'choice', i }); grid.appendChild(b); });
+  const acts = $('cacts'); acts.innerHTML = ''; acts.hidden = !(L.actions && L.actions.length);
+  (L.actions || []).forEach((a, i) => { const b = document.createElement('button'); b.textContent = a; press(b, { t: 'act', i }, 25); acts.appendChild(b); });
+}
 function applyLayout(L) {
-  L = L || { type: 'gamepad' }; curType = L.type; curOrient = L.orient || null; setTimeout(updateOrient, 0); $('pad').hidden = L.type !== 'gamepad'; bz.hidden = L.type !== 'buzzer'; $('choices').hidden = L.type !== 'choices'; $('textL').hidden = L.type !== 'text'; $('handL').hidden = L.type !== 'hand';
+  L = L || { type: 'gamepad' }; curType = L.type; curOrient = L.orient || null; setTimeout(updateOrient, 0); $('pad').hidden = L.type !== 'gamepad'; bz.hidden = L.type !== 'buzzer'; $('choices').hidden = L.type !== 'choices'; $('textL').hidden = L.type !== 'text'; $('handL').hidden = L.type !== 'hand'; $('cardsL').hidden = L.type !== 'cards';
   if (L.type === 'gamepad') { const labels = L.labels || {}; for (const k of ['A', 'B', 'C', 'D']) { const b = $('b' + k); b.textContent = labels[k] ?? k; b.hidden = L.buttons ? !L.buttons.includes(k) : (k === 'D'); } }
   $('bq').hidden = !(L.type === 'buzzer' && L.question);
   if (L.type === 'buzzer') { bz.textContent = L.label || 'BUZZ'; const esc = t => String(t).replace(/[<>&]/g, ''); if (L.question) { $('bq').innerHTML = esc(L.question) + (L.choices ? `<small>${L.choices.map((c, i) => 'ABCD'[i] + ': ' + esc(c)).join(' · ')}</small>` : ''); requestAnimationFrame(() => document.documentElement.style.setProperty('--bqh', ($('bq').offsetHeight + 12) + 'px')); } bz.classList.toggle('q', !!L.question); }
   if (L.type === 'choices') { $('cq').textContent = L.question || ''; const box = $('copts'); box.innerHTML = ''; (L.choices || []).forEach((c, i) => { const b = document.createElement('button'); b.style.background = CHOICE_COLORS[i % 4]; b.innerHTML = `<b>${'ABCDEF'[i] || i + 1}</b><span>${String(c).replace(/[<>&]/g, '')}</span>`; b.disabled = !!L.locked || (L.out || []).includes(i); if (L.picked === i) b.classList.add('picked'); b.addEventListener('pointerdown', e => { e.preventDefault(); if (b.disabled) return; buzz(25); b.classList.add('on'); [...box.children].forEach(x => x.classList.toggle('picked', x === b)); sendMsg({ t: 'choice', i }); }); b.addEventListener('pointerup', () => b.classList.remove('on')); box.appendChild(b); }); }
   if (L.type === 'hand') renderHand(L);
+  if (L.type === 'cards') renderCards(L);
   if (L.type === 'text') { $('msg').textContent = L.text || ''; $('msg').style.whiteSpace = 'pre-line'; }
 }
 applyLayout({ type: 'gamepad' });
