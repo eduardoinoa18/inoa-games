@@ -98,6 +98,8 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 
 /* ======================= settings + save (E.store 'inoa.dominoes', small) ======================= */
 const SKEY = 'inoa.dominoes';
+// Online on separate screens (engine/room.js): ?join=CODE = this screen takes a seat at someone else's table
+const JOIN = new URLSearchParams(location.search).get('join');
 const S = Object.assign({ mode: 'block', players: 4, teams: true, target: 100, skill: 'normal', locals: 1, names: ['Ana', 'Leo', 'Mia', 'Rafa'], capicua: false, hints: false, color: true, wins: 0, played: 0, best: 0, doms: 0 }, E.store.get(SKEY, {}));
 if (!Array.isArray(S.names)) S.names = ['Ana', 'Leo', 'Mia', 'Rafa'];
 const save = () => E.store.set(SKEY, { mode: S.mode, players: S.players, teams: S.teams, target: S.target, skill: S.skill, locals: S.locals, names: S.names.slice(0, 4).map(n => String(n).slice(0, 12)), capicua: S.capicua, hints: S.hints, color: S.color, wins: S.wins, played: S.played, best: S.best, doms: S.doms });
@@ -185,7 +187,9 @@ const nextSpot = end => { if (!G || !G.chains) return { x: 0, z: 0, rot: Math.PI
 /* ---- seats around the table (seat 0 at the bottom; turn order goes counter-clockwise) ---- */
 const POSN = { 2: ['bottom', 'top'], 3: ['bottom', 'tr', 'tl'], 4: ['bottom', 'right', 'top', 'left'] };
 const DIR = { bottom: [0, 1], top: [0, -1], right: [1, 0], left: [-1, 0], tr: [.8, -.6], tl: [-.8, -.6] };
-const seatWorld = s => { const d = DIR[POSN[G.seats.length][s]]; return { x: d[0] * (TW / 2 - 1.9), z: d[1] * (TD / 2 - 1.7), d }; };
+// an online guest sees the table from its own seat: positions turn by G.base so that seat sits at the bottom
+const posOf = s => POSN[G.seats.length][(s - (G.base || 0) + G.seats.length) % G.seats.length];
+const seatWorld = s => { const d = DIR[posOf(s)]; return { x: d[0] * (TW / 2 - 1.9), z: d[1] * (TD / 2 - 1.7), d }; };
 
 /* ---- glowing ends ---- */
 const markM = [0, 1].map(() => new THREE.MeshBasicMaterial({ color: 0x7dffd8, transparent: true, opacity: .45, depthWrite: false, blending: THREE.AdditiveBlending }));
@@ -208,16 +212,18 @@ const mySide = () => { const l = G && G.seats.findIndex(s => s.kind === 'local')
 function start(o = {}) {
   closeCards(); if (titleEl) { titleEl.remove(); titleEl = null; }
   const players = clamp(o.players ?? S.players, 2, 4), opts = { players, mode: o.mode ?? S.mode, teams: players === 4 && !!(o.teams ?? S.teams), target: o.target ?? S.target, skill: o.skill ?? S.skill, capicua: !!(o.capicua ?? S.capicua) };
-  const phones = o.phones === false || E.net.role !== 'host' ? [] : E.net.pads().slice(0, 4);
-  let nLoc = clamp(o.locals ?? S.locals, 0, players); const nPh = Math.min(phones.length, players - nLoc); if (nLoc + nPh === 0) nLoc = 1;
+  const phones = o.phones === false || E.net.role !== 'host' ? [] : E.net.pads('pad').slice(0, 4), online = o.phones === false || !room ? [] : room.players.slice(0, 3);
+  let nLoc = clamp(o.locals ?? S.locals, 0, players); const nPh = Math.min(phones.length, players - nLoc), nOn = Math.min(online.length, players - nLoc - nPh); if (nLoc + nPh + nOn === 0) nLoc = 1;
   const botNames = CR.shuffle(BOTS.map(b => b.n));
-  const seats = CR.makeSeats({ players, locals: nLoc, phones: phones.slice(0, nPh), names: S.names, botNames, skill: opts.skill });
-  seats.forEach((s, i) => { s.color = SEATC[i]; s.emoji = s.kind === 'bot' ? BOTS.find(b => b.n === s.name).e : s.kind === 'phone' ? '📱' : '🙂'; });
+  const seats = CR.makeSeats({ players, locals: nLoc, phones: phones.slice(0, nPh), online: online.slice(0, nOn), names: S.names, botNames, skill: opts.skill });
+  seats.forEach((s, i) => { s.color = SEATC[i]; s.emoji = s.kind === 'bot' ? BOTS.find(b => b.n === s.name).e : s.kind === 'phone' ? '📱' : s.kind === 'online' ? '🌐' : '🙂'; });
   const m = CR.createMatch(D.GAME, { seats, opts: { n: players, mode: opts.mode, teams: opts.teams, target: opts.target, capicua: opts.capicua }, seed: o.seed });
-  if (G && G.ph) G.ph.stop();
+  if (G && G.ph) G.ph.stop(); if (G && G.on) G.on.stop();
   G = { m, seats, opts, sel: -1, pick: null, think: .8, viewSeat: seats.findIndex(s => s.kind === 'local'), revealed: nLoc <= 1, paused: false, stats: { rounds: 0, myPts: 0, myDoms: 0, bestRound: 0 }, bubbles: {}, away: 0, phonePick: null, phoneNote: {}, auto: !!o.auto, lastRound: null, wait: 0 };
   m.on('move', onMove); m.on('reject', onReject); m.on('round', onRound);
   G.ph = CR.phoneHands(E.NET, { seats, layout: phoneLayout, onMsg: phoneMsg });
+  // players on their own screen get their own view of the table after every move (engine/cardroom.js onlineHost)
+  if (seats.some(s => s.kind === 'online')) G.on = CR.onlineHost(room, m);
   if (!hudEl) hudEl = E.shell({ title: 'Dominoes', onPause: pause, buttons: [], party: PARTY() }).hud;
   document.querySelector('.ig-top').hidden = false;
   music && music.stop(); music = E.music(E.SONGS.chill);
@@ -225,8 +231,9 @@ function start(o = {}) {
   E.say(L('Match a number on either end of the line. Empty your hand to win the round.', 'Junta un número con cualquier punta de la fila. Vacía tu mano para ganar la ronda.'), { once: true });
   return G;
 }
-function newRound() {
-  closeCards(); clearTable(); G.m.deal(); G.sel = -1; G.pick = null; G.phonePick = null; G.bubbles = {}; G.wait = .6;
+function newRound() { G.m.deal(); dealt(); }
+function dealt() {
+  closeCards(); clearTable(); G.sel = -1; G.pick = null; G.phonePick = null; G.bubbles = {}; G.wait = .6;
   if (locals().length > 1) G.revealed = false;
   buildRacks(); syncTable(); beginTurn(); renderAll();
   const st = G.m.state; if (st.forced) { const s = st.turn; E.toast(L(`${G.seats[s].name} opens with ${st.forced[0]}|${st.forced[1]}`, `${G.seats[s].name} sale con ${st.forced[0]}|${st.forced[1]}`), 2200); }
@@ -241,7 +248,7 @@ function buildRacks() {
 function updateRacks() {
   const st = G.m.state;
   G.seats.forEach((s, i) => {
-    const r = racks[i]; if (!r) return; const hide = s.kind === 'local' && i === 0; /* the bottom seat's tiles are in the tray */ const n = hide ? 0 : st.hands[i].length;
+    const r = racks[i]; if (!r) return; const hide = s.kind === 'local' && i === (G.base || 0); /* the bottom seat's tiles are in the tray */ const n = hide ? 0 : st.hands[i].length;
     if (r.n !== n) { r.tiles.forEach(t => r.g.remove(t)); r.tiles = []; for (let k = 0; k < n; k++) { const t = makeBack(); t.rotation.x = -Math.PI / 2 + .12; t.position.set((k - (n - 1) / 2) * 1.12, FELT_Y + 1, .4); r.g.add(t); r.tiles.push(t); } r.n = n; }
     r.plate.visible = !hide;
   });
@@ -295,6 +302,7 @@ function onMove(seat, mv, before, after) {
 }
 function onReject(seat, mv, reason, from) {
   if (from === 'bot') { console.warn('bot illegal move', mv, reason); return; }
+  if (from === 'online') return; // engine/cardroom.js onlineHost tells that guest why
   const msg = reason === 'not-your-turn' ? L('Wait for your turn', 'Espera tu turno') : G.m.state.forced && mv && mv.type === 'play' ? L(`Open with the double ${G.m.state.forced[0]}`, `Sal con el doble ${G.m.state.forced[0]}`) : mv && mv.type === 'play' ? L("That tile doesn't fit there", 'Esa ficha no cabe ahí') : L('You can still play a tile', 'Todavía puedes jugar una ficha');
   if (from === 'phone') { const sl = G.seats[seat].slot; G.phoneNote[seat] = msg; E.NET.rumble(sl, 120); G.ph.sync(); return; }
   SFX.bad(); E.toast(msg, 1500); const el = document.querySelector(`.dm-tile[data-k="${mv && mv.tile ? D.key(mv.tile) : ''}"]`); if (el) { el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); }
@@ -312,7 +320,7 @@ function burst(seat) { const i = G.seats.indexOf(seat); const w = seatWorld(i); 
 function bubble(seat, text) { G.bubbles[seat] = { text, t: 1.6 }; renderSeats(); }
 
 /* ---- local human actions (mouse / touch / keys / gamepad) ---- */
-const myTurnLocal = () => G && G.m.phase === 'turns' && G.revealed && G.m.turn() === G.viewSeat && G.seats[G.viewSeat]?.kind === 'local' && !G.paused;
+const myTurnLocal = () => G && G.m.phase === 'turns' && !G.m.pending && G.revealed && G.m.turn() === G.viewSeat && G.seats[G.viewSeat]?.kind === 'local' && !G.paused;
 function tapTile(i) {
   if (!G || G.paused) return; const s = G.viewSeat, st = G.m.state, t = st.hands[s] && st.hands[s][i]; if (!t) return;
   if (!myTurnLocal()) { if (G.m.phase === 'turns') { E.toast(L('Wait for your turn', 'Espera tu turno'), 1200); SFX.tick(); } return; }
@@ -406,12 +414,12 @@ function renderHud() {
   hudEl.innerHTML = `<div class="ig-chip dm-sc" aria-label="${L('Score', 'Marcador')}">${G.m.scores.map((v, sd) => `<span style="--c:${sideColor(sd)}"><i></i><b>${v}</b></span>`).join('')}<small>/ ${G.opts.target}</small></div>${st && st.mode === 'draw' ? `<div class="ig-chip" title="${L('Boneyard', 'Pozo')}">🂠 <b>${st.boneyard.length}</b></div>` : ''}<div class="ig-chip dm-opt">${L('Round', 'Ronda')} <b>${G.m.round}</b></div>`;
 }
 function renderSeats() {
-  const box = $('seats'); if (!G) { box.innerHTML = ''; return; } const st = G.m.state, turn = G.m.turn(), pos = POSN[G.seats.length];
+  const box = $('seats'); if (!G) { box.innerHTML = ''; return; } const st = G.m.state, turn = G.m.turn();
   box.innerHTML = G.seats.map((s, i) => {
     if (s.kind === 'local' && i === G.viewSeat && !$('tray').hidden) return '';
-    const b = G.bubbles[i], status = turn === i ? (s.kind === 'bot' ? L('thinking…', 'pensando…') : s.kind === 'phone' ? L('on the phone…', 'en el teléfono…') : L('playing…', 'jugando…')) : '';
+    const b = G.bubbles[i], status = turn === i ? (s.kind === 'bot' ? L('thinking…', 'pensando…') : s.kind === 'phone' ? L('on the phone…', 'en el teléfono…') : s.kind === 'online' ? L('on their screen…', 'en su pantalla…') : L('playing…', 'jugando…')) : '';
     const team = G.opts.teams ? ` ${TEAM[seatSide(i)].e}` : '';
-    return `<div class="dm-seat ${pos[i]} ${turn === i ? 'turn' : ''}" style="--c:${s.color}"><span class="e">${s.emoji}</span><span class="n">${esc(s.name)}${team}</span><span class="k" aria-label="${L('tiles', 'fichas')}">▮ ${st.hands[i].length}</span>${status ? `<span class="st">${status}</span>` : ''}${b ? `<span class="dm-bub">${esc(b.text)}</span>` : ''}</div>`;
+    return `<div class="dm-seat ${posOf(i)} ${turn === i ? 'turn' : ''}" style="--c:${s.color}"><span class="e">${s.emoji}</span><span class="n">${esc(s.name)}${team}</span><span class="k" aria-label="${L('tiles', 'fichas')}">▮ ${st.hands[i].length}</span>${status ? `<span class="st">${status}</span>` : ''}${b ? `<span class="dm-bub">${esc(b.text)}</span>` : ''}</div>`;
   }).join('');
 }
 function svgTile(a, b) { const half = (v, y0) => (PIP[v] || []).map(([x, y]) => `<circle cx="${x * 50}" cy="${y0 + y * 50}" r="5.6" fill="${S.color ? PIPC[v] : '#1b2430'}"/>`).join(''); return `<svg viewBox="0 0 50 100" aria-hidden="true"><line x1="6" y1="50" x2="44" y2="50" stroke="#b9a988" stroke-width="2.4" stroke-linecap="round"/>${half(a, 0)}${half(b, 50)}</svg>`; }
@@ -438,7 +446,7 @@ function renderTray() {
 function renderBanner() {
   const bn = $('banner'); if (!G || G.m.phase !== 'turns' || !$('tray').hidden) { bn.hidden = true; return; }
   const t = G.m.turn(), s = G.seats[t]; bn.hidden = false;
-  bn.textContent = s.kind === 'phone' ? L(`📱 ${s.name}: play on your phone`, `📱 ${s.name}: juega en tu teléfono`) : s.kind === 'bot' ? L(`${s.emoji} ${s.name} is thinking…`, `${s.emoji} ${s.name} está pensando…`) : L(`${s.name}'s turn`, `Turno de ${s.name}`);
+  bn.textContent = s.kind === 'phone' ? L(`📱 ${s.name}: play on your phone`, `📱 ${s.name}: juega en tu teléfono`) : s.kind === 'online' ? L(`🌐 ${s.name} is playing on their screen…`, `🌐 ${s.name} juega en su pantalla…`) : s.kind === 'bot' ? L(`${s.emoji} ${s.name} is thinking…`, `${s.emoji} ${s.name} está pensando…`) : L(`${s.name}'s turn`, `Turno de ${s.name}`);
 }
 function renderAll() { if (!G) return; renderHud(); renderTray(); renderSeats(); renderBanner(); updateMarkers(); G.ph && G.ph.sync(); }
 
@@ -453,11 +461,11 @@ function roundCard() {
   const bars = G.m.scores.map((v, sd) => `<div class="dm-bar" style="--c:${sideColor(sd)}"><span>${G.opts.teams ? TEAM[sd].e + ' ' : G.seats[sd].emoji + ' '}${esc(sideName(sd))}</span><div><i style="width:${Math.min(100, v / G.opts.target * 100)}%"></i></div><b>${v}</b></div>`).join('');
   const pts = o.points ? `<div class="dm-big">+${o.points} ${L('for', 'para')} ${esc(sideName(o.side))}${o.bonus ? ` <small>(${L('capicúa', 'capicúa')} +${o.bonus})</small>` : ''}</div>` : '';
   const d = document.createElement('div'); d.className = 'ig-screen dm-card'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true');
-  d.innerHTML = `<div class="ig-card"><div class="ig-kicker">${L('Round', 'Ronda')} ${G.m.round} · ${L('pips left in each hand', 'puntos en cada mano')}</div><h2>${roundTitle(o)}</h2>${pts}<div class="dm-round">${rows}</div><div class="dm-score">${bars}</div><div class="ig-row"><button class="ig-btn" data-a="next">${end ? L('See results', 'Ver resultados') : L('Next round', 'Siguiente ronda')}</button></div></div>`;
-  document.body.appendChild(d); d.querySelector('[data-a=next]').onclick = () => { SFX.click(); d.remove(); if (end) finishMatch(); else newRound(); };
+  d.innerHTML = `<div class="ig-card"><div class="ig-kicker">${L('Round', 'Ronda')} ${G.m.round} · ${L('pips left in each hand', 'puntos en cada mano')}</div><h2>${roundTitle(o)}</h2>${pts}<div class="dm-round">${rows}</div><div class="dm-score">${bars}</div><div class="ig-row"><button class="ig-btn" data-a="next">${end ? L('See results', 'Ver resultados') : JOIN ? L('OK · the host deals next', 'OK · el anfitrión reparte') : L('Next round', 'Siguiente ronda')}</button></div></div>`;
+  document.body.appendChild(d); d.querySelector('[data-a=next]').onclick = () => { SFX.click(); d.remove(); if (end) finishMatch(); else if (!JOIN) newRound(); };
   setTimeout(() => d.querySelector('[data-a=next]')?.focus({ preventScroll: true }), 30);
   E.say(`${roundTitle(o).replace(/^\S+\s/, '')}. ${o.points ? (L(`${o.points} points for ${sideName(o.side)}.`, `${o.points} puntos para ${sideName(o.side)}.`)) : ''}`, { interrupt: false });
-  G.ph.sync();
+  G.ph && G.ph.sync();
 }
 function finishMatch() {
   if (!G || G.done) return; G.done = true; music && music.stop(); closeCards();
@@ -470,7 +478,7 @@ function finishMatch() {
   resultsCount++;
   E.results({ gameId: 'dominoes', title, won, xp, coins, best: S.wins, bestLabel: L('Matches won', 'Partidas ganadas'),
     stats: [[L('Score', 'Marcador'), G.m.scores.join('–')], [L('Rounds', 'Rondas'), G.stats.rounds], [L('Your points', 'Tus puntos'), G.stats.myPts], [L('Dominoes', 'Dominós'), G.stats.myDoms]],
-    share: L(`I played Dominoes on Inoa Games: ${G.m.scores.join('–')} to ${G.opts.target}!`, `Jugué Dominó en Inoa Games: ${G.m.scores.join('–')} a ${G.opts.target}.`), onAgain: () => title_() });
+    share: L(`I played Dominoes on Inoa Games: ${G.m.scores.join('–')} to ${G.opts.target}!`, `Jugué Dominó en Inoa Games: ${G.m.scores.join('–')} a ${G.opts.target}.`), onAgain: () => JOIN ? guestIdle(L('Waiting for the host to start the next match…', 'Esperando a que el anfitrión empiece la próxima partida…')) : title_() });
 }
 
 /* ======================= main loop ======================= */
@@ -486,8 +494,8 @@ function update(dt) {
       const s = G.m.turn(), seat = G.seats[s];
       if (G.wait <= 0) {
         if (seat.kind === 'bot' || (G.auto && seat.kind === 'local' && (G.revealed || locals().length < 2))) { G.think -= dt; if (G.think <= 0) { G.m.botAct(s, seat.kind === 'bot' ? seat.skill : 'sharp'); } }
-        else if (seat.kind === 'local' && G.revealed) { const lm = G.m.legal(s); if (lm.length === 1 && lm[0].type === 'pass') { G.think -= dt; if (G.think <= 0) G.m.act(s, lm[0], 'local'); } }
-        else if (seat.kind === 'phone') { const p = E.net.players.find(x => x.slot === seat.slot); if (!p || !p.connected) { G.away += dt; if (G.away > 12) { E.toast(L(`${seat.name}'s phone is away: a bot plays for now`, `El teléfono de ${seat.name} no está: juega un bot por ahora`), 2200); G.away = 0; G.m.botAct(s, 'normal'); } } else G.away = 0; }
+        else if (seat.kind === 'local' && G.revealed && !G.m.pending) { const lm = G.m.legal(s); if (lm.length === 1 && lm[0].type === 'pass') { G.think -= dt; if (G.think <= 0) G.m.act(s, lm[0], 'local'); } }
+        else if (seat.kind === 'phone' || seat.kind === 'online') { const p = E.net.players.find(x => x.slot === seat.slot); if (!p || !p.connected) { G.away += dt; if (G.away > 12) { E.toast(L(`${seat.name}'s phone is away: a bot plays for now`, `El teléfono de ${seat.name} no está: juega un bot por ahora`), 2200); G.away = 0; G.m.botAct(s, 'normal'); } } else G.away = 0; }
       }
     }
     if (G.cardT != null) { G.cardT -= dt; if (G.cardT <= 0) { G.cardT = null; roundCard(); } }
@@ -507,19 +515,46 @@ function updateCamera(dt) {
   camera.position.set(camT.x, Math.sin(tilt) * camT.d, camT.z + Math.cos(tilt) * camT.d); camera.lookAt(camT.x, 0, camT.z);
   const off = Math.round((trayH - topH) / 2), key = `${Wd}x${H}:${off}`; if (key !== lastOff) { lastOff = key; if (off) camera.setViewOffset(Wd, H, 0, off, Wd, H); else camera.clearViewOffset(); }
 }
-function pause() { if (!G || G.paused || G.done || document.querySelector('.ig-screen:not(.dm-card)')) return; G.paused = true; music && music.stop(); E.pauseMenu({ onResume: () => { G.paused = false; music = E.music(E.SONGS.chill); }, onRestart: () => { G.paused = false; start({ ...G.opts, locals: undefined }); } }); }
-document.addEventListener('visibilitychange', () => { if (document.hidden && G && !G.done && !E.net.pads().length) pause(); });
+function pause() { if (!G || G.paused || G.done || document.querySelector('.ig-screen:not(.dm-card)')) return; if (JOIN) { E.pauseMenu({ extra: `<p class="ig-sub">${L('Online game: the table keeps going while this menu is open.', 'Partida en línea: la mesa sigue mientras este menú está abierto.')}</p>`, onResume: () => { }, onRestart: () => { } }); return; } G.paused = true; music && music.stop(); E.pauseMenu({ onResume: () => { G.paused = false; music = E.music(E.SONGS.chill); }, onRestart: () => { G.paused = false; start({ ...G.opts, locals: undefined }); } }); }
+document.addEventListener('visibilitychange', () => { if (document.hidden && G && !G.done && !JOIN && !E.net.pads().length) pause(); });
 
 /* ======================= title ======================= */
-const PARTY = () => ({ label: L('Phones as private hands', 'Teléfonos como mano secreta'), hint: L('Each phone becomes a player and shows only its own tiles (up to 4).', 'Cada teléfono es un jugador y solo ve sus propias fichas (hasta 4).') });
+const PARTY = () => ({ label: L('Phones & online play', 'Teléfonos y juego en línea'), hint: L('Each phone becomes a player and shows only its own tiles (up to 4).', 'Cada teléfono es un jugador y solo ve sus propias fichas (hasta 4).'), online: { page: 'games/dominoes.html', text: L('Friends in other homes play at this table on their own screen with this link (up to 3):', 'Amigos en otras casas juegan en esta mesa desde su pantalla con este enlace (hasta 3):') } });
+const ONLINE_INFO = { page: 'games/dominoes.html', label: L('🁫 Play on this screen', '🁫 Juega en esta pantalla') };
+const room = JOIN ? null : E.ROOM.hostRoom({ prefix: 'dm', online: ONLINE_INFO });
+const guest = JOIN ? E.ROOM.guestRoom({ prefix: 'dm', code: JOIN, L, game: L('Dominoes', 'Dominó'), name: (() => { try { return (JSON.parse(localStorage.getItem('inoa.pad') || '{}').name) || E.profile().name || ''; } catch (e) { return ''; } })(),
+  help: L('Your tiles stay on your screen. Tap a tile to play it; keys ◀ ▶ and Space work too.', 'Tus fichas se quedan en tu pantalla. Toca una ficha para jugarla; también sirven ◀ ▶ y Espacio.'),
+  words: { title: () => L('Online table', 'Mesa en línea'), youreIn: me => L(`You're in as <b style="color:${me.color}">${esc(me.name)}</b>! Waiting for the host to deal…`, `¡Entraste como <b style="color:${me.color}">${esc(me.name)}</b>! Esperando a que el anfitrión reparta…`) },
+  on: { start: guestStart, view: msg => { if (G && G.m.apply) G.m.apply(msg); }, rej: msg => { if (G && G.m.reject) G.m.reject(msg); }, lobby: () => { if (!G || G.done) return false; guestClear(); }, busy: () => !!G },
+  onEnd: () => guestClear() }) : null;
+// guest: the host seated us; build the same table from our seat (the host's match stays the only real one)
+function guestStart(msg) {
+  const mine = msg.seats.findIndex(s => s.kind === 'online' && E.net.me && s.slot === E.net.me.slot);
+  if (mine < 0) { guest.wait(L('This table is full. Waiting for the next game…', 'Esta mesa está llena. Esperando la próxima partida…')); return; }
+  if (G && !G.done && G.base === mine) return; // reconnected: a 'sync' view follows
+  guestClear(); for (const ms of tileMeshes.values()) scene.remove(ms); tileMeshes.clear(); // the title's demo tiles
+  const seats = msg.seats.map((s, i) => ({ ...s, i, was: s.kind, kind: i === mine ? 'local' : 'remote', emoji: i === mine ? '🙂' : s.emoji }));
+  const o = msg.opts, opts = { players: o.n, mode: o.mode, teams: !!o.teams, target: o.target, skill: 'normal', capicua: !!o.capicua };
+  const m = CR.mirrorMatch(D.GAME, { seats, opts: o, seat: mine, send: move => guest.act('act', { move }) });
+  G = { m, seats, opts, base: mine, sel: -1, pick: null, think: 0, viewSeat: mine, revealed: true, paused: false, stats: { rounds: 0, myPts: 0, myDoms: 0, bestRound: 0 }, bubbles: {}, away: 0, phonePick: null, phoneNote: {}, auto: false, lastRound: null, wait: 0 };
+  m.on('move', onMove); m.on('reject', onReject); m.on('round', onRound); m.on('deal', dealt);
+  m.on('sync', () => { closeCards(); clearTable(); buildRacks(); syncTable(); if (m.phase === 'turns') beginTurn(); renderAll(); });
+  if (!hudEl) hudEl = E.shell({ title: 'Dominoes', onPause: pause, buttons: [], party: false }).hud;
+  document.querySelector('.ig-top').hidden = false; music && music.stop(); music = E.music(E.SONGS.chill);
+  E.say(L('You are at the table. Match a number on either end of the line.', 'Estás en la mesa. Junta un número con cualquier punta de la fila.'), { once: true });
+}
+function guestClear() {
+  closeCards(); G = null; clearTable(); $('tray').hidden = true; $('banner').hidden = true; $('seats').innerHTML = ''; if (hudEl) document.querySelector('.ig-top').hidden = true; music && music.stop();
+}
+function guestIdle(html) { guestClear(); demoTable(); guest.wait(html); }
 function title_() {
-  closeCards(); if (G && G.ph) G.ph.stop(); G = null; clearTable(); $('tray').hidden = true; $('banner').hidden = true; $('seats').innerHTML = ''; if (hudEl) document.querySelector('.ig-top').hidden = true;
+  closeCards(); if (G && G.ph) G.ph.stop(); if (G && G.on) { G.on.stop(); room.lobby(); } G = null; clearTable(); $('tray').hidden = true; $('banner').hidden = true; $('seats').innerHTML = ''; if (hudEl) document.querySelector('.ig-top').hidden = true;
   music && music.stop(); music = E.music(E.SONGS.chill); demoTable(); renderTitle();
   E.say(L('Dominoes! Pick a mode and press Play.', '¡Dominó! Elige un modo y pulsa Jugar.'), { once: true });
 }
 function renderTitle() {
   if (titleEl) titleEl.remove();
-  const es = E.lang() === 'es', nPh = E.net.role === 'host' ? E.net.pads().length : 0;
+  const es = E.lang() === 'es', nPh = E.net.role === 'host' ? E.net.pads().length : 0, nOn = room ? room.players.length : 0;
   if (S.locals === 0 && !nPh) S.locals = 1;
   const b = (on, attrs, html) => `<button ${attrs} class="${on ? 'on' : ''}" aria-pressed="${!!on}">${html}</button>`;
   const extra = `<div class="dm-setup">
@@ -532,7 +567,7 @@ function renderTitle() {
     <div class="dm-lbl">${L('People on this screen', 'Personas en esta pantalla')}</div><div class="pick four" id="pH">${[0, 1, 2, 3, 4].filter(n => n <= S.players && (n > 0 || nPh)).map(n => b(S.locals === n, `data-h="${n}"`, n === 0 ? `📺 0<small>${L('phones only', 'solo teléfonos')}</small>` : n === 1 ? `🙂 1<small>${L('vs bots', 'contra bots')}</small>` : `👥 ${n}<small>${L('pass the device', 'pasan el aparato')}</small>`)).join('')}</div>
     <div class="dm-names" id="pNames" ${S.locals > 1 ? '' : 'hidden'}>${[0, 1, 2, 3].map(i => `<input data-i="${i}" maxlength="12" value="${esc(S.names[i])}" aria-label="${L('Player', 'Jugador')} ${i + 1}" style="border-left:6px solid ${SEATC[i]}" ${i < S.locals ? '' : 'hidden'}>`).join('')}</div>
     <div class="pick three" id="pX">${b(S.hints, 'data-x="hints"', `💡 ${L('Hints', 'Pistas')}<small>${L('glow playable tiles', 'fichas que caben')}</small>`)}${b(S.color, 'data-x="color"', `🎨 ${L('Colour pips', 'Puntos de color')}`)}${b(S.capicua, 'data-x="capicua"', `⭐ ${L('Capicúa', 'Capicúa')} +25<small>${L('last tile fits both ends', 'la última cabe en las dos')}</small>`)}</div>
-    <p class="dm-rec" id="pPh">${nPh ? L(`📱 ${nPh} phone${nPh > 1 ? 's' : ''} connected: each one is a player with a secret hand`, `📱 ${nPh} teléfono${nPh > 1 ? 's' : ''}: cada uno es un jugador con mano secreta`) : ''}</p>
+    <p class="dm-rec" id="pPh">${phoneLine()}</p>
     ${S.played ? `<p class="dm-rec">🏆 ${L(`Matches won: ${S.wins} of ${S.played}`, `Partidas ganadas: ${S.wins} de ${S.played}`)}${S.best ? ` · ${L('best round', 'mejor ronda')} +${S.best}` : ''}</p>` : ''}</div>`;
   const d = E.titleScreen({ party: PARTY(), title: L('Dominoes', 'Dominó'), kicker: L('Inoa Games · Card Room', 'Inoa Games · Sala de juegos'), lead: L('The classic double-six game for 2–4 players: match the ends, play your last tile, or have the fewest pips when nobody can move.', 'El clásico doble seis para 2–4 jugadores: junta las puntas, juega tu última ficha o ten menos puntos cuando nadie pueda jugar.'),
     how: [['🔢', L('Match a number on either end of the line', 'Junta un número con una de las dos puntas')], ['👆', L('Tap a tile. If it fits both ends, pick one. Keys: ◀ ▶ and Space', 'Toca una ficha. Si cabe en las dos puntas, elige una. Teclas: ◀ ▶ y Espacio')], ['🏆', L('Empty your hand, then score the pips left in the other hands', 'Vacía tu mano y anota los puntos de las otras manos')]], extra, onPlay: () => { titleEl = null; save(); start(); } });
@@ -548,7 +583,11 @@ function renderTitle() {
   d.querySelectorAll('#pNames input').forEach(inp => { inp.addEventListener('input', () => { S.names[+inp.dataset.i] = inp.value.replace(/[<>]/g, '').trim() || `P${+inp.dataset.i + 1}`; save(); }); inp.addEventListener('keydown', e => e.stopPropagation()); });
   d.querySelectorAll('#pX button').forEach(x => x.onclick = () => { const k = x.dataset.x; S[k] = !S[k]; x.classList.toggle('on', S[k]); x.setAttribute('aria-pressed', S[k]); SFX.click(); save(); if (k === 'color') demoTable(); });
 }
-E.net.on('change', () => { if (titleEl && titleEl.isConnected && !document.querySelector('.inoa-pp')) renderTitle(); else if (titleEl && titleEl.isConnected) { const el = document.getElementById('pPh'); const n = E.net.role === 'host' ? E.net.pads().length : 0; if (el) el.textContent = n ? L(`📱 ${n} phone${n > 1 ? 's' : ''} connected: each one is a player with a secret hand`, `📱 ${n} teléfono${n > 1 ? 's' : ''}: cada uno es un jugador con mano secreta`) : ''; } });
+E.net.on('change', () => { if (titleEl && titleEl.isConnected && !document.querySelector('.inoa-pp')) renderTitle(); else if (titleEl && titleEl.isConnected) { const el = document.getElementById('pPh'); if (el) el.textContent = phoneLine(); } });
+function phoneLine() {
+  const n = E.net.role === 'host' ? E.net.pads('pad').length : 0, o = room ? room.players.length : 0;
+  return [n ? L(`📱 ${n} phone${n > 1 ? 's' : ''} connected: each one is a player with a secret hand`, `📱 ${n} teléfono${n > 1 ? 's' : ''}: cada uno es un jugador con mano secreta`) : '', o ? L(`🌐 ${o} online player${o > 1 ? 's' : ''} ready: they play on their own screen`, `🌐 ${o} jugador${o > 1 ? 'es' : ''} en línea: juega${o > 1 ? 'n' : ''} en su pantalla`) : ''].filter(Boolean).join(' · ');
+}
 addEventListener('inoa:settings', e => { if (!e.detail || e.detail.key !== 'lang') return; document.title = L('Dominoes', 'Dominó'); if (titleEl && titleEl.isConnected) renderTitle(); else if (G) { renderAll(); const rc = document.querySelector('.dm-card .dm-round'); if (rc) roundCard(); } });
 // the title table: a few tiles laid out as a little line
 function demoTable() {
@@ -559,14 +598,14 @@ function demoTable() {
 
 /* ======================= boot ======================= */
 document.title = L('Dominoes', 'Dominó');
-ld.set(1); title_();
-if (new URLSearchParams(location.search).get('online')) setTimeout(() => E.NET.partyPanel(PARTY()), 300);
+ld.set(1); if (JOIN) { demoTable(); guest.join(); } else title_();
+if (!JOIN && new URLSearchParams(location.search).get('online')) setTimeout(() => E.NET.partyPanel(PARTY()), 300);
 ld.done(); window.__READY = true;
 E.loop(dt => { update(dt); R.render(dt); });
 window.__GAME = {
   get G() { return G; }, get m() { return G && G.m; }, get state() { return G && G.m.state; }, get phase() { return G ? G.m.phase : 'title'; }, get resultsCount() { return resultsCount; }, S, D, CR, R, THREE,
   start, update, title: title_, tapTile, localAction, roundCard, finishMatch, next: () => { const b = document.querySelector('.dm-card [data-a=next]'); if (b) b.click(); },
-  legal: s => G.m.legal(s), act: (s, mv, from = 'local') => G.m.act(s, mv, from), auto(v) { if (G) G.auto = !!v; },
+  legal: s => G.m.legal(s), act: (s, mv, from = 'local') => G.m.act(s, mv, from), rawAct: mv => guest && guest.act('act', { move: mv }), auto(v) { if (G) G.auto = !!v; },
   fast(v = true) { window.__DM_FAST = !!v; },
   // run the simulation n steps of dt (tests): bots + auto-locals keep playing; round cards are clicked through when skipCards is set
   run(n = 600, dt = 1 / 30, { skipCards = false } = {}) { for (let i = 0; i < n; i++) { update(dt); if (skipCards && document.querySelector('.dm-card [data-a=next]') && G && G.m.phase === 'roundEnd') window.__GAME.next(); if (!G || G.done || (G.m.phase === 'matchEnd' && document.querySelector('.dm-card'))) break; } return G && G.m.phase; }

@@ -18,7 +18,7 @@
     "store:shots": "PORT=8890 node test/run.js index tools/store_shots.js",
     "test:beta": "node test/run.js junk test/beta.js",
     "test:rules": "node test/dominoes_rules.js && node test/golf_rules.js",
-    "test:party": "for s in pad hub drift trivia games pact approve relay runner dominoes golf; do node test/party.js test/party_$s.js; done"
+    "test:party": "for s in pad hub drift trivia games pact approve relay runner dominoes golf dominoes_online golf_online; do node test/party.js test/party_$s.js; done"
   },
   "devDependencies": {
     "@gltf-transform/core": "4.1.1",

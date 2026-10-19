@@ -134,6 +134,13 @@ export function view(st, seat) {
     legal: legalMoves(st, seat), over: st.over };
 }
 
+// Online guests (engine/cardroom.js mirrorMatch): the full state shape with everything this seat may not see removed. Other
+// hands and the boneyard become nulls (only their sizes stay). At the end of a round every hand is shown, as at a real table.
+export function redact(st, seat) {
+  if (st.over) return clone(st);
+  const r = clone(st); r.hands = st.hands.map((h, i) => i === seat ? h.map(t => t.slice()) : h.map(() => null)); r.boneyard = st.boneyard.map(() => null); return r;
+}
+
 /* ---------------- bots: they decide from view() only ---------------- */
 // Chill: any legal tile (a little random). Normal: dump the heaviest tile, doubles first.
 // Sharp: also keeps numbers it holds on the ends, plays numbers the next opponent passed on, avoids numbers the partner
@@ -168,4 +175,4 @@ export function botMove(v, skill = 'normal', rng = Math.random) {
 }
 function best(list, f) { let b = null, bs = -Infinity; for (const x of list) { const s = f(x); if (s > bs) { bs = s; b = x; } } return b; }
 
-export const GAME = { newRound, turnOf, legalMoves, moveKey, applyMove, view, botMove, roundOver, sides };
+export const GAME = { newRound, turnOf, legalMoves, moveKey, applyMove, view, redact, botMove, roundOver, sides };

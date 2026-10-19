@@ -12,7 +12,7 @@ at ~16 Hz to stay inside the free plan's message rate). Config comes from `platf
 | --- | --- |
 | Host (TV, laptop, tablet) | Hub → **Party** section → **📱 Start a party**, or any game's title screen → **📱 Use phones as controllers**. A QR code + 4-letter code appear. The room follows the host from game to game (it is kept in `sessionStorage` and the host re-claims the same peer id on every page). |
 | Phone nearby | Scan the QR (opens `pad.html?r=CODE`) or open the site → Party → type the code. The phone becomes a controller (stick + A/B/C/D, vibration, wake lock), a buzzer, or a private answer screen, depending on the game. Reconnects by itself when the host switches games. |
-| Friend far away | Host shares the **online link** from the party panel. Island Drift: `games/drift.html?join=CODE` = their own 3D race on their own screen. Trivia/Draw: `pad.html?join=CODE` = questions + answers on their phone. |
+| Friend far away | Host shares the **online link** from the party panel. Island Drift: `games/drift.html?join=CODE` = their own 3D race on their own screen. Dominoes / Six-Card Golf: `games/dominoes.html?join=CODE` / `games/golf.html?join=CODE` = a seat at the host's table on their own screen. Trivia/Draw: `pad.html?join=CODE` = questions + answers on their phone. |
 
 ## What each game does with phones
 | Game | Phones |
@@ -23,6 +23,7 @@ at ~16 Hz to stay inside the free plan's message rate). Config comes from `platf
 | Pixel Pact: Depths | Phone 1 = P1, phones 2–4 take over AI allies as P2–P4 (custom button icons pushed to the phone). |
 | Tide Lines | Phone 1 = you, phones 2–4 join your team, phones 5–8 the other team (4v4). |
 | Dominoes | Each phone is a seat with a **private hand** (`hand` layout): only its own tiles, tap a tile to play it (◀/▶ when it fits both ends), Draw/Pass buttons. The host checks every move and rejects tiles that don't fit or moves out of turn (the phone vibrates and shows why). A phone that drops for 12 s on its turn gets a bot stand-in. Covered by `test/party_dominoes.js` |
+| Dominoes / Six-Card Golf online | Friends far away open the online link and play at the host's table on their own screen (up to 3, seated after local players and phones; bots fill the rest). The host's match is the only real one: after every deal/move/round it sends each online seat its own copy of the state with everything that seat may not see removed (`redact` in the rules files: other hands, the boneyard, the stock order, face-down cards, another player's stock draw). The guest page runs the same table code on that copy, sees the table from its own seat, refuses moves out of turn on the spot, and the host re-checks every move with `act()` (a forged move is refused and the guest is told why). Away 12 s on their turn → bot stand-in; a guest that reconnects gets the table again. Each guest gets its own results/XP. Covered by `test/party_dominoes_online.js`, `test/party_golf_online.js` and the rules tests (60 + 40 simulated online rounds with leak checks) |
 | Six-Card Golf | Each phone is a seat with its **own six cards** (`cards` layout): face-down cards as backs, the stock + top discard, the card you drew (only on your phone), Discard it / Back buttons, hint deltas when hints are on. The host checks every move (out of turn, flipping a face-up card, swapping before drawing are rejected with the reason on the phone). Away 12 s on your turn → a bot stand-in. Covered by `test/party_golf.js` |
 | Draw the Pact (Party mode) | Each phone is a player: the drawer gets the secret word on their phone, everyone else guesses from 4 options on theirs (first right answer scores). |
 | Pixel Pact (2D) | Each phone is its own input source (`net1`…`net8`): press A in the lobby to join. A jump · B attack · C special · D dodge · C+D ultimate. |
@@ -40,11 +41,19 @@ at ~16 Hz to stay inside the free plan's message rate). Config comes from `platf
 - Engine input: `E.createInput({pads:'any'|'first'|'separate'})`; `input.pad(slot)` returns `{x,y,a,b,c,d,pause,aPressed…}` once per frame per slot.
 - Override (tests / another project): `window.INOA_NET = {realtimeUrl, apikey, config:{iceServers:[…]}}` before the engine loads, or `localStorage['inoa.net']` (same JSON).
 
+## Online rooms on separate screens (`engine/room.js`, roadmap R7, 2026-10-19)
+One helper for every host-authoritative online mode, built from Island Drift's race code (Drift now runs on it with the same
+messages). Messages carry a per-game prefix: `<p>-start`, `<p>` (snapshots), `<p>-lobby`, `<p>-<kind>`.
+- Host: `E.ROOM.hostRoom({prefix, online:{page,label}, rate})` → `players`, `input(slot)`, `start(data)`, `snapshot(dt, build)` (real-time games, `rate` Hz), `send(slot, kind, data)`, `broadcast(kind, data)`, `lobby()`, `on(kind, (player, msg) => …)`, `onJoin`, `onLeave`, `stop()`. It also advertises the own-screen page to phones (`setOnline`).
+- Guest: `E.ROOM.guestRoom({prefix, code, L, game, help, words, name, on:{start, snap, lobby, busy, <kind>}, onEnd})` → `join()`, `sendInput(state)`, `act(kind, data)`, `wait(html)` (the waiting screen: joining, waiting for the host, reconnecting, host went back to the menu, party ended), `close()`.
+- Turn-based tables: `engine/cardroom.js` `onlineHost(room, match)` (host: sends redacted views, routes `act` to `match.act(seat, move, 'online')`, answers refusals with `rej`) and `mirrorMatch(game, {seats, opts, seat, send})` (guest: same surface as `createMatch`, so the table code runs unchanged). A rules module needs `redact(state, seat)`.
+- Prefixes in use: `dr` (Island Drift), `dm` (Dominoes), `gf` (Six-Card Golf).
+
 ## Tests
 `npm run test:party` runs `test/party.js` with a local Realtime look-alike (`test/party/mock-realtime.js`) and several browser
 pages (host + phones + online guest): `party_pad` (QR join, menu nav, P1 input, pause, room survives
 navigation), `party_drift` (online race to the finish), `party_trivia`, `party_games` (Depths, Tide
-Lines, Draw), `party_pact`, `party_dominoes` (private hands, illegal/out-of-turn moves rejected), `party_golf` (card grids per phone, drawn card private, illegal/out-of-turn moves rejected).
+Lines, Draw), `party_pact`, `party_dominoes` (private hands, illegal/out-of-turn moves rejected), `party_golf` (card grids per phone, drawn card private, illegal/out-of-turn moves rejected), `party_dominoes_online` + `party_golf_online` (two guests on their own screens + a bot: no hidden cards on a guest page, out-of-turn refused on the guest, forged move refused by the host, match to the end with results on every guest).
 
 ## Limits and upgrade path
 - TURN: PeerJS's free relay (`turn:eu-0/us-0.turn.peerjs.com`) is configured (2026-10-15; before that only STUN was set, so phones on mobile data or isolating Wi-Fi could not join). It is shared and best-effort; for launch use a dedicated TURN service. Previously: no TURN relay was configured: on a few strict networks (some schools/offices, symmetric NAT) devices

@@ -248,7 +248,7 @@ function startRace(spec) {
   G = { T, ti: trackIdx, D, karts, me: karts.find(k => k.isPlayer) || karts[0], boxes, hazards: [], t: -3.6, count: 3, raceT: 0, done: false, paused: false, shake: 0, camPos: new THREE.Vector3(), camLook: new THREE.Vector3(), camH: 0, fov: 62, client: !!spec, online: !spec && karts.some(k => k.remote), rec: [], recT: 0, wrongT: 0 };
   // time trial: the ghost of your best lap on this track (stored on this device)
   if (S.mode === 'tt' && !spec) { const gd = E.store.get(ghostKey(T.id), null); if (gd && Array.isArray(gd.s) && gd.s.length > 4) G.ghost = { t: gd.t, s: gd.s, m: makeGhost(), i: 0 }; }
-  if (G.online) E.NET.broadcast({ t: 'dr-start', track: trackIdx, roster: roster.map(r => ({ ri: r.ri, name: r.name, slot: r.slot })) }, 'player');
+  if (G.online) room.start({ track: trackIdx, roster: roster.map(r => ({ ri: r.ri, name: r.name, slot: r.slot })) });
   ['drLeft', 'drItem', 'drDrift', 'drSpeed', 'minimap'].forEach(id => $(id).hidden = false); setItemSlot(null); $('drWarn').hidden = true;
   drawMinimapBase(); hud(); if (music) music.stop(); music = E.music(E.SONGS.race);
   const k = G.me; G.camH = k.h; G.camPos.set(k.x - Math.sin(k.h) * 12, k.y + 6, k.z - Math.cos(k.h) * 12); G.camLook.set(k.x, k.y + 1.6, k.z);
@@ -362,7 +362,7 @@ function update(dt) {
   if (G.bumpT > 0) G.bumpT -= dt;
   updateGhost();
   hud(); updateEngine();
-  if (G.online) { G.snapT = (G.snapT || 0) - dt; if (G.snapT <= 0) { G.snapT = .05; sendSnap(); } }
+  if (G.online) room.snapshot(dt, snap);
 }
 function releaseDrift(k) { const c = k.driftCharge; let tier = 0; if (c > 2.1) { k.boost = Math.max(k.boost, 1.3); tier = 2; } else if (c > 1) { k.boost = Math.max(k.boost, .7); tier = 1; } k.drift = 0; k.driftCharge = 0;
   if (tier) { P.burst(new THREE.Vector3(k.x - Math.sin(k.h) * 2, k.y + .5, k.z - Math.cos(k.h) * 2), { color: tier === 2 ? 0xd27bff : 0xffa53a, n: tier === 2 ? 18 : 10, speed: 5, up: 1.5, size: .6, life: .35 }); if (k.isPlayer) { SFX.boost(); if (tier === 2) toastSmall(L('Super mini-turbo!', '¡Súper mini-turbo!')); } } }
@@ -389,28 +389,20 @@ function placeKart(k) {
 
 /* ---------- online: host side ---------- */
 const r2 = v => Math.round(v * 100) / 100;
-function sendSnap() {
+// engine/room.js carries the messages: 'dr-start' (roster), 'dr' (20 Hz snapshots), 'dr-fin' (a guest's result), 'dr-lobby'
+const room = JOIN ? null : E.ROOM.hostRoom({ prefix: 'dr', online: ONLINE_INFO, rate: 20 });
+function snap() {
   const it = id => id ? ITEMS.findIndex(i => i.id === id) : -1;
-  E.NET.broadcast({ t: 'dr', gt: r2(G.t), rt: r2(G.raceT), k: G.karts.map(k => [r2(k.x), r2(k.z), r2(k.y), Math.round(k.h * 1000) / 1000, r2(k.v), r2(k.steer), k.drift ? k.driftDir : 0, k.boost > 0 ? 1 : 0, k.shieldT > 0 ? 1 : 0, r2(Math.max(0, k.spin)), k.lap, k.prog, k.finished ? 1 : 0, it(k.item), k.rolling > 0 ? 1 : 0, r2(k.driftCharge), r2(k.lapStart), k.bestLap ? r2(k.bestLap) : 0]), bx: G.boxes.map(b => b.t > 0 ? 0 : 1).join(''), hz: G.hazards.map(h => [h.id, r2(h.x), r2(h.z), r2(h.y)]) }, 'player');
+  return { gt: r2(G.t), rt: r2(G.raceT), k: G.karts.map(k => [r2(k.x), r2(k.z), r2(k.y), Math.round(k.h * 1000) / 1000, r2(k.v), r2(k.steer), k.drift ? k.driftDir : 0, k.boost > 0 ? 1 : 0, k.shieldT > 0 ? 1 : 0, r2(Math.max(0, k.spin)), k.lap, k.prog, k.finished ? 1 : 0, it(k.item), k.rolling > 0 ? 1 : 0, r2(k.driftCharge), r2(k.lapStart), k.bestLap ? r2(k.bestLap) : 0]), bx: G.boxes.map(b => b.t > 0 ? 0 : 1).join(''), hz: G.hazards.map(h => [h.id, r2(h.x), r2(h.z), r2(h.y)]) };
 }
-function remoteFinish(k) { const place = G.karts.filter(o => o.finished).length; E.NET.send(k.remote, { t: 'dr-fin', place, time: r2(k.finishTime), best: k.bestLap ? r2(k.bestLap) : 0, track: tn(G.T.name) }); E.toast(`🌐 ${k.def.name} ${L('finished', 'terminó')} ${ORD(place)}`); }
+function remoteFinish(k) { const place = G.karts.filter(o => o.finished).length; room.send(k.remote, 'fin', { place, time: r2(k.finishTime), best: k.bestLap ? r2(k.bestLap) : 0, track: tn(G.T.name) }); E.toast(`🌐 ${k.def.name} ${L('finished', 'terminó')} ${ORD(place)}`); }
 
 /* ---------- online: guest side (renders the host's race) ---------- */
-let lobbyEl = null;
-function lobby(html, retry = false) {
-  if (!lobbyEl) { lobbyEl = document.createElement('div'); lobbyEl.className = 'ig-screen'; document.body.appendChild(lobbyEl); }
-  lobbyEl.innerHTML = `<div class="ig-card"><div class="ig-kicker">Island Drift · ${L('Online room', 'Sala en línea')} ${JOIN}</div><h2>${L('Online race', 'Carrera en línea')}</h2><p class="ig-sub">${html}</p><p class="ig-sub" style="font-size:13px">${L('Steer with A/D or arrows, drift with Shift, items with Space. On a phone, use the on-screen buttons.', 'Gira con A/D o flechas, derrapa con Shift, objetos con Espacio. En el teléfono, usa los botones en pantalla.')}</p><div class="ig-row"><a class="ig-btn ghost" href="../index.html">Hub</a>${retry ? `<button class="ig-btn" data-a="retry">${L('Try again', 'Reintentar')}</button>` : ''}</div></div>`;
-  const rb = lobbyEl.querySelector('[data-a=retry]'); if (rb) rb.onclick = () => { E.net.role = null; clientJoin(); };
-}
-function closeLobby() { if (lobbyEl) { lobbyEl.remove(); lobbyEl = null; } }
-const youreIn = () => L(`You're in as <b style="color:${E.net.me.color}">${E.net.me.name}</b>! Waiting for the host to start the race…`, `¡Entraste como <b style="color:${E.net.me.color}">${E.net.me.name}</b>! Esperando a que el anfitrión empiece la carrera…`);
-async function clientJoin() {
-  lobby(L(`Joining room <b>${JOIN}</b>…`, `Entrando a la sala <b>${JOIN}</b>…`));
-  let nm = ''; try { nm = (JSON.parse(localStorage.getItem('inoa.pad') || '{}').name) || E.profile().name || ''; } catch (e) { }
-  try { await E.NET.join(JOIN, { kind: 'player', name: nm }); }
-  catch (e) { lobby(L(`Couldn't reach room <b>${JOIN}</b> (${e.message}). Check the code, and that the host still has Island Drift open.`, `No se pudo entrar a la sala <b>${JOIN}</b> (${e.message}). Revisa el código y que el anfitrión tenga Island Drift abierto.`), true); return; }
-  lobby(youreIn());
-}
+const guest = JOIN ? E.ROOM.guestRoom({ prefix: 'dr', code: JOIN, L, game: 'Island Drift', name: (() => { try { return (JSON.parse(localStorage.getItem('inoa.pad') || '{}').name) || E.profile().name || ''; } catch (e) { return ''; } })(),
+  help: L('Steer with A/D or arrows, drift with Shift, items with Space. On a phone, use the on-screen buttons.', 'Gira con A/D o flechas, derrapa con Shift, objetos con Espacio. En el teléfono, usa los botones en pantalla.'),
+  words: { title: () => L('Online race', 'Carrera en línea'), youreIn: me => L(`You're in as <b style="color:${me.color}">${me.name}</b>! Waiting for the host to start the race…`, `¡Entraste como <b style="color:${me.color}">${me.name}</b>! Esperando a que el anfitrión empiece la carrera…`), hostBack: () => L('The host went back to the menu. Waiting for the next race…', 'El anfitrión volvió al menú. Esperando la próxima carrera…'), ended: () => L('The host ended the party. Thanks for racing!', 'El anfitrión terminó la fiesta. ¡Gracias por correr!') },
+  on: { start: m => startRace(m), snap: m => applySnap(m), fin: m => clientFinish(m), lobby: () => { if (!(G && !G.done)) return false; endClientRace(); }, busy: () => !!G },
+  onEnd: () => endClientRace() }) : null;
 function endClientRace() { if (G && G.client) { for (const k of G.karts) scene.remove(k.g); for (const h of G.hazards) scene.remove(h.m); G = null; ['drLeft', 'drItem', 'drDrift', 'drSpeed', 'minimap', 'drWarn'].forEach(id => $(id).hidden = true); if (engineSnd) engineSnd.g.gain.value = 0; music && music.stop(); } }
 function applySnap(m) {
   if (!G || !G.client) return; if (Math.abs(G.t - m.gt) > .25) G.t = m.gt; G.raceT = m.rt;
@@ -431,7 +423,7 @@ function clientUpdate(dt) {
   if (G.t < 0) { const c = Math.ceil(-G.t); if (c !== G.count && c <= 3) { G.count = c; bigText(String(c)); E.tone(440, .2, 'square', .1); } }
   else if (G.count > 0) { G.count = 0; bigText(L('GO!', '¡YA!')); E.tone(880, .45, 'square', .12); }
   if (G.t >= 0 && !G.done) G.raceT += dt;
-  const s = input.poll(); E.NET.sendInput({ x: r2(s.x), y: r2(s.y), a: s.a, b: s.b, c: s.c });
+  const s = input.poll(); guest.sendInput({ x: r2(s.x), y: r2(s.y), a: s.a, b: s.b, c: s.c });
   for (const k of G.karts) {
     if (k.tx == null) continue;
     k.tx += Math.sin(k.th) * k.v * dt; k.tz += Math.cos(k.th) * k.v * dt;
@@ -449,12 +441,8 @@ function clientUpdate(dt) {
 }
 function clientFinish(m) {
   if (!G || G.done) return; G.done = true; const place = m.place; SFX.win(); celebrate(place); bigText(place === 1 ? L('🏆 1ST!', '🏆 ¡1.º!') : ORD(place));
-  setTimeout(() => { music && music.stop(); E.results({ gameId: 'drift', title: place === 1 ? L('You won the online race!', '¡Ganaste la carrera en línea!') : L(`You finished ${ORD(place)}`, `Terminaste ${ORD(place)}`), stats: [[L('Place', 'Puesto'), ORD(place)], [L('Race time', 'Tiempo'), fmt(m.time)], [L('Best lap', 'Mejor vuelta'), m.best ? fmt(m.best) : '–']], xp: [120, 95, 80, 65, 55, 45][place - 1] || 40, coins: [40, 30, 22, 16, 12, 10][place - 1] || 8, best: m.best || null, bestLower: true, bestLabel: L('Best lap (s)', 'Mejor vuelta (s)'), won: place === 1, onAgain: () => { endClientRace(); lobby(L('Waiting for the host to start the next race…', 'Esperando a que el anfitrión empiece la próxima carrera…')); } }); }, 1600);
+  setTimeout(() => { music && music.stop(); E.results({ gameId: 'drift', title: place === 1 ? L('You won the online race!', '¡Ganaste la carrera en línea!') : L(`You finished ${ORD(place)}`, `Terminaste ${ORD(place)}`), stats: [[L('Place', 'Puesto'), ORD(place)], [L('Race time', 'Tiempo'), fmt(m.time)], [L('Best lap', 'Mejor vuelta'), m.best ? fmt(m.best) : '–']], xp: [120, 95, 80, 65, 55, 45][place - 1] || 40, coins: [40, 30, 22, 16, 12, 10][place - 1] || 8, best: m.best || null, bestLower: true, bestLabel: L('Best lap (s)', 'Mejor vuelta (s)'), won: place === 1, onAgain: () => { endClientRace(); guest.wait(L('Waiting for the host to start the next race…', 'Esperando a que el anfitrión empiece la próxima carrera…')); } }); }, 1600);
 }
-E.net.on('msg', m => { if (!JOIN || !m) return; if (m.t === 'dr-start') { closeLobby(); document.querySelectorAll('.ig-results').forEach(e => e.remove()); startRace(m); } else if (m.t === 'dr') applySnap(m); else if (m.t === 'dr-fin') clientFinish(m); else if (m.t === 'dr-lobby') { if (G && !G.done) { endClientRace(); lobby(L('The host went back to the menu. Waiting for the next race…', 'El anfitrión volvió al menú. Esperando la próxima carrera…')); } } });
-E.net.on('status', st => { if (!JOIN) return; if (st === 'ended') { endClientRace(); lobby(L('The host ended the party. Thanks for racing!', 'El anfitrión terminó la fiesta. ¡Gracias por correr!')); } else if (st === 'reconnecting' && !G) lobby(L('Reconnecting to the room…', 'Reconectando a la sala…')); else if (st === 'ready' && !G && E.net.me) lobby(youreIn()); });
-// Host: advertise the own-screen mode to every phone in the room.
-if (!JOIN) { const adv = () => { if (E.net.role === 'host' && E.net.status === 'ready') E.NET.setOnline(ONLINE_INFO); }; E.net.on('status', adv); adv(); }
 
 function updateEngine() { const ac = E.audio(); if (!ac || !E.profile().sound) return; if (!engineSnd) { const o = ac.createOscillator(), o2 = ac.createOscillator(), f = ac.createBiquadFilter(), g = ac.createGain(); o.type = 'sawtooth'; o2.type = 'square'; f.type = 'lowpass'; f.frequency.value = 600; g.gain.value = .0; o.connect(f); o2.connect(f); f.connect(g); g.connect(ac.destination); o.start(); o2.start(); engineSnd = { o, o2, g, f }; } const k = G.me, sp = Math.abs(k.v) / MAXV; engineSnd.o.frequency.setTargetAtTime(55 + sp * 120 + (k.boost > 0 ? 40 : 0), ac.currentTime, .05); engineSnd.o2.frequency.setTargetAtTime(110 + sp * 240, ac.currentTime, .05); engineSnd.g.gain.setTargetAtTime(G.paused || G.done ? 0 : .025 + sp * .03, ac.currentTime, .1); engineSnd.f.frequency.setTargetAtTime(400 + sp * 1600, ac.currentTime, .05); }
 
@@ -536,7 +524,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden && G &
 /* ---------- title ---------- */
 let titleEl = null;
 function title() {
-  if (E.net.role === 'host') E.NET.broadcast({ t: 'dr-lobby' }, 'player');
+  if (room) room.lobby();
   cup = null;
   ['drLeft', 'drItem', 'drDrift', 'drSpeed', 'minimap', 'drWarn'].forEach(id => $(id).hidden = true); if (G) { for (const k of G.karts) scene.remove(k.g); for (const h of G.hazards) scene.remove(h.m); if (G.ghost) scene.remove(G.ghost.m); G = null; } if (engineSnd) engineSnd.g.gain.value = 0;
   buildTrack(TRACKS[S.track]); renderTitle();
@@ -562,7 +550,7 @@ function renderTitle() {
   d.querySelectorAll('#pD button').forEach(b => b.onclick = () => { S.diff = b.dataset.d; sel('#pD button', b); saveS(); });
 }
 addEventListener('inoa:settings', e => { if (e.detail && e.detail.key === 'lang' && titleEl && titleEl.isConnected) { renderTitle(); } });
-if (JOIN) { buildTrack(TRACKS[S.track]); clientJoin(); } else { title(); if (new URLSearchParams(location.search).get('online')) setTimeout(() => E.NET.partyPanel(PARTY), 300); }
+if (JOIN) { buildTrack(TRACKS[S.track]); guest.join(); } else { title(); if (new URLSearchParams(location.search).get('online')) setTimeout(() => E.NET.partyPanel(PARTY), 300); }
 ld.done(); window.__READY = true;
 E.loop((dt) => { update(dt); if (!G || !G.paused || G.done) P.update(dt); updateCamera(dt); updateSnow(dt); R.render(dt); });
 window.__GAME = { get G() { return G; }, get pts() { return pts; }, get cup() { return cup; }, get bridge() { return bridge; }, TRACKS, S, R, THREE, startRace, startCup, update, title, updateCamera, net: E.net };

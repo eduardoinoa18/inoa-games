@@ -165,6 +165,31 @@ const eq = (a, b, msg) => ok(JSON.stringify(a) === JSON.stringify(b), `${msg}: g
     const v = D.view(st, 1); ok(!('hands' in v), 'view has no hands field'); eq(v.hand.length, 5, 'view shows own hand'); eq(v.counts, [5, 5, 5, 5], 'view shows tile counts'); eq(typeof v.boneyard, 'number', 'boneyard is a count');
   }
 
+
+  /* ---- online on separate screens: host match + mirrorMatch guests through a fake room (engine/cardroom.js) ---- */
+  {
+    let leaks = 0, legalDiff = 0, rounds = 0, rejects = 0, guestMoves = 0;
+    for (let r = 0; r < 60; r++) {
+      const n = 2 + (r % 3), seats = Array.from({ length: n }, (_, i) => i === 0 ? { i, kind: 'bot', skill: 'normal' } : { i, kind: 'online', slot: i, name: 'G' + i });
+      const m = C.createMatch(D.GAME, { seats, opts: { n, mode: r % 2 ? 'draw' : 'block', teams: n === 4, target: 9999 }, seed: 900 + r });
+      const guests = {}, h = {}; const room = { send(slot, kind, data) { const g = guests[slot]; if (kind === 'view') g.apply(data); else if (kind === 'rej') g.reject(data); }, on(k, f) { h[k] = f; }, onJoin() { }, start() { }, broadcast() { } };
+      for (let i = 1; i < n; i++) guests[i] = C.mirrorMatch(D.GAME, { seats, opts: m.opts, seat: i, send: move => h.act({ slot: i }, { move }) });
+      C.onlineHost(room, m); m.deal();
+      let g = 0; while (m.phase === 'turns' && g++ < 400) {
+        const s = m.turn(); if (s === 0) { m.botAct(0); continue; }
+        const gm = guests[s], st = gm.state;
+        st.hands.forEach((hd, i) => { if (i !== s && hd.some(t => t !== null)) leaks++; }); if (st.boneyard.some(t => t !== null)) leaks++;
+        if (JSON.stringify(gm.legal(s).map(D.moveKey)) !== JSON.stringify(m.legal(s).map(D.moveKey))) legalDiff++;
+        if (gm.act((s % (n - 1)) + 1 === s ? s : (s % (n - 1)) + 1, { type: 'pass' }).ok === false) rejects++; // out-of-turn is refused on the guest
+        gm.act(s, D.botMove(gm.view(s), 'normal', Math.random)); guestMoves++;
+      }
+      if (m.phase !== 'turns') { rounds++; for (let i = 1; i < n; i++) { if (guests[i].phase !== m.phase) leaks += 100; if (guests[i].state.hands.some(hd => hd.some(t => t === null))) leaks += 1000; } }
+    }
+    eq(leaks, 0, 'online guests never receive another hand or the boneyard (all hands shown at round end)');
+    eq(legalDiff, 0, 'a guest computes the same legal moves from its redacted state as the host');
+    ok(rounds === 60 && guestMoves > 200, `60 online rounds finished through the host (${guestMoves} guest moves)`);
+  }
+
   console.log(`${passes} passed, ${fails} failed`);
   console.log(fails ? 'RULES_FAILED' : 'RULES_OK');
   process.exitCode = fails ? 1 : 0;

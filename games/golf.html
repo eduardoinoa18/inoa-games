@@ -105,6 +105,8 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 
 /* ======================= settings + save (E.store 'inoa.golf', small) ======================= */
 const SKEY = 'inoa.golf';
+// Online on separate screens (engine/room.js): ?join=CODE = this screen takes a seat at someone else's table
+const JOIN = new URLSearchParams(location.search).get('join');
 const DEF_NAMES = ['Ana', 'Leo', 'Mia', 'Rafa'];
 const S = Object.assign({ players: 4, holes: 9, skill: 'normal', locals: 1, names: DEF_NAMES.slice(), jokers: false, hints: false, badges: true, wins: 0, played: 0, bestHole: null, pairs: 0 }, E.store.get(SKEY, {}));
 if (!Array.isArray(S.names)) S.names = DEF_NAMES.slice();
@@ -157,7 +159,7 @@ function cardTex(c) {
 }
 function makeCard(c) {
   const g = new THREE.Group(); const body = new THREE.Mesh(BODY_GEO, BODY); body.castShadow = true; body.receiveShadow = true; g.add(body);
-  const face = new THREE.Mesh(FACE_GEO, cardTex(c)); face.position.y = CT / 2 + .002; g.add(face);
+  const face = new THREE.Mesh(FACE_GEO, cardTex(c && c.r != null ? c : null)); face.position.y = CT / 2 + .002; g.add(face);
   const back = new THREE.Mesh(BACKF_GEO, cardTex(null)); back.position.y = -CT / 2 - .002; g.add(back);
   g.userData.face = face; g.userData.cid = c && c.id; return g;
 }
@@ -184,17 +186,19 @@ function clearTable() { for (const m of meshes.values()) scene.remove(m); meshes
 function start(o = {}) {
   closeCards(); if (titleEl) { titleEl.remove(); titleEl = null; }
   const players = clamp(o.players ?? S.players, 2, 4), opts = { players, holes: o.holes ?? S.holes, skill: o.skill ?? S.skill, jokers: !!(o.jokers ?? S.jokers) };
-  const phones = o.phones === false || E.net.role !== 'host' ? [] : E.net.pads().slice(0, 4);
-  let nLoc = clamp(o.locals ?? S.locals, 0, players); const nPh = Math.min(phones.length, players - nLoc); if (nLoc + nPh === 0) nLoc = 1;
-  const taken = [...S.names.slice(0, nLoc), ...phones.slice(0, nPh).map(p => String(p.name || ''))].map(n => n.toLowerCase());
+  const phones = o.phones === false || E.net.role !== 'host' ? [] : E.net.pads('pad').slice(0, 4), online = o.phones === false || !room ? [] : room.players.slice(0, 3);
+  let nLoc = clamp(o.locals ?? S.locals, 0, players); const nPh = Math.min(phones.length, players - nLoc), nOn = Math.min(online.length, players - nLoc - nPh); if (nLoc + nPh + nOn === 0) nLoc = 1;
+  const taken = [...S.names.slice(0, nLoc), ...phones.slice(0, nPh).map(p => String(p.name || '')), ...online.slice(0, nOn).map(p => String(p.name || ''))].map(n => n.toLowerCase());
   const botNames = CR.shuffle(BOTS.filter(b => !taken.includes(b.n.toLowerCase())).map(b => b.n)).concat(BOTS.map(b => b.n + ' 2'));
-  const seats = CR.makeSeats({ players, locals: nLoc, phones: phones.slice(0, nPh), names: S.names, botNames, skill: opts.skill });
-  seats.forEach((s, i) => { s.color = SEATC[i]; s.emoji = s.kind === 'bot' ? (BOTS.find(b => s.name.startsWith(b.n)) || BOTS[0]).e : s.kind === 'phone' ? '📱' : '🙂'; });
+  const seats = CR.makeSeats({ players, locals: nLoc, phones: phones.slice(0, nPh), online: online.slice(0, nOn), names: S.names, botNames, skill: opts.skill });
+  seats.forEach((s, i) => { s.color = SEATC[i]; s.emoji = s.kind === 'bot' ? (BOTS.find(b => s.name.startsWith(b.n)) || BOTS[0]).e : s.kind === 'phone' ? '📱' : s.kind === 'online' ? '🌐' : '🙂'; });
   const m = CR.createMatch(GR.GAME, { seats, opts: { n: players, holes: opts.holes, jokers: opts.jokers }, seed: o.seed });
-  if (G && G.ph) G.ph.stop();
+  if (G && G.ph) G.ph.stop(); if (G && G.on) G.on.stop();
   G = { m, seats, opts, think: .8, viewSeat: Math.max(0, seats.findIndex(s => s.kind === 'local')), revealed: nLoc <= 1, paused: false, flip: false, phoneFlip: {}, phoneNote: {}, bubbles: {}, away: 0, auto: !!o.auto, lastRound: null, wait: 0, stats: { holes: 0, myPairs: 0, holeWins: 0, bestHole: null } };
   m.on('move', onMove); m.on('reject', onReject); m.on('round', onRound);
   G.ph = CR.phoneHands(E.NET, { seats, layout: phoneLayout, onMsg: phoneMsg });
+  // players on their own screen get their own view of the table after every move (engine/cardroom.js onlineHost)
+  if (seats.some(s => s.kind === 'online')) G.on = CR.onlineHost(room, m);
   if (!hudEl) hudEl = E.shell({ title: 'Six-Card Golf', onPause: pause, buttons: [], party: PARTY() }).hud;
   document.querySelector('.ig-top').hidden = false;
   music && music.stop(); music = E.music(E.SONGS.chill);
@@ -202,8 +206,9 @@ function start(o = {}) {
   E.say(L('Draw a card, then swap it with one of yours, or discard it and turn a card over. Lowest score wins.', 'Roba una carta y cámbiala por una de las tuyas, o descártala y voltea una carta. Gana el puntaje más bajo.'), { once: true });
   return G;
 }
-function newHole() {
-  camT = null; closeCards(); clearTable(); G.m.deal(); G.flip = false; G.phoneFlip = {}; G.bubbles = {}; G.wait = .5; G.cardT = null;
+function newHole() { G.m.deal(); dealt(); }
+function dealt() {
+  camT = null; closeCards(); clearTable(); G.flip = false; G.phoneFlip = {}; G.bubbles = {}; G.wait = .5; G.cardT = null;
   if (locals().length > 1) G.revealed = false;
   syncTable(true); beginTurn(); renderAll();
   const st = G.m.state; E.toast(L(`Hole ${G.m.round} of ${G.opts.holes} · ${G.seats[st.start].name} starts`, `Hoyo ${G.m.round} de ${G.opts.holes} · empieza ${G.seats[st.start].name}`), 2200);
@@ -226,10 +231,20 @@ function target(ms, x, y, z, up, ry = 0) {
 }
 function syncTable(snap = false) {
   if (!G) return; const st = G.m.state, lay = layout(), seen = new Set();
+  // an online guest's state has no face-down cards (card: null) and no card another player drew from the stock: those get
+  // placeholder ids, and when a real card shows up its mesh takes over a placeholder (the card that was moved or flipped)
+  const hid = (s, i) => `hid${s}-${i}`, real = c => c && c.r != null;
+  const grids = st.grids.map((g, s) => g.map((cell, i) => cell.card ? cell : { up: false, card: { id: hid(s, i) } }));
+  const held = st.held && { ...st.held, card: st.held.card || { id: 'held' } };
+  { const want = new Set([...grids.flat().map(c => c.card.id), ...st.discard.map(c => c.id), held ? held.card.id : null]);
+    const free = [...meshes.keys()].filter(k => /^(hid|held)/.test(k) && !want.has(k));
+    const take = (c, prefs) => { if (!real(c) || meshes.has(c.id)) return; const k = prefs.find(p => free.includes(p)) || (prefs.includes('*') && free.find(f => f.startsWith('hid'))); if (!k) return; free.splice(free.indexOf(k), 1); const ms = meshes.get(k); meshes.delete(k); ms.userData.face.material = cardTex(c); ms.userData.cid = c.id; meshes.set(c.id, ms); };
+    grids.forEach((g, s) => g.forEach((cell, i) => take(cell.card, ['held', hid(s, i)])));
+    st.discard.slice(-3).forEach(c => take(c, ['*'])); if (held) take(held.card, ['held']); }
   const place = (c, x, y, z, up, ry = 0, spawn, hide = false) => { let ms = meshes.get(c.id); if (!ms) { ms = makeCard(c); scene.add(ms); meshes.set(c.id, ms); const sp = spawn || lay.stock; ms.position.set(sp.x, CARD_Y + .4, sp.z); ms.rotation.z = Math.PI; } seen.add(c.id); target(ms, x, y, z, up, ry); ms.userData.hide = hide; ms.visible = !(hide && !ms.userData.a); };
-  st.grids.forEach((g, s) => { const ctr = lay.centers[s]; g.forEach((cell, i) => { const p = slotPos(ctr, i); place(cell.card, p.x, CARD_Y, p.z, cell.up, 0, null, !!ctr.hidden); }); });
+  grids.forEach((g, s) => { const ctr = lay.centers[s]; g.forEach((cell, i) => { const p = slotPos(ctr, i); place(cell.card, p.x, CARD_Y, p.z, cell.up, 0, null, !!ctr.hidden); }); });
   const n = st.discard.length; st.discard.slice(-3).forEach((c, k) => { const j = n - Math.min(3, n) + k; place(c, lay.discard.x + Math.sin(j * 2.3) * .08, CARD_Y + k * (CT + .004), lay.discard.z + Math.cos(j * 1.7) * .06, true, Math.sin(j * 1.9) * .1, lay.discard); });
-  if (st.held) { const h = heldSpot(lay); place(st.held.card, h.x, h.y, h.z, true, 0, st.held.from === 'discard' ? lay.discard : lay.stock); }
+  if (held) { const h = heldSpot(lay); place(held.card, h.x, h.y, h.z, real(held.card), 0, held.from === 'discard' ? lay.discard : lay.stock); }
   for (const [id, ms] of meshes) if (!seen.has(id)) { scene.remove(ms); meshes.delete(id); }
   if (snap) for (const ms of meshes.values()) { const t = ms.userData.tgt; if (t) { ms.userData.a = null; if (ms.userData.hide) ms.visible = false; ms.position.set(t.x, t.y, t.z); ms.rotation.set(0, t.ry, t.up ? 0 : Math.PI); } }
   // stock block
@@ -274,6 +289,7 @@ function onMove(seat, mv, before, after) {
 function pairFx(seat) { const ctr = G.lay && G.lay.centers[seat]; if (!ctr || ctr.hidden) { SFX.good(); return; } SFX.good(); for (let k = 0; k < 2; k++) P.burst(new THREE.Vector3(ctr.x, .8, ctr.z), { color: [0x7dffd8, 0xffd166][k], n: 18, speed: 4, up: 4, size: .3, life: .9, gravity: 8 }); }
 function onReject(seat, mv, reason, from) {
   if (from === 'bot') { console.warn('bot illegal move', mv, reason); return; }
+  if (from === 'online') return; // engine/cardroom.js onlineHost tells that guest why
   const st = G.m.state;
   const msg = reason === 'not-your-turn' ? L('Wait for your turn', 'Espera tu turno')
     : st.phase === 'setup' ? L('Pick a face-down card to turn up', 'Elige una carta boca abajo para voltearla')
@@ -296,7 +312,7 @@ function burst(seat) { const c = G.lay && G.lay.centers[seat]; const p = c && !c
 function bubble(seat, text) { G.bubbles[seat] = { text, t: 1.6 }; }
 
 /* ---- local human actions (mouse / touch / keys / gamepad) ---- */
-const myTurnLocal = () => !!G && G.m.phase === 'turns' && G.revealed && G.m.turn() === G.viewSeat && G.seats[G.viewSeat]?.kind === 'local' && !G.paused;
+const myTurnLocal = () => !!G && G.m.phase === 'turns' && !G.m.pending && G.revealed && G.m.turn() === G.viewSeat && G.seats[G.viewSeat]?.kind === 'local' && !G.paused;
 function tapCard(i) {
   if (!G || G.paused) return; const s = G.viewSeat, st = G.m.state;
   if (!myTurnLocal()) { if (G.m.phase === 'turns') { E.toast(L('Wait for your turn', 'Espera tu turno'), 1200); SFX.tick(); } return; }
@@ -488,10 +504,10 @@ function holeCard() {
   const pairs = o.pairs.reduce((a, b) => a + b, 0);
   const d = document.createElement('div'); d.className = 'ig-screen gf-card'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true');
   d.innerHTML = `<div class="ig-card"><div class="ig-kicker">${L('Hole', 'Hoyo')} ${G.m.round} ${L('of', 'de')} ${G.opts.holes} · ${L('lowest score wins', 'gana el puntaje más bajo')}</div><h2>${holeTitle(o)}</h2>${pairs ? `<div class="gf-big">✨ ${L(`${pairs} column pair${pairs > 1 ? 's' : ''} scored 0`, `${pairs} pareja${pairs > 1 ? 's' : ''} de columna valieron 0`)}</div>` : ''}<div class="gf-rows">${rows}</div><div class="ig-row"><button class="ig-btn" data-a="next">${end ? L('See results', 'Ver resultados') : L('Next hole', 'Siguiente hoyo')}</button></div></div>`;
-  document.body.appendChild(d); d.querySelector('[data-a=next]').onclick = () => { SFX.click(); d.remove(); if (end) finishMatch(); else newHole(); };
+  document.body.appendChild(d); if (JOIN && !end) d.querySelector('[data-a=next]').textContent = L('OK · the host deals next', 'OK · el anfitrión reparte'); d.querySelector('[data-a=next]').onclick = () => { SFX.click(); d.remove(); if (end) finishMatch(); else if (!JOIN) newHole(); };
   setTimeout(() => d.querySelector('[data-a=next]')?.focus({ preventScroll: true }), 30);
   E.say(holeTitle(o).replace(/^\S+\s/, ''), { interrupt: false });
-  G.ph.sync();
+  G.ph && G.ph.sync();
 }
 function finishMatch() {
   if (!G || G.done) return; G.done = true; music && music.stop(); closeCards();
@@ -505,7 +521,7 @@ function finishMatch() {
   const myTot = me != null ? G.m.scores[me] : null;
   E.results({ gameId: 'golf', title, won, xp, coins, best: S.wins, bestLabel: L('Matches won', 'Partidas ganadas'),
     stats: [[L('Holes', 'Hoyos'), G.stats.holes], [L('Your total', 'Tu total'), myTot == null ? '–' : fmt(myTot)], [L('Best hole', 'Mejor hoyo'), G.stats.bestHole == null ? '–' : fmt(G.stats.bestHole)], [L('Column pairs', 'Parejas'), G.stats.myPairs]],
-    share: L(`I played Six-Card Golf on Inoa Games: ${myTot == null ? '' : fmt(myTot) + ' over '}${G.stats.holes} holes!`, `Jugué Golf de seis cartas en Inoa Games: ${myTot == null ? '' : fmt(myTot) + ' en '}${G.stats.holes} hoyos.`), onAgain: () => title_() });
+    share: L(`I played Six-Card Golf on Inoa Games: ${myTot == null ? '' : fmt(myTot) + ' over '}${G.stats.holes} holes!`, `Jugué Golf de seis cartas en Inoa Games: ${myTot == null ? '' : fmt(myTot) + ' en '}${G.stats.holes} hoyos.`), onAgain: () => JOIN ? guestIdle(L('Waiting for the host to start the next match…', 'Esperando a que el anfitrión empiece la próxima partida…')) : title_() });
 }
 
 /* ======================= main loop ======================= */
@@ -518,7 +534,7 @@ function update(dt) {
     ms.rotation.z = lerp(a.rz, tg.up ? 0 : Math.PI, k); ms.rotation.y = lerp(a.ry0, tg.ry, k);
     if (a.t >= 1) { ms.userData.a = null; if (ms.userData.hide) ms.visible = false; ms.position.set(tg.x, tg.y, tg.z); ms.rotation.set(0, tg.ry, tg.up ? 0 : Math.PI); if (tg.y < .5) { E.tone(1500, .03, 'square', .04); E.noise(.05, .1, 2600, 2); } } }
   // the held card hovers gently
-  if (G && G.m.state && G.m.state.held) { const ms = meshes.get(G.m.state.held.card.id); if (ms && !ms.userData.a) ms.position.y = ms.userData.tgt.y + Math.sin(t * 2.4) * .08; }
+  if (G && G.m.state && G.m.state.held) { const ms = meshes.get((G.m.state.held.card || { id: 'held' }).id); if (ms && !ms.userData.a) ms.position.y = ms.userData.tgt.y + Math.sin(t * 2.4) * .08; }
   glowM.opacity = .26 + Math.sin(t * 5) * .14;
   if (G && !G.paused) {
     let bub = false; for (const k in G.bubbles) { G.bubbles[k].t -= dt; if (G.bubbles[k].t <= 0) { delete G.bubbles[k]; bub = true; } } if (bub) renderSeats();
@@ -527,7 +543,7 @@ function update(dt) {
       const s = G.m.turn(), seat = G.seats[s];
       if (G.wait <= 0) {
         if (seat.kind === 'bot' || (G.auto && seat.kind === 'local' && (G.revealed || locals().length < 2))) { G.think -= dt; if (G.think <= 0) { G.m.botAct(s, seat.kind === 'bot' ? seat.skill : 'sharp'); } }
-        else if (seat.kind === 'phone') { const p = E.net.players.find(x => x.slot === seat.slot); if (!p || !p.connected) { G.away += dt; if (G.away > 12) { E.toast(L(`${seat.name}'s phone is away: a bot plays for now`, `El teléfono de ${seat.name} no está: juega un bot por ahora`), 2200); G.away = 11; G.m.botAct(s, 'normal'); } } else G.away = 0; }
+        else if (seat.kind === 'phone' || seat.kind === 'online') { const p = E.net.players.find(x => x.slot === seat.slot); if (!p || !p.connected) { G.away += dt; if (G.away > 12) { E.toast(L(`${seat.name}'s phone is away: a bot plays for now`, `El teléfono de ${seat.name} no está: juega un bot por ahora`), 2200); G.away = 11; G.m.botAct(s, 'normal'); } } else G.away = 0; }
       }
     }
     if (G.cardT != null) { G.cardT -= dt; if (G.cardT <= 0) { G.cardT = null; holeCard(); } }
@@ -551,13 +567,38 @@ function updateCamera(dt) {
   if (key !== lastOff) { lastOff = key; if (offX || offY) camera.setViewOffset(W, H, offX, offY, W, H); else camera.clearViewOffset(); }
 }
 addEventListener('resize', () => { if (G) { syncTable(); renderAll(); } });
-function pause() { if (!G || G.paused || G.done || document.querySelector('.ig-screen:not(.gf-card)')) return; G.paused = true; music && music.stop(); E.pauseMenu({ onResume: () => { G.paused = false; music = E.music(E.SONGS.chill); }, onRestart: () => { G.paused = false; start({ ...G.opts, locals: undefined }); } }); }
-document.addEventListener('visibilitychange', () => { if (document.hidden && G && !G.done && !E.net.pads().length) pause(); });
+function pause() { if (!G || G.paused || G.done || document.querySelector('.ig-screen:not(.gf-card)')) return; if (JOIN) { E.pauseMenu({ extra: `<p class="ig-sub">${L('Online game: the table keeps going while this menu is open.', 'Partida en línea: la mesa sigue mientras este menú está abierto.')}</p>`, onResume: () => { }, onRestart: () => { } }); return; } G.paused = true; music && music.stop(); E.pauseMenu({ onResume: () => { G.paused = false; music = E.music(E.SONGS.chill); }, onRestart: () => { G.paused = false; start({ ...G.opts, locals: undefined }); } }); }
+document.addEventListener('visibilitychange', () => { if (document.hidden && G && !G.done && !JOIN && !E.net.pads().length) pause(); });
 
 /* ======================= title ======================= */
-const PARTY = () => ({ label: L('Phones as private hands', 'Teléfonos como mano secreta'), hint: L('Each phone becomes a player and shows its own six cards (up to 4).', 'Cada teléfono es un jugador y muestra sus seis cartas (hasta 4).') });
+const PARTY = () => ({ label: L('Phones & online play', 'Teléfonos y juego en línea'), hint: L('Each phone becomes a player and shows its own six cards (up to 4).', 'Cada teléfono es un jugador y muestra sus seis cartas (hasta 4).'), online: { page: 'games/golf.html', text: L('Friends in other homes play at this table on their own screen with this link (up to 3):', 'Amigos en otras casas juegan en esta mesa desde su pantalla con este enlace (hasta 3):') } });
+const ONLINE_INFO = { page: 'games/golf.html', label: L('🂡 Play on this screen', '🂡 Juega en esta pantalla') };
+const room = JOIN ? null : E.ROOM.hostRoom({ prefix: 'gf', online: ONLINE_INFO });
+const guest = JOIN ? E.ROOM.guestRoom({ prefix: 'gf', code: JOIN, L, game: L('Six-Card Golf', 'Golf de seis cartas'), name: (() => { try { return (JSON.parse(localStorage.getItem('inoa.pad') || '{}').name) || E.profile().name || ''; } catch (e) { return ''; } })(),
+  help: L('Your cards stay on your screen. Tap the stock or the discard, then one of your cards.', 'Tus cartas se quedan en tu pantalla. Toca el mazo o el descarte y luego una de tus cartas.'),
+  words: { title: () => L('Online table', 'Mesa en línea'), youreIn: me => L(`You're in as <b style="color:${me.color}">${esc(me.name)}</b>! Waiting for the host to deal…`, `¡Entraste como <b style="color:${me.color}">${esc(me.name)}</b>! Esperando a que el anfitrión reparta…`) },
+  on: { start: guestStart, view: msg => { if (G && G.m.apply) G.m.apply(msg); }, rej: msg => { if (G && G.m.reject) G.m.reject(msg); }, lobby: () => { if (!G || G.done) return false; guestClear(); }, busy: () => !!G },
+  onEnd: () => guestClear() }) : null;
+// guest: the host seated us; build the same table from our seat (the host's match stays the only real one)
+function guestStart(msg) {
+  const mine = msg.seats.findIndex(s => s.kind === 'online' && E.net.me && s.slot === E.net.me.slot);
+  if (mine < 0) { guest.wait(L('This table is full. Waiting for the next game…', 'Esta mesa está llena. Esperando la próxima partida…')); return; }
+  if (G && !G.done && G.viewSeat === mine) return; // reconnected: a 'sync' view follows
+  guestClear(); clearTable(); // the title's demo cards
+  const seats = msg.seats.map((s, i) => ({ ...s, i, was: s.kind, kind: i === mine ? 'local' : 'remote', emoji: i === mine ? '🙂' : s.emoji }));
+  const o = msg.opts, opts = { players: o.n, holes: o.holes, skill: 'normal', jokers: !!o.jokers };
+  const m = CR.mirrorMatch(GR.GAME, { seats, opts: o, seat: mine, send: move => guest.act('act', { move }) });
+  G = { m, seats, opts, think: 0, viewSeat: mine, revealed: true, paused: false, flip: false, phoneFlip: {}, phoneNote: {}, bubbles: {}, away: 0, auto: false, lastRound: null, wait: 0, stats: { holes: 0, myPairs: 0, holeWins: 0, bestHole: null } };
+  m.on('move', onMove); m.on('reject', onReject); m.on('round', onRound); m.on('deal', dealt);
+  m.on('sync', () => { closeCards(); clearTable(); syncTable(true); if (m.phase === 'turns') beginTurn(); renderAll(); });
+  if (!hudEl) hudEl = E.shell({ title: 'Six-Card Golf', onPause: pause, buttons: [], party: false }).hud;
+  document.querySelector('.ig-top').hidden = false; music && music.stop(); music = E.music(E.SONGS.chill);
+  E.say(L('You are at the table. Lowest score wins.', 'Estás en la mesa. Gana el puntaje más bajo.'), { once: true });
+}
+function guestClear() { closeCards(); G = null; clearTable(); $('tray').hidden = true; $('banner').hidden = true; $('seats').innerHTML = ''; seatEls = []; if (hudEl) document.querySelector('.ig-top').hidden = true; music && music.stop(); }
+function guestIdle(html) { guestClear(); guest.wait(html); }
 function title_() {
-  closeCards(); if (G && G.ph) G.ph.stop(); G = null; clearTable(); $('tray').hidden = true; $('banner').hidden = true; $('seats').innerHTML = ''; seatEls = []; if (hudEl) document.querySelector('.ig-top').hidden = true;
+  closeCards(); if (G && G.ph) G.ph.stop(); if (G && G.on) { G.on.stop(); room.lobby(); } G = null; clearTable(); $('tray').hidden = true; $('banner').hidden = true; $('seats').innerHTML = ''; seatEls = []; if (hudEl) document.querySelector('.ig-top').hidden = true;
   music && music.stop(); music = E.music(E.SONGS.chill); demoTable(); renderTitle();
   E.say(L('Six-Card Golf! Lowest score wins. Press Play.', '¡Golf de seis cartas! Gana el puntaje más bajo. Pulsa Jugar.'), { once: true });
 }
@@ -574,7 +615,7 @@ function renderTitle() {
     <div class="gf-lbl">${L('People on this screen', 'Personas en esta pantalla')}</div><div class="pick four" id="pH">${[0, 1, 2, 3, 4].filter(n => n <= S.players && (n > 0 || nPh)).map(n => b(S.locals === n, `data-h="${n}"`, n === 0 ? `📺 0<small>${L('phones only', 'solo teléfonos')}</small>` : n === 1 ? `🙂 1<small>${L('vs bots', 'contra bots')}</small>` : `👥 ${n}<small>${L('pass the device', 'pasan el aparato')}</small>`)).join('')}</div>
     <div class="gf-names" id="pNames" ${S.locals > 1 ? '' : 'hidden'}>${[0, 1, 2, 3].map(i => `<input data-i="${i}" maxlength="12" value="${esc(S.names[i])}" aria-label="${L('Player', 'Jugador')} ${i + 1}" style="border-left:6px solid ${SEATC[i]}" ${i < S.locals ? '' : 'hidden'}>`).join('')}</div>
     <div class="pick three" id="pX">${b(S.hints, 'data-x="hints"', `💡 ${L('Hints', 'Pistas')}<small>${L('what a swap does', 'qué hace un cambio')}</small>`)}${b(S.badges, 'data-x="badges"', `🔢 ${L('Card points', 'Puntos en cartas')}<small>${L('A=1 · 2=−2 · K=0', 'A=1 · 2=−2 · K=0')}</small>`)}${b(S.jokers, 'data-x="jokers"', `★ ${L('Jokers', 'Comodines')}<small>${L('2 jokers, −2 each', '2 comodines, −2 cada uno')}</small>`)}</div>
-    <p class="gf-rec" id="pPh">${nPh ? L(`📱 ${nPh} phone${nPh > 1 ? 's' : ''} connected: each one is a player`, `📱 ${nPh} teléfono${nPh > 1 ? 's' : ''}: cada uno es un jugador`) : ''}</p>
+    <p class="gf-rec" id="pPh">${phoneLine()}</p>
     ${S.played ? `<p class="gf-rec">🏆 ${L(`Matches won: ${S.wins} of ${S.played}`, `Partidas ganadas: ${S.wins} de ${S.played}`)}${S.bestHole != null ? ` · ${L('best hole', 'mejor hoyo')} ${fmt(S.bestHole)}` : ''}</p>` : ''}</div>`;
   const d = E.titleScreen({ party: PARTY(), title: L('Six-Card Golf', 'Golf de seis cartas'), kicker: L('Inoa Games · Card Room', 'Inoa Games · Sala de juegos'), lead: L('Six cards face down, two turned up. Swap your way to the lowest score: pairs in a column count zero.', 'Seis cartas boca abajo, dos volteadas. Cambia cartas hasta el puntaje más bajo: las parejas en columna valen cero.'),
     how: [['🂠', L('Draw from the stock or take the top discard', 'Roba del mazo o toma el descarte de arriba')], ['🔁', L('Swap it for one of your cards, or discard it and turn a card up', 'Cámbiala por una de tus cartas, o descártala y voltea una')], ['⛳', L('A=1, 2=−2, K=0, J/Q=10. A pair in a column = 0. Lowest wins', 'A=1, 2=−2, K=0, J/Q=10. Pareja en columna = 0. Gana el más bajo')]], extra, onPlay: () => { titleEl = null; save(); start(); } });
@@ -588,7 +629,11 @@ function renderTitle() {
   d.querySelectorAll('#pNames input').forEach(inp => { inp.addEventListener('input', () => { S.names[+inp.dataset.i] = inp.value.replace(/[<>]/g, '').trim() || `P${+inp.dataset.i + 1}`; save(); }); inp.addEventListener('keydown', e => e.stopPropagation()); });
   d.querySelectorAll('#pX button').forEach(x => x.onclick = () => { const k = x.dataset.x; S[k] = !S[k]; x.classList.toggle('on', S[k]); x.setAttribute('aria-pressed', S[k]); SFX.click(); save(); if (k === 'badges') demoTable(); });
 }
-E.net.on('change', () => { if (titleEl && titleEl.isConnected && !document.querySelector('.inoa-pp')) renderTitle(); else if (titleEl && titleEl.isConnected) { const el = document.getElementById('pPh'); const n = E.net.role === 'host' ? E.net.pads().length : 0; if (el) el.textContent = n ? L(`📱 ${n} phone${n > 1 ? 's' : ''} connected: each one is a player`, `📱 ${n} teléfono${n > 1 ? 's' : ''}: cada uno es un jugador`) : ''; } });
+E.net.on('change', () => { if (titleEl && titleEl.isConnected && !document.querySelector('.inoa-pp')) renderTitle(); else if (titleEl && titleEl.isConnected) { const el = document.getElementById('pPh'); if (el) el.textContent = phoneLine(); } });
+function phoneLine() {
+  const n = E.net.role === 'host' ? E.net.pads('pad').length : 0, o = room ? room.players.length : 0;
+  return [n ? L(`📱 ${n} phone${n > 1 ? 's' : ''} connected: each one is a player`, `📱 ${n} teléfono${n > 1 ? 's' : ''}: cada uno es un jugador`) : '', o ? L(`🌐 ${o} online player${o > 1 ? 's' : ''} ready: they play on their own screen`, `🌐 ${o} jugador${o > 1 ? 'es' : ''} en línea: juega${o > 1 ? 'n' : ''} en su pantalla`) : ''].filter(Boolean).join(' · ');
+}
 addEventListener('inoa:settings', e => { if (!e.detail || e.detail.key !== 'lang') return; document.title = L('Six-Card Golf', 'Golf de seis cartas'); if (titleEl && titleEl.isConnected) renderTitle(); else if (G) { renderAll(); if (document.querySelector('.gf-card .gf-rows')) holeCard(); } });
 // the title table: a grid of six cards with a pair of kings and a 2 turned up
 function demoTable() {
@@ -601,13 +646,13 @@ function demoTable() {
 
 /* ======================= boot ======================= */
 document.title = L('Six-Card Golf', 'Golf de seis cartas');
-ld.set(1); title_();
-if (new URLSearchParams(location.search).get('online')) setTimeout(() => E.NET.partyPanel(PARTY()), 300);
+ld.set(1); if (JOIN) guest.join(); else title_();
+if (!JOIN && new URLSearchParams(location.search).get('online')) setTimeout(() => E.NET.partyPanel(PARTY()), 300);
 ld.done(); window.__READY = true;
 E.loop(dt => { update(dt); R.render(dt); });
 window.__GAME = {
   get G() { return G; }, get m() { return G && G.m; }, get state() { return G && G.m.state; }, get phase() { return G ? G.m.phase : 'title'; }, get resultsCount() { return resultsCount; }, S, GR, CR, CARDS, R, THREE,
-  start, update, title: title_, tapCard, tapPile, discardIt, cancelFlip, holeCard, finishMatch, next: () => { const b = document.querySelector('.gf-card [data-a=next]'); if (b) b.click(); },
+  start, update, title: title_, rawAct: mv => guest && guest.act('act', { move: mv }), tapCard, tapPile, discardIt, cancelFlip, holeCard, finishMatch, next: () => { const b = document.querySelector('.gf-card [data-a=next]'); if (b) b.click(); },
   cardMesh: id => meshes.get(id), legal: s => G.m.legal(s), act: (s, mv, from = 'local') => G.m.act(s, mv, from), view: s => G.m.view(s), auto(v) { if (G) G.auto = !!v; },
   fast(v = true) { window.__GF_FAST = !!v; },
   // run the simulation n steps of dt (tests): bots + auto-locals keep playing; hole cards are clicked through when skipCards is set

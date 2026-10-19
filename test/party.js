@@ -27,7 +27,8 @@ server.listen(PORT, async () => {
     await p.route(/cdn\.jsdelivr\.net\/npm\/three@0\.170\.0\/(.*)/, r => { const rel = r.request().url().split('three@0.170.0/')[1].split('?')[0]; r.fulfill({ body: fs.readFileSync(path.join(NM, 'three', rel)), contentType: 'application/javascript' }); });
     await p.route(/cdn\.jsdelivr\.net\/npm\/peerjs@[^/]+\/dist\/peerjs\.min\.js/, r => r.fulfill({ body: fs.readFileSync(path.join(NM, 'peerjs/dist/peerjs.min.js')), contentType: 'application/javascript' }));
     await p.route(/cdn\.jsdelivr\.net\/npm\/qrcode-generator@[^/]+\/qrcode\.js/, r => r.fulfill({ body: fs.readFileSync(path.join(NM, 'qrcode-generator/qrcode.js')), contentType: 'application/javascript' }));
-    await p.goto(`http://localhost:${PORT}/${url}`);
+    // generous: with a host page already rendering (software WebGL), a third page can take ~50 s to load on a 4-core runner
+    await p.goto(`http://localhost:${PORT}/${url}`, { timeout: 120000 });
     return p;
   };
   const shot = (p, nm) => p.screenshot({ path: path.join(outDir, `${name}_${nm}.png`) });

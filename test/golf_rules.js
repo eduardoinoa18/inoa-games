@@ -201,6 +201,33 @@ const eq = (a, b, msg) => ok(JSON.stringify(a) === JSON.stringify(b), `${msg}: g
     ok(sharpWins / games > .6, 'sharp bots beat chill bots most of the time'); ok(avg.sharp < avg.normal && avg.normal < avg.chill, 'skill order: sharp < normal < chill average score');
   }
 
+
+  /* ---- online on separate screens: host match + mirrorMatch guests through a fake room (engine/cardroom.js) ---- */
+  {
+    let leaks = 0, legalDiff = 0, rounds = 0, guestMoves = 0, reject = 0;
+    for (let r = 0; r < 40; r++) {
+      const n = 2 + (r % 3), seats = Array.from({ length: n }, (_, i) => i === 0 ? { i, kind: 'bot', skill: 'normal' } : { i, kind: 'online', slot: i, name: 'G' + i });
+      const m = C.createMatch(G.GAME, { seats, opts: { n, holes: 99 }, seed: 700 + r });
+      const guests = {}, h = {}; const room = { send(slot, kind, data) { const g = guests[slot]; if (kind === 'view') g.apply(data); else if (kind === 'rej') g.reject(data); }, on(k, f) { h[k] = f; }, onJoin() { }, start() { }, broadcast() { } };
+      for (let i = 1; i < n; i++) guests[i] = C.mirrorMatch(G.GAME, { seats, opts: m.opts, seat: i, send: move => h.act({ slot: i }, { move }) });
+      C.onlineHost(room, m); m.deal();
+      let g = 0; while (m.phase === 'turns' && g++ < 5000) {
+        const s = m.turn(); if (s === 0) { m.botAct(0); continue; }
+        const gm = guests[s], st = gm.state;
+        st.grids.forEach(gr => gr.forEach(c => { if (!c.up && c.card) leaks++; })); if (st.stock.some(c => c)) leaks++; if (st.seed) leaks++;
+        for (let o = 1; o < n; o++) if (o !== s) { const os = guests[o].state; if (os.held && os.held.from === 'stock' && os.held.card) leaks++; }
+        if (JSON.stringify(gm.legal(s).map(G.moveKey)) !== JSON.stringify(m.legal(s).map(G.moveKey))) legalDiff++;
+        // a move the host would refuse is refused on the guest with the same reason
+        const bad = st.held ? { type: 'draw', from: 'stock' } : { type: 'swap', i: 0 }; if (gm.act(s, bad).reason === 'illegal') reject++;
+        gm.act(s, G.botMove(gm.view(s), 'normal', Math.random)); guestMoves++;
+      }
+      if (m.phase !== 'turns') { rounds++; for (let i = 1; i < n; i++) if (guests[i].phase !== m.phase || JSON.stringify(guests[i].scores) !== JSON.stringify(m.scores)) leaks += 100; }
+    }
+    eq(leaks, 0, 'online guests never see a face-down card, the stock order or another player\'s stock draw');
+    eq(legalDiff, 0, 'a guest computes the same legal moves from its redacted state as the host');
+    ok(rounds === 40 && guestMoves > 300 && reject > 300, `40 online holes finished through the host (${guestMoves} guest moves, ${reject} bad moves refused)`);
+  }
+
   console.log(`${passes} passed, ${fails} failed`);
   console.log(fails ? 'RULES_FAILED' : 'RULES_OK');
   process.exitCode = fails ? 1 : 0;

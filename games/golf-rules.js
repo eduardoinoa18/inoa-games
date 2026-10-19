@@ -144,6 +144,17 @@ export function view(st, seat) {
     legal: legalMoves(st, seat), over: st.over && { ...st.over } };
 }
 
+// Online guests (engine/cardroom.js mirrorMatch): the full state shape with only what view() allows: face-down cards
+// (its own included) and the stock order become nulls, another player's card from the stock stays hidden, no reshuffle seed.
+export function redact(st, seat) {
+  const r = clone(st);
+  r.grids = st.grids.map(g => g.map(c => c.up ? { up: true, card: cp(c.card) } : { up: false, card: null }));
+  r.stock = st.stock.map(() => null); r.seed = 0;
+  if (st.held && st.turn !== seat && st.held.from === 'stock') r.held = { card: null, from: 'stock' };
+  r.history = st.history.map(h => h.seat === seat || h.type !== 'draw' ? { ...h } : { seat: h.seat, type: h.type, from: h.from });
+  return r;
+}
+
 /* ---------------- helpers for hints and bots (view-only information) ---------------- */
 // estimated grid score: unknown cards count as E; a column pair only counts when both are known
 export function estimate(cells, E = 5) {
@@ -219,4 +230,4 @@ export function botMove(v, skill = 'normal', rng = Math.random) {
   return pick;
 }
 
-export const GAME = { newRound, turnOf, legalMoves, moveKey, applyMove, view, botMove, roundOver, sides, matchOver };
+export const GAME = { newRound, turnOf, legalMoves, moveKey, applyMove, view, redact, botMove, roundOver, sides, matchOver };

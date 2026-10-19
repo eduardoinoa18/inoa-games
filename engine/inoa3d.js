@@ -15,7 +15,8 @@ import { clone as skClone } from 'three/addons/utils/SkeletonUtils.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 export { THREE };
 import * as NET from './net.js';
-export { NET };
+import * as ROOM from './room.js';
+export { NET, ROOM };
 export const net = NET.net;
 // If this tab is hosting a party (phones as controllers), keep the room alive on every game page.
 try { NET.resume(); } catch (e) { }
@@ -454,7 +455,7 @@ addStrings({ en: { phones: 'Phones', usePhones: 'Use phones as controllers', con
 }
 
 /* ---------------- loop ---------------- */
-export function loop(fn) { let last = performance.now(); const f = now => { requestAnimationFrame(f); const dt = Math.min(.05, (now - last) / 1000); last = now; fn(dt, now / 1000); }; requestAnimationFrame(f); }
+export function loop(fn) { let last = performance.now(); const f = now => { requestAnimationFrame(f); /* never negative: a rAF timestamp can be older than the performance.now() taken at start (slow page loads), and smoothing like 1 - k^dt then blows up */ const dt = Math.max(0, Math.min(.05, (now - last) / 1000)); last = Math.max(last, now); fn(dt, now / 1000); }; requestAnimationFrame(f); }
 // Screen position of a 3D point (for floating text)
 export function toScreen(v, camera) { camera.updateMatrixWorld(); const p = v.clone().project(camera); return { x: (p.x * .5 + .5) * innerWidth, y: (-p.y * .5 + .5) * innerHeight }; }
 
