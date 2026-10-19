@@ -38,6 +38,10 @@ jobs:
         run: PP_SECS=30 node test/run.js pixelpact test/pixelpact_perf.js | tee out.txt && grep -q PP_FEEL_BUDGET_OK out.txt
       - name: Cloud saves e2e
         run: node test/run.js fit test/cloudsave.js | tee out.txt && grep -q CLOUD_E2E_PASSED out.txt
+      - name: Page guard (stuck game, lost WebGL, blocked download)
+        run: node test/run.js bubbles test/guard.js | tee out.txt && grep -q GUARD_OK out.txt
+      - name: Phone held sideways (title Play reachable, no page errors)
+        run: for g in drift depths builders bubbles; do W=844 H=390 node test/run.js $g test/sweep.js | tee out.txt; grep -q NO_ERRORS out.txt && grep -q '"title":\[\]' out.txt || exit 1; done
       - if: failure()
         uses: actions/upload-artifact@v4
         with: { name: screenshots, path: test/out, retention-days: 7 }

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<html lang="en"><head><meta charset="utf-8"><script src="../engine/guard.js"></script><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Memory Match</title>
 <!--meta--><meta name="description" content="Flip two cards, find the pairs. Little ones play with big spoken pictures, Words matches pictures and English with Spanish, Classic has three grids with moves and a timer, plus a daily board and… Free in your browser.">
 <meta property="og:type" content="website"><meta property="og:site_name" content="Inoa Games"><meta property="og:title" content="Memory Match · Inoa Games"><meta property="og:description" content="Flip two cards, find the pairs. Little ones play with big spoken pictures, Words matches pictures and English with Spanish, Classic has three grids with moves and a timer, plus a daily board and… Free in your browser."><meta property="og:url" content="https://inoa-games.vercel.app/games/memory.html"><meta property="og:image" content="https://inoa-games.vercel.app/thumbs/memory.jpg"><meta property="og:image:width" content="640"><meta property="og:image:height" content="360"><meta name="twitter:card" content="summary_large_image"><!--/meta-->
@@ -109,7 +109,7 @@ html.ig-reduced .mm-turn{animation:mmfade2b 1.1s forwards}
 .mm-opts2 .ig-chipbtn small{display:block;font-weight:600;color:#4c5868;font-size:12px}
 @media (max-height:640px) and (min-width:720px){.mm-kids .ig-card{width:min(860px,100%);grid-template-columns:1fr 1fr;align-items:center}.mm-kids .ig-card>h2,.mm-kids .ig-card>p{grid-column:1/-1}}
 </style>
-<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+<script type="importmap">{"imports":{"three":"../vendor/three/build/three.module.js","three/addons/":"../vendor/three/examples/jsm/"}}</script>
 </head><body>
 <canvas class="ig-gl" id="gl"></canvas>
 <div class="mm-board" id="board" role="group" aria-label="Cards" hidden></div>

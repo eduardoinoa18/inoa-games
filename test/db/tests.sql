@@ -270,4 +270,13 @@ set role anon; select t.as_user(null);
 select public.ig_submit_feedback(4, 'runs fine', 'drift', 'general', '{"device":"android chrome 8c","fps":"52","quality":"full","imei":"123456"}'::jsonb);
 reset role;
 select t.ok((select context ->> 'fps' from public.ig_feedback order by id desc limit 1) = '52' and (select context ->> 'device' from public.ig_feedback order by id desc limit 1) = 'android chrome 8c' and (select not (context ? 'imei') from public.ig_feedback order by id desc limit 1), 'feedback keeps fps/device/quality, drops unknown fields');
+-- client error reports (engine/guard.js): anyone can log a short anonymous report; nobody but the owner reads them
+set role anon; select t.as_user(null);
+select t.ok((public.ig_log_error('{"page":"drift","kind":"webgl","message":"WebGL context lost <b>","detail":{"ua":"iPhone","w":390,"secret":"x"}}'::jsonb) ->> 'ok')::boolean, 'guest page can report an error');
+select t.ok((public.ig_log_error('{"page":"../etc","kind":"error","message":"x"}'::jsonb) ->> 'reason') = 'bad_request', 'bad page name refused');
+select t.ok((public.ig_log_error('{"page":"drift","kind":"hack","message":"x"}'::jsonb) ->> 'reason') = 'bad_request', 'unknown kind refused');
+select t.fails($$select count(*) from public.ig_client_errors$$, 'guests cannot read error reports');
+select t.fails($$select public.ig_admin_client_errors()$$, 'guests cannot use the admin error view');
+reset role;
+select t.ok((select not (detail ? 'secret') and message = 'WebGL context lost b' from public.ig_client_errors order by id desc limit 1), 'error report keeps known fields only, strips markup');
 \echo SQL_TESTS_DONE

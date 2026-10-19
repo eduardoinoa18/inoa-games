@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<html lang="en"><head><meta charset="utf-8"><script src="engine/guard.js"></script><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Owner dashboard · Inoa Games</title>
 <meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#0b2a3a"><link rel="icon" href="favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -44,6 +44,8 @@ dialog{background:var(--panel);color:var(--ink);border:1px solid var(--line);bor
     <div class="row"><button class="btn" id="prev">← Prev</button><span class="note" id="pageInfo"></span><button class="btn" id="next">Next →</button></div></section>
   <section aria-labelledby="fTitle"><div class="row" style="justify-content:space-between"><h2 id="fTitle">Player feedback</h2><div class="row" id="fFilter" role="group" aria-label="Feedback filter"><button class="btn" data-s="new" aria-pressed="true">New</button><button class="btn" data-s="" aria-pressed="false">All</button></div></div>
     <p class="note" id="fSum"></p><div class="wrapx"><table id="feedback"><thead><tr><th scope="col">When</th><th scope="col">Rating</th><th scope="col">Kind</th><th scope="col">Game</th><th scope="col">Note</th><th scope="col">From</th><th scope="col">Device</th><th scope="col"><span class="note">Status</span></th></tr></thead><tbody></tbody></table></div></section>
+  <section aria-labelledby="eTitle"><h2 id="eTitle">Crash reports (real devices)</h2>
+    <p class="note" id="eSum">Sent automatically by every page when a game fails to load, gets stuck, or the phone drops the 3D view. No personal data.</p><div class="wrapx"><table id="cerr"><thead><tr><th scope="col">When</th><th scope="col">Page</th><th scope="col">Kind</th><th scope="col">Message</th><th scope="col">Device</th></tr></thead><tbody></tbody></table></div></section>
   <section aria-labelledby="aTitle"><h2 id="aTitle">Admin audit log</h2><div class="wrapx"><table id="audit"><thead><tr><th>When</th><th>Action</th><th>Target</th><th>Details</th></tr></thead><tbody></tbody></table></div></section>
   <p class="note">Payment operations (refunds, disputes, payouts) are done in the Stripe dashboard. This page never shows card details or passwords.</p>
 </main>
@@ -82,6 +84,11 @@ async function loadFeedback() {
   $('fSum').textContent = `${num(f.new)} new · ${num(f.total)} shown in this filter · average rating (30 d): ${f.avg_rating_30d ?? '—'} / 5`;
   $('feedback').tBodies[0].innerHTML = f.items.map(x => `<tr><td>${new Date(x.created_at).toLocaleString()}</td><td>${x.rating ? FACE[x.rating] + ' ' + x.rating : '—'}</td><td>${esc(x.kind)}</td><td>${esc(x.game_id || 'hub')}</td><td>${esc(x.body || '')}</td><td>${x.email ? esc(x.display_name || '') + '<br><span class="note">' + esc(x.email) + '</span>' : '<span class="note">guest</span>'}</td><td class="note">${esc([x.context.platform, x.context.device, x.context.version, x.context.lang, x.context.screen, x.context.fps ? x.context.fps + ' fps' + (x.context.quality === 'reduced' ? ' (reduced)' : '') : ''].filter(Boolean).join(' · '))}</td><td><select data-f="${x.id}" aria-label="Status">${['new', 'read', 'done'].map(v => `<option${v === x.status ? ' selected' : ''}>${v}</option>`).join('')}</select></td></tr>`).join('') || '<tr><td colspan="8" class="note">No feedback here yet.</td></tr>';
 }
+async function loadErrors() {
+  const r = await P.rpc('ig_admin_client_errors', { p_limit: 100 });
+  $('eSum').textContent = r.by_page.length ? 'Last 7 days: ' + r.by_page.map(x => `${x.page} ${x.kind} ×${num(x.n)}`).join(' · ') : 'No crash reports in the last 7 days.';
+  $('cerr').tBodies[0].innerHTML = r.items.map(x => { const d = x.detail || {}; const ua = String(d.ua || ''); const dev = (/iPhone|iPad/.test(ua) ? (ua.match(/OS (\d+)_/) ? 'iOS ' + ua.match(/OS (\d+)_/)[1] : 'iOS') : /Android/.test(ua) ? 'Android ' + ((ua.match(/Android (\d+)/) || [])[1] || '') : /Mac/.test(ua) ? 'Mac' : /Windows/.test(ua) ? 'Windows' : '') + (/CriOS|Chrome/.test(ua) ? ' Chrome' : /Safari/.test(ua) ? ' Safari' : /Firefox/.test(ua) ? ' Firefox' : '') + ` · ${d.w}×${d.h}`; return `<tr><td>${new Date(x.created_at).toLocaleString()}</td><td>${esc(x.page)}</td><td>${esc(x.kind)}</td><td>${esc(x.message)}${d.at ? '<br><span class="note">' + esc(d.at) + '</span>' : ''}</td><td class="note">${esc(dev)}${d.ready === false ? ' · before start' : ''}</td></tr>`; }).join('') || '<tr><td colspan="5" class="note">none yet</td></tr>';
+}
 async function loadAudit() { const a = await P.rpc('ig_admin_recent_audit', { p_limit: 30 }); $('audit').tBodies[0].innerHTML = a.map(x => `<tr><td>${new Date(x.created_at).toLocaleString()}</td><td>${esc(x.action)}</td><td>${esc(x.target_type)} ${esc(String(x.target_id || '').slice(0, 8))}</td><td class="note">${esc(JSON.stringify(x.metadata))}</td></tr>`).join('') || '<tr><td colspan="4" class="note">No admin actions yet.</td></tr>'; }
 async function openUser(id) {
   const d = await P.rpc('ig_admin_user_detail', { p_user: id }); const u = d.user || {}, p = d.profile || {}, st = d.status || {};
@@ -118,7 +125,7 @@ function fail(e) { console.warn(e); $('asof').textContent = 'Could not load: ' +
   const st = await P.refreshStatus().catch(() => null);
   if (!st || !st.is_admin) return deny('Owner access only', 'This account is not an owner account. (Access is checked by the database on every request; this page cannot grant it.)');
   $('app').hidden = false; if (st.access_mode === 'beta_free') $('asof').insertAdjacentHTML('beforebegin', '<p class="note" id="betaNote"><b>Free beta mode:</b> every player has full access and nobody is charged (switch with <code>ig_app_config.access_mode</code>; see docs §13).</p>');
-  await Promise.all([loadKpis(), loadUsers(), loadAudit(), loadFeedback()]);
+  await Promise.all([loadKpis(), loadUsers(), loadAudit(), loadFeedback(), loadErrors().catch(e => console.warn(e))]);
 } catch (e) { fail(e); } finally { window.__READY = true; } })();
 </script>
 </body></html>

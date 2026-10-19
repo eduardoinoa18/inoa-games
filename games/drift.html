@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<html lang="en"><head><meta charset="utf-8"><script src="../engine/guard.js"></script><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Island Drift</title>
 <!--meta--><meta name="description" content="Drift for mini-turbos, grab items and race five rivals on four island tracks, win the Island Cup, or race the ghost of your best lap. Free in your browser.">
 <meta property="og:type" content="website"><meta property="og:site_name" content="Inoa Games"><meta property="og:title" content="Island Drift · Inoa Games"><meta property="og:description" content="Drift for mini-turbos, grab items and race five rivals on four island tracks, win the Island Cup, or race the ghost of your best lap. Free in your browser."><meta property="og:url" content="https://inoa-games.vercel.app/games/drift.html"><meta property="og:image" content="https://inoa-games.vercel.app/thumbs/drift.jpg"><meta property="og:image:width" content="640"><meta property="og:image:height" content="360"><meta name="twitter:card" content="summary_large_image"><!--/meta-->
@@ -39,21 +39,21 @@
 .dr-cup tr.me td{background:var(--mint);font-weight:900}
 .dr-cup td.n{text-align:right;font-family:var(--f-d)}
 .dr-cup .plus{color:var(--mint-ink);font-size:12px}
-.ig-title .ig-card>.ig-row{position:sticky;bottom:-16px;background:var(--paper);padding:8px 0 4px;z-index:2}
+.ig-title .ig-card>.ig-row{position:sticky;bottom:0;background:var(--paper);padding:8px 0 4px;z-index:2}
 @media (orientation:landscape) and (max-height:760px) and (min-width:700px){
   .ig-title .ig-card{width:min(960px,100%);grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);column-gap:22px;row-gap:10px;align-items:start;padding:18px 22px}
   .ig-title .ig-card>*{grid-column:1}
   .ig-title .ig-card>.dr-setup{grid-column:2;grid-row:1/span 9}
   .ig-title .ig-card h1{font-size:40px}
   .ig-title .ig-card>.ig-sub{font-size:14px}
-  .ig-title .ig-card>.ig-row{position:static;padding:0}
+  .ig-title .ig-card>.ig-row{position:sticky;bottom:0;padding:6px 0}
   .pick.tracks{grid-template-columns:repeat(2,minmax(0,1fr))}
   .pick.drivers{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 @media (max-width:430px){.ig-hud .dr-opt{display:none}}
 @media (max-width:640px){#minimap{width:110px;height:110px;bottom:104px}.dr-left{top:58px}.dr-speed{bottom:100px;left:24px;transform:none;font-size:16px}.dr-drift{bottom:126px;left:24px;transform:none;width:110px}.dr-item{width:64px;height:64px;font-size:34px}.pick.drivers{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>
-<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+<script type="importmap">{"imports":{"three":"../vendor/three/build/three.module.js","three/addons/":"../vendor/three/examples/jsm/"}}</script>
 </head><body>
 <canvas class="ig-gl" id="gl"></canvas>
 <canvas id="minimap" width="280" height="280" hidden></canvas>

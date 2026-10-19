@@ -7,7 +7,7 @@
 // Signaling: the project's Supabase Realtime (URL + public key from /platform.json). Override for tests with
 // window.INOA_NET = {realtimeUrl, apikey, config:{iceServers}} or localStorage 'inoa.net'.
 import { Peer } from './rtc.js';
-const QRJS = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js';
+const QRJS = new URL('../vendor/npm/qrcode-generator@1.4.4/qrcode.js', import.meta.url).href;
 const PREFIX = 'inoa-v1-';
 const COLORS = ['#ff6b6b', '#5bb8ff', '#ffd166', '#2fbf8a', '#c9b8ff', '#ff9a3c', '#ff8ad8', '#8be0ff'];
 const NAMES = ['Coral', 'Sky', 'Sun', 'Mint', 'Lilac', 'Mango', 'Rose', 'Ice'];

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8">
+<html lang="en"><head><meta charset="utf-8"><script src="engine/guard.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0d1b26">
 <title>Inoa Pad</title>
@@ -165,7 +165,7 @@ async function startScan() {
   let detect = null;
   if ('BarcodeDetector' in window) { try { const bd = new BarcodeDetector({ formats: ['qr_code'] }); detect = async () => { const r = await bd.detect(v); return r[0] && r[0].rawValue; }; } catch (e) { } }
   if (!detect) {
-    try { if (!window.jsQR) await new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); }); } catch (e) { $('err').textContent = 'Scanner could not load. Type the 4 letters instead.'; return stopScan(); }
+    try { if (!window.jsQR) await new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = 'vendor/npm/jsqr@1.4.0/dist/jsQR.js'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); }); } catch (e) { $('err').textContent = 'Scanner could not load. Type the 4 letters instead.'; return stopScan(); }
     const cv = document.createElement('canvas'), cx = cv.getContext('2d', { willReadFrequently: true });
     detect = async () => { if (!v.videoWidth) return null; const w = 480, h = Math.round(w * v.videoHeight / v.videoWidth); cv.width = w; cv.height = h; cx.drawImage(v, 0, 0, w, h); const r = window.jsQR(cx.getImageData(0, 0, w, h).data, w, h); return r && r.data; };
   }

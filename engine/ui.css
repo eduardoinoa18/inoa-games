@@ -64,3 +64,7 @@ html.ig-reduced *{animation-duration:.001s!important;animation-iteration-count:1
 /* phone controllers + pad/gamepad menu focus */
 .ig-focus{outline:4px solid var(--sun,#ffd166)!important;outline-offset:3px;box-shadow:0 0 0 8px rgba(255,209,102,.35)!important}
 .ig-phones{justify-self:center;margin:2px auto 0;display:block}
+/* Play / Play again always in reach (2026-10-19): on a phone held sideways (~390 px tall) or a long title card, the action row
+   sticks to the bottom of the scrolling screen instead of sitting below the edge. Short screens also get a tighter card. */
+.ig-title .ig-row:has([data-a=play]),.ig-results .ig-row:has([data-a=again]){position:sticky;bottom:0;z-index:3;background:var(--paper);padding:8px 0;margin:0 -2px;box-shadow:0 -12px 14px -12px rgba(0,0,0,.25)}
+@media (max-height:520px){.ig-screen{padding-top:8px;padding-bottom:8px}.ig-card{padding:16px 16px;gap:10px;border-radius:22px}.ig-card h1{font-size:clamp(24px,5vw,34px)}.ig-card h2{font-size:20px}}

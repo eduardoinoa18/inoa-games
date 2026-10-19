@@ -1022,3 +1022,29 @@ Measured over 90 s of an autopilot run (3,800 fight frames): **8.9% of fight tim
 - Tests: rules tests simulate 60 Dominoes rounds + 40 Golf holes with two mirror guests through a fake room (no leaks, same legal moves as the host, matches finish); `party_dominoes_online` and `party_golf_online` (host + 2 guest pages + a bot, landscape + portrait). `test/party.js` page-load timeout raised to 120 s: on a 4-core runner a third WebGL page can take ~50 s to load while others render.
 - **Engine fix found on the way (all engine games):** `E.loop` could hand the game a *negative* first frame step when a page loads slowly (the first rAF timestamp can be older than the start time). Smoothing written as `1 - k^dt` then explodes; a Dominoes guest's camera flew off to ~1e35 and the table went black. `dt` is now clamped to 0…0.05 s.
 - Open: real-network check over live Realtime (two homes), online Tide Lines/Depths (same helper), a "rejoin your seat" banner after a long drop.
+
+## Stability pass — "some games won't open, some break in the middle" (owner report, 2026-10-19)
+Evidence first: the feedback inbox had **0** reports (no real-device data existed), and this sandbox has no iPhone/Safari, so
+the pass fixes the failure modes that can be reproduced or that real phones are known to hit, and adds reporting so the next
+round is driven by real data.
+- **Won't open, cause 1 (reproduced):** every 3D page loaded three.js from cdn.jsdelivr.net. When that host is blocked or slow
+  (some school/office/ISP networks, captive Wi-Fi, the sandbox here), the import map fails and the page sits on its loading bar
+  forever. Fix: three.js r170 + qrcode-generator + jsQR are now **served from our own domain** (`vendor/`, `tools/vendor_web.mjs`,
+  same layout the app build already used). jsDelivr is no longer needed at runtime.
+- **Won't open, cause 2:** nothing told the player what happened. `engine/guard.js` (first script on every page) now shows a
+  bilingual "having trouble starting" screen with Reload / Hub after a script load failure (8 s) or 45 s without starting,
+  and an offline message when the device is offline.
+- **Breaks in the middle:** (a) iPhones/iPads drop the WebGL context under memory pressure, which froze the 3D view with no
+  message; the guard now waits 1.5 s for a restore, then offers Continue (reload; progress is saved locally). (b) An error that
+  repeats every frame left a frozen picture; three uncaught errors within 4 s now show "the game got stuck" with Reload.
+  (c) `CanvasRenderingContext2D.roundRect` (used by 6 games + the engine) doesn't exist before Safari 16 — older iPads threw
+  every frame; polyfilled. (d) `E.loop` negative first-frame step (fixed earlier today) blew up camera smoothing on slow loads.
+- **Design breaks on phones held sideways (844×390, never tested before):** title cards of Island Drift, Depths, Bubble Pop and
+  others put **Play below the bottom edge** (reachable only by scrolling, which players don't discover). The Play / Play again
+  row now sticks to the bottom of the screen on every title and results card, and short screens get a tighter card.
+  New check: `W=844 H=390 node test/run.js <game> test/sweep.js` (page errors, overflow, Play reachable, start + run).
+- **Crash reports:** `ig_client_errors` + `ig_log_error` (migration 0014, applied): page, kind, message, browser, screen,
+  whether the game had started — no account link, no IP; insert-only for guests, 120/minute cap, owner reads them in
+  admin.html → Crash reports. Max 5 reports per page load; headless test browsers never report.
+- Still needed (can't be done from here): a real-device round (iPhone + mid-range Android, phone held both ways), and the
+  testers actually using the feedback button. The crash reports will show which games/devices fail without anyone writing in.

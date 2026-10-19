@@ -5,7 +5,7 @@ You are continuing a project that is already built and working. Read this file f
 ## What this is
 Inoa Games is a browser game hub owned by **Inoa Services** (Eduardo Inoa, Methuen, MA). One link, no download, works on phones (touch), laptops (keyboard) and gamepads. Friendly for kids, deep enough for adults. Every game shares one **hero profile** (XP, coins, hero level) stored in `localStorage['inoa.profile']` through the engine's `results()`; the hub front page shows it.
 
-It is a **static site**: `index.html` (hub) + `games/*.html` (one page per game) + `engine/` + `packs/` (asset bundles) + `thumbs/` (tile screenshots). No build step is needed to deploy. Three.js r170 loads from jsDelivr via an import map in each page.
+It is a **static site**: `index.html` (hub) + `games/*.html` (one page per game) + `engine/` + `packs/` (asset bundles) + `thumbs/` (tile screenshots). No build step is needed to deploy. Three.js r170 is served from `vendor/three/` via an import map in each page.
 
 ## Repo map
 | Path | What |
@@ -20,6 +20,8 @@ It is a **static site**: `index.html` (hub) + `games/*.html` (one page per game)
 | `engine/kids.js` + `engine/kids.css` | **Kids World shell** (docs/DECISIONS/0005): big targets (≥ 64 px), voice-first instructions + repeat button + spoken numbers EN/ES, gentle success/try-again feedback, reward overlay, parent gate (hold 1.5 s + grown-up sum) and `guardLinks()` for settings + every link out. Used by Bubble Pop Counting |
 | `engine/cardroom.js` | Card Room table-game core: seats, turn order, match lifecycle, bot interface, per-seat views, host-authoritative `act()`, phone hands via net.js (pure, Node-testable); optional per-seat round scores + `matchOver` (Golf). `engine/cards.js`: original procedural playing-card faces/backs (SVG + canvas, four-colour suits with shapes), shared by games and the pad |
 | `engine/net.js` | Multiplayer: party rooms over WebRTC (PeerJS), phone controllers, online play, QR + party panel. See `docs/MULTIPLAYER.md` |
+| `engine/guard.js` | Page guard, loaded first on every page (classic script): Reload/Hub screen when a game can't start, gets stuck in an error loop, or the phone drops the WebGL context; anonymous crash reports to Supabase (`ig_log_error`, shown in admin.html → Crash reports); Safari < 16 polyfills. Test: `node test/run.js bubbles test/guard.js` |
+| `vendor/` | Self-hosted three.js + qrcode-generator + jsQR (`node tools/vendor_web.mjs` after changing three or adding an addon import) |
 | `engine/room.js` | Online rooms on separate screens (R7, `E.ROOM`): host-authoritative `hostRoom` / `guestRoom` (waiting screen, snapshots, per-guest messages). Used by Island Drift races and, through `cardroom.onlineHost`/`mirrorMatch`, by Dominoes + Six-Card Golf |
 | `pad.html` | The phone controller page (gamepad / buzzer / choices / text / `hand` (dominoes) / `cards` (golf: card grid + piles) layouts) |
 | `packs/<game>/manifest.json` + `packs/assets/` | **Primary asset format**: per-game manifest pointing at shared, content-hashed meshopt `.glb` models and downsampled `.hdr` files (`node tools/build_packs.mjs`). ~18 MB total vs 61 MB of JSON |
@@ -79,7 +81,7 @@ python3 tools/build_hub.py       # after changing hub-src/ or adding a game/thum
 Hub **Party** section and every title screen open a room (QR + 4-letter code). Phones join at `pad.html`. Online friends use the link in the party panel. Read `docs/MULTIPLAYER.md` before touching `engine/net.js`; keep `npm run test:party` green.
 
 ## Non-negotiable rules
-1. Static + client-side only (no server needed). Scripts only from jsDelivr (import map); fonts from Google Fonts.
+1. Static + client-side only (no server needed). Scripts are served from this site: three.js r170 and the small libraries live in `vendor/` (copied by `node tools/vendor_web.mjs`, import maps point at `../vendor/three/`; since 2026-10-19, because a network that blocked jsDelivr left every 3D game on an endless loading bar). No other third-party scripts. Fonts from Google Fonts (optional: pages work without them).
 2. All assets CC0/original. **No real brands, franchises or real people** (a fan game of a famous franchise got shut down within 2 days in Sept 2026).
 3. Friendly by default (forgiving, no harsh fail states in kids' games), optional hard modes for adults. All ages: no stranger chat.
 4. Every round ends with `E.results(...)` so XP/coins reach the shared profile.

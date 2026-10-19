@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<html lang="en"><head><meta charset="utf-8"><script src="../engine/guard.js"></script><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Driftwood Builders</title>
 <!--meta--><meta name="description" content="Build a cozy island home, sail to two new islands, welcome islanders into cottages, grant their wishes and fill your postcards. 21 quests, share with a code. Free in your browser.">
 <meta property="og:type" content="website"><meta property="og:site_name" content="Inoa Games"><meta property="og:title" content="Driftwood Builders · Inoa Games"><meta property="og:description" content="Build a cozy island home, sail to two new islands, welcome islanders into cottages, grant their wishes and fill your postcards. 21 quests, share with a code. Free in your browser."><meta property="og:url" content="https://inoa-games.vercel.app/games/builders.html"><meta property="og:image" content="https://inoa-games.vercel.app/thumbs/builders.jpg"><meta property="og:image:width" content="640"><meta property="og:image:height" content="360"><meta name="twitter:card" content="summary_large_image"><!--/meta-->
@@ -34,11 +34,11 @@
 .db-prog{font-weight:800;background:#fff3d6;border-radius:12px;padding:6px 10px;margin:0}
 .db-photo .inoa-party,.db-photo .ig-toast,.db-photo .ig-float{display:none!important}
 @media (max-width:640px){.ig-hud.db-many .ig-chip{padding:4px 6px!important;font-size:11px!important;min-height:30px!important;gap:2px!important}}
-.ig-title .ig-card>.ig-row{position:sticky;bottom:-16px;background:var(--paper);padding:8px 0 4px;z-index:2}
-@media (orientation:landscape) and (max-height:620px) and (min-width:760px){.ig-title .ig-card{width:min(940px,100%);display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);column-gap:22px;row-gap:8px;align-items:start;padding:16px 22px}.ig-title .ig-card>*{grid-column:1}.ig-title .ig-card>.ig-how{grid-column:2;grid-row:1/span 8}.ig-title .ig-card h1{font-size:36px}.ig-title .ig-card>.ig-sub{font-size:13px}.ig-title .ig-card>.ig-row{position:static;padding:0}}
+.ig-title .ig-card>.ig-row{position:sticky;bottom:0;background:var(--paper);padding:8px 0 4px;z-index:2}
+@media (orientation:landscape) and (max-height:620px) and (min-width:760px){.ig-title .ig-card{width:min(940px,100%);display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);column-gap:22px;row-gap:8px;align-items:start;padding:16px 22px}.ig-title .ig-card>*{grid-column:1}.ig-title .ig-card>.ig-how{grid-column:2;grid-row:1/span 8}.ig-title .ig-card h1{font-size:36px}.ig-title .ig-card>.ig-sub{font-size:13px}.ig-title .ig-card>.ig-row{position:sticky;bottom:0;padding:6px 0}}
 @media (max-width:640px){.db-visit{top:auto;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 156px);font-size:13px;padding:6px 10px}.ig-hud .ig-chip{padding:5px 8px;font-size:12px;min-height:34px;gap:3px}.db-quest{font-size:12px;top:calc(max(10px,env(safe-area-inset-top)) + 142px)}.db-day{top:calc(max(10px,env(safe-area-inset-top)) + 96px);left:12px;right:auto}.db-day .ig-chip{min-height:36px;padding:6px 10px}}
 </style>
-<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+<script type="importmap">{"imports":{"three":"../vendor/three/build/three.module.js","three/addons/":"../vendor/three/examples/jsm/"}}</script>
 </head><body>
 <canvas class="ig-gl" id="gl"></canvas>
 <div class="db-fade" id="fade"></div>
