@@ -2,7 +2,7 @@
 // sends only its input or its moves, and the host sends back what that guest may see. Built on engine/net.js party rooms
 // (guests join as kind 'player' with games/<game>.html?join=CODE; every new device still needs Allow on the big screen).
 //
-// Messages are tagged with a per-game prefix: `${prefix}-start`, `${prefix}` (snapshots), `${prefix}-lobby`, and
+// Messages are tagged with a per-game prefix (the type travels in `t`, so game data must not use a `t` field): `${prefix}-start`, `${prefix}` (snapshots), `${prefix}-lobby`, and
 // `${prefix}-<kind>` for anything else (e.g. Island Drift's 'dr-fin'). Real-time games stream snapshots with
 // room.snapshot(dt, build); turn-based games send each guest its own view with room.send(slot, 'view', {...}).
 //
@@ -31,11 +31,11 @@ export function hostRoom({ prefix, online = null, rate = 20 } = {}) {
     prefix,
     get players() { return net.role === 'host' ? net.pads('player') : []; },
     input(slot) { return net.pad(slot); },
-    start(data = {}) { NET.broadcast({ t: tag(prefix, 'start'), ...data }, 'player'); acc = 0; },
+    start(data = {}) { NET.broadcast({ ...data, t: tag(prefix, 'start') }, 'player'); acc = 0; },
     // call every frame: sends build() to every guest at `rate` Hz
-    snapshot(dt, build) { acc -= dt; if (acc <= 0) { acc = 1 / rate; NET.broadcast({ t: prefix, ...build() }, 'player'); } },
-    send(slot, kind, data = {}) { NET.send(slot, { t: tag(prefix, kind), ...data }); },
-    broadcast(kind, data = {}) { NET.broadcast({ t: tag(prefix, kind), ...data }, 'player'); },
+    snapshot(dt, build) { acc -= dt; if (acc <= 0) { acc = 1 / rate; NET.broadcast({ ...build(), t: prefix }, 'player'); } },
+    send(slot, kind, data = {}) { NET.send(slot, { ...data, t: tag(prefix, kind) }); },
+    broadcast(kind, data = {}) { NET.broadcast({ ...data, t: tag(prefix, kind) }, 'player'); },
     lobby() { if (net.role === 'host') NET.broadcast({ t: tag(prefix, 'lobby') }, 'player'); },
     on(kind, fn) { (handlers[tag(prefix, kind)] ||= []).push(fn); return room; },
     onJoin(fn) { (handlers[':join'] ||= []).push(fn); return room; },
@@ -78,7 +78,7 @@ export function guestRoom({ prefix, code, L = defL, game = '', help = '', words 
       room.wait(W.youreIn(net.me)); return true;
     },
     sendInput(state) { NET.sendInput(state); },
-    act(kind, data = {}) { NET.sendMsg({ t: tag(prefix, kind), ...data }); },
+    act(kind, data = {}) { NET.sendMsg({ ...data, t: tag(prefix, kind) }); },
     stop() { live = false; offs.forEach(f => f && f()); }
   };
   const offs = [

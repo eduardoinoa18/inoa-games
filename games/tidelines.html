@@ -81,6 +81,9 @@ const MODES = {
 };
 // EN/ES: every player-facing line goes through E.L (language comes from the shared settings)
 const tr = (en, es) => E.L(en, es);
+// Online on separate screens (engine/room.js): ?join=CODE = this screen plays one painter in someone else's match
+const JOIN = new URLSearchParams(location.search).get('join');
+const r2 = v => Math.round(v * 100) / 100, r3 = v => Math.round(v * 1000) / 1000;
 const teamName = i => i ? tr('Coral', 'Coral') : tr('Teal', 'Turquesa');
 const stars = n => '★'.repeat(n) + '☆'.repeat(3 - n);
 
@@ -158,6 +161,7 @@ const ownerAt = (x, z) => { const c = cellOf(x, z); return c < 0 ? -1 : grid[c];
 function nearBase(x, z, team, r = 2.6) { const b = TEAMS[team].base; return (x - b.x) ** 2 + (z - b.z) ** 2 < r * r; }
 function paint(x, z, r, team, by, visual = true) {
   if (nearBase(x, z, 1 - team, 2.8)) return 0;
+  if (G && G.online && !G.client) G.plog.push([r3(x), r3(z), r3(r), team, visual ? 1 : 0]); // replayed in order on every online guest
   const k = PAINT_PX / (2 * A); let flipped = 0;
   if (visual) { pg.fillStyle = INK[team]; pg.beginPath(); pg.arc((x + A) * k, (z + A) * k, r * k, 0, 6.3); pg.fill(); const n = r > 1 ? 7 : 3; for (let i = 0; i < n; i++) { const a = Math.random() * 6.3, d = r * rnd(.85, 1.35); const sx = x + Math.cos(a) * d, sz = z + Math.sin(a) * d; if (nearBase(sx, sz, 1 - team, 3)) continue; pg.beginPath(); pg.arc((sx + A) * k, (sz + A) * k, r * rnd(.12, .3) * k, 0, 6.3); pg.fill(); } paintDirty = true; }
   const i0 = Math.max(0, Math.floor((x - r + A) / CELL)), i1 = Math.min(N - 1, Math.floor((x + r + A) / CELL)), j0 = Math.max(0, Math.floor((z - r + A) / CELL)), j1 = Math.min(N - 1, Math.floor((z + r + A) / CELL));
@@ -445,7 +449,7 @@ function startMatch() {
   buildMap(S.map); resetPaint(); for (const t of [0, 1]) paint(TEAMS[t].base.x, TEAMS[t].base.z, 3.4, t, null);
   blobs.length = 0; bombs.forEach(b => scene.remove(b.m)); bombs.length = 0;
   const mode = S.mode === 'pools' ? 'pools' : 'turf';
-  G = { state: 'intro', t: 0, time: MATCH, mode, map: mapId, me: null, sk: SKILL[S.skill] || SKILL.chill, shake: 0, camPos: new THREE.Vector3(0, 40, 30), camLook: new THREE.Vector3(), auto: !!window.__AUTOPILOT, warned: false, lastTick: 99, lowInkHint: false, judgeT: 0, mapT: 0, paused: false, endT: 0, pts: [0, 0], flips: 0, sayT: 0 };
+  G = { state: 'intro', t: 0, time: MATCH, mode, map: mapId, me: null, sk: SKILL[S.skill] || SKILL.chill, shake: 0, camPos: new THREE.Vector3(0, 40, 30), camLook: new THREE.Vector3(), auto: !!window.__AUTOPILOT, warned: false, lastTick: 99, lowInkHint: false, judgeT: 0, mapT: 0, paused: false, endT: 0, pts: [0, 0], flips: 0, sayT: 0, plog: [], blog: [], snapN: 0, online: false };
   for (const zn of ZONES) { zn.owner = -1; zn.share = [0, 0]; zoneTag(zn); zn.ring.material.color.set(0xffffff); zn.col.material.color.set(0xffffff); }
   ZG.visible = mode === 'pools';
   setupUnits(); G.me = units[0];
@@ -479,6 +483,7 @@ function nearestEnemy(u, r) { let best = null, bd = r * r; for (const o of units
 
 /* ---------- phone controllers: phone 1 = you, phones 2-4 = your teammates, phones 5-8 = the other team ---------- */
 function netControl(u) {
+  if (u.online) return onlineControl(u);
   const n = input.pad(u.netSlot) || { x: 0, y: 0 }; let mx = n.x, mz = n.y; const ml = Math.hypot(mx, mz); if (ml > 1) { mx /= ml; mz /= ml; }
   let aim = ml > .2 ? Math.atan2(mx, mz) : u.aimH; const fire = !!n.a;
   if (fire) { const e = nearestEnemy(u, 9); if (e) { const ea = Math.atan2(e.x - u.x, e.z - u.z); if (ml < .2 || Math.abs(angDiff(ea, aim)) < .7) aim = ea; } }
@@ -488,11 +493,86 @@ let tlLayoutSent = false;
 E.net.on('join', () => { tlLayoutSent = false; });
 function syncPhones() {
   if (E.net.role !== 'host' || !G) return; if (!tlLayoutSent) { tlLayoutSent = true; E.NET.setLayout({ type: 'gamepad', labels: { A: '💦', C: '💣' }, buttons: ['A', 'C'] }); }
-  const me = units.find(u => u.isPlayer); const phones = E.net.pads('pad').slice(1, 8);
-  for (const u of units) if (u.netSlot && !phones.some(p => p.slot === u.netSlot)) { u.netSlot = 0; E.toast(tr(`${u.netName} left: a bot takes over`, `${u.netName} salió: un bot toma su lugar`), 1500); }
-  phones.forEach((p, k) => { if (units.some(u => u.netSlot === p.slot)) return; const team = k < 3 ? me.team : 1 - me.team; const u = units.find(o => !o.isPlayer && !o.netSlot && o.team === team); if (!u) return; u.netSlot = p.slot; u.netName = p.name; E.toast(team === me.team ? tr(`📱 ${p.name} joined your team!`, `📱 ¡${p.name} se unió a tu equipo!`) : tr(`📱 ${p.name} joined the other team!`, `📱 ¡${p.name} se unió al otro equipo!`), 1600); E.NET.rumble(p.slot, 120); });
+  const me = units.find(u => u.isPlayer); const phones = [...E.net.pads('pad').slice(1, 8), ...(room ? room.players : [])].slice(0, 7);
+  for (const u of units) if (u.netSlot && !phones.some(p => p.slot === u.netSlot)) { u.netSlot = 0; u.online = false; E.toast(tr(`${u.netName} left: a bot takes over`, `${u.netName} salió: un bot toma su lugar`), 1500); }
+  phones.forEach((p, k) => { if (units.some(u => u.netSlot === p.slot)) return; const team = k < 3 ? me.team : 1 - me.team; const u = units.find(o => !o.isPlayer && !o.netSlot && o.team === team); if (!u) return; u.netSlot = p.slot; u.netName = p.name; u.online = p.kind === 'player'; const ic = u.online ? '🌐' : '📱'; if (u.online) { u.name = String(p.name || u.name).slice(0, 14); G.online = true; onlineStart(p.slot); } E.toast(team === me.team ? tr(`${ic} ${p.name} joined your team!`, `${ic} ¡${p.name} se unió a tu equipo!`) : tr(`${ic} ${p.name} joined the other team!`, `${ic} ¡${p.name} se unió al otro equipo!`), 1600); E.NET.rumble(p.slot, 120); });
 }
 const isHuman = u => (u.isPlayer && !(G.auto || window.__AUTOPILOT)) || (u.netSlot && E.net.pad(u.netSlot));
+
+/* ---------- online on separate screens (engine/room.js): the host simulates everything; each guest sends its stick, aim,
+   spray and bomb presses and renders the host's match from 20 Hz snapshots (units, paint strokes in order, bombs, pools) ---------- */
+const PARTY = { label: tr('Phones & online play (up to 8 players, 4v4)', 'Teléfonos y juego en línea (hasta 8 jugadores, 4 contra 4)'), hint: tr('Phone 1 plays you. Phones 2-4 join your team, phones 5-8 the other team: up to 8 players, 4v4!', 'El teléfono 1 eres tú. Los teléfonos 2-4 se unen a tu equipo y los 5-8 al otro: ¡hasta 8 jugadores, 4 contra 4!'), online: { page: 'games/tidelines.html', text: tr('Friends in other homes paint on their own screen with this link (they join your team first):', 'Amigos en otras casas pintan en su pantalla con este enlace (primero se unen a tu equipo):') } };
+const room = JOIN ? null : E.ROOM.hostRoom({ prefix: 'tl', online: { page: 'games/tidelines.html', label: tr('💦 Paint on this screen', '💦 Pinta en esta pantalla') } });
+function onlineControl(u) {
+  const n = E.net.pad(u.netSlot) || {}; let mx = +n.x || 0, mz = +n.y || 0; const ml = Math.hypot(mx, mz); if (ml > 1) { mx /= ml; mz /= ml; }
+  let bomb = false; if (n.bn != null) { bomb = n.bn > (u.bn ?? n.bn); u.bn = n.bn; }
+  return { mx, mz, aim: typeof n.h === 'number' ? n.h : u.aimH, fire: !!n.a, bomb };
+}
+const gridStr = () => Array.from(grid, v => v < 0 ? 'x' : v).join('');
+function onlineStart(slot) {
+  room.send(slot, 'start', { map: mapId, mode: G.mode, you: units.findIndex(u => u.online && u.netSlot === slot), roster: units.map(u => ({ m: u.def.model, n: u.name, tm: u.team })), gt: G.t, tm: G.time, st: G.state, g: gridStr(), pts: G.pts });
+}
+function snap() {
+  const o = { gt: r2(G.t), tm: r2(G.time), st: G.state, u: units.map(u => [r2(u.x), r2(u.z), r2(u.y), r3(u.h), r3(u.aimH), r2(u.vx), r2(u.vz), u.alive ? 1 : 0, Math.round(u.ink), Math.round(u.hp), u.firing ? 1 : 0, u.inv > 0 ? 1 : 0, r2(u.respawnT), u.splats, u.painted, u.sbI ?? -1]), p: G.plog.splice(0), b: G.blog.splice(0) };
+  if (G.mode === 'pools') { o.zo = ZONES.map(z => z.owner); o.pts = G.pts.map(r2); }
+  if (++G.snapN % 40 === 0) o.g = gridStr(); // every 2 s the whole floor, so a guest can never drift
+  return o;
+}
+// guest side
+const guest = JOIN ? E.ROOM.guestRoom({ prefix: 'tl', code: JOIN, L: tr, game: 'Tide Lines', name: (() => { try { return (JSON.parse(localStorage.getItem('inoa.pad') || '{}').name) || E.profile().name || ''; } catch (e) { return ''; } })(),
+  help: tr('Move: WASD / arrows / stick · Spray: Space, mouse or 💦 · Bomb: E or 💣', 'Moverse: WASD / flechas / stick · Rociar: Espacio, ratón o 💦 · Bomba: E o 💣'),
+  words: { title: () => tr('Online paint battle', 'Batalla de pintura en línea'), youreIn: me => tr(`You're in as <b style="color:${me.color}">${me.name}</b>! Waiting for the host to start the match…`, `¡Entraste como <b style="color:${me.color}">${me.name}</b>! Esperando a que el anfitrión empiece la partida…`) },
+  on: { start: m => clientStart(m), snap: m => applySnap(m), end: m => { if (!G || !G.client || G.state === 'end' || G.state === 'judge' || G.state === 'done') return; G.pts = m.pts; G.knockout = m.ko; endMatch(); G.final = m.final; }, lobby: () => { if (!G || G.resultsShown) return false; clientLeave(); }, busy: () => !!G },
+  onEnd: () => clientLeave(null) }) : null;
+function applyGrid(str) { counts[0] = counts[1] = 0; for (let c = 0; c < N * N && c < str.length; c++) { const ch = str[c]; if (grid[c] < 0) continue; const v = ch === 'x' ? 0 : +ch; grid[c] = v; if (v > 0) counts[v - 1]++; } }
+function paintFromGrid() { const k = PAINT_PX / (2 * A); for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) { const o = grid[j * N + i]; if (o <= 0) continue; pg.fillStyle = INK[o - 1]; pg.beginPath(); pg.arc((cx(i) + A) * k, (cx(j) + A) * k, CELL * .8 * k, 0, 6.3); pg.fill(); } paintDirty = true; }
+function clientStart(m) {
+  document.querySelectorAll('.ig-results,.ig-title,.tl-judge').forEach(d => d.remove());
+  buildMap(m.map); resetPaint(); applyGrid(m.g); paintFromGrid();
+  blobs.length = 0; bombs.forEach(b => scene.remove(b.m)); bombs.length = 0;
+  clearUnits(); m.roster.forEach((r, i) => makeUnit(CHARS.find(c => c.model === r.m) || { model: r.m, name: r.n }, r.tm, i === m.you, r.n));
+  G = { client: true, state: m.st, t: m.gt, time: m.tm, mode: m.mode, map: m.map, me: units[m.you], sk: SKILL.chill, shake: 0, camPos: new THREE.Vector3(0, 40, 30), camLook: new THREE.Vector3(), auto: false, warned: m.tm <= 10, music30: m.tm <= 30, lastTick: 99, lowInkHint: false, judgeT: 0, mapT: 0, paused: false, endT: 0, pts: m.pts || [0, 0], flips: 0, sayT: 0, bn: 0 };
+  units.forEach((u, i) => { u.alive = true; u.squash = 0; u.spawnPop = 1; });
+  for (const zn of ZONES) { zn.owner = -1; zn.share = [0, 0]; zoneTag(zn); zn.ring.material.color.set(0xffffff); zn.col.material.color.set(0xffffff); }
+  ZG.visible = G.mode === 'pools';
+  ensureShell(); ['tlBar', 'tlMap', 'tlInk'].forEach(id => $(id).hidden = false); $('tlBar').classList.remove('hide'); $('tlBar').classList.toggle('pools', G.mode === 'pools'); $('tlResp').hidden = true;
+  if (music) music.stop(); music = E.music(G.music30 ? E.SONGS.race : E.SONGS.tense);
+  const tn = teamName(G.me.team);
+  E.say(tr(`You are on team ${tn}! Paint the floor in your colour, stand on it to refill your ink.`, `¡Estás en el equipo ${tn}! Pinta el suelo de tu color y párate sobre él para recargar tinta.`), { once: true });
+  setLabels(); hud(true);
+}
+function clientLeave(html) {
+  G = null; blobs.length = 0; blobIM.count = 0; bombs.forEach(b => scene.remove(b.m)); bombs.length = 0; document.querySelectorAll('.tl-judge,.ig-results').forEach(d => d.remove()); aimRing.visible = false; $('tlHit').style.opacity = 0; if (music) music.stop(); music = null;
+  if (shellEl) { shellEl.pad.hidden = true; document.querySelector('.ig-top').hidden = true; } ['tlBar', 'tlMap', 'tlInk', 'tlResp'].forEach(id => $(id).hidden = true);
+  buildMap(S.map); showcase(); if (html) guest.wait(html);
+}
+function applySnap(m) {
+  if (!G || !G.client) return;
+  if (Math.abs(G.t - m.gt) > .25) G.t = m.gt; if (G.state === 'intro' || G.state === 'play') { G.time = m.tm; if (m.st === 'play' && G.state === 'intro') { G.state = 'play'; bigText(tr('GO!', '¡YA!')); E.tone(880, .45, 'square', .12); } }
+  for (const p of m.p) paint(p[0], p[1], p[2], p[3], null, !!p[4]);
+  if (m.g) applyGrid(m.g);
+  m.u.forEach((a, i) => { const u = units[i]; if (!u) return; const first = u.tx == null, was = u.alive, hp = u.hp;
+    u.tx = a[0]; u.tz = a[1]; u.ty = a[2]; u.th = a[3]; if (u !== G.me || !G.me.alive) u.aimH = a[4]; u.vx = a[5]; u.vz = a[6]; u.alive = !!a[7]; u.ink = a[8]; u.hp = a[9]; u.firing = !!a[10]; u.inv = a[11] ? .3 : 0; u.respawnT = a[12]; u.splats = a[13]; u.painted = a[14];
+    if (first || (!was && u.alive)) { u.x = u.tx; u.z = u.tz; u.y = u.ty; u.h = u.th; }
+    if (was && !u.alive) { const by = units[a[15]] || null; u.squash = 1; u.splatBy = by ? by.name : ''; splatFx(u, by); }
+    if (!was && u.alive) { u.spawnPop = 0; u.squash = 0; if (u === G.me) { $('tlResp').hidden = true; SFX.pop(); } }
+    if (u === G.me && u.alive && u.hp < hp - 1) { G.shake = Math.max(G.shake, .18); G.hitFlash = 1; } });
+  for (const [ui, aim] of m.b) { const u = units[ui]; if (u) { u.aimH = aim; bombFx(u); } }
+  if (m.zo) { G.pts = m.pts; ZONES.forEach((zn, k) => { const o = m.zo[k]; if (o !== zn.owner && o >= 0) { zn.owner = o; zoneTag(zn); zn.ring.material.color.set(TEAMS[o].col); zn.col.material.color.set(TEAMS[o].col); shock(zn.x, groundAt(zn.x, zn.z), zn.z, TEAMS[o].col); const mine = o === G.me.team, L = 'ABC'[zn.k]; E.toast(mine ? tr(`We took pool ${L}!`, `¡Tomamos la poza ${L}!`) : tr(`${teamName(o)} took pool ${L}!`, `¡${teamName(o)} tomó la poza ${L}!`), 1300); mine ? SFX.coin() : E.tone(260, .2, 'triangle', .06, -60); } }); }
+}
+// this screen's painter: read the local controls and send them; the host decides what happens
+function clientInput(dt) {
+  const me = G.me, playing = G.state === 'play';
+  if (playing && me.alive) { const c = playerControl(me, dt); if (c.bomb) G.bn++; me.aimH = c.aim; guest.sendInput({ x: r2(c.mx), y: r2(c.mz), a: !!c.fire, h: r3(c.aim), bn: G.bn }); }
+  else guest.sendInput({ x: 0, y: 0, a: false, h: r3(me.aimH), bn: G.bn });
+}
+function clientUnit(u, dt, playing) {
+  if (u.tx != null) { u.tx += u.vx * dt; u.tz += u.vz * dt; u.x = damp(u.x, u.tx, .0005, dt); u.z = damp(u.z, u.tz, .0005, dt); u.y = damp(u.y, u.ty, .001, dt); u.h += angDiff(u.th, u.h) * (1 - Math.pow(.0005, dt)); if (Math.hypot(u.tx - u.x, u.tz - u.z) > 5) { u.x = u.tx; u.z = u.tz; } }
+  if (!u.alive) { if (u.squash > 0) u.squash = Math.max(0, u.squash - dt * 3); if (u === G.me && playing) { $('tlResp').hidden = false; $('tlResp').innerHTML = `${tr('Splatted!', '¡Salpicado!')}${u.splatBy ? ` <small>${tr('by', 'por')} ${u.splatBy}</small>` : ''}<small>${tr('Back in', 'Vuelves en')} ${Math.max(1, Math.ceil(u.respawnT))}…</small>`; } dressUnit(u, dt); return; }
+  if (u.firing && playing) { u.aimT = .5; u.fireCD -= dt; while (u.fireCD <= 0) { u.fireCD += .075; fireBlob(u); } if (u === G.me && (G.sprayT = (G.sprayT || 0) - dt) <= 0) { G.sprayT = .14; E.noise(.1, .03, 2400, 1.2); } } else u.fireCD = Math.max(u.fireCD, 0);
+  if (playing || G.state === 'intro') poseUnit(u, dt); dressUnit(u, dt);
+  u.ring.material.opacity = (u.isPlayer ? .95 : .7) * (u.inv > 0 ? .5 + Math.sin(G.t * 20) * .4 : 1);
+}
 
 /* ---------- bots ---------- */
 // where to walk next on the way to (tx, tz): bridges over the canal, ramps onto decks
@@ -574,6 +654,10 @@ function fireBlob(u) {
 }
 function throwBomb(u) {
   if (u.ink < 35) { if (u.isPlayer) { E.toast(tr('Need more ink for a bomb!', '¡Necesitas más tinta para una bomba!'), 1200); SFX.bad(); } return; } u.ink -= 35;
+  if (G.online) G.blog.push([units.indexOf(u), r3(u.aimH)]);
+  bombFx(u);
+}
+function bombFx(u) {
   const m = new THREE.Mesh(new THREE.SphereGeometry(.32, 14, 12), new THREE.MeshStandardMaterial({ color: TEAMS[u.team].col, emissive: TEAMS[u.team].col, emissiveIntensity: .4, roughness: .2 })); m.castShadow = true; scene.add(m);
   bombs.push({ m, x: u.x, y: u.y + 1.4, z: u.z, vx: Math.sin(u.aimH) * 9, vy: 6.5, vz: Math.cos(u.aimH) * 9, team: u.team, by: u, t: 0 }); E.tone(300, .25, 'triangle', .08, 200);
 }
@@ -587,8 +671,11 @@ function hurt(v, dmg, by) {
   if (v.hp <= 0) splatUnit(v, by);
 }
 function splatUnit(v, by) {
-  v.alive = false; v.squash = 1; v.respawnT = isHuman(v) ? G.sk.resp : 3; v.deaths++; v.splatBy = by ? by.name : ''; if (by) by.splats++;
+  v.alive = false; v.squash = 1; v.respawnT = isHuman(v) ? G.sk.resp : 3; v.deaths++; v.splatBy = by ? by.name : ''; v.sbI = by ? units.indexOf(by) : -1; if (by) by.splats++;
   paint(v.x, v.z, 1.9, by ? by.team : 1 - v.team, by);
+  splatFx(v, by);
+}
+function splatFx(v, by) {
   PT.burst(new THREE.Vector3(v.x, v.y + 1, v.z), { color: TEAMS[by ? by.team : 1 - v.team].col, n: 34, speed: 5, up: 6, size: .55, life: .9, additive: false, gravity: 14 });
   shock(v.x, v.y, v.z, TEAMS[by ? by.team : 1 - v.team].col);
   SFX.splash(); E.tone(180, .25, 'square', .08, -90);
@@ -626,16 +713,19 @@ function update(dt) {
   if (!G) { titleIdle(dt); flushPaint(); return; }
   if (G.paused) return;
   G.t += dt;
+  if (G.client) clientInput(dt);
   if (G.state === 'intro') { const c = Math.ceil(3.4 - G.t); if (G.t > .4 && c !== G.cd && c >= 1 && c <= 3) { G.cd = c; bigText(String(c)); E.tone(440, .2, 'square', .1); } if (G.t >= 3.4) { G.state = 'play'; bigText(tr('GO!', '¡YA!')); E.tone(880, .45, 'square', .12); } }
-  if (G.state === 'play') { G.time -= dt;
+  if (G.state === 'play') { if (!G.client) G.time -= dt; else G.time = Math.max(0, G.time - dt);
     if (G.time <= 30 && !G.music30) { G.music30 = true; music && music.stop(); music = E.music(E.SONGS.race); E.toast(tr('30 seconds: final push!', '30 segundos: ¡último esfuerzo!'), 1800); E.say(tr('Thirty seconds left! Final push!', '¡Quedan treinta segundos! ¡Último esfuerzo!'), { interrupt: false }); }
     if (G.time <= 10 && !G.warned) { G.warned = true; bigText(tr('10 SECONDS!', '¡10 SEGUNDOS!')); E.say(tr('Ten seconds left!', '¡Quedan diez segundos!'), { interrupt: true }); }
     if (G.time <= 10 && Math.ceil(G.time) !== G.lastTick) { G.lastTick = Math.ceil(G.time); E.tone(G.lastTick <= 5 ? 1500 : 1200, .08, 'square', .07); if (G.lastTick <= 5 && G.lastTick >= 1) bigText(String(G.lastTick), true); }
-    if (G.time <= 0) { G.time = 0; endMatch(); } }
+    if (G.time <= 0 && !G.client) { G.time = 0; endMatch(); } }
   const playing = G.state === 'play'; syncPhones();
-  if (G.mode === 'pools') { updateZones(dt, playing); if (playing && (G.pts[0] >= POOL_GOAL || G.pts[1] >= POOL_GOAL)) { G.knockout = true; endMatch(); } }
+  if (G.mode === 'pools' && G.client) for (const zn of ZONES) zn.col.material.opacity = .08 + Math.sin(G.t * 3 + zn.k) * .03 + (zn.owner >= 0 ? .04 : 0);
+  else if (G.mode === 'pools') { updateZones(dt, playing); if (playing && (G.pts[0] >= POOL_GOAL || G.pts[1] >= POOL_GOAL)) { G.knockout = true; endMatch(); } }
   for (const u of units) {
     u.inv = Math.max(0, u.inv - dt); u.lastHit += dt; if (u.spawnPop != null && u.spawnPop < 1) u.spawnPop = Math.min(1, u.spawnPop + dt * 4); u.aimT = Math.max(0, (u.aimT || 0) - dt);
+    if (G.client) { clientUnit(u, dt, playing); continue; }
     if (!u.alive) { if (u.squash > 0) u.squash = Math.max(0, u.squash - dt * 3); if (playing) { u.respawnT -= dt; if (u.isPlayer) $('tlResp').innerHTML = `${tr('Splatted!', '¡Salpicado!')}${u.splatBy ? ` <small>${tr('by', 'por')} ${u.splatBy}</small>` : ''}<small>${tr('Back in', 'Vuelves en')} ${Math.max(1, Math.ceil(u.respawnT))}…</small>`; if (u.respawnT <= 0) { spawn(u); if (u.isPlayer) { $('tlResp').hidden = true; SFX.pop(); } } } dressUnit(u, dt); continue; }
     let c = { mx: 0, mz: 0, aim: u.aimH, fire: false, bomb: false };
     if (playing) c = (u.isPlayer && !(G.auto || window.__AUTOPILOT)) ? playerControl(u, dt) : (u.netSlot && E.net.pad(u.netSlot)) ? netControl(u) : botControl(u, dt);
@@ -654,14 +744,15 @@ function update(dt) {
   // blobs
   let n = 0;
   for (let i = blobs.length - 1; i >= 0; i--) { const b = blobs[i]; b.t += dt; b.vy -= 14 * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.z += b.vz * dt; let dead = false;
-    for (const v of units) { if (v.team === b.team || !v.alive) continue; if ((v.x - b.x) ** 2 + (v.z - b.z) ** 2 < .3 && b.y > v.y && b.y < v.y + 1.9) { hurt(v, 8, b.by); dead = true; PT.burst(new THREE.Vector3(b.x, b.y, b.z), { color: TEAMS[b.team].col, n: 4, speed: 2, up: 2, size: .3, life: .35, additive: false, gravity: 10 }); if (b.by.isPlayer) E.tone(700, .04, 'square', .03); break; } }
-    if (!dead) { const hgt = heightAtP(b.x, b.z); if (!inArena(b.x, b.z, -1) || b.y < -2) dead = true; else if (b.y <= hgt) { const so = solidAtP(b.x, b.z); if (so) { if (hgt - b.y < .5 && hgt < 50) paint(b.x, b.z, .35, b.team, null, false); } else if (waterAt(b.x, b.z)) { if (Math.random() < .3) PT.burst(_v.set(b.x, .05, b.z), { color: 0xd8f6ff, n: 3, speed: 1.5, up: 2.5, size: .25, life: .4, additive: false, gravity: 9 }); } else { paint(b.x, b.z, rnd(.5, .68), b.team, b.by); if (b.by === G.me && Math.random() < .35) PT.burst(_v.set(b.x, hgt + .1, b.z), { color: TEAMS[b.team].col, n: 3, speed: 2.2, up: 2.2, size: .28, life: .35, additive: false, gravity: 12 }); } dead = true; } }
+    for (const v of units) { if (v.team === b.team || !v.alive) continue; if ((v.x - b.x) ** 2 + (v.z - b.z) ** 2 < .3 && b.y > v.y && b.y < v.y + 1.9) { if (!G.client) hurt(v, 8, b.by); dead = true; PT.burst(new THREE.Vector3(b.x, b.y, b.z), { color: TEAMS[b.team].col, n: 4, speed: 2, up: 2, size: .3, life: .35, additive: false, gravity: 10 }); if (b.by.isPlayer) E.tone(700, .04, 'square', .03); break; } }
+    if (!dead) { const hgt = heightAtP(b.x, b.z); if (!inArena(b.x, b.z, -1) || b.y < -2) dead = true; else if (b.y <= hgt) { const so = solidAtP(b.x, b.z); if (so) { if (hgt - b.y < .5 && hgt < 50 && !G.client) paint(b.x, b.z, .35, b.team, null, false); } else if (waterAt(b.x, b.z)) { if (Math.random() < .3) PT.burst(_v.set(b.x, .05, b.z), { color: 0xd8f6ff, n: 3, speed: 1.5, up: 2.5, size: .25, life: .4, additive: false, gravity: 9 }); } else { if (!G.client) paint(b.x, b.z, rnd(.5, .68), b.team, b.by); if (b.by === G.me && Math.random() < .35) PT.burst(_v.set(b.x, hgt + .1, b.z), { color: TEAMS[b.team].col, n: 3, speed: 2.2, up: 2.2, size: .28, life: .35, additive: false, gravity: 12 }); } dead = true; } }
     if (dead) { blobs[i] = blobs[blobs.length - 1]; blobs.pop(); continue; }
   }
   for (const b of blobs) { if (n >= MAXB) break; const st = 1 + Math.min(.6, b.t * 2); _s.set(1, 1, st); _q.setFromUnitVectors(_z1, _v.set(b.vx, b.vy, b.vz).normalize()); _m.compose(_v.set(b.x, b.y, b.z), _q, _s); blobIM.setMatrixAt(n, _m); blobIM.setColorAt(n, BLOB_C.set(TEAMS[b.team].col)); n++; }
   blobIM.count = n; blobIM.instanceMatrix.needsUpdate = true; if (blobIM.instanceColor) blobIM.instanceColor.needsUpdate = true;
-  for (let i = bombs.length - 1; i >= 0; i--) { const b = bombs[i]; b.t += dt; b.vy -= 16 * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.z += b.vz * dt; b.m.position.set(b.x, b.y, b.z); b.m.rotation.x += dt * 8; b.m.scale.setScalar(1 + Math.sin(b.t * 30) * .08); const hgt = heightAtP(b.x, b.z); if (b.y <= hgt || !inArena(b.x, b.z, -1)) { const x = clamp(b.x, -A + 1, A - 1), z = clamp(b.z, -A + 1, A - 1); const flipped = paint(x, z, 2.7, b.team, b.by); let hits = 0; for (const v of units) if (v.team !== b.team && v.alive && (v.x - x) ** 2 + (v.z - z) ** 2 < 2.6 * 2.6) { hurt(v, 60, b.by); hits++; } PT.burst(new THREE.Vector3(x, hgt + .4, z), { color: TEAMS[b.team].col, n: 40, speed: 6, up: 6, size: .6, life: .8, additive: false, gravity: 14 }); shock(x, hgt, z, TEAMS[b.team].col); SFX.splash(); if (Math.hypot(G.me.x - x, G.me.z - z) < 10) G.shake = Math.max(G.shake, .35); if (b.by.isPlayer && flipped > 4) { const p = E.toScreen(_v.set(x, hgt + 1.2, z), camera); E.floatText(`+${Math.round(flipped * CELL * CELL)} m²`, p.x, p.y); } scene.remove(b.m); b.m.geometry.dispose(); bombs.splice(i, 1); } }
+  for (let i = bombs.length - 1; i >= 0; i--) { const b = bombs[i]; b.t += dt; b.vy -= 16 * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.z += b.vz * dt; b.m.position.set(b.x, b.y, b.z); b.m.rotation.x += dt * 8; b.m.scale.setScalar(1 + Math.sin(b.t * 30) * .08); const hgt = heightAtP(b.x, b.z); if (b.y <= hgt || !inArena(b.x, b.z, -1)) { const x = clamp(b.x, -A + 1, A - 1), z = clamp(b.z, -A + 1, A - 1); const flipped = G.client ? 0 : paint(x, z, 2.7, b.team, b.by); let hits = 0; if (!G.client) for (const v of units) if (v.team !== b.team && v.alive && (v.x - x) ** 2 + (v.z - z) ** 2 < 2.6 * 2.6) { hurt(v, 60, b.by); hits++; } PT.burst(new THREE.Vector3(x, hgt + .4, z), { color: TEAMS[b.team].col, n: 40, speed: 6, up: 6, size: .6, life: .8, additive: false, gravity: 14 }); shock(x, hgt, z, TEAMS[b.team].col); SFX.splash(); if (Math.hypot(G.me.x - x, G.me.z - z) < 10) G.shake = Math.max(G.shake, .35); if (b.by.isPlayer && flipped > 4) { const p = E.toScreen(_v.set(x, hgt + 1.2, z), camera); E.floatText(`+${Math.round(flipped * CELL * CELL)} m²`, p.x, p.y); } scene.remove(b.m); b.m.geometry.dispose(); bombs.splice(i, 1); } }
   if (G.state === 'end' || G.state === 'judge' || G.state === 'done') endStep(dt);
+  if (G.online && !G.client) room.snapshot(dt, snap);
   flushPaint(); hud();
 }
 function flushPaint() { if (paintDirty) { paintTex.needsUpdate = true; paintDirty = false; } }
@@ -669,12 +760,13 @@ const pct = () => [counts[0] / paintable * 100, counts[1] / paintable * 100];
 
 /* ---------- end of match: sweep + bar fill + winner ---------- */
 function endMatch() {
+  if (G.online && !G.client) room.broadcast('end', { final: pct(), pts: G.pts, ko: !!G.knockout });
   G.state = 'end'; G.endT = 0; bigText(G.knockout ? tr('KNOCKOUT!', '¡NOCAUT!') : tr('TIME!', '¡TIEMPO!')); E.tone(1760, .25, 'square', .09); E.tone(1760, .5, 'square', .09, 0, .3); music && music.stop(); music = null;
   for (const u of units) { u.firing = false; u.vx = u.vz = 0; } $('tlResp').hidden = true; $('tlBar').classList.add('hide'); aimRing.visible = false; $('tlHit').style.opacity = 0; G.final = pct();
 }
 function endStep(dt) {
   G.endT += dt;
-  if (G.state === 'end') { for (const u of units) if (u.alive) poseUnit(u, dt, 'idle'); if (G.endT > 1.3) { G.state = 'judge'; G.judgeT = 0; G.final = pct(); judgeUI(); ['tlBar', 'tlMap', 'tlInk'].forEach(id => $(id).hidden = true); shellEl.pad.hidden = true; E.say(tr('And the winner is…', 'Y el ganador es…'), { interrupt: true }); } return; }
+  if (G.state === 'end') { for (const u of units) if (u.alive) poseUnit(u, dt, 'idle'); if (G.endT > 1.3) { G.state = 'judge'; G.judgeT = 0; if (!G.client) G.final = pct(); judgeUI(); ['tlBar', 'tlMap', 'tlInk'].forEach(id => $(id).hidden = true); shellEl.pad.hidden = true; E.say(tr('And the winner is…', 'Y el ganador es…'), { interrupt: true }); } return; }
   G.judgeT += dt; const pools = G.mode === 'pools'; const [t, c] = pools ? G.pts.map(p => p / POOL_GOAL * 50) : G.final; const k = clamp(G.judgeT / 3.2, 0, 1), e = 1 - Math.pow(1 - k, 2);
   const j = document.querySelector('.tl-judge'); if (j) { j.querySelector('.t').style.width = (t * e) + '%'; j.querySelector('.c').style.width = (c * e) + '%'; j.querySelector('.vt').firstChild.textContent = pools ? `${TEAMS[0].shape} ${Math.round(G.pts[0] * e)}` : `${TEAMS[0].shape} ${(t * e).toFixed(1)}%`; j.querySelector('.vc').firstChild.textContent = pools ? `${Math.round(G.pts[1] * e)} ${TEAMS[1].shape}` : `${(c * e).toFixed(1)}% ${TEAMS[1].shape}`; }
   // drum roll: ticks speed up and rise in pitch as the bars fill
@@ -689,17 +781,17 @@ function endStep(dt) {
 }
 function judgeUI() { const pools = G.mode === 'pools'; const d = document.createElement('div'); d.className = 'tl-judge'; d.innerHTML = `<div class="k">${pools ? tr('POOL POINTS', 'PUNTOS DE POZAS') : tr('TURF COUNT', 'CONTEO DE TERRITORIO')}</div><h2></h2><div class="bar${pools ? ' pools' : ''}"><i class="t"></i><i class="c"></i></div><div class="row"><span class="vt" style="color:#d6fbf6">0<small>${teamName(0).toUpperCase()}</small></span><span class="vc" style="color:#ffe1da">0<small>${teamName(1).toUpperCase()}</small></span></div><div class="m"></div>`; document.body.appendChild(d); }
 function finish() {
-  const [t, c] = G.final, me = G.me, win = G.winner, pools = G.mode === 'pools'; const tp = Math.round(t * 10) / 10, cp = Math.round(c * 10) / 10;
+  const [t, c] = G.final, me = G.me, win = G.winner, pools = G.mode === 'pools'; const tp = Math.round(t * 10) / 10, cp = Math.round(c * 10) / 10, won = win === me.team; /* online guests can be on Coral */
   document.querySelector('.tl-judge')?.remove(); ['tlBar', 'tlMap', 'tlInk'].forEach(id => $(id).hidden = true); shellEl.pad.hidden = true;
   // stars per arena + mode: a win on Chill = ★, Normal = ★★, Fierce = ★★★
-  const key = G.map + ':' + G.mode, had = S.stars[key] || 0, got = win === 0 ? G.sk.star : 0; if (got > had) S.stars[key] = got;
-  if (!pools && tp > S.best) S.best = tp; save();
+  const key = G.map + ':' + G.mode, had = S.stars[key] || 0, got = won && !G.client ? G.sk.star : 0; if (got > had) S.stars[key] = got;
+  if (!pools && tp > S.best && !G.client) S.best = tp; save();
   if (got > had) setTimeout(() => { E.toast(tr(`New star! ${stars(got)} on ${MAP.name[0]}`, `¡Nueva estrella! ${stars(got)} en ${MAP.name[1]}`), 2200); SFX.coin(); }, 900);
   const stats = pools ? [[tr('Teal points', 'Puntos turquesa'), Math.round(G.pts[0])], [tr('Coral points', 'Puntos coral'), Math.round(G.pts[1])], [tr('Teal turf', 'Turquesa'), tp + '%'], [tr('Your splats', 'Tus salpicones'), me.splats], [tr('You painted', 'Pintaste'), Math.round(me.painted * CELL * CELL) + ' m²']]
     : [[tr('Teal turf', 'Turquesa'), tp + '%'], [tr('Coral turf', 'Coral'), cp + '%'], [tr('Your splats', 'Tus salpicones'), me.splats], [tr('You painted', 'Pintaste'), Math.round(me.painted * CELL * CELL) + ' m²']];
   stats.push([tr(...MAP.name), stars(S.stars[key] || 0)]);
   const title = win === 0 ? (pools ? tr('Teal holds the pools!', '¡Turquesa domina las pozas!') : tr('Teal wins the turf!', '¡Turquesa gana el territorio!')) : win === 1 ? (pools ? tr('Coral held the pools', 'Coral dominó las pozas') : tr('Coral took the turf', 'Coral se llevó el territorio')) : tr('A perfect draw!', '¡Un empate perfecto!');
-  E.results({ gameId: 'tidelines', title, stats, xp: (win === 0 ? 120 : win < 0 ? 90 : 70) + me.splats * 4 + Math.min(40, me.painted * CELL * CELL / 10) + (got > had ? 25 : 0), coins: (win === 0 ? 35 : win < 0 ? 22 : 14) + (got > had ? 10 : 0), best: pools ? null : tp, bestLabel: tr('Best teal turf (%)', 'Mejor territorio turquesa (%)'), won: win === 0, onAgain: () => startMatch(), share: pools ? tr(`Team Teal ${win === 0 ? 'won' : 'played'} Tide Pools ${Math.round(G.pts[0])} to ${Math.round(G.pts[1])} in Tide Lines (Inoa Games)! ${location.href}`, `¡El equipo Turquesa ${win === 0 ? 'ganó' : 'jugó'} Pozas de Marea ${Math.round(G.pts[0])} a ${Math.round(G.pts[1])} en Tide Lines (Inoa Games)! ${location.href}`) : tr(`Team Teal ${win === 0 ? 'won' : 'played'} ${tp}% to ${cp}% in Tide Lines (Inoa Games)! ${location.href}`, `¡El equipo Turquesa ${win === 0 ? 'ganó' : 'jugó'} ${tp}% a ${cp}% en Tide Lines (Inoa Games)! ${location.href}`) });
+  E.results({ gameId: 'tidelines', title, stats, xp: (won ? 120 : win < 0 ? 90 : 70) + me.splats * 4 + Math.min(40, me.painted * CELL * CELL / 10) + (got > had ? 25 : 0), coins: (won ? 35 : win < 0 ? 22 : 14) + (got > had ? 10 : 0), best: pools || G.client ? null : tp, bestLabel: tr('Best teal turf (%)', 'Mejor territorio turquesa (%)'), won, onAgain: () => G && G.client ? clientLeave(tr('Waiting for the host to start the next match…', 'Esperando a que el anfitrión empiece la próxima partida…')) : startMatch(), share: pools ? tr(`Team Teal ${win === 0 ? 'won' : 'played'} Tide Pools ${Math.round(G.pts[0])} to ${Math.round(G.pts[1])} in Tide Lines (Inoa Games)! ${location.href}`, `¡El equipo Turquesa ${win === 0 ? 'ganó' : 'jugó'} Pozas de Marea ${Math.round(G.pts[0])} a ${Math.round(G.pts[1])} en Tide Lines (Inoa Games)! ${location.href}`) : tr(`Team Teal ${win === 0 ? 'won' : 'played'} ${tp}% to ${cp}% in Tide Lines (Inoa Games)! ${location.href}`, `¡El equipo Turquesa ${win === 0 ? 'ganó' : 'jugó'} ${tp}% a ${cp}% en Tide Lines (Inoa Games)! ${location.href}`) });
 }
 
 /* ---------- camera ---------- */
@@ -760,7 +852,7 @@ function updateCamera(dt) {
 let shellEl = null, lastHud = '';
 function ensureShell() {
   if (shellEl) { shellEl.pad.hidden = false; document.querySelector('.ig-top').hidden = false; return; }
-  shellEl = E.shell({ title: 'Tide Lines', onPause: pause, stick: true, party: { hint: tr('Phone 1 plays you. Phones 2-4 join your team, phones 5-8 the other team: up to 8 players, 4v4!', 'El teléfono 1 eres tú. Los teléfonos 2-4 se unen a tu equipo y los 5-8 al otro: ¡hasta 8 jugadores, 4 contra 4!') }, buttons: [{ id: 'bB', icon: '💣', label: tr('Throw ink bomb', 'Lanzar bomba de tinta') }, { id: 'bF', icon: '💦', label: tr('Spray (drag to aim)', 'Rociar (arrastra para apuntar)'), cls: 'big' }] });
+  shellEl = E.shell({ title: 'Tide Lines', onPause: pause, stick: true, party: JOIN ? false : PARTY, buttons: [{ id: 'bB', icon: '💣', label: tr('Throw ink bomb', 'Lanzar bomba de tinta') }, { id: 'bF', icon: '💦', label: tr('Spray (drag to aim)', 'Rociar (arrastra para apuntar)'), cls: 'big' }] });
   input.bindStick($('igStick'), $('igKnob')); input.bindButton($('bB'), 'c');
   const f = $('bF'); f.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); E.audio(); f.setPointerCapture(e.pointerId); aimPad = { down: true, sx: e.clientX, sy: e.clientY, dx: 0, dy: 0, len: 0, id: e.pointerId }; f.classList.add('on'); });
   f.addEventListener('pointermove', e => { if (!aimPad || e.pointerId !== aimPad.id) return; aimPad.dx = e.clientX - aimPad.sx; aimPad.dy = e.clientY - aimPad.sy; aimPad.len = Math.hypot(aimPad.dx, aimPad.dy); });
@@ -793,7 +885,7 @@ function setLabels() { $('tlInkL').textContent = tr('INK', 'TINTA'); }
 let _lang = E.lang();
 addEventListener('inoa:settings', () => { setLabels(); if (E.lang() === _lang) return; _lang = E.lang(); const t = document.querySelector('.ig-title'); if (!G && t) { t.remove(); title(); const sp = document.querySelector('.ig-settings'); if (sp) document.body.appendChild(sp); } });
 /* ---------- flow ---------- */
-function pause() { if (!G || G.paused || G.state !== 'play' && G.state !== 'intro') return; G.paused = true; music && music.stop(); const d = E.pauseMenu({ onResume: () => { G.paused = false; music = E.music(G.music30 ? E.SONGS.race : E.SONGS.tense); }, onRestart: () => startMatch(), extra: `<button class="ig-btn ghost" data-a="menu">${tr('Change arena / mode / bots', 'Cambiar arena / modo / bots')}</button>` }); d.querySelector('[data-a=menu]').onclick = () => { d.remove(); title(); }; }
+function pause() { if (!G || G.paused || G.state !== 'play' && G.state !== 'intro') return; if (G.client) { if (!document.querySelector('.ig-screen')) E.pauseMenu({ extra: `<p class="ig-sub">${tr('Online match: the game keeps going while this menu is open.', 'Partida en línea: el juego sigue mientras este menú está abierto.')}</p>`, onResume: () => { }, onRestart: () => { } }); return; } G.paused = true; music && music.stop(); const d = E.pauseMenu({ onResume: () => { G.paused = false; music = E.music(G.music30 ? E.SONGS.race : E.SONGS.tense); }, onRestart: () => startMatch(), extra: `<button class="ig-btn ghost" data-a="menu">${tr('Change arena / mode / bots', 'Cambiar arena / modo / bots')}</button>` }); d.querySelector('[data-a=menu]').onclick = () => { d.remove(); title(); }; }
 addEventListener('keydown', e => { if ((e.code === 'Escape' || e.code === 'KeyP') && G && !G.paused) pause(); });
 document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
 function showcase() {
@@ -803,6 +895,7 @@ function showcase() {
 }
 function title() {
   document.querySelectorAll('.ig-title').forEach(d => d.remove());
+  if (G && G.online && room) room.lobby();
   G = null; if (music) music.stop(); music = null; blobs.length = 0; blobIM.count = 0; bombs.forEach(b => scene.remove(b.m)); bombs.length = 0; document.querySelectorAll('.tl-judge').forEach(d => d.remove()); aimRing.visible = false; $('tlHit').style.opacity = 0;
   if (shellEl) { shellEl.pad.hidden = true; document.querySelector('.ig-top').hidden = true; } ['tlBar', 'tlMap', 'tlInk', 'tlResp'].forEach(id => $(id).hidden = true);
   buildMap(S.map); ZG.visible = S.mode === 'pools'; showcase();
@@ -813,7 +906,7 @@ function title() {
   <div><p class="ig-sub tl-lbl">${tr('Bots', 'Bots')}</p><div class="pick" id="pS">${Object.entries(SKILL).map(([k, v]) => `<button data-s="${k}" class="${k === S.skill ? 'on' : ''}">${tr(...v.label)}<small>${tr(...v.desc)}</small></button>`).join('')}</div></div>
   <div><p class="ig-sub tl-lbl">${tr('Your painter', 'Tu pintor')}</p><div class="pick" id="pC">${CHARS.map((c, i) => `<button data-i="${i}" class="${i === S.char ? 'on' : ''}">${c.name}</button>`).join('')}</div></div>
   <p class="ig-sub" style="font-size:12px;margin:0">${tr('4 vs 4 · 2:30 · Team', '4 contra 4 · 2:30 · Equipo')} <b style="color:var(--tealText)">${TEAMS[0].shape} ${teamName(0)}</b> vs <b style="color:var(--coralText)">${teamName(1)} ${TEAMS[1].shape}</b> · ${tr('win on Chill ★, Normal ★★, Fierce ★★★', 'gana en Tranqui ★, Normal ★★, Feroz ★★★')}</p></div>`;
-  const d = E.titleScreen({ party: { label: tr('Phones as controllers (up to 8 players, 4v4)', 'Teléfonos como controles (hasta 8 jugadores, 4 contra 4)'), hint: tr('Phone 1 plays you. Phones 2-4 join your team, phones 5-8 the other team: up to 8 players, 4v4!', 'El teléfono 1 eres tú. Los teléfonos 2-4 se unen a tu equipo y los 5-8 al otro: ¡hasta 8 jugadores, 4 contra 4!') }, title: 'Tide Lines', kicker: tr('Inoa Games · 4v4 Team Paint', 'Inoa Games · Pintura 4 contra 4'), lead: tr('Grab a water cannon and cover the arena in teal. Three arenas, two modes!', 'Toma un cañón de agua y pinta la arena de turquesa. ¡Tres arenas, dos modos!'), how: [['🕹️', tr('Move: WASD, arrows, left stick', 'Moverse: WASD, flechas, stick izquierdo')], ['💦', tr('Spray: hold Space / mouse / 💦 (drag 💦 or right stick to aim)', 'Rociar: mantén Espacio / ratón / 💦 (arrastra 💦 o el stick derecho para apuntar)')], ['🪣', tr('Refill: stand on your own colour', 'Recargar: párate sobre tu color')], ['💣', tr('Ink bomb: E / 💣 / pad X · the ring shows where it lands', 'Bomba de tinta: E / 💣 / botón X · el aro muestra dónde cae')], ['💥', tr('Splat rivals: they pop back at base (bases are safe)', 'Salpica rivales: vuelven a su base (las bases son seguras)')]], extra, onPlay: () => { save(); startMatch(); } });
+  const d = E.titleScreen({ party: PARTY, title: 'Tide Lines', kicker: tr('Inoa Games · 4v4 Team Paint', 'Inoa Games · Pintura 4 contra 4'), lead: tr('Grab a water cannon and cover the arena in teal. Three arenas, two modes!', 'Toma un cañón de agua y pinta la arena de turquesa. ¡Tres arenas, dos modos!'), how: [['🕹️', tr('Move: WASD, arrows, left stick', 'Moverse: WASD, flechas, stick izquierdo')], ['💦', tr('Spray: hold Space / mouse / 💦 (drag 💦 or right stick to aim)', 'Rociar: mantén Espacio / ratón / 💦 (arrastra 💦 o el stick derecho para apuntar)')], ['🪣', tr('Refill: stand on your own colour', 'Recargar: párate sobre tu color')], ['💣', tr('Ink bomb: E / 💣 / pad X · the ring shows where it lands', 'Bomba de tinta: E / 💣 / botón X · el aro muestra dónde cae')], ['💥', tr('Splat rivals: they pop back at base (bases are safe)', 'Salpica rivales: vuelven a su base (las bases son seguras)')]], extra, onPlay: () => { save(); startMatch(); } });
   const refreshMaps = () => { d.querySelector('#pM').innerHTML = mapBtns(); bindMaps(); };
   const bindMaps = () => d.querySelectorAll('#pM button').forEach(b => b.onclick = () => { S.map = b.dataset.m; save(); refreshMaps(); SFX.click(); buildMap(S.map); ZG.visible = S.mode === 'pools'; showcase(); E.say(tr(...MAPS[S.map].name), { interrupt: true }); });
   bindMaps();
@@ -821,8 +914,10 @@ function title() {
   d.querySelectorAll('#pC button').forEach(b => b.onclick = () => { S.char = +b.dataset.i; S.picked = true; d.querySelectorAll('#pC button').forEach(x => x.classList.toggle('on', x === b)); SFX.click(); });
   d.querySelectorAll('#pS button').forEach(b => b.onclick = () => { S.skill = b.dataset.s; d.querySelectorAll('#pS button').forEach(x => x.classList.toggle('on', x === b)); SFX.click(); });
 }
-title(); ld.done(); window.__READY = true;
+if (JOIN) { buildMap(S.map); showcase(); guest.join(); } else title();
+if (!JOIN && new URLSearchParams(location.search).get('online')) setTimeout(() => E.NET.partyPanel(PARTY), 300);
+ld.done(); window.__READY = true;
 E.loop((dt) => { if (window.__HOLD) return; update(dt); updateCamera(dt); R.render(dt); });
-window.__GAME = { get G() { return G; }, S, camera, startMatch, closeup(on = true) { if (G) G.closeup = on; }, occluders: () => OCC.filter(o => o.a < 1).length, update, updateCamera, title, units, counts, pct, paintable: () => paintable, maps: MAP_IDS, get map() { return mapId; }, zones: () => ZONES.map(z => ({ k: z.k, owner: z.owner, share: z.share.map(v => +v.toFixed(2)), cells: z.cells.length })), setMap(id) { S.map = id; buildMap(id); }, setMode(m) { S.mode = m; }, setSkill(s) { S.skill = s; }, route, groundAt, solidAt, inArena, set auto(v) { window.__AUTOPILOT = v; if (G) G.auto = v; } };
+window.__GAME = { get G() { return G; }, net: E.net, S, camera, startMatch, closeup(on = true) { if (G) G.closeup = on; }, occluders: () => OCC.filter(o => o.a < 1).length, update, updateCamera, title, units, counts, pct, paintable: () => paintable, maps: MAP_IDS, get map() { return mapId; }, zones: () => ZONES.map(z => ({ k: z.k, owner: z.owner, share: z.share.map(v => +v.toFixed(2)), cells: z.cells.length })), setMap(id) { S.map = id; buildMap(id); }, setMode(m) { S.mode = m; }, setSkill(s) { S.skill = s; }, route, groundAt, solidAt, inArena, set auto(v) { window.__AUTOPILOT = v; if (G) G.auto = v; } };
 </script>
 </body></html>

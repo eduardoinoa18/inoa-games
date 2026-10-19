@@ -47,7 +47,7 @@ messages). Messages carry a per-game prefix: `<p>-start`, `<p>` (snapshots), `<p
 - Host: `E.ROOM.hostRoom({prefix, online:{page,label}, rate})` → `players`, `input(slot)`, `start(data)`, `snapshot(dt, build)` (real-time games, `rate` Hz), `send(slot, kind, data)`, `broadcast(kind, data)`, `lobby()`, `on(kind, (player, msg) => …)`, `onJoin`, `onLeave`, `stop()`. It also advertises the own-screen page to phones (`setOnline`).
 - Guest: `E.ROOM.guestRoom({prefix, code, L, game, help, words, name, on:{start, snap, lobby, busy, <kind>}, onEnd})` → `join()`, `sendInput(state)`, `act(kind, data)`, `wait(html)` (the waiting screen: joining, waiting for the host, reconnecting, host went back to the menu, party ended), `close()`.
 - Turn-based tables: `engine/cardroom.js` `onlineHost(room, match)` (host: sends redacted views, routes `act` to `match.act(seat, move, 'online')`, answers refusals with `rej`) and `mirrorMatch(game, {seats, opts, seat, send})` (guest: same surface as `createMatch`, so the table code runs unchanged). A rules module needs `redact(state, seat)`.
-- Prefixes in use: `dr` (Island Drift), `dm` (Dominoes), `gf` (Six-Card Golf).
+- Prefixes in use: `dr` (Island Drift), `dm` (Dominoes), `gf` (Six-Card Golf), `tl` (Tide Lines: guests take a painter on the host's team first; the host replays every paint stroke to guests in order and sends the whole floor every 2 s, so the turf count matches).
 
 ## Tests
 `npm run test:party` runs `test/party.js` with a local Realtime look-alike (`test/party/mock-realtime.js`) and several browser
